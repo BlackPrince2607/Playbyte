@@ -1,0 +1,206 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PLAY - Choose Interests</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ffb4ab",
+                      "line": "rgba(245, 240, 255, 0.12)",
+                      "secondary-fixed-dim": "#a2d801",
+                      "paper": "#F5F0FF",
+                      "tertiary-fixed": "#75ff75",
+                      "on-tertiary-container": "#003306",
+                      "surface-container": "#2a1c1f",
+                      "surface-container-low": "#26181b",
+                      "on-surface-variant": "#e1bec5",
+                      "on-primary": "#65002e",
+                      "card": "#211540",
+                      "cardAlt": "#2A1B4E",
+                      "on-secondary-container": "#425a00",
+                      "on-tertiary-fixed-variant": "#00530f",
+                      "on-error": "#690005",
+                      "outline": "#a8898f",
+                      "secondary-container": "#a2d801",
+                      "outline-variant": "#594046",
+                      "on-secondary": "#263500",
+                      "on-tertiary-fixed": "#002203",
+                      "background": "#1d1013",
+                      "ink": "#150E2B",
+                      "primary-container": "#ff4d8d",
+                      "on-background": "#f7dce1",
+                      "surface-dim": "#1d1013",
+                      "primary-fixed": "#ffd9e0",
+                      "on-primary-container": "#5b0028",
+                      "primary": "#ffb1c4",
+                      "inverse-primary": "#b90a5a",
+                      "primary-fixed-dim": "#ffb1c4",
+                      "surface-bright": "#463538",
+                      "surface-tint": "#ffb1c4",
+                      "surface-container-lowest": "#170a0e",
+                      "secondary-fixed": "#bdf532",
+                      "inverse-surface": "#f7dce1",
+                      "on-primary-fixed-variant": "#8f0043",
+                      "on-surface": "#f7dce1",
+                      "on-secondary-fixed": "#141f00",
+                      "tertiary-fixed-dim": "#57e15b",
+                      "surface": "#1d1013",
+                      "surface-variant": "#413034",
+                      "inverse-on-surface": "#3c2c30",
+                      "on-error-container": "#ffdad6",
+                      "on-secondary-fixed-variant": "#384e00",
+                      "surface-container-highest": "#413034",
+                      "lilac": "#8F7FC0",
+                      "tertiary-container": "#00a92a",
+                      "error-container": "#93000a",
+                      "secondary": "#bdf532",
+                      "tertiary": "#57e15b",
+                      "on-primary-fixed": "#3f001a",
+                      "surface-container-high": "#362629",
+                      "on-tertiary": "#003908"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "sm": "8px",
+                      "xl": "32px",
+                      "md": "16px",
+                      "lg": "24px",
+                      "margin": "20px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "stats": ["JetBrains Mono", "monospace"],
+                      "game-question-mobile": ["Space Grotesk", "sans-serif"],
+                      "screen-title": ["Space Grotesk", "sans-serif"],
+                      "hero": ["Space Grotesk", "sans-serif"],
+                      "hero-mobile": ["Space Grotesk", "sans-serif"],
+                      "large-score": ["Space Grotesk", "sans-serif"],
+                      "game-question": ["Space Grotesk", "sans-serif"],
+                      "micro": ["Inter", "sans-serif"],
+                      "metadata": ["Inter", "sans-serif"],
+                      "body-sm": ["Inter", "sans-serif"],
+                      "body-lg": ["Inter", "sans-serif"]
+              },
+              "fontSize": {
+                      "stats": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                      "game-question-mobile": ["30px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                      "screen-title": ["34px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                      "hero": ["48px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                      "hero-mobile": ["40px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                      "large-score": ["72px", {"lineHeight": "1", "fontWeight": "700"}],
+                      "game-question": ["42px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                      "micro": ["10px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                      "metadata": ["12px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .glow-pink {
+                box-shadow: 0 0 15px rgba(255, 77, 141, 0.4);
+            }
+        }
+        
+        .interest-card {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .interest-card.selected {
+            border-color: #ff4d8d !important;
+            background-color: #2a1c1f;
+            box-shadow: 0 0 15px rgba(255, 77, 141, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-ink text-paper min-h-screen flex flex-col font-body-lg selection:bg-primary-container selection:text-on-primary-container overflow-hidden">
+<!-- Header Section -->
+<header class="px-margin pt-xl pb-gutter flex-shrink-0">
+<h1 class="font-hero-mobile text-hero-mobile text-paper mb-sm">What do you love?</h1>
+<p class="font-body-lg text-body-lg text-lilac">Pick a few things and we'll build your first game feed.</p>
+</header>
+<!-- Scrollable Grid Area -->
+<main class="flex-1 overflow-y-auto px-margin pb-32 no-scrollbar" style="scrollbar-width: none;">
+<div class="grid grid-cols-2 gap-gutter">
+<button class="interest-card h-24 bg-card rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95" onclick="toggleSelection(this)">
+<span class="text-3xl">🏏</span>
+<span class="font-body-lg text-body-lg font-bold">Cricket</span>
+</button>
+<button class="interest-card h-24 bg-card rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95" onclick="toggleSelection(this)">
+<span class="text-3xl">🎬</span>
+<span class="font-body-lg text-body-lg font-bold">Bollywood</span>
+</button>
+<button class="interest-card h-24 bg-cardAlt rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95 selected" onclick="toggleSelection(this)">
+<span class="text-3xl">😂</span>
+<span class="font-body-lg text-body-lg font-bold">Memes</span>
+</button>
+<button class="interest-card h-24 bg-card rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95" onclick="toggleSelection(this)">
+<span class="text-3xl">❤️</span>
+<span class="font-body-lg text-body-lg font-bold">Relationships</span>
+</button>
+<button class="interest-card h-24 bg-card rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95 selected" onclick="toggleSelection(this)">
+<span class="text-3xl">🧠</span>
+<span class="font-body-lg text-body-lg font-bold">Puzzles</span>
+</button>
+<button class="interest-card h-24 bg-cardAlt rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95 selected" onclick="toggleSelection(this)">
+<span class="text-3xl">🎵</span>
+<span class="font-body-lg text-body-lg font-bold">Music</span>
+</button>
+<button class="interest-card h-24 bg-card rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95" onclick="toggleSelection(this)">
+<span class="text-3xl">🍕</span>
+<span class="font-body-lg text-body-lg font-bold">Food</span>
+</button>
+<button class="interest-card h-24 bg-card rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95 selected" onclick="toggleSelection(this)">
+<span class="text-3xl">🔥</span>
+<span class="font-body-lg text-body-lg font-bold">Trending</span>
+</button>
+<button class="interest-card h-24 bg-cardAlt rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95" onclick="toggleSelection(this)">
+<span class="text-3xl">⚽</span>
+<span class="font-body-lg text-body-lg font-bold">Sports</span>
+</button>
+<button class="interest-card h-24 bg-card rounded-2xl border border-line flex flex-col items-center justify-center gap-2 active:scale-95 selected" onclick="toggleSelection(this)">
+<span class="text-3xl">🇮🇳</span>
+<span class="font-body-lg text-body-lg font-bold">India</span>
+</button>
+</div>
+</main>
+<!-- Bottom Fixed Action Area -->
+<div class="fixed bottom-0 left-0 w-full bg-gradient-to-t from-ink via-ink to-transparent pt-12 pb-8 px-margin z-50">
+<div class="flex flex-col items-center gap-md">
+<div class="font-stats text-stats text-primary-container bg-surface-container px-4 py-1 rounded-full border border-primary-container/30">
+<span id="selected-count">5</span> selected
+            </div>
+<button class="w-full h-14 bg-primary-container text-paper font-body-lg text-body-lg font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,77,141,0.3)]">
+                Build my feed <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<script>
+        function toggleSelection(element) {
+            element.classList.toggle('selected');
+            updateCount();
+        }
+
+        function updateCount() {
+            const count = document.querySelectorAll('.interest-card.selected').length;
+            document.getElementById('selected-count').textContent = count;
+        }
+    </script>
+</body></html>

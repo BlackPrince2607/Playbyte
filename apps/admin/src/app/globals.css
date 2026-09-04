@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-ink: #150e2b;
+  --color-card: #211540;
+  --color-card-alt: #2a1b4e;
+  --color-pink: #ff4d8d;
+  --color-pink-soft: #ffb1c4;
+  --color-lime: #c6ff3d;
+  --color-live: #57e15b;
+  --color-paper: #f5f0ff;
+  --color-lilac: #8f7fc0;
+  --color-line: rgba(245, 240, 255, 0.12);
+  --font-display: var(--font-space-grotesk);
+  --font-body: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}

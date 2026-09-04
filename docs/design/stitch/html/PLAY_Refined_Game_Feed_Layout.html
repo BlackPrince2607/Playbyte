@@ -1,0 +1,303 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PLAY - Home Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#bdf532",
+                        "secondary-fixed": "#bdf532",
+                        "surface-bright": "#463538",
+                        "surface": "#1d1013",
+                        "surface-container-low": "#26181b",
+                        "inverse-primary": "#b90a5a",
+                        "on-secondary-fixed": "#141f00",
+                        "primary-fixed": "#ffd9e0",
+                        "paper": "#F5F0FF",
+                        "surface-tint": "#ffb1c4",
+                        "on-primary-fixed": "#3f001a",
+                        "surface-container": "#2a1c1f",
+                        "primary-fixed-dim": "#ffb1c4",
+                        "surface-dim": "#1d1013",
+                        "tertiary-fixed-dim": "#57e15b",
+                        "surface-container-high": "#362629",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "cardAlt": "#2A1B4E",
+                        "secondary-fixed-dim": "#a2d801",
+                        "tertiary-fixed": "#75ff75",
+                        "card": "#211540",
+                        "outline-variant": "#594046",
+                        "on-tertiary": "#003908",
+                        "outline": "#a8898f",
+                        "ink": "#150E2B",
+                        "on-tertiary-container": "#003306",
+                        "on-secondary": "#263500",
+                        "on-background": "#f7dce1",
+                        "background": "#1d1013",
+                        "on-secondary-fixed-variant": "#384e00",
+                        "on-primary-container": "#5b0028",
+                        "surface-variant": "#413034",
+                        "surface-container-highest": "#413034",
+                        "on-tertiary-fixed-variant": "#00530f",
+                        "on-surface": "#f7dce1",
+                        "on-secondary-container": "#425a00",
+                        "lilac": "#8F7FC0",
+                        "primary-container": "#ff4d8d",
+                        "tertiary": "#57e15b",
+                        "primary": "#ffb1c4",
+                        "surface-container-lowest": "#170a0e",
+                        "secondary-container": "#a2d801",
+                        "on-tertiary-fixed": "#002203",
+                        "inverse-surface": "#f7dce1",
+                        "on-primary-fixed-variant": "#8f0043",
+                        "inverse-on-surface": "#3c2c30",
+                        "tertiary-container": "#00a92a",
+                        "on-primary": "#65002e",
+                        "line": "rgba(245, 240, 255, 0.12)",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#e1bec5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "margin": "20px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["inter"],
+                        "stats": ["jetbrainsMono"],
+                        "large-score": ["spaceGrotesk"],
+                        "hero-mobile": ["spaceGrotesk"],
+                        "game-question-mobile": ["spaceGrotesk"],
+                        "game-question": ["spaceGrotesk"],
+                        "micro": ["inter"],
+                        "metadata": ["inter"],
+                        "hero": ["spaceGrotesk"],
+                        "screen-title": ["spaceGrotesk"],
+                        "body-lg": ["inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "stats": ["24px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "large-score": ["72px", { "lineHeight": "1", "fontWeight": "700" }],
+                        "hero-mobile": ["40px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "game-question-mobile": ["30px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "game-question": ["42px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "micro": ["10px", { "lineHeight": "1.2", "fontWeight": "500" }],
+                        "metadata": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "hero": ["48px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "screen-title": ["34px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-stats { font-family: 'JetBrains Mono', monospace; }
+        .font-hero, .font-screen-title, .font-large-score, .font-game-question { font-family: 'Space Grotesk', sans-serif; }
+        
+        /* Hide scrollbar for the snap container */
+        .snap-y-container::-webkit-scrollbar {
+            display: none;
+        }
+        .snap-y-container {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-ink text-paper h-screen w-full overflow-hidden flex justify-center selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-gradient-to-b from-ink/90 to-transparent pb-md pt-sm px-margin">
+<div class="flex justify-between items-center w-full max-w-md mx-auto">
+<div class="flex items-center gap-sm">
+<img alt="User Profile Avatar" class="w-10 h-10 rounded-full border border-line object-cover" data-alt="A small, stylized profile avatar of a user in a futuristic, neon-lit gaming environment. High contrast, dark premium style with subtle pink or lime edge lighting. 3D rendered, highly detailed, vibrant colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrJNVnO3DwPNfW8cP8nCPn_5rxpxiTdT9ZYSZ_c6vL2lbajBcVxWMz4aiEddH7TNIu-c1b8wtbn3EHtDcHwH_pTAXC092gGRmv7NEULRGG0KONwpZ7Xkl23jBfttzu6SZyT5K4mnIiSikrxDW5bqQWH4M1YFZ0FbJ2A5wtQ7IJpBZOn2cj7Gdfaatsk67EUfvWr0GdZnb8RWfh2v6wsoqWqW_oCwsGgv0VA7lnVj-4BZNZjsUR9bM1nA">
+</div>
+<h1 class="font-screen-title text-screen-title font-bold text-primary dark:text-primary tracking-tighter">PLAY</h1>
+<div class="flex items-center gap-xs px-sm py-1 bg-cardAlt rounded-full border border-line text-body-sm font-body-sm font-bold text-paper">
+                7 <span class="text-primary-container">🔥</span>
+</div>
+</div>
+</header>
+<!-- Main Feed Container (Snap Scrolling) -->
+<main class="w-full h-full max-w-md mx-auto snap-y snap-mandatory snap-y-container overflow-y-scroll overflow-x-hidden relative">
+<!-- Game Card (Full Screen Snap Item) -->
+<section class="h-full w-full snap-start snap-always relative flex flex-col justify-end pb-24 pt-20 px-margin">
+<!-- Background Image overlay -->
+<div class="absolute inset-0 bg-cover bg-center opacity-30 z-0" data-alt="A dramatic, high-contrast background image for a cricket match prediction. Dark, moody stadium atmosphere with bright, volumetric stadium lights piercing through light fog. Hints of vibrant pink and lime green neon accents in the background to match the high-energy, internet-native aesthetic. Very subtle, abstract shapes suggesting motion." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADdlqKscuvKupob1YIFjgbSkbT8WAfjLp-oRp9H5dJFlexSB0tRZCEgX6LbSnrZLKsTQdORQZRcHWdsMofi79ulW0qlHYxRK3aTAZIPuLREgR9uGpXbYSS6IVCGHM2CHp0MQmredo7aVCUjsyUxWW0LpkdUG7esxpOHyowDmF3xXEi38KWl40O1vWxsIdHrPVn9t8uHsYcgWl2MEYZuvmodGtEw_ftUSOrTS9gdEmbH4U3f-bZbEz-Tw')"></div>
+<!-- Gradient to ensure text readability -->
+<div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-transparent z-0"></div>
+<!-- Content Area -->
+<div class="relative z-10 w-full flex flex-col gap-lg h-full justify-between">
+<!-- Top Section: Metadata -->
+<div class="flex flex-col gap-sm mt-4">
+<div class="flex items-center gap-sm">
+<span class="px-sm py-xs bg-cardAlt rounded-full border border-line font-metadata text-metadata text-lilac uppercase tracking-wider flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">sports_cricket</span>
+                            CRICKET PREDICTION
+                        </span>
+<span class="px-sm py-xs bg-secondary/10 rounded-full text-secondary font-stats text-micro flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                            12.4K playing now
+                        </span>
+</div>
+</div>
+<!-- Middle Section: Question & Interaction -->
+<div class="flex flex-col gap-md items-center text-center mb-xl mt-lg">
+<h2 class="font-game-question-mobile text-game-question-mobile md:font-game-question md:text-game-question text-paper tracking-tight drop-shadow-md px-4">
+                        "Who wins tonight?"
+                    </h2>
+<!-- Answer Options -->
+<div class="flex flex-col gap-sm w-full mt-lg">
+<button class="w-full bg-cardAlt border border-line rounded-[14px] py-md px-margin text-body-lg font-body-lg font-bold text-paper hover:border-secondary hover:bg-card transition-all duration-200 flex justify-between items-center group relative overflow-hidden">
+<span class="relative z-10 flex items-center gap-sm">
+<span class="text-2xl">🇮🇳</span> INDIA
+                            </span>
+<!-- Progress Bar Simulation -->
+<div class="absolute left-0 top-0 bottom-0 bg-primary-container/20 w-[63%] z-0 rounded-l-[14px] opacity-0 group-focus:opacity-100 transition-opacity"></div>
+<span class="font-stats text-body-sm relative z-10 opacity-0 group-focus:opacity-100 text-primary-fixed">63%</span>
+</button>
+<button class="w-full bg-cardAlt border border-line rounded-[14px] py-md px-margin text-body-lg font-body-lg font-bold text-paper hover:border-primary-container hover:bg-card transition-all duration-200 flex justify-between items-center group relative overflow-hidden">
+<span class="relative z-10 flex items-center gap-sm">
+<span class="text-2xl">🇦🇺</span> AUSTRALIA
+                            </span>
+<!-- Progress Bar Simulation -->
+<div class="absolute left-0 top-0 bottom-0 bg-secondary/20 w-[37%] z-0 rounded-l-[14px] opacity-0 group-focus:opacity-100 transition-opacity"></div>
+<span class="font-stats text-body-sm relative z-10 opacity-0 group-focus:opacity-100 text-secondary">37%</span>
+</button>
+</div>
+<!-- Post-interaction Results (Hidden by default, shown for mockup context) -->
+<p class="font-metadata text-metadata text-lilac mt-sm hidden">63% India • 37% Australia</p>
+</div>
+<!-- Bottom Section: Social Context -->
+
+</div>
+<!-- NavigationDrawer (Vertical Interaction Rail) -->
+<div class="flex flex-col gap-sm pt-md pb-4 items-start px-margin relative z-10">
+<div class="flex items-center -space-x-2">
+<img alt="Rahul" class="w-8 h-8 rounded-full border-2 border-ink object-cover z-20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAk_imfDxlZpBysdv95hPMaMMGVnGGviS-XRnGgyjhnSeZ5eP6ivFVVD3MJJ4Md-kBdXm_KrEDP3pq7F13IMHR3b2W9G_HL9-DH0DTvFhoLC7nYFD1RtHgOv6b15fcU_9SGKEAGcA-THETgYE4wU0wd3lb5EpqnmjexbW3fphuLPD14GccocpqHbiAtBEYT5TSbNXc6ihzyCJB5D53QMvP7GDc156F9W9dFhQ5-VX0_jQW4jTBLW7ZH9w">
+<img alt="Neha" class="w-8 h-8 rounded-full border-2 border-ink object-cover z-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI9HDF6ymWKI28ZohCmYv4YA4kF44e8xmNlTnWLPGb642nDvfm3-lGC-TMz1WofLeHETMivMo5Gi78Y99totR5mGMeOexCKMAjO72dXnhnyXeMJBHG2aRo4zhV4NSTB8tkm7Dilfhr_Jnb5u4GutJTiQvcT0HKjCKQMJPvo1ZlqWcqYD-fu1ws-G0zguaCrM8tJb_RQbpQwlTB6lCMYT2Dv3hN8E45WvfBufvq_CEr1f7TriJ1rrHuvA">
+<div class="w-8 h-8 rounded-full border-2 border-ink bg-cardAlt flex items-center justify-center text-micro font-stats text-secondary z-0">
+                            +12k
+                        </div>
+</div>
+<p class="font-body-sm text-body-sm text-paper">
+<span class="font-bold">Rahul, Neha</span> + 12.4K people are playing
+                    </p>
+
+</div><div class="flex justify-around items-center w-full py-md bg-ink/40 backdrop-blur-sm border-t border-line mt-lg">
+<div class="flex flex-col items-center gap-xs">
+<button class="w-10 h-10 bg-cardAlt rounded-full border border-line flex items-center justify-center text-paper">
+<span class="material-symbols-outlined text-body-lg" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+<span class="font-stats text-micro text-paper">12.4K</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<button class="w-10 h-10 bg-cardAlt rounded-full border border-line flex items-center justify-center text-paper">
+<span class="material-symbols-outlined text-body-lg" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+</button>
+<span class="font-stats text-micro text-paper">832</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<button class="w-10 h-10 bg-cardAlt rounded-full border border-line flex items-center justify-center text-paper">
+<span class="material-symbols-outlined text-body-lg">share</span>
+</button>
+<span class="font-metadata text-micro text-lilac">Share</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<button class="w-10 h-10 bg-cardAlt rounded-full border border-line flex items-center justify-center text-paper">
+<span class="material-symbols-outlined text-body-lg">bolt</span>
+</button>
+<span class="font-metadata text-micro text-lilac">Challenge</span>
+</div>
+</div><div class="flex justify-center w-full mt-sm relative z-10">
+    <p class="font-metadata text-metadata text-lilac flex items-center gap-xs">
+        <span class="material-symbols-outlined text-xs">south</span>
+        Swipe for next game
+    </p>
+</div></section>
+<!-- Placeholder for next game to demonstrate scrolling -->
+<section class="h-full w-full snap-start snap-always relative flex flex-col justify-center items-center bg-card">
+<span class="text-lilac font-metadata text-metadata animate-pulse">Loading next game...</span>
+<div class="flex justify-around items-center w-full py-md bg-ink/40 backdrop-blur-sm border-t border-line mt-lg">
+<div class="flex flex-col items-center gap-xs">
+<button class="w-10 h-10 bg-cardAlt rounded-full border border-line flex items-center justify-center text-paper">
+<span class="material-symbols-outlined text-body-lg" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+<span class="font-stats text-micro text-paper">12.4K</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<button class="w-10 h-10 bg-cardAlt rounded-full border border-line flex items-center justify-center text-paper">
+<span class="material-symbols-outlined text-body-lg" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+</button>
+<span class="font-stats text-micro text-paper">832</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<button class="w-10 h-10 bg-cardAlt rounded-full border border-line flex items-center justify-center text-paper">
+<span class="material-symbols-outlined text-body-lg">share</span>
+</button>
+<span class="font-metadata text-micro text-lilac">Share</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<button class="w-10 h-10 bg-cardAlt rounded-full border border-line flex items-center justify-center text-paper">
+<span class="material-symbols-outlined text-body-lg">bolt</span>
+</button>
+<span class="font-metadata text-micro text-lilac">Challenge</span>
+</div>
+</div></section>
+</main>
+<!-- BottomNavBar -->
+<!-- Displayed on mobile, hidden on md. Assuming Top Level Destination "Feed" -->
+<nav class="md:hidden fixed bottom-0 w-full h-16 flex justify-around items-center px-gutter pb-safe bg-surface dark:bg-surface border-t border-line rounded-t-xl z-50">
+<!-- Feed (Active) -->
+<a class="flex flex-col items-center justify-center bg-cardAlt text-secondary rounded-full p-2 transition-all scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">style</span>
+<span class="font-micro text-micro mt-1">Feed</span>
+</a>
+<!-- Compete -->
+<a class="flex flex-col items-center justify-center text-lilac p-2 opacity-70 hover:text-secondary hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined">emoji_events</span>
+<span class="font-micro text-micro mt-1">Compete</span>
+</a>
+<!-- Friends -->
+<a class="flex flex-col items-center justify-center text-lilac p-2 opacity-70 hover:text-secondary hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-micro text-micro mt-1">Friends</span>
+</a>
+<!-- Vault -->
+<a class="flex flex-col items-center justify-center text-lilac p-2 opacity-70 hover:text-secondary hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-micro text-micro mt-1">Vault</span>
+</a>
+</nav>
+
+
+
+
+
+</body></html>

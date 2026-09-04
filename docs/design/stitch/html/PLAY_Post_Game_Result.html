@@ -1,0 +1,229 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PLAY - Post Game Result</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-primary": "#b90a5a",
+                        "surface-container-high": "#362629",
+                        "on-tertiary-container": "#003306",
+                        "paper": "#F5F0FF",
+                        "on-surface-variant": "#e1bec5",
+                        "secondary-container": "#a2d801",
+                        "background": "#1d1013",
+                        "on-primary": "#65002e",
+                        "outline": "#a8898f",
+                        "surface-container": "#2a1c1f",
+                        "on-secondary-fixed-variant": "#384e00",
+                        "card": "#211540",
+                        "surface-bright": "#463538",
+                        "on-secondary-fixed": "#141f00",
+                        "secondary-fixed-dim": "#a2d801",
+                        "inverse-surface": "#f7dce1",
+                        "on-primary-fixed-variant": "#8f0043",
+                        "surface-dim": "#1d1013",
+                        "primary-fixed": "#ffd9e0",
+                        "on-primary-fixed": "#3f001a",
+                        "tertiary": "#57e15b",
+                        "on-secondary": "#263500",
+                        "surface": "#1d1013",
+                        "on-primary-container": "#5b0028",
+                        "on-tertiary": "#003908",
+                        "line": "rgba(245, 240, 255, 0.12)",
+                        "lilac": "#8F7FC0",
+                        "on-error-container": "#ffdad6",
+                        "outline-variant": "#594046",
+                        "secondary": "#bdf532",
+                        "tertiary-fixed-dim": "#57e15b",
+                        "cardAlt": "#2A1B4E",
+                        "primary-container": "#ff4d8d",
+                        "surface-container-low": "#26181b",
+                        "on-surface": "#f7dce1",
+                        "primary-fixed-dim": "#ffb1c4",
+                        "ink": "#150E2B",
+                        "tertiary-container": "#00a92a",
+                        "error-container": "#93000a",
+                        "on-background": "#f7dce1",
+                        "surface-container-lowest": "#170a0e",
+                        "on-tertiary-fixed": "#002203",
+                        "primary": "#ffb1c4",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#00530f",
+                        "surface-variant": "#413034",
+                        "inverse-on-surface": "#3c2c30",
+                        "surface-tint": "#ffb1c4",
+                        "tertiary-fixed": "#75ff75",
+                        "on-secondary-container": "#425a00",
+                        "secondary-fixed": "#bdf532",
+                        "surface-container-highest": "#413034",
+                        "on-error": "#690005"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "xl": "32px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "margin": "20px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "gutter": "16px"
+                    },
+                    fontFamily: {
+                        "game-question": ["spaceGrotesk"],
+                        "game-question-mobile": ["spaceGrotesk"],
+                        "large-score": ["spaceGrotesk"],
+                        "hero": ["spaceGrotesk"],
+                        "stats": ["jetbrainsMono"],
+                        "micro": ["inter"],
+                        "hero-mobile": ["spaceGrotesk"],
+                        "metadata": ["inter"],
+                        "screen-title": ["spaceGrotesk"],
+                        "body-lg": ["inter"],
+                        "body-sm": ["inter"]
+                    },
+                    fontSize: {
+                        "game-question": ["42px", { lineHeight: "1.1", fontWeight: "700" }],
+                        "game-question-mobile": ["30px", { lineHeight: "1.1", fontWeight: "700" }],
+                        "large-score": ["72px", { lineHeight: "1", fontWeight: "700" }],
+                        "hero": ["48px", { lineHeight: "1.1", fontWeight: "700" }],
+                        "stats": ["24px", { lineHeight: "1.4", fontWeight: "500" }],
+                        "micro": ["10px", { lineHeight: "1.2", fontWeight: "500" }],
+                        "hero-mobile": ["40px", { lineHeight: "1.1", fontWeight: "700" }],
+                        "metadata": ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+                        "screen-title": ["34px", { lineHeight: "1.2", fontWeight: "700" }],
+                        "body-lg": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+                        "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        @keyframes scaleIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fillBar {
+            0% { width: 0%; }
+            100% { width: var(--target-width); }
+        }
+        .animate-scale-in { animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; opacity: 0; }
+        .animate-fill-bar { animation: fillBar 1s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        
+        .glass-panel {
+            background: rgba(33, 21, 64, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen font-body-lg antialiased selection:bg-primary-container selection:text-paper flex flex-col items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 pointer-events-none opacity-20" style="background-image: radial-gradient(circle at 50% 0%, #ff4d8d 0%, transparent 70%);"></div>
+<main class="w-full max-w-md w-full px-margin py-xl flex flex-col gap-lg z-10">
+<header class="text-center animate-scale-in">
+<h1 class="font-hero-mobile text-hero-mobile text-paper mb-xs">You got it right! 🎉</h1>
+<p class="font-metadata text-metadata text-lilac uppercase tracking-widest">Question Complete</p>
+</header>
+<section class="text-center flex flex-col items-center justify-center animate-slide-up delay-100">
+<div class="relative">
+<span class="font-large-score text-large-score text-secondary drop-shadow-[0_0_15px_rgba(189,245,50,0.3)]">920</span>
+<div class="absolute -top-4 -right-8 bg-cardAlt border border-line rounded-full px-2 py-1 flex items-center gap-1 transform rotate-6">
+<span class="material-symbols-outlined text-[14px] text-tertiary">arrow_upward</span>
+<span class="font-micro text-micro text-paper">+92</span>
+</div>
+</div>
+<p class="font-body-lg text-body-lg text-lilac mt-xs">Top 16% of players</p>
+</section>
+<section class="grid grid-cols-3 gap-sm animate-slide-up delay-200">
+<div class="bg-cardAlt border border-line rounded-xl p-sm flex flex-col items-center justify-center gap-1">
+<span class="font-stats text-[18px] text-paper">+20</span>
+<span class="font-micro text-micro text-lilac uppercase tracking-wide">XP Earned</span>
+</div>
+<div class="bg-cardAlt border border-line rounded-xl p-sm flex flex-col items-center justify-center gap-1">
+<span class="font-stats text-[18px] text-paper">#245</span>
+<span class="font-micro text-micro text-lilac uppercase tracking-wide">India Rank</span>
+</div>
+<div class="bg-cardAlt border border-line rounded-xl p-sm flex flex-col items-center justify-center gap-1 text-center">
+<span class="font-stats text-[18px] text-tertiary">84%</span>
+<span class="font-micro text-micro text-lilac uppercase tracking-wide leading-tight">Better Than<br>Players</span>
+</div>
+</section>
+<section class="glass-panel border border-line rounded-xl p-md flex flex-col gap-sm animate-slide-up delay-300">
+<h2 class="font-metadata text-metadata text-lilac uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">bar_chart</span>
+                What everyone chose
+            </h2>
+<div class="flex flex-col gap-2">
+<div class="relative w-full h-10 bg-ink rounded-lg overflow-hidden border border-line">
+<div class="absolute top-0 left-0 h-full bg-primary-container animate-fill-bar origin-left" style="--target-width: 67%;"></div>
+<div class="absolute inset-0 flex justify-between items-center px-sm z-10 pointer-events-none">
+<span class="font-body-sm font-bold text-paper drop-shadow-md">Jaipur</span>
+<span class="font-stats text-[16px] text-paper drop-shadow-md">67%</span>
+</div>
+</div>
+<div class="relative w-full h-10 bg-ink rounded-lg overflow-hidden border border-line">
+<div class="absolute top-0 left-0 h-full bg-surface-variant animate-fill-bar origin-left" style="--target-width: 21%;"></div>
+<div class="absolute inset-0 flex justify-between items-center px-sm z-10 pointer-events-none">
+<span class="font-body-sm text-on-surface-variant">Jodhpur</span>
+<span class="font-stats text-[16px] text-on-surface-variant">21%</span>
+</div>
+</div>
+<div class="relative w-full h-10 bg-ink rounded-lg overflow-hidden border border-line">
+<div class="absolute top-0 left-0 h-full bg-surface-variant animate-fill-bar origin-left" style="--target-width: 12%;"></div>
+<div class="absolute inset-0 flex justify-between items-center px-sm z-10 pointer-events-none">
+<span class="font-body-sm text-on-surface-variant">Udaipur</span>
+<span class="font-stats text-[16px] text-on-surface-variant">12%</span>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-card border border-primary-container/30 rounded-xl p-md flex items-center gap-md animate-slide-up delay-400 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-r from-primary-container/10 to-transparent opacity-50"></div>
+<div class="relative z-10 w-12 h-12 rounded-full border-2 border-primary-container overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A highly detailed close up portrait of a young competitive gamer with neon pink rim lighting against a dark moody background, high contrast, sharp focus, vibrant aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSmMDtMOgIAXFjHjZTutuFZudloOyhTMoTj-jjMa8vzVtum3Dlk9uH4HB364PDezD6UBVLPTsod-t4qQsWzjDvtiUq9br4vvPjO6DfjfHlpcU4FxWnb4pt12dUYnIiyhIBYaU9sBwVeIX8fLSa5PqSlSpeFLLY9EnnS_WQIJeF7-4p61ezeUdc6Md2JdrAxarJSUexcr44f5U9lPvub_EQe8Ep8D830nCKKRRtP_DqSswNhOsWjPpjKQ">
+</div>
+<div class="relative z-10 flex-1">
+<p class="font-body-sm text-paper">
+<span class="font-bold text-primary-container">Rahul</span> scored <span class="font-stats text-[16px] text-secondary">980</span>.
+                </p>
+<p class="font-body-sm text-lilac">Can you beat him?</p>
+</div>
+<button class="relative z-10 bg-primary-container text-paper font-body-sm font-bold rounded-lg px-md py-2 hover:brightness-110 active:scale-95 transition-all">
+                Challenge
+            </button>
+</section>
+<section class="flex flex-col gap-sm mt-auto pt-sm animate-slide-up delay-400">
+<button class="w-full bg-transparent border border-line hover:bg-surface-variant/50 text-paper font-body-lg font-bold rounded-xl py-sm px-md flex items-center justify-center gap-2 transition-colors active:scale-95">
+                Next game
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</section>
+</main>
+</body></html>

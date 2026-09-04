@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PLAY - Your game is waiting.</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Space+Grotesk:wght@400;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error": "#690005",
+                      "on-secondary-fixed": "#141f00",
+                      "lilac": "#8F7FC0",
+                      "background": "#1d1013",
+                      "primary": "#ffb1c4",
+                      "primary-fixed-dim": "#ffb1c4",
+                      "tertiary-fixed-dim": "#57e15b",
+                      "surface-container": "#2a1c1f",
+                      "surface-tint": "#ffb1c4",
+                      "inverse-surface": "#f7dce1",
+                      "secondary-fixed-dim": "#a2d801",
+                      "card": "#211540",
+                      "on-secondary-fixed-variant": "#384e00",
+                      "on-secondary-container": "#425a00",
+                      "surface-variant": "#413034",
+                      "on-secondary": "#263500",
+                      "on-tertiary": "#003908",
+                      "on-primary-fixed-variant": "#8f0043",
+                      "paper": "#F5F0FF",
+                      "ink": "#150E2B",
+                      "surface": "#1d1013",
+                      "secondary": "#bdf532",
+                      "on-tertiary-fixed-variant": "#00530f",
+                      "outline-variant": "#594046",
+                      "surface-container-highest": "#413034",
+                      "tertiary-fixed": "#75ff75",
+                      "on-background": "#f7dce1",
+                      "secondary-container": "#a2d801",
+                      "primary-container": "#ff4d8d",
+                      "on-tertiary-container": "#003306",
+                      "surface-container-high": "#362629",
+                      "on-primary": "#65002e",
+                      "error-container": "#93000a",
+                      "error": "#ffb4ab",
+                      "on-surface": "#f7dce1",
+                      "inverse-on-surface": "#3c2c30",
+                      "primary-fixed": "#ffd9e0",
+                      "surface-container-low": "#26181b",
+                      "on-tertiary-fixed": "#002203",
+                      "on-primary-fixed": "#3f001a",
+                      "cardAlt": "#2A1B4E",
+                      "inverse-primary": "#b90a5a",
+                      "surface-container-lowest": "#170a0e",
+                      "surface-dim": "#1d1013",
+                      "tertiary": "#57e15b",
+                      "on-error-container": "#ffdad6",
+                      "on-surface-variant": "#e1bec5",
+                      "tertiary-container": "#00a92a",
+                      "outline": "#a8898f",
+                      "on-primary-container": "#5b0028",
+                      "secondary-fixed": "#bdf532",
+                      "surface-bright": "#463538",
+                      "line": "rgba(245, 240, 255, 0.12)"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "gutter": "16px",
+                      "sm": "8px",
+                      "margin": "20px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "xl": "32px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "inter"
+                      ],
+                      "game-question": [
+                              "spaceGrotesk"
+                      ],
+                      "game-question-mobile": [
+                              "spaceGrotesk"
+                      ],
+                      "hero": [
+                              "spaceGrotesk"
+                      ],
+                      "screen-title": [
+                              "spaceGrotesk"
+                      ],
+                      "micro": [
+                              "inter"
+                      ],
+                      "hero-mobile": [
+                              "spaceGrotesk"
+                      ],
+                      "stats": [
+                              "jetbrainsMono"
+                      ],
+                      "metadata": [
+                              "inter"
+                      ],
+                      "body-sm": [
+                              "inter"
+                      ],
+                      "large-score": [
+                              "spaceGrotesk"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "game-question": [
+                              "42px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "game-question-mobile": [
+                              "30px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "hero": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "screen-title": [
+                              "34px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "micro": [
+                              "10px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "hero-mobile": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "stats": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "metadata": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "large-score": [
+                              "72px",
+                              {
+                                      "lineHeight": "1",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: theme('colors.ink');
+            color: theme('colors.on-background');
+        }
+        /* Custom scrollbar for horizontal lists */
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="antialiased pb-24 md:pb-0 pt-16 md:pt-0">
+<!-- TopAppBar (Mobile) -->
+<header class="md:hidden fixed top-0 w-full z-50 flex justify-between items-center h-16 px-margin bg-background/80 backdrop-blur-md border-b border-line">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-line">
+<img class="w-full h-full object-cover" data-alt="A small circular avatar placeholder image showing a generic stylized user silhouette in deep nocturnal ink tones with a subtle pink glow, matching the high-energy gaming aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJzMr45pvgZIg5fxYSikvfupNseTBLA20Qb0hieti9eaxg8Kt1DAydgoY939qYo4wGJlhUzh2AEilAn2qWPDKmFBSiuMm8-NSXIPI7XIAK-ifpJoRYq7YF8D179WLVH0C-bdgirDAUse1-GANkQPLlnHbYwikEsZyiIASX1z_pT6GHvgkj5nd-DWfCbbIYqemunSnCMuKA_iXPVueKbQFesr-1Co9xHNbMS_RnzW2fjSxQYjlkNbtMbg"/>
+</div>
+<h1 class="font-hero-mobile text-hero-mobile text-primary tracking-tighter italic">PLAY</h1>
+<button class="w-8 h-8 flex items-center justify-center text-primary active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</button>
+</header>
+<!-- TopAppBar (Desktop / Web) -->
+<header class="hidden md:flex fixed top-0 w-full z-50 justify-between items-center h-16 px-margin bg-background/80 backdrop-blur-md border-b border-line">
+<h1 class="font-hero-mobile text-hero-mobile text-primary tracking-tighter italic">PLAY</h1>
+<nav class="flex gap-lg">
+<a class="text-primary font-bold text-body-lg hover:opacity-80 transition-opacity flex items-center gap-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">sports_esports</span> Play
+            </a>
+<a class="text-on-surface-variant text-body-lg hover:opacity-80 transition-opacity flex items-center gap-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span> Friends
+            </a>
+<a class="text-on-surface-variant text-body-lg hover:opacity-80 transition-opacity flex items-center gap-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">leaderboard</span> Rank
+            </a>
+<a class="text-on-surface-variant text-body-lg hover:opacity-80 transition-opacity flex items-center gap-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span> Profile
+            </a>
+</nav>
+<div class="flex items-center gap-sm">
+<button class="w-8 h-8 flex items-center justify-center text-primary hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-line">
+<img class="w-full h-full object-cover" data-alt="A small circular avatar placeholder image showing a generic stylized user silhouette in deep nocturnal ink tones with a subtle pink glow, matching the high-energy gaming aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnAkGLQqniZzxX_zU1LJVEIJtlY9AF8ehfHPKb-Fo9iMItX3rxv67lp632PcmxhIqiVS6hZ025IFWlvXtNrn8fule7vwJnlxWpctwD64HQY7SGRS68bxDlNZXkD6CZBwLVKbiOCyeHojpx9kP08YxaqYN5LWOM8WuBs7eR1uA71jNEDT9K9NiR_GjA9iyyApJKxnRGJ9rb_Y1BSM9b5JbzVP9vWHduyQi66Z1SC0tk-eoEfeHuyp4CaA"/>
+</div>
+</div>
+</header>
+<main class="md:pt-24 max-w-7xl mx-auto px-margin md:px-lg space-y-xl">
+<!-- Hero Section -->
+<section class="text-center md:text-left py-md">
+<h2 class="font-screen-title text-screen-title-mobile md:text-screen-title mb-sm">Your game is waiting.</h2>
+<p class="font-stats text-stats text-primary-container">8,421 <span class="font-body-lg text-body-lg text-lilac font-normal">people are already playing.</span></p>
+</section>
+<!-- Live Momentum Scroll -->
+<section>
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-body-lg text-body-lg text-paper font-bold uppercase tracking-widest text-sm">Live Now</h3>
+<span class="flex items-center gap-xs text-tertiary font-stats text-stats text-sm"><span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">fiber_manual_record</span> Global Feed</span>
+</div>
+<div class="flex overflow-x-auto hide-scroll gap-md snap-x pb-sm">
+<!-- Game Card 1 -->
+<div class="snap-center shrink-0 w-[280px] md:w-[320px] bg-card rounded-[24px] border border-line overflow-hidden relative group cursor-pointer hover:border-primary transition-colors">
+<div class="h-40 bg-cardAlt relative">
+<div class="absolute inset-0 bg-cover bg-center opacity-70 group-hover:opacity-100 transition-opacity" data-alt="Vibrant, high-contrast digital art for a trivia game, featuring floating neon geometric shapes in bright pink and lime against a deep, nocturnal ink background. A stylized question mark glows intensely in the center. The mood is energetic, modern, and competitive." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuClf59FfoOMNindYPRcJbQVNkGTWBgYXri0foL4sHSBkBJ0EfyZKpq58wwAXdgc9GNaB8p9NGRc54Zrr4N_JtPmTuTh3NvpelFLuYYgJRRKhxItsYWmkCIs5q7Pjh0tns1e20kWoi11T8ZZVutJFhuOTFUO7nmkAoS-TI22Ke8XezKVIIg2B0xeHfAPselKjZEWkZoGYdevh5t5NrIhD6FeZUxB8g46wdwpX6D9oUehpujqVS9dqBn1gA')"></div>
+<div class="absolute top-sm right-sm bg-tertiary text-ink px-3 py-1 rounded-full font-stats text-micro flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">visibility</span> 2.4K
+                        </div>
+</div>
+<div class="p-md">
+<h4 class="font-game-question text-game-question-mobile text-paper mb-xs">TRIVIA</h4>
+<p class="font-metadata text-metadata text-lilac line-clamp-2 mb-md">Quick-fire general knowledge. 10 questions. Winner takes all.</p>
+<button class="w-full bg-primary text-paper font-body-lg text-body-lg font-bold py-2 rounded-[14px] hover:bg-primary-container transition-colors active:scale-95 flex justify-center items-center gap-2">
+                            Join Game <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Game Card 2 -->
+<div class="snap-center shrink-0 w-[280px] md:w-[320px] bg-card rounded-[24px] border border-line overflow-hidden relative group cursor-pointer hover:border-tertiary transition-colors">
+<div class="h-40 bg-cardAlt relative">
+<div class="absolute inset-0 bg-cover bg-center opacity-70 group-hover:opacity-100 transition-opacity" data-alt="High-speed cybernetic racing game art, showcasing neon green speed lines blurring into a deep black background. A stylized futuristic vehicle silhouette is barely visible in the motion blur. The mood is adrenaline-fueled, fast-paced, and technologically advanced." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD5_8xZBinCxmSuaxAY5mg-U9Tudz6XOBkI5z95Uzc8XUVurJiUZJ7snWDJKUWCVdv-hK57nRLlxtbO9xSKgRvp3SpQe8loFhZ227Fe_48IyN8iAYvluHxYKlSgh-cm0OfRxwU-7Kus-TihgKOvee-eNNgU8CR0dvnaucQTQ4GIjY8jvW6Xf-Qf32J6zjAPs2RaFjIdKz2_ms8ThXj3f1P0Nwa3FkXKlI2s4HQfTFDT6v4atx9oi4uXZw')"></div>
+<div class="absolute top-sm right-sm bg-tertiary text-ink px-3 py-1 rounded-full font-stats text-micro flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">visibility</span> 1.1K
+                        </div>
+</div>
+<div class="p-md">
+<h4 class="font-game-question text-game-question-mobile text-paper mb-xs">CYBER SPRINT</h4>
+<p class="font-metadata text-metadata text-lilac line-clamp-2 mb-md">Test your reaction time in the neon grid. Fast paced.</p>
+<button class="w-full bg-tertiary text-ink font-body-lg text-body-lg font-bold py-2 rounded-[14px] hover:bg-tertiary-fixed transition-colors active:scale-95 flex justify-center items-center gap-2">
+                            Join Game <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Game Card 3 -->
+<div class="snap-center shrink-0 w-[280px] md:w-[320px] bg-card rounded-[24px] border border-line overflow-hidden relative group cursor-pointer hover:border-secondary transition-colors">
+<div class="h-40 bg-cardAlt relative">
+<div class="absolute inset-0 bg-cover bg-center opacity-70 group-hover:opacity-100 transition-opacity" data-alt="Abstract digital puzzle game art featuring glowing interlocking blocks in vivid yellow and deep purple hues floating in a dark, atmospheric void. Soft ambient light highlights the edges of the shapes. The mood is cerebral, mysterious, and modern." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB5j2Rn8OHXID27PsGbD3mR7jrReY1bsvoddj56ret0GAvyankC22KpJudyqw_ApQijzy3J6KOHtIzrBhgFaYnbLGQHV-B2I3BahfzezupPyEmeKYj2lsRYbOR2ap4uP4Qde3hmgFGkm402lHPCeLHjRRDO9qsjPN2_BFV4DHZ34s-T_u9T63bGv3f3hshDhJ6RBOsL5Co8MZz2rQaCOs1pbqBuQRuaGNJ6gtZnWYSDZaQ68ZGlzranIA')"></div>
+<div class="absolute top-sm right-sm bg-tertiary text-ink px-3 py-1 rounded-full font-stats text-micro flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">visibility</span> 890
+                        </div>
+</div>
+<div class="p-md">
+<h4 class="font-game-question text-game-question-mobile text-paper mb-xs">GRIDLOCK</h4>
+<p class="font-metadata text-metadata text-lilac line-clamp-2 mb-md">Spatial reasoning puzzles. Only 5% solve the final tier.</p>
+<button class="w-full bg-secondary text-ink font-body-lg text-body-lg font-bold py-2 rounded-[14px] hover:bg-secondary-fixed transition-colors active:scale-95 flex justify-center items-center gap-2">
+                            Join Game <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid: Trending & Social CTA -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Trending Challenges -->
+<div class="md:col-span-2 bg-card border border-line rounded-[24px] p-md md:p-lg flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-10 -top-10 w-40 h-40 bg-primary opacity-10 blur-3xl rounded-full pointer-events-none"></div>
+<h3 class="text-body-lg text-paper font-bold mb-md flex items-center gap-sm font-game-question">
+<span class="material-symbols-outlined text-primary">local_fire_department</span> Trending Challenges
+                </h3>
+<div class="space-y-sm z-10">
+<div class="bg-cardAlt border border-line rounded-lg p-sm flex items-center justify-between hover:border-primary cursor-pointer transition-colors">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 bg-primary/20 rounded-md flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">target</span>
+</div>
+<div>
+<h4 class="font-body-sm text-body-sm text-paper font-bold">Perfect Score Club</h4>
+<p class="font-metadata text-metadata text-lilac">Trivia • 150 players currently attempting</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-lilac">chevron_right</span>
+</div>
+<div class="bg-cardAlt border border-line rounded-lg p-sm flex items-center justify-between hover:border-tertiary cursor-pointer transition-colors">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 bg-tertiary/20 rounded-md flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">timer</span>
+</div>
+<div>
+<h4 class="font-body-sm text-body-sm text-paper font-bold">Sub-10s Sprint</h4>
+<p class="font-metadata text-metadata text-lilac">Cyber Sprint • 89 players succeeded today</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-lilac">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Social CTA -->
+<div class="bg-cardAlt border border-line rounded-[24px] p-md md:p-lg flex flex-col justify-center text-center relative overflow-hidden">
+<div class="absolute -left-10 -bottom-10 w-32 h-32 bg-secondary opacity-10 blur-3xl rounded-full pointer-events-none"></div>
+<div class="mb-md z-10">
+<span class="material-symbols-outlined text-4xl text-primary mb-sm" style="font-variation-settings: 'FILL' 1;">group_add</span>
+<h3 class="text-xl text-paper mb-xs font-game-question">Make it more fun with friends</h3>
+<p class="font-body-sm text-body-sm text-lilac">Challenge your crew and climb the leaderboards together.</p>
+</div>
+<div class="space-y-sm z-10 w-full">
+<button class="w-full bg-primary text-paper font-body-lg text-body-lg font-bold py-3 rounded-[14px] hover:bg-primary-container transition-colors active:scale-95 shadow-md border border-transparent hover:border-paper/20">
+                        Invite friends
+                    </button>
+<button class="w-full bg-transparent border border-line text-paper font-body-lg text-body-lg font-bold py-3 rounded-[14px] hover:bg-surface-variant transition-colors active:scale-95">
+                        Find friends
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl border-t border-line flex justify-around items-center h-20 px-2 pb-safe bg-surface-container/95 backdrop-blur-lg">
+<a class="flex flex-col items-center justify-center text-primary font-bold active:scale-90 transition-transform duration-150 hover:bg-cardAlt rounded-lg p-2 w-16" href="#">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
+<span class="font-metadata text-metadata mt-1">Play</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac active:scale-90 transition-transform duration-150 hover:bg-cardAlt rounded-lg p-2 w-16" href="#">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-metadata text-metadata mt-1">Friends</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac active:scale-90 transition-transform duration-150 hover:bg-cardAlt rounded-lg p-2 w-16" href="#">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">leaderboard</span>
+<span class="font-metadata text-metadata mt-1">Rank</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac active:scale-90 transition-transform duration-150 hover:bg-cardAlt rounded-lg p-2 w-16" href="#">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-metadata text-metadata mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,16 @@
+{
+  "name": "playbyte",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build",
+    "admin:dev": "pnpm --filter @playbyte/admin dev",
+    "mobile:start": "pnpm --filter @playbyte/mobile start"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

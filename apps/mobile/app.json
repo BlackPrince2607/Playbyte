@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "PLAY",
+    "slug": "playbyte",
+    "version": "1.0.0",
+    "scheme": "playbyte",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#150E2B"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.playbyte.mobile",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Share your PLAY moment results."
+      }
+    },
+    "android": {
+      "package": "app.playbyte.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#150E2B",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    }
+  }
+}

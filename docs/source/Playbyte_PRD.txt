@@ -1,0 +1,354 @@
+﻿
+PLAYBYTE
+Product Requirements Document
+The world is playing. Join in.
+Draft v1.0  ·  August 11, 2026  ·  Owner: Product Management
+
+Document Control
+Field
+Detail
+Product
+Playbyte — the swipeable play feed
+Document owner
+Product Management
+Status
+Draft v1.0 — for review
+Last updated
+August 11, 2026
+Positioning
+Participation-first: join the moment, not compete to win
+Platforms (MVP)
+iOS, Android (native)
+
+Table of Contents
+
+
+
+1. Executive Summary
+Playbyte turns the passive scroll into a live, participatory feed. Every screen is a short, self-contained "play" — a prediction, poll, or reaction to what's happening right now — that takes under five seconds to join. The product is positioned participation-first: the reward is seeing yourself inside a real-time crowd, not climbing a leaderboard or beating a friend.
+This document defines the MVP required to validate the core participation loop, plus the two follow-on phases (V1.1 Fast Follow and V2 Growth) that build out social depth, content variety, and monetization once the loop is proven.
+2. Problem Statement & Opportunity
+2.1 Problem
+Passive content feeds (video, articles, images) ask nothing of the user beyond attention — engagement is shallow and interchangeable across apps.
+Existing trivia/quiz and prediction apps lean heavily on competition and skill display, which excludes casual users who don't want to be ranked or judged.
+Real-time cultural moments (breaking news, live sports, viral debates) currently have no low-friction, purpose-built way for a casual user to "weigh in" and see how they compare to everyone else, instantly.
+2.2 Opportunity
+A feed where the unit of content is a 5-second participatory "play" instead of a video or post, combining the format habits of short-video apps with the instant-gratification loop of live polling.
+Positioning around participation rather than competition broadens the addressable audience beyond gamers/quiz enthusiasts to anyone with an opinion.
+Live crowd counters and topical content create natural, non-paid virality ("everyone's talking about this right now").
+3. Product Vision & Positioning
+Vision:  Every swipe is a play — and every play connects you to everyone else playing it, right now.
+Positioning statement:  For people who want a quick, social, no-pressure way to react to what's happening, Playbyte is a live participation feed where every card shows you how you fit into the crowd — unlike trivia and prediction apps that reward skill and rank, Playbyte rewards simply showing up.
+3.1 Positioning shift from earlier concept
+Dimension
+Compete-first (earlier concept)
+Participation-first (this PRD)
+Core promise
+Play and win
+Show up and be counted
+Core loop payoff
+Win/lose, rank moves
+See how you fit into the live crowd
+Hero mechanic
+1:1 duels, skill leaderboards
+Live crowd counter, real-time tally
+Growth loop
+"Beat me at this" challenge
+"Everyone's weighing in" FOMO share
+Retention hook
+Streaks, rank anxiety
+Live/topical urgency, belonging recap
+Audience
+Gamer-adjacent, competitive
+Mainstream, opinion-havers
+4. Target Users
+Persona
+Motivation
+What they need from Playbyte
+The Scroller
+Wants a quick dopamine hit between other apps, no pressure to perform
+Zero-skill entry, instant results, no visible score pressure
+The Connector
+Plays because friends are playing; enjoys shared moments
+Friend presence, shareable results, group moments
+The Zeitgeist Chaser
+Wants to feel plugged into what's happening right now
+Live/topical content, real-time crowd counters, timely pushes
+5. Goals & Success Metrics
+MVP success is measured by proof of the participation loop, not monetization or scale. The table below defines the metrics that determine whether Playbyte progresses to V1.1 investment.
+Metric
+Definition
+MVP target
+North Star: Daily Moments Joined (DMJ)
+Avg. number of moments a DAU swipes through per day
+≥ 8 per DAU by week 6
+D1 / D7 / D30 retention
+% of new users returning on day 1 / 7 / 30
+45% / 20% / 10%
+Live participation rate
+% of MAU joining at least one time-boxed "live" moment per week
+≥ 35%
+Share / invite rate
+% of sessions ending in a share or friend invite
+≥ 8%
+Session length
+Median time in app per session
+4–7 minutes
+Crowd-belonging satisfaction
+Post-session survey: "I felt part of something"
+≥ 70% agree
+6. Scope Overview & Roadmap
+Phase
+Timing
+Theme
+Key features
+MVP
+Launch (Month 0)
+Prove the core participation loop
+Live moment feed, crowd counter, friend presence, lightweight onboarding, recap
+V1.1 — Fast Follow
+Month 2–4
+Deepen social & content variety
+Comments/reactions, groups, sponsored moments, opt-in duels, content format expansion
+V2 — Growth
+Month 5+
+Scale participation & monetize
+Creator tools, live audio/video moments, localization, brand analytics dashboard, Pro tier
+
+7. MVP Feature Requirements
+MVP scope is limited to what is required to prove that users will repeatedly join live, participatory moments and feel a sense of belonging from doing so. Priority key: P0 = launch-blocking, P1 = strongly desired, P2 = nice-to-have if time allows.
+7.1 Live Moment Feed (core)
+7.1.1 Swipeable feed of moments [P0] 
+The primary surface of the app: a full-screen, vertically swipeable feed where each card is one participatory moment.
+User story:  As a user, I want to swipe through short, self-contained moments so that I can participate in many of them quickly without deciding what to do next.
+Functional requirements:
+Feed renders one moment card at a time, full-viewport, TikTok-style vertical swipe navigation
+Supports three MVP card types: Predict (binary yes/no), Pulse (2–4 option poll), Reaction (live binary reaction to an in-progress event)
+Cards preload the next 3 in the stack to avoid load delay on swipe
+Each card shows: category tag, prompt text, response controls, live crowd counter, friend-presence avatars
+User response is captured on tap/swipe of an answer option, not on card exit, so partial engagement is never silently lost
+After responding, the card updates in place to show the live result (crowd meter or ticker) for 1–2 seconds before auto-advancing or allowing manual swipe
+Feed ordering blends chronological "live now" moments with a lightly personalized ranking based on the user's selected interest categories
+Acceptance criteria:
+A user can respond to a moment and see an updated live result within 2 seconds on a standard 4G connection
+Swiping up always advances to a new, previously unseen moment (no immediate repeats within a session)
+Feed never shows an empty or loading state for more than 500ms under normal network conditions
+Feature success metric:  Median moments joined per session ≥ 6
+7.1.2 Live crowd counter & aggregation engine [P0] 
+Real-time backend service that aggregates responses per moment and streams updated counts to active viewers.
+User story:  As a user, I want to see how many people are playing a moment with me right now so that participating feels alive, not static.
+Functional requirements:
+Each moment tracks total responses and per-option breakdown, updated in near-real-time
+Client receives live count updates via a persistent connection (WebSocket or equivalent), with polling fallback
+Counter displays using abbreviated formatting for large numbers (e.g., 48.2K)
+A rolling "joined in the last minute" ticker is available for Pulse and Predict cards
+System distinguishes and correctly labels low-volume moments (e.g., "be the first 50 to weigh in") rather than displaying a misleading small number as if it were a mature crowd
+Acceptance criteria:
+Counter updates reach 95% of active viewers within 2 seconds of a new response
+No moment ever displays a fabricated or non-live number; all displayed counts are traceable to real recorded responses
+Feature success metric:  ≥ 99% of P0 moments reach at least 500 responses within 10 minutes of going live
+7.1.3 Friend presence [P1] 
+Shows which of a user's connected friends have already engaged with a given moment.
+User story:  As a user, I want to see that my friends already played this moment so that the app feels social even when I'm playing alone.
+Functional requirements:
+Friend graph built from contact sync (opt-in) and in-app follow/add
+Card displays a small avatar stack of friends who responded, with a count of additional friends
+Tapping the avatar stack shows friends' responses (respecting each friend's individual privacy setting)
+Users can set response visibility to Friends-only, Public, or Private per account-level default (overridable per moment)
+Acceptance criteria:
+Friend avatars appear on a card only after contact sync or in-app connection consent is explicitly granted
+A user with response visibility set to Private never appears in another user's friend-presence stack
+Feature success metric:  ≥ 30% of MAU have at least 3 mutual connections by week 4
+7.2 Onboarding & Personalization
+7.2.1 Lightweight interest selection [P0] 
+A fast, low-friction onboarding flow that captures topical interests without gating access behind a skill quiz.
+User story:  As a new user, I want to start playing within seconds of opening the app, without answering a battery of setup questions.
+Functional requirements:
+Onboarding presents a single screen of 8–12 category chips (Sports, News, Pop Culture, Food, Weather, Tech, etc.); user selects any number, including none
+Skipping interest selection is always allowed and defaults to a general/trending mix
+First moment is served within 10 seconds of app open on first launch
+Optional (skippable) contact sync and notification permission prompts follow, not precede, the first played moment
+Acceptance criteria:
+A new user can reach and respond to their first moment in 3 taps or fewer from app install
+No mandatory account creation gate blocks first-moment participation (guest play allowed, with soft prompt to save progress after 3 moments)
+Feature success metric:  ≥ 85% of installs reach their first played moment
+7.3 Notifications
+7.3.1 Moment alerts [P1] 
+Push notifications that surface time-sensitive, live moments to re-engage users at the right cultural moment.
+User story:  As a user, I want to be notified when something worth reacting to is happening live so I don't miss the moment while it's hot.
+Functional requirements:
+Notification types: Live Now (event-tied, e.g., live game reaction), Trending Pulse (a poll gaining rapid response volume), Friend Activity (a friend just joined a moment you haven't seen)
+Default notification frequency capped at 3 per day; user-configurable in settings
+Tapping a notification deep-links directly into that specific moment card
+Acceptance criteria:
+Users can fully disable each notification type independently
+No notification is sent for a moment that has already expired or closed
+Feature success metric:  Notification-driven session share ≥ 20% of DAU sessions
+7.4 Recap & Participation Stats
+7.4.1 Weekly participation recap [P1] 
+A non-competitive summary of the user's participation, framed around belonging rather than skill or rank.
+User story:  As a user, I want to see a summary of how much I showed up this week so that I feel recognized without being judged against others.
+Functional requirements:
+Recap surfaces: moments joined, % of moments where the user's answer matched the majority, consecutive days active, total unique people played alongside
+No numeric skill score, accuracy leaderboard position, or public rank is shown at MVP
+Participation badges awarded for engagement patterns (e.g., topic regular), not for being "right" more than others
+Recap is shareable as an image card
+Acceptance criteria:
+Recap screen contains zero head-to-head comparison against any named individual friend
+Recap generates correctly for a user with as few as 1 moment played in the period (no divide-by-zero or broken states)
+Feature success metric:  ≥ 40% of WAU view their weekly recap
+7.5 Profile
+7.5.1 Basic profile [P0] 
+Minimal identity surface required to support friend presence and recap features.
+User story:  As a user, I want a simple profile so friends can recognize me in the app.
+Functional requirements:
+Fields: display name, avatar (preset or uploaded photo), optional short bio
+Privacy controls for response visibility (see 7.1.3) live on the profile screen
+No visible follower/following counts or public leaderboard rank at MVP
+Acceptance criteria:
+A user can complete profile setup in under 30 seconds
+7.6 Sharing
+7.6.1 Share a moment result [P1] 
+Lets a user export a visual card of their response and the live crowd result to share outside the app.
+User story:  As a user, I want to share how I answered a moment (and how the crowd answered) so I can bring friends into the app.
+Functional requirements:
+Generates a branded image card with the moment prompt, the user's answer, and the crowd result
+Native OS share sheet integration (Messages, Instagram Stories, etc.)
+Shared link deep-links a recipient directly into the live (or closed-result) version of that moment
+Acceptance criteria:
+Share flow completes in 2 taps from the result screen
+Feature success metric:  Share-to-install conversion ≥ 12%
+7.7 Content Operations (internal tooling)
+7.7.1 Moment CMS & scheduling [P0] 
+Internal tool for the editorial/content team to create, schedule, and retire moments — this is launch-blocking infrastructure, not a user-facing feature.
+User story:  As a content editor, I want to create and schedule moments in advance and in real time so the feed always has fresh, relevant content.
+Functional requirements:
+Form-based creation of Predict, Pulse, and Reaction card types with category tagging
+Scheduling for future release and manual "go live now" trigger for breaking moments
+Restricted-topics guardrail: card types tied to health, tragedy, or election outcomes require a second editorial approval before publishing
+Basic moderation queue for reported content or flagged trending moments
+Acceptance criteria:
+An editor can publish a live moment to the production feed in under 2 minutes
+No moment tagged as a restricted topic can go live without a second approver on record
+
+8. Post-MVP Feature Requirements
+8.1 V1.1 — Fast Follow (Month 2–4)
+Focus: deepen the social layer and expand content variety once the core participation loop is validated.
+8.1.1 Comments & reactions on a moment [P1] 
+Lightweight commentary layer so users can react to a moment's live result, not just the prompt.
+Functional requirements:
+Emoji-first quick reactions on a moment result screen
+Threaded text comments, moderated via the same content-ops tooling as moment creation
+8.1.2 Groups / private moments [P1] 
+Lets a user create a private moment visible only to an invited friend group (e.g., "just us watching the game").
+Functional requirements:
+User-initiated moment creation restricted to closed friend groups
+Group-scoped crowd counter and friend-presence view
+8.1.3 Opt-in duels [P2] 
+Reintroduces 1:1 challenge mechanics as an optional mode, not the default feed experience — preserves participation-first positioning for the core feed.
+Functional requirements:
+Duels live in a separate, opt-in section of the app, not injected into the main live feed
+No duel result affects the main profile's participation stats
+8.1.4 Sponsored moments [P1] 
+First monetization surface: brand-sponsored Pulse or Predict cards inserted into the feed with clear disclosure.
+Functional requirements:
+Sponsored cards visually labeled and disclosed per applicable ad-disclosure regulations
+Sponsored card frequency capped (e.g., no more than 1 in every 12 organic cards)
+Brand dashboard (internal, sales-facing) showing live participation volume and result breakdown for a sponsored moment
+8.1.5 Content format expansion [P2] 
+Adds lightweight puzzle and quiz formats back in, framed as participation ("how did everyone else do") rather than individual scoring.
+Functional requirements:
+New card type: daily puzzle with a crowd-average completion time shown instead of individual leaderboard rank
+8.2 V2 — Growth (Month 5+)
+Focus: scale the participation loop through creator tools, richer live formats, and monetization maturity.
+8.2.1 Creator tools [P1] 
+Allows a subset of trusted users (and eventually all users) to submit moments for editorial review and publishing.
+Functional requirements:
+Submission flow reusing the internal CMS's restricted-topic guardrails
+Creator attribution on published user-generated moments
+8.2.2 Live audio/video-tied moments [P2] 
+Ties moments to live audio/video streams (e.g., reacting in real time alongside a live broadcast) for major cultural events.
+Functional requirements:
+Sync layer between a live broadcast timestamp and moment go-live triggers
+8.2.3 Localization & international expansion [P1] 
+Expands content operations and the app itself to additional languages and regional content calendars.
+Functional requirements:
+Locale-aware content scheduling
+Full UI localization starting with the top 3 target markets
+8.2.4 Brand analytics dashboard [P1] 
+Self-serve analytics for sponsors to view participation, sentiment split, and reach of their sponsored moments.
+Functional requirements:
+Exportable reporting
+Real-time dashboard during a live sponsored moment
+8.2.5 Pro tier [P2] 
+Optional paid tier offering deeper personal stats, an ad-free feed, and early access to trending moments.
+Functional requirements:
+Subscription billing integration
+Feature-gating layer for Pro-only surfaces
+
+9. Non-Functional Requirements
+9.1 Performance
+Card-to-card swipe transition renders in under 100ms on supported devices
+Live counter update latency: 95th percentile under 2 seconds
+Cold app start to first interactive moment: under 3 seconds on a mid-tier device
+9.2 Scalability & Reliability
+Real-time aggregation infrastructure must support at least 100,000 concurrent connected sessions at MVP launch scale, with a clear scaling path to 1M+
+Target platform availability: 99.9% monthly uptime
+Graceful degradation: if the live-count stream drops, the client falls back to periodic polling rather than showing a broken counter
+9.3 Privacy & Data
+Contact sync and friend-graph features are strictly opt-in with clear, revocable consent
+Compliance with applicable regional data regulations (e.g., GDPR, CCPA), including data export and deletion requests
+Minimum age gate consistent with applicable regulations; no behavioral advertising targeting to users below the regulated age threshold
+Response-level privacy settings (Public / Friends-only / Private) are enforced server-side, not just in the client UI
+9.4 Accessibility
+WCAG 2.1 AA conformance for all core screens
+All swipe-based interactions have an equivalent tap/button alternative for users who cannot perform swipe gestures
+Screen-reader labeling for live counters, avatar stacks, and card categories
+9.5 Trust & Safety
+Restricted-topics editorial guardrail (Section 7.7.1) is enforced at the CMS level, not left to individual editor judgment alone
+User reporting available on every moment and every comment (post-V1.1)
+No prediction moment may use monetary stakes, odds, or payout language, to avoid gambling-adjacent framing
+10. Out of Scope (MVP)
+Real-money wagering or gambling mechanics of any kind
+Skill-based matchmaking, ranked ladders, or public leaderboards at MVP
+User-generated moment creation (creator tools) — deferred to V2
+Web app / desktop experience — mobile native only at MVP
+Paid subscription tier — deferred until V1.1 monetization pilot
+11. Risks & Mitigations
+Risk
+Impact
+Mitigation
+Cold-start crowd size
+Live counters feel hollow without real concurrent volume
+Seed launch in a small number of time zones/markets; use editorial team to guarantee moment cadence; simulate honestly-labeled aggregate context where volume is genuinely low
+Sensitive-topic predictions
+Predictions on politics, tragedy, or health events can create reputational or moderation risk
+Maintain a restricted-topics list; require editorial sign-off on all live moments at MVP (no open user submission)
+Real-time infrastructure cost
+Sub-2-second crowd counter updates at scale require persistent connections and fan-out
+Start with a managed pub/sub (e.g., WebSocket gateway + Redis) sized for MVP concurrency; revisit before V2 scale
+Perceived gambling adjacency
+"Predict" cards without stakes can still read as betting to some users or regulators
+No odds/payout language, no monetary framing; legal review of prediction copy before launch
+Content ops throughput
+Live, topical content requires a fast editorial pipeline; understaffing stalls the feed
+Build the CMS and scheduling tool as an MVP-blocking workstream, not an afterthought
+12. Open Questions
+Do we launch in a single metro/timezone first to guarantee crowd density, or go broad and thin?
+What is the minimum viable editorial team size to sustain 15–20 fresh moments/day?
+How do we badge or gate topics that are borderline (e.g., close sports games, election-adjacent news) without over-restricting relevance?
+Is push notification cadence for "live" moments opt-in only, or default-on with a frequency cap?
+13. Appendix — Glossary
+Term
+Definition
+Moment
+A single participatory card in the feed (Predict, Pulse, or Reaction)
+Live
+A moment that is currently open for responses within its active time window
+Crowd counter
+The real-time aggregate response count/breakdown shown on a moment
+Friend presence
+UI showing which connected friends have already responded to a moment
+Recap
+The weekly, non-competitive summary of a user's participation
+

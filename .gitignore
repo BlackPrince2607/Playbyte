@@ -1,0 +1,46 @@
+# Secrets and local env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Python
+backend/.venv/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/.pytest_cache/
+backend/*.egg-info/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+.pnpm-store/
+apps/**/.expo/
+apps/**/.next/
+apps/**/dist/
+apps/**/web-build/
+*.tsbuildinfo
+npm-debug.log*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Scratch extracts (do not ship)
+_prd_extract.txt
+_arch_extract.txt
+_stitch_*.json
+_stitch_*.md
+_stitch_*.py
+_stitch_shots/
+
+# Generated
+*.log
+coverage/
+.turbo/

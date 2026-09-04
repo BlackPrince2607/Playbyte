@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: playbyte
+      POSTGRES_PASSWORD: playbyte
+      POSTGRES_DB: playbyte
+    ports:
+      - "5432:5432"
+    volumes:
+      - playbyte_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U playbyte"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://playbyte:playbyte@postgres:5432/playbyte
+      DATABASE_URL_SYNC: postgresql://playbyte:playbyte@postgres:5432/playbyte
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  worker:
+    build:
+      context: ./backend
+    command: python -m worker.main
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://playbyte:playbyte@postgres:5432/playbyte
+      DATABASE_URL_SYNC: postgresql://playbyte:playbyte@postgres:5432/playbyte
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+volumes:
+  playbyte_pg:

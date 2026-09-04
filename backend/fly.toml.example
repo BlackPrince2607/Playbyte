@@ -1,0 +1,30 @@
+# Fly.io configuration example — copy to fly.toml and customize.
+# Deploy API and worker as separate Fly apps using the same Docker image.
+
+app = "playbyte-api-staging"
+primary_region = "bom"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  APP_ENV = "staging"
+  API_HOST = "0.0.0.0"
+  API_PORT = "8000"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "15s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+# Worker app (separate fly.toml): override CMD to python -m worker.main
+# No http_service block on worker app.

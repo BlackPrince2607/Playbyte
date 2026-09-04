@@ -1,0 +1,326 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PLAY - Live Now</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#57e15b",
+                      "outline-variant": "#594046",
+                      "card": "#211540",
+                      "primary-fixed-dim": "#ffb1c4",
+                      "outline": "#a8898f",
+                      "on-primary": "#65002e",
+                      "surface-variant": "#413034",
+                      "surface-dim": "#1d1013",
+                      "on-error": "#690005",
+                      "surface-container-low": "#26181b",
+                      "on-tertiary": "#003908",
+                      "error-container": "#93000a",
+                      "secondary-fixed": "#bdf532",
+                      "surface-container-highest": "#413034",
+                      "primary": "#ffb1c4",
+                      "on-error-container": "#ffdad6",
+                      "ink": "#150E2B",
+                      "tertiary-fixed-dim": "#57e15b",
+                      "on-tertiary-fixed": "#002203",
+                      "surface-tint": "#ffb1c4",
+                      "surface-container-lowest": "#170a0e",
+                      "inverse-surface": "#f7dce1",
+                      "tertiary-fixed": "#75ff75",
+                      "error": "#ffb4ab",
+                      "primary-container": "#ff4d8d",
+                      "tertiary-container": "#00a92a",
+                      "on-secondary": "#263500",
+                      "on-primary-fixed-variant": "#8f0043",
+                      "on-tertiary-fixed-variant": "#00530f",
+                      "surface": "#1d1013",
+                      "secondary-fixed-dim": "#a2d801",
+                      "on-primary-container": "#5b0028",
+                      "paper": "#F5F0FF",
+                      "secondary-container": "#a2d801",
+                      "surface-container": "#2a1c1f",
+                      "inverse-primary": "#b90a5a",
+                      "primary-fixed": "#ffd9e0",
+                      "cardAlt": "#2A1B4E",
+                      "secondary": "#bdf532",
+                      "inverse-on-surface": "#3c2c30",
+                      "background": "#1d1013",
+                      "line": "rgba(245, 240, 255, 0.12)",
+                      "on-secondary-fixed": "#141f00",
+                      "on-secondary-fixed-variant": "#384e00",
+                      "surface-container-high": "#362629",
+                      "on-background": "#f7dce1",
+                      "lilac": "#8F7FC0",
+                      "on-surface": "#f7dce1",
+                      "on-surface-variant": "#e1bec5",
+                      "on-primary-fixed": "#3f001a",
+                      "on-tertiary-container": "#003306",
+                      "surface-bright": "#463538",
+                      "on-secondary-container": "#425a00"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "margin": "20px",
+                      "xl": "32px",
+                      "xs": "4px",
+                      "lg": "24px",
+                      "md": "16px",
+                      "sm": "8px"
+              },
+              "fontFamily": {
+                      "body-lg": ["inter"],
+                      "game-question-mobile": ["spaceGrotesk"],
+                      "hero": ["spaceGrotesk"],
+                      "body-sm": ["inter"],
+                      "stats": ["jetbrainsMono"],
+                      "micro": ["inter"],
+                      "game-question": ["spaceGrotesk"],
+                      "metadata": ["inter"],
+                      "hero-mobile": ["spaceGrotesk"],
+                      "screen-title": ["spaceGrotesk"],
+                      "large-score": ["spaceGrotesk"]
+              },
+              "fontSize": {
+                      "body-lg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "game-question-mobile": ["30px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                      "hero": ["48px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "stats": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                      "micro": ["10px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                      "game-question": ["42px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                      "metadata": ["12px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                      "hero-mobile": ["40px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                      "screen-title": ["34px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                      "large-score": ["72px", {"lineHeight": "1", "fontWeight": "700"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); }
+        .glass-panel {
+            background: linear-gradient(145deg, rgba(33, 21, 64, 0.9) 0%, rgba(42, 27, 78, 0.4) 100%);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-ink text-paper font-body-lg antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-ink/80 backdrop-blur-md border-b border-line flex justify-between items-center h-16 px-margin transition-colors duration-200">
+<button class="text-primary hover:opacity-80 transition-opacity p-2 -ml-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<h1 class="font-hero-mobile text-hero-mobile text-primary font-bold tracking-tighter uppercase absolute left-1/2 -translate-x-1/2">
+            PLAY
+        </h1>
+<div class="flex items-center cursor-pointer hover:bg-surface-variant transition-colors p-xs rounded-full active:scale-95 duration-200">
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-line object-cover" data-alt="A small circular user avatar featuring a stylized digital portrait of a gamer illuminated by neon pink light against a dark background. High contrast, clean vector style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYReNshwZjJh_RbBzZLmTyKoG3-hL9sOVuy7ScgKl5fH_CEqRg8hY76mnYV1MzJU_7yBP0TqzGkyAtHnpiSBHhn6SS2_b21y7_HHRIBaV-V_kE1QKG9dP4LU9_ae_cOCkmG4jUEn4GLyRFoeisgkDyu0FAJcDUhREv-nUdHz2MHYIX9sfB3vsoPHdt5vVYSh86pR4D_9KofeEsarfl66bfJSHS7IFle-w6_dSd_jVz5nd3RW7YUC3Luw">
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="pt-[104px] pb-[120px] px-margin max-w-7xl mx-auto min-h-screen">
+<!-- Header Section -->
+<section class="mb-xl relative">
+<h1 class="font-hero-mobile md:font-hero text-hero-mobile md:text-hero text-paper tracking-tight mb-sm font-bold">
+                What India is playing.
+            </h1>
+<p class="font-body-lg text-body-lg text-lilac max-w-lg">
+                Jump into games already full of people.
+            </p>
+<!-- Ambient Glow -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary-container opacity-10 rounded-full blur-[80px] pointer-events-none"></div>
+</section>
+<!-- Live Games Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md auto-rows-fr">
+<!-- Card 1: Cricket Predict -->
+<article class="bg-card border border-line rounded-[24px] p-lg flex flex-col relative overflow-hidden group hover:border-primary-container/50 transition-colors duration-300 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+<div class="flex justify-between items-start mb-md z-10">
+<span class="bg-cardAlt text-lilac font-metadata text-metadata px-sm py-xs rounded-full border border-line uppercase tracking-widest">CRICKET</span>
+<div class="bg-cardAlt text-paper font-stats text-[14px] px-3 py-1 rounded-full flex items-center gap-xs border border-line">
+<span class="w-2 h-2 bg-tertiary rounded-full animate-pulse shadow-[0_0_8px_#57e15b]"></span>
+                        12.4K
+                    </div>
+</div>
+<h2 class="font-game-question-mobile text-game-question-mobile text-paper leading-none mb-xl z-10 font-bold group-hover:text-primary transition-colors">Cricket Predict</h2>
+<div class="mt-auto z-10 flex flex-col gap-sm">
+<div class="bg-cardAlt/80 border border-line rounded-lg p-sm backdrop-blur-sm">
+<p class="font-body-sm text-body-sm text-paper flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm text-primary-container">monitoring</span>
+                            67% chose Jaipur
+                        </p>
+</div>
+<div class="flex items-center gap-sm mt-sm">
+<div class="flex -space-x-3">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Close up avatar of a young gamer with vibrant pink rim lighting, dark futuristic background, crisp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDC69DEpCbouicWtonbPPZrAeL-C2ZadgTTJXPNG5QMalB5nPuRcjVdEE1BBiYe16us09xpBRq4Z3FSpaRsSyOKZpnmdpor1baNTMYB8EK5y6_BrCgpw-cX2l0eHq8UG8xiVXYZGVuCE4ayUWvmDernLHbKvMRzUr0NfWpaMZDjG-tXjsNZr0rIJh4mSxmZAe7c_JUn5tWBu_5sOZVPloLv2CNcldZna1D7mnqkYTtUj210zstyzpTFZg">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Close up avatar of a person wearing neon green gaming headphones, dark background, sharp digital photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiQOJ6_gXe2_u_PlNNC8W0HDEwMRqn2aDb_KhaaiLNNEsfDbkitNWfEHY9bUHz1faZdwVM9kufOm5lW8-4bRbYootpSOLoh52TZoqyD5OYn1ruE5eMjH-lFMlkLiEIJoKBYzgSu6XqhjL0fkwMDhT7if8Xq0uLVpu_DJVK8AJjrWW2ZT4QQGqOg2JfSeAdFgcGbKMOCzsX4bmjf9xCoXdHPgt511kLUH1T8LXcduur5RtH_qDhwXHAhA">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Close up avatar of a profile illuminated by electric blue screen glow in a dark room, cinematic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiLbg1jVFlfznhuDdZwsdvbMlocRKh9LUulY6JpzBTlxBilZmHFFXNP420IWS1L8Qv2bsCBHd7PRPdYlX5TEPQGQjX_3_LCF5fi4fY1r05sD84yFFEopxnjzrn70mPGDDbuH4fs5ss7RBZNk9iE2VaCG_kfJobBEVs9hHtUnWItb_u09fuGgFfDfUsgx8gjju4UBJfLio3F_rQeFYRh__WKN8Th2vDSswPCzKu_b9C3QRMmuKQ-1D5nw">
+</div>
+<span class="font-metadata text-metadata text-lilac">+ playing now</span>
+</div>
+</div>
+<!-- Subtle graphic element -->
+<div class="absolute -bottom-10 -right-10 text-[120px] text-primary-container opacity-5 material-symbols-outlined pointer-events-none transform rotate-12">sports_cricket</div>
+</article>
+<!-- Card 2: Trivia Royale -->
+<article class="bg-card border border-line rounded-[24px] p-lg flex flex-col relative overflow-hidden group hover:border-primary-container/50 transition-colors duration-300 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+<div class="flex justify-between items-start mb-md z-10">
+<span class="bg-cardAlt text-lilac font-metadata text-metadata px-sm py-xs rounded-full border border-line uppercase tracking-widest">TRIVIA</span>
+<div class="bg-cardAlt text-paper font-stats text-[14px] px-3 py-1 rounded-full flex items-center gap-xs border border-line">
+<span class="w-2 h-2 bg-tertiary rounded-full animate-pulse shadow-[0_0_8px_#57e15b]"></span>
+                        8.7K
+                    </div>
+</div>
+<h2 class="font-game-question-mobile text-game-question-mobile text-paper leading-none mb-xl z-10 font-bold group-hover:text-primary transition-colors">Trivia Royale</h2>
+<div class="mt-auto z-10 flex flex-col gap-sm">
+<div class="flex items-center gap-sm mt-sm">
+<div class="flex -space-x-3">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar portrait of a gamer with reflective glasses catching neon screen light, deep black background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiHufPo2CS1KoayMqwuv2XAi3zQrW4hRvGjPE_srLol8MB3I0BIgalaIkh3s_VrAM0EIUkyw2-qpQ9oPFf-ybJcg3vLJ-RIkb20PV4ytIb2HynRPfrAHv-yauQEJaJzqgxpSm5daGT993FJbCLqMzVU1ZJ4_1nhQ517mDeBtqLUaj6qKNTBQ3RWz99GrkT0GuVYehlZpaYsRLUS0J69kaRnO6-aFD2YXyRa-6Lh_tOydRrGBtmlQy_pg">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar portrait of a focused player bathed in warm magenta light, high contrast moody aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqkMT95zgSc0mh6PhoycDaHetILHbUEhcWzOsRLV0t5U40rbqt_R3XmaHXo5nJrkluh05FKinXncu7iniJprQnz-723C4dzwTNwmdU0Deq5cDAip4QrjSpPhNfg1oUJUPsuw071XMb3Vy3bH2c8-kySvHtayMl2wCYCcQqOc4hg3ESVBpKtPqehSwZBEg-u1L7QwxSjAVLRqjAB5w4Ay-5kXu0bQFqO1wxTCb3fPqqUFSlol25qMsMrw">
+</div>
+<span class="font-metadata text-metadata text-lilac">+ playing now</span>
+</div>
+</div>
+<div class="absolute -bottom-10 -right-10 text-[120px] text-primary-container opacity-5 material-symbols-outlined pointer-events-none transform rotate-12">psychology_alt</div>
+</article>
+<!-- Card 3: Bollywood Battle -->
+<article class="bg-card border border-line rounded-[24px] p-lg flex flex-col relative overflow-hidden group hover:border-primary-container/50 transition-colors duration-300 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+<div class="flex justify-between items-start mb-md z-10">
+<span class="bg-cardAlt text-lilac font-metadata text-metadata px-sm py-xs rounded-full border border-line uppercase tracking-widest">MOVIES</span>
+<div class="bg-cardAlt text-paper font-stats text-[14px] px-3 py-1 rounded-full flex items-center gap-xs border border-line">
+<span class="w-2 h-2 bg-tertiary rounded-full animate-pulse shadow-[0_0_8px_#57e15b]"></span>
+                        7.9K
+                    </div>
+</div>
+<h2 class="font-game-question-mobile text-game-question-mobile text-paper leading-none mb-xl z-10 font-bold group-hover:text-primary transition-colors">Bollywood Battle</h2>
+<div class="mt-auto z-10 flex flex-col gap-sm">
+<div class="bg-cardAlt/80 border border-line rounded-lg p-sm backdrop-blur-sm">
+<p class="font-body-sm text-body-sm text-paper flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm text-primary-container">chat_bubble</span>
+                            80% know SRK's debut
+                        </p>
+</div>
+<div class="flex items-center gap-sm mt-sm">
+<div class="flex -space-x-3">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar of a smiling user lit by cinematic yellow and pink lighting, dark stadium background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCmHYvUs--MbqScl0eo1qr6NZBkPcU--41xF7SMDCN7HChXwpaOPJIqnz7SPHfrjoAXQBu7kUE0T4WtQRd7PvFcShHXucHPYmbnSbbBcoYDoW_qv_4p-02YmAiIM0io--4Q-K2BSjkSwwTOb6szWABq2NPuwxyWXwhmGsD6QGbrw_uMneMYQMAOL8h5o0bV37wxFEEmgeVNNbqjEWEEnPSdgScn7mnt7ysU4Z5f8PilcG2S5Qfh2o5zQ">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar showing intense focus, illuminated by bright teal rim light, deep shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMdzZk2-khwUf-_rW0LlyrpvEhrRQqe_dZqR--dNG_65-pq9gfmLLJRlIh0DpZODIoq6dhbpCfpPXUJ40C9yuU1ZzJQcJQXPLGX5kXY1eKAy9J8rRFE0RXOcjx_O2Ibvgt1qErBoR6V08ipR32liHq2OFO9jmD0cYfLOGydu1lD7tmQFGb6P6JLbVUUh0nGucc2DAxuOw9eJ7BhUYR5HszQACWIZ0Z8JVNVIFlc3T2A6uqJlQSKs34Dg">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar portrait of a gamer illuminated by neon pink and lime green screen glow. The background is dark and moody." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9ZS8vtoJbcZdCNfnM_UIxxApxAYV9f7Xj5cXIjKlN8LQOjYrrTiByxczLQDHaLjTkyMnDMeesvpjYP6AlRdVmIVgIR4Lq3CIosR2LjogDimG721vzT_1OgoZW5g5Hwi5tuFelO57MUlZrCv9PpvMmd95vYris_5sgP8bVn7Sn0mk3KvkB-fkMZZ7CHqp4SpVxa3Jp-auYMB0d5VNVlNEGViGaC6PLHNhyCEGNQNaVLnnFnH32qspYiA">
+</div>
+<span class="font-metadata text-metadata text-lilac">+ playing now</span>
+</div>
+</div>
+<div class="absolute -bottom-10 -right-10 text-[120px] text-primary-container opacity-5 material-symbols-outlined pointer-events-none transform -rotate-12">movie</div>
+</article>
+<!-- Card 4: Red Flag / Green Flag -->
+<article class="bg-card border border-line rounded-[24px] p-lg flex flex-col relative overflow-hidden group hover:border-primary-container/50 transition-colors duration-300 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+<div class="flex justify-between items-start mb-md z-10">
+<span class="bg-cardAlt text-lilac font-metadata text-metadata px-sm py-xs rounded-full border border-line uppercase tracking-widest">SOCIAL</span>
+<div class="bg-cardAlt text-paper font-stats text-[14px] px-3 py-1 rounded-full flex items-center gap-xs border border-line">
+<span class="w-2 h-2 bg-tertiary rounded-full animate-pulse shadow-[0_0_8px_#57e15b]"></span>
+                        6.8K
+                    </div>
+</div>
+<h2 class="font-game-question-mobile text-game-question-mobile text-paper leading-none mb-xl z-10 font-bold group-hover:text-primary transition-colors">Red Flag / Green Flag</h2>
+<div class="mt-auto z-10 flex flex-col gap-sm">
+<div class="flex items-center gap-sm mt-sm">
+<div class="flex -space-x-3">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar of a casual gamer in low light with strong magenta accents on the face." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgoRii0DNw5EN0uDksVw6YToOdYemPumtgTde9BBeGoEFHEmktbt_XkBJ1WhPrMET1UDzGuoyeIj2KbctYSEuTYyckssqDSlDfatfmFONEJ-CBaEfFKNR-xgxvee6OCQyxz0X-slv9AyBFTcqH2APkarwJ4C1WwO7EryHTJlGRYUMHgWq-hqWqDeKajY-arS_-N4OGDdjVaHPFTH5vCaAcV6itPWHlQ5mugvjZbaJiyV6jgNG9PmjaOQ">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar profile with a neutral expression bathed in soft white and neon green screen light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaKIj-H7SQtWdg0dJ12F4Y8igCDBBD4Dx-wUD35-xlb_PTFe9SE9eL3VWTLdsIvQpmMJ9CqidHAi-ZJIYDK5tPRvDyB5Fbg2VG8QXNf4KCp2Fk-zxfwbLN9BxKTr_ra5RFzEM2lcOjX0EpJQDtULs-5mdgzFFw6ZVLSr00PMPOYJ6Q4cenf7ftfwdDX3vJR3PvoYFdL1x8T4qnCNnMwL-OGCYcZHGqP06X5AZVEl0XljuFDRdnR4WzCA">
+</div>
+<span class="font-metadata text-metadata text-lilac">+ playing now</span>
+</div>
+</div>
+<div class="absolute -bottom-10 -right-10 text-[120px] text-primary-container opacity-5 material-symbols-outlined pointer-events-none transform rotate-6">flag</div>
+</article>
+<!-- Card 5: Guess the Song -->
+<article class="bg-card border border-line rounded-[24px] p-lg flex flex-col relative overflow-hidden group hover:border-primary-container/50 transition-colors duration-300 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+<div class="flex justify-between items-start mb-md z-10">
+<span class="bg-cardAlt text-lilac font-metadata text-metadata px-sm py-xs rounded-full border border-line uppercase tracking-widest">MUSIC</span>
+<div class="bg-cardAlt text-paper font-stats text-[14px] px-3 py-1 rounded-full flex items-center gap-xs border border-line">
+<span class="w-2 h-2 bg-tertiary rounded-full animate-pulse shadow-[0_0_8px_#57e15b]"></span>
+                        5.4K
+                    </div>
+</div>
+<h2 class="font-game-question-mobile text-game-question-mobile text-paper leading-none mb-xl z-10 font-bold group-hover:text-primary transition-colors">Guess the Song</h2>
+<div class="mt-auto z-10 flex flex-col gap-sm">
+<div class="flex items-center gap-sm mt-sm">
+<div class="flex -space-x-3">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar portrait of a gamer wearing large over-ear headphones, deep purple and pink neon lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkFWJgX3ps8P6peJXbgkW0yBYF-W2BkZBSsbSk05eMEObbwCqne7o_gBVBapCdS_6OGvvEYYCVDVkrr2HsCc8pVE-R4ZhNu2h-xGer5fiGLejBKyWRd3Q1KruJg248G11upVsH5kxIE0ueVKgPi_EQUxp8DJRl8hFQtZJSbEjPut0zF_CiT4FkpugZ4Epy7ZoILeXNjSpQfWQZNZzoX0Ql9JppMo_6k-8VzdcVFXSdx_2BFE4oxTa5lw">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar of an expressive player with glowing reflections in their eyes, dark cyberspace aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs3g_2F1a4Yrf0DLhd773fnWgxajHKpDL8_1GbSDwBOZqfX2LPUXyNKvEKkjIlAHyHXHzy2xQ_spr7YnD9gxoWa8Rtirc6ilYObtW6kJP7rpWzbhwos2xk8c97l0JmQ8deFBRjxzuQjpwCjg4Fn4nh-QMn_MIE652f5cQ0r3JcOEW6ZQU9RAKpXh8wkc3pqTNl8geJvqWWijdYLBQh9LMfsoaQoQRImPxmGqeWtfx7HJKjw1N7XfoR1Q">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar of a young person dimly lit with a strong streak of lime green light across their face." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvvH8OykE-JjUYuro-KnjOeMPN7Q9aQgJtCYIi1lDPbiPIKJEbNg_3JH4azjE3kf5CpQh6VQEpqROoncmpaEuATj_sT5r03mzlA_7v5PZd-AoP_dHmYGO_d2xjqzqbZCBWTwhj1TgRV5L87-nFcRHjkSxIcKF-ODe5ldkGYVHdtONzp-ovBXccxeKjK6PCISbGSCl_i1UvA9BtY0A_f76iJAF4By66HFonPutXVW09FwbiEMtJ8M-hJg">
+</div>
+<span class="font-metadata text-metadata text-lilac">+ playing now</span>
+</div>
+</div>
+<div class="absolute -bottom-10 -right-10 text-[120px] text-primary-container opacity-5 material-symbols-outlined pointer-events-none transform -rotate-6">music_note</div>
+</article>
+<!-- Card 6: Speed Puzzle -->
+<article class="bg-card border border-line rounded-[24px] p-lg flex flex-col relative overflow-hidden group hover:border-primary-container/50 transition-colors duration-300 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+<div class="flex justify-between items-start mb-md z-10">
+<span class="bg-cardAlt text-lilac font-metadata text-metadata px-sm py-xs rounded-full border border-line uppercase tracking-widest">CASUAL</span>
+<div class="bg-cardAlt text-paper font-stats text-[14px] px-3 py-1 rounded-full flex items-center gap-xs border border-line">
+<span class="w-2 h-2 bg-tertiary rounded-full animate-pulse shadow-[0_0_8px_#57e15b]"></span>
+                        3.8K
+                    </div>
+</div>
+<h2 class="font-game-question-mobile text-game-question-mobile text-paper leading-none mb-xl z-10 font-bold group-hover:text-primary transition-colors">Speed Puzzle</h2>
+<div class="mt-auto z-10 flex flex-col gap-sm">
+<div class="flex items-center gap-sm mt-sm">
+<div class="flex -space-x-3">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Close up avatar of a young gamer illuminated by neon pink and lime green screen glow. The background is dark and moody." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqyUqvGJmKROhfbtXsVaD0hSiU0Uz8J5WNFeTGMCpVjsAqjI5b0qusMGx9TU-kREu9rsGX4tki5C0Kzp-s611kGeH7n9HgxVHWANGtpdAXbbS98_yHe2UuBEshe1yN7TYpVhby6VkzP6iXITyLSY_B7OCcri-BxbyYbcd3b0eX1zrgcv8QX8SyQy5ARYVlaPjAN0lMo19P8MpDC8zcD1OruNJuUwznfgDp-8eSEvSZss6f1wGJjdz4Bg">
+<img class="w-8 h-8 rounded-full border-2 border-card object-cover" data-alt="Avatar showing an intense look, lit by stark blue and magenta neon against pure black." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBG1biJXp9mFtaWlaRRcL9XT-KMU4lAPHO54vE4oGvrZbkltv7ZXMZqPaiuneQ67B57JR2J6FIAasntbmqGulkuU4W0AbUzSPfa9uWl540vm0lH3vjAIXhy3tL0eFo_WvHkrbtDgCz_yvsrtHIaA1libzPY2ne6NS2gM3RFBsvz11qAhRdrplnpkqWsOX0F-PfGObEAG3Hu-gzgKwaMgjv2IYBJ56sYRRrMtIUwfQ1ZgxiPyrDQOu-pCQ">
+</div>
+<span class="font-metadata text-metadata text-lilac">+ playing now</span>
+</div>
+</div>
+<div class="absolute -bottom-10 -right-10 text-[120px] text-primary-container opacity-5 material-symbols-outlined pointer-events-none transform rotate-12">extension</div>
+</article>
+</div>
+</main>
+<!-- Bottom Nav Bar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-surface border-t border-line">
+<a class="flex flex-col items-center justify-center text-lilac hover:text-secondary transition-colors p-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">play_circle</span>
+<span class="font-micro text-micro mt-1">Play</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-cardAlt text-secondary rounded-xl p-2 scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">sensors</span>
+<span class="font-micro text-micro mt-1">Live</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac hover:text-secondary transition-colors p-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
+<span class="font-micro text-micro mt-1">Friends</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac hover:text-secondary transition-colors p-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">add_box</span>
+<span class="font-micro text-micro mt-1">Create</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac hover:text-secondary transition-colors p-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">person</span>
+<span class="font-micro text-micro mt-1">Profile</span>
+</a>
+</nav>
+</body></html>
