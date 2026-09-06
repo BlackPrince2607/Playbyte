@@ -72,4 +72,4 @@ pnpm lint && pnpm typecheck && pnpm test
 
 ## Deployment
 
-See [docs/production-deployment.md](docs/production-deployment.md) and [docs/deployment-runbook.md](docs/deployment-runbook.md). Production promotion is explicit (staging first). Current gate: **NOT READY FOR STAGING** — see [docs/production-readiness-audit.md](docs/production-readiness-audit.md).
+See [docs/production-deployment.md](docs/production-deployment.md) and [docs/deployment-runbook.md](docs/deployment-runbook.md). For Railway API + worker setup see [docs/railway.md](docs/railway.md). Production promotion is explicit (staging first). Current gate: **NOT READY FOR STAGING** — see [docs/production-readiness-audit.md](docs/production-readiness-audit.md).
