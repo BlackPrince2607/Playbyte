@@ -13,9 +13,34 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ENUM, JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+
+def _pg_enum(*values: str, name: str) -> ENUM:
+    """Use existing Postgres ENUM types from migrations (do not CREATE TYPE)."""
+    return ENUM(*values, name=name, create_type=False)
+
+
+user_status = _pg_enum("active", "disabled", "deleted", name="user_status")
+actor_visibility = _pg_enum("public", "friends", "private", name="actor_visibility")
+moment_type = _pg_enum("predict", "pulse", "reaction", name="moment_type")
+moment_status = _pg_enum(
+    "draft", "scheduled", "ready", "live", "closed", "retired", name="moment_status"
+)
+restricted_topic = _pg_enum("none", "health", "tragedy", "election", name="restricted_topic")
+friendship_status = _pg_enum("pending", "accepted", "blocked", name="friendship_status")
+game_status = _pg_enum("enabled", "disabled", name="game_status")
+window_status = _pg_enum("draft", "active", "ended", name="window_status")
+outbox_status = _pg_enum("pending", "processing", "done", "dead", name="outbox_status")
+report_status = _pg_enum("open", "reviewed", "actioned", "dismissed", name="report_status")
+data_request_type = _pg_enum("export", "deletion", name="data_request_type")
+data_request_status = _pg_enum(
+    "queued", "processing", "complete", "failed", name="data_request_status"
+)
+approval_decision = _pg_enum("approve", "reject", name="approval_decision")
+volume_state = _pg_enum("nascent", "building", "mature", name="volume_state")
 
 
 class Base(DeclarativeBase):
@@ -27,7 +52,7 @@ class User(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     auth_subject: Mapped[str | None] = mapped_column(Text, unique=True)
-    status: Mapped[str] = mapped_column(Text, default="active")
+    status: Mapped[str] = mapped_column(user_status, default="active")
     date_of_birth: Mapped[date | None] = mapped_column(Date)
     age_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -55,7 +80,7 @@ class Profile(Base):
     display_name: Mapped[str] = mapped_column(Text, default="Player")
     avatar_key: Mapped[str | None] = mapped_column(Text)
     bio: Mapped[str | None] = mapped_column(Text)
-    default_visibility: Mapped[str] = mapped_column(Text, default="friends")
+    default_visibility: Mapped[str] = mapped_column(actor_visibility, default="friends")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -97,7 +122,7 @@ class ContentWindow(Base):
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     priority: Mapped[int] = mapped_column(Integer, default=0)
-    status: Mapped[str] = mapped_column(Text, default="draft")
+    status: Mapped[str] = mapped_column(window_status, default="draft")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -105,11 +130,11 @@ class Moment(Base):
     __tablename__ = "moments"
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
-    type: Mapped[str] = mapped_column(Text)
+    type: Mapped[str] = mapped_column(moment_type)
     category_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("categories.id"))
     content_window_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("content_windows.id"))
-    status: Mapped[str] = mapped_column(Text, default="draft")
-    restricted_topic: Mapped[str] = mapped_column(Text, default="none")
+    status: Mapped[str] = mapped_column(moment_status, default="draft")
+    restricted_topic: Mapped[str] = mapped_column(restricted_topic, default="none")
     prompt: Mapped[str] = mapped_column(Text)
     starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -151,7 +176,7 @@ class CrowdSnapshot(Base):
     total_responses: Mapped[int] = mapped_column(Integer, default=0)
     option_counts: Mapped[dict] = mapped_column(JSONB, default=dict)
     joined_last_minute: Mapped[int] = mapped_column(Integer, default=0)
-    volume_state: Mapped[str] = mapped_column(Text, default="nascent")
+    volume_state: Mapped[str] = mapped_column(volume_state, default="nascent")
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -162,7 +187,7 @@ class Friendship(Base):
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     user_a: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
     user_b: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
-    status: Mapped[str] = mapped_column(Text, default="pending")
+    status: Mapped[str] = mapped_column(friendship_status, default="pending")
     requested_by: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -172,7 +197,7 @@ class ResponseVisibility(Base):
 
     user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
     moment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("moments.id"), primary_key=True)
-    visibility: Mapped[str] = mapped_column(Text)
+    visibility: Mapped[str] = mapped_column(actor_visibility)
 
 
 class MomentApproval(Base):
@@ -181,7 +206,7 @@ class MomentApproval(Base):
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     moment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("moments.id"))
     approver_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
-    decision: Mapped[str] = mapped_column(Text)
+    decision: Mapped[str] = mapped_column(approval_decision)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -191,7 +216,7 @@ class MiniGame(Base):
     key: Mapped[str] = mapped_column(Text, primary_key=True)
     title: Mapped[str] = mapped_column(Text)
     blurb: Mapped[str] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(Text, default="enabled")
+    status: Mapped[str] = mapped_column(game_status, default="enabled")
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     config: Mapped[dict] = mapped_column(JSONB, default=dict)
 
@@ -230,7 +255,7 @@ class Report(Base):
     target_type: Mapped[str] = mapped_column(Text)
     target_id: Mapped[str] = mapped_column(Text)
     reason: Mapped[str | None] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(Text, default="open")
+    status: Mapped[str] = mapped_column(report_status, default="open")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -240,7 +265,7 @@ class OutboxEvent(Base):
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     type: Mapped[str] = mapped_column(Text)
     payload: Mapped[dict] = mapped_column(JSONB)
-    status: Mapped[str] = mapped_column(Text, default="pending")
+    status: Mapped[str] = mapped_column(outbox_status, default="pending")
     next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     attempt_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -291,8 +316,8 @@ class DataRequest(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
-    type: Mapped[str] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(Text, default="queued")
+    type: Mapped[str] = mapped_column(data_request_type)
+    status: Mapped[str] = mapped_column(data_request_status, default="queued")
     requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     download_key: Mapped[str | None] = mapped_column(Text)
