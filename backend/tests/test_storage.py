@@ -15,8 +15,8 @@ def test_validate_upload_rejects_oversized() -> None:
         validate_upload(bucket="share-cards", key="share/a.png", content_type="image/png", size=3_000_000)
 
 
-def test_validate_upload_accepts_png() -> None:
-    validate_upload(bucket="share-cards", key="share/moment/x.png", content_type="image/png", size=1024)
+def test_validate_upload_accepts_moment_media() -> None:
+    validate_upload(bucket="moment-media", key="prompts/a.jpg", content_type="image/jpeg", size=2048)
 
 
 @pytest.mark.asyncio
@@ -48,6 +48,7 @@ async def test_supabase_storage_upload(monkeypatch) -> None:
 
         async def post(self, url, content, headers):
             assert "Authorization" in headers
+            assert "apikey" in headers
             assert url.endswith("/storage/v1/object/share-cards/share/x.png")
             return FakeResponse()
 

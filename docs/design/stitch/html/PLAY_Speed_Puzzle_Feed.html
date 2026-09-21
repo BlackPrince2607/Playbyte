@@ -1,0 +1,350 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Speed Puzzle Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-secondary-fixed": "#141f00",
+                "surface-variant": "#413034",
+                "secondary": "#bdf532",
+                "on-primary-fixed-variant": "#8f0043",
+                "on-surface-variant": "#e1bec5",
+                "on-tertiary": "#003908",
+                "error": "#ffb4ab",
+                "primary": "#ffb1c4",
+                "inverse-primary": "#b90a5a",
+                "secondary-fixed-dim": "#a2d801",
+                "surface-container-lowest": "#170a0e",
+                "surface-container-high": "#362629",
+                "secondary-fixed": "#bdf532",
+                "on-tertiary-fixed": "#002203",
+                "on-primary-fixed": "#3f001a",
+                "on-tertiary-fixed-variant": "#00530f",
+                "surface": "#1d1013",
+                "primary-fixed": "#ffd9e0",
+                "paper": "#F5F0FF",
+                "on-error-container": "#ffdad6",
+                "primary-fixed-dim": "#ffb1c4",
+                "surface-bright": "#463538",
+                "inverse-on-surface": "#3c2c30",
+                "primary-container": "#ff4d8d",
+                "line": "rgba(245, 240, 255, 0.12)",
+                "cardAlt": "#2A1B4E",
+                "card": "#211540",
+                "on-primary": "#65002e",
+                "tertiary-fixed": "#75ff75",
+                "tertiary": "#57e15b",
+                "error-container": "#93000a",
+                "surface-container-low": "#26181b",
+                "surface-container": "#2a1c1f",
+                "on-error": "#690005",
+                "tertiary-fixed-dim": "#57e15b",
+                "lilac": "#8F7FC0",
+                "outline-variant": "#594046",
+                "on-surface": "#f7dce1",
+                "outline": "#a8898f",
+                "inverse-surface": "#f7dce1",
+                "background": "#1d1013",
+                "surface-dim": "#1d1013",
+                "surface-container-highest": "#413034",
+                "on-secondary-fixed-variant": "#384e00",
+                "on-primary-container": "#5b0028",
+                "tertiary-container": "#00a92a",
+                "on-secondary": "#263500",
+                "secondary-container": "#a2d801",
+                "ink": "#150E2B",
+                "on-secondary-container": "#425a00",
+                "surface-tint": "#ffb1c4",
+                "on-tertiary-container": "#003306",
+                "on-background": "#f7dce1"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "sm": "8px",
+                "lg": "24px",
+                "gutter": "16px",
+                "margin": "20px",
+                "xl": "32px",
+                "xs": "4px",
+                "md": "16px"
+        },
+        "fontFamily": {
+                "hero": [
+                        "spaceGrotesk"
+                ],
+                "game-question-mobile": [
+                        "spaceGrotesk"
+                ],
+                "micro": [
+                        "inter"
+                ],
+                "body-lg": [
+                        "inter"
+                ],
+                "large-score": [
+                        "spaceGrotesk"
+                ],
+                "stats": [
+                        "jetbrainsMono"
+                ],
+                "hero-mobile": [
+                        "spaceGrotesk"
+                ],
+                "body-sm": [
+                        "inter"
+                ],
+                "screen-title": [
+                        "spaceGrotesk"
+                ],
+                "metadata": [
+                        "inter"
+                ],
+                "game-question": [
+                        "spaceGrotesk"
+                ]
+        },
+        "fontSize": {
+                "hero": [
+                        "48px",
+                        {
+                                "lineHeight": "1.1",
+                                "fontWeight": "700"
+                        }
+                ],
+                "game-question-mobile": [
+                        "30px",
+                        {
+                                "lineHeight": "1.1",
+                                "fontWeight": "700"
+                        }
+                ],
+                "micro": [
+                        "10px",
+                        {
+                                "lineHeight": "1.2",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "1.5",
+                                "fontWeight": "400"
+                        }
+                ],
+                "large-score": [
+                        "72px",
+                        {
+                                "lineHeight": "1",
+                                "fontWeight": "700"
+                        }
+                ],
+                "stats": [
+                        "24px",
+                        {
+                                "lineHeight": "1.4",
+                                "fontWeight": "500"
+                        }
+                ],
+                "hero-mobile": [
+                        "40px",
+                        {
+                                "lineHeight": "1.1",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "1.5",
+                                "fontWeight": "400"
+                        }
+                ],
+                "screen-title": [
+                        "34px",
+                        {
+                                "lineHeight": "1.2",
+                                "fontWeight": "700"
+                        }
+                ],
+                "metadata": [
+                        "12px",
+                        {
+                                "lineHeight": "1.4",
+                                "fontWeight": "400"
+                        }
+                ],
+                "game-question": [
+                        "42px",
+                        {
+                                "lineHeight": "1.1",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+  body {
+    background-color: #1d1013; /* match tailwind background */
+    color: #f7dce1; /* match tailwind on-background */
+  }
+  
+  /* Pulse animation for the live dot */
+  @keyframes pulse-green {
+    0% {
+      box-shadow: 0 0 0 0 rgba(87, 225, 91, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(87, 225, 91, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(87, 225, 91, 0);
+    }
+  }
+  .pulse-dot {
+    animation: pulse-green 2s infinite;
+  }
+</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-sm relative overflow-hidden">
+<!-- Main Content Area -->
+<main class="flex-grow flex flex-col w-full h-full p-margin z-10 relative md:max-w-md md:mx-auto pt-8">
+<!-- Top Header: Badge & Timer -->
+<header class="flex justify-between items-center mb-xl w-full">
+<!-- Category Badge -->
+<div class="bg-cardAlt text-paper border border-line rounded-full px-4 py-2 flex items-center gap-2">
+<span class="text-xl">⚡</span>
+<span class="font-metadata text-metadata uppercase tracking-wider font-bold">Speed Puzzle</span>
+</div>
+<!-- Timer -->
+<div class="relative w-16 h-16 flex items-center justify-center rounded-full bg-cardAlt border border-primary-container">
+<!-- SVG for circular progress could go here, simulating with border -->
+<svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" r="45" stroke="rgba(245, 240, 255, 0.12)" stroke-width="8"></circle>
+<circle class="transition-all duration-1000" cx="50" cy="50" fill="none" r="45" stroke="#ff4d8d" stroke-dasharray="283" stroke-dashoffset="141.5" stroke-width="8"></circle>
+</svg>
+<span class="font-stats text-stats text-primary-container relative z-10 font-bold">05</span>
+</div>
+</header>
+<!-- Headline -->
+<h1 class="font-game-question-mobile text-game-question-mobile text-center text-paper mb-lg leading-tight md:font-game-question md:text-game-question">
+      Find the odd emoji.
+    </h1>
+<!-- Game Card / Grid -->
+<div class="bg-card rounded-[24px] p-gutter border border-line shadow-lg w-full aspect-square mb-gutter flex flex-col relative overflow-hidden">
+<!-- Live Status Badge (Top right of card) -->
+<div class="absolute top-4 right-4 bg-ink/80 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center gap-2 border border-line z-20">
+<div class="w-2 h-2 rounded-full bg-tertiary pulse-dot"></div>
+<span class="font-metadata text-metadata text-paper">5.2K solving now</span>
+</div>
+<!-- 4x4 Grid -->
+<div class="grid grid-cols-4 grid-rows-4 gap-2 flex-grow h-full w-full">
+<!-- Row 1 -->
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<!-- Row 2 -->
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<!-- Row 3 -->
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<!-- THE ODD ONE -->
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-tertiary rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍒</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<!-- Row 4 -->
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+<button class="bg-cardAlt hover:bg-card border border-line hover:border-primary-container rounded-xl flex items-center justify-center text-4xl transition-colors active:scale-95">🍎</button>
+</div>
+</div>
+<!-- Tagline -->
+<p class="text-center font-body-lg text-body-lg text-lilac mb-xl">
+      Can you beat the crowd?
+    </p>
+<div class="mt-auto">
+<!-- Social Proof -->
+<div class="flex items-center gap-3 mb-6 px-2">
+<div class="flex -space-x-3">
+<img alt="Player Avatar" class="w-8 h-8 rounded-full border-2 border-background object-cover" data-alt="Close up portrait of a young gamer with neon pink rim lighting in a dark modern room." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAH50QzecsDFaaN58-GpeIVaoVur_6tWcH-Od-QzZMlUp5X7avA6yRuMlEs2FIdXqBHWbEhE6qLyrYwJOfoEUvRP_bIOel8HfE6JXQLVwXVO5fOe4E9LM3NO2A8zQ0B-dSG2hwEP7FfajzBjhELlsnws72zUjEy7UVz1xz78qwkAtDwquZNILpCC9YW2dhh_EfzNgg9BEB7RxwDUdVIM38PxJtSX-idaONGGvSZlS2eUTUoHJHfsYKwzQ">
+<img alt="Player Avatar" class="w-8 h-8 rounded-full border-2 border-background object-cover" data-alt="Close up portrait of a female esports player with green neon lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVdW-pv-LxRtcBSuCw5d0r5kQe-DsuPeLFj_t4lWci58LN3bEUWIcHCy1C57OL7s-HgmovEF-PSS6uWZ6qlX_GZnAy8WR0d4Szaio28scxQge4r4xieKSUgu0EApPjcsf4YqYmrvNp600meM7Ba1yQTBkLYGH-jJ8nQWJqHNOq-R_SXiArW_tDx1dEtT10Y1h7oAH02hin_K9--LOKMyupORGWzh4t09kNLVfO-Se8pXK8y1HQVfAHng">
+<img alt="Player Avatar" class="w-8 h-8 rounded-full border-2 border-background object-cover" data-alt="Close up portrait of a gamer wearing headphones in a dark room with subtle purple lights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9w9jIBQ-d6TUIfi8ojqpPMDqxgTPy5W9-18i146FOBxCpjG0wFLZIYPar28u3CZ63KCpd2wSVYD3BsO3LKTLiKYQx2FZ82eDIpGzVz-pjCw3039yePVMr9vJ9Tg1o5bmZXPa_t24Cb9jfEdzKaCoa5GgbD-PsKk78gE1iv_aYGYqXaBznBF20cX4XTAlKlckEoeoUlI9LAgCVSpVdXUOxYYYucx9CfsDAbib8rLpQd4ZOd8XiPeVvHw">
+</div>
+<span class="font-body-sm text-body-sm text-paper"><span class="font-bold text-white">Rahul</span> + 5.2K players</span>
+</div>
+<!-- Interaction Bar -->
+<div class="flex justify-between items-center mb-8 px-2">
+<div class="flex gap-4">
+<button class="flex items-center gap-1.5 text-lilac hover:text-primary-container transition-colors group">
+<span class="material-symbols-outlined text-[28px] group-hover:scale-110 transition-transform">favorite</span>
+<span class="font-metadata text-metadata">1.2K</span>
+</button>
+<button class="flex items-center gap-1.5 text-lilac hover:text-paper transition-colors group">
+<span class="material-symbols-outlined text-[28px] group-hover:scale-110 transition-transform">chat_bubble</span>
+<span class="font-metadata text-metadata">342</span>
+</button>
+<button class="flex items-center gap-1.5 text-lilac hover:text-paper transition-colors group">
+<span class="material-symbols-outlined text-[28px] group-hover:scale-110 transition-transform">send</span>
+</button>
+</div>
+<button class="flex items-center gap-2 bg-cardAlt border border-line text-paper px-4 py-2 rounded-full hover:bg-card hover:border-primary-container transition-colors active:scale-95">
+<span class="font-metadata text-metadata font-bold uppercase tracking-wide">Challenge</span>
+<span class="material-symbols-outlined text-lg">swords</span>
+</button>
+</div>
+</div>
+<!-- Footer / Swipe Hint -->
+<div class="flex flex-col items-center justify-center pb-6 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+<span class="font-metadata text-metadata text-lilac mb-1 uppercase tracking-wider">Swipe for next game</span>
+<span class="material-symbols-outlined text-lilac animate-bounce">keyboard_arrow_down</span>
+</div>
+</main>
+<!-- Bottom Nav Bar (From Shared Components) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-card dark:bg-card md:hidden">
+<!-- Explore (Inactive) -->
+<a class="flex flex-col items-center justify-center text-lilac p-2 hover:text-primary active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
+</a>
+<!-- Live (Inactive) -->
+<a class="flex flex-col items-center justify-center text-lilac p-2 hover:text-primary active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">sensors</span>
+</a>
+<!-- Community (Inactive) -->
+<a class="flex flex-col items-center justify-center text-lilac p-2 hover:text-primary active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">group</span>
+</a>
+<!-- Create (Inactive) -->
+<a class="flex flex-col items-center justify-center text-lilac p-2 hover:text-primary active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">add_box</span>
+</a>
+<!-- Profile (Inactive - assuming Home/Feed intent doesn't strictly map to profile) -->
+<a class="flex flex-col items-center justify-center text-lilac p-2 hover:text-primary active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</a>
+</nav>
+</body></html>

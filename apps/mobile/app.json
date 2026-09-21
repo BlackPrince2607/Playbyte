@@ -7,11 +7,6 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#150E2B"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.playbyte.mobile",
@@ -36,6 +31,19 @@
       "eas": {
         "projectId": "d4604f3d-6fb5-4a81-acf6-5843ceea2fb5"
       }
-    }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#150E2B",
+          "resizeMode": "contain",
+          "imageWidth": 200
+        }
+      ]
+    ]
   }
 }

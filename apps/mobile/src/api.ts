@@ -146,6 +146,16 @@ export type CrowdSnapshot = {
   optionCounts: Record<string, number>;
   joinedLastMinute?: number;
   volumeState?: string;
+  correctOptionId?: string | null;
+};
+
+export type ContentTag = { slug: string; name: string };
+
+export type FeedMomentOption = {
+  id: string;
+  label: string | null;
+  imageUrl?: string | null;
+  sortOrder: number;
 };
 
 export type FeedMoment = {
@@ -153,9 +163,12 @@ export type FeedMoment = {
   id: string;
   cardType: string;
   prompt: string;
+  promptImageUrl?: string | null;
+  scoringMode?: string;
+  tags?: ContentTag[];
   category: { slug: string; name: string } | null;
   status?: string;
-  options: { id: string; label: string; sortOrder: number }[];
+  options: FeedMomentOption[];
   myOptionId: string | null;
   result: CrowdSnapshot | null;
   friends?: { displayName: string; avatarKey: string | null; optionId: string }[];

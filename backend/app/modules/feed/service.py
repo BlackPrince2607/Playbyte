@@ -6,19 +6,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.infrastructure.postgres.models import (
+    ContentTag,
     ContentWindow,
     CrowdSnapshot,
     Friendship,
     GuestInterest,
     MiniGame,
     Moment,
+    MomentTag,
     Profile,
     Response,
     ResponseVisibility,
     UserInterest,
 )
+from app.infrastructure.storage.objects import get_object_storage
 from app.modules.crowd.volume import volume_state
 from app.modules.feed.ranking import RankedItem, interleave, moment_score
+
+
+def media_url(key: str | None) -> str | None:
+    if not key:
+        return None
+    return get_object_storage().public_url("moment-media", key)
 
 
 async def interest_ids(session: AsyncSession, user_id: UUID | None, guest_id: UUID | None) -> set[UUID]:
@@ -43,6 +52,20 @@ async def load_live_moments(session: AsyncSession) -> list[Moment]:
         .where(or_(Moment.ends_at.is_(None), Moment.ends_at > now))
     )
     return list(await session.scalars(stmt))
+
+
+async def tags_for_moments(session: AsyncSession, moment_ids: list[UUID]) -> dict[UUID, list[dict]]:
+    if not moment_ids:
+        return {}
+    rows = await session.execute(
+        select(MomentTag.moment_id, ContentTag)
+        .join(ContentTag, ContentTag.id == MomentTag.tag_id)
+        .where(MomentTag.moment_id.in_(moment_ids))
+    )
+    out: dict[UUID, list[dict]] = {mid: [] for mid in moment_ids}
+    for moment_id, tag in rows:
+        out.setdefault(moment_id, []).append({"slug": tag.slug, "name": tag.name})
+    return out
 
 
 async def active_window_ids(session: AsyncSession) -> set[UUID]:
@@ -97,6 +120,7 @@ async def build_feed(
             s.moment_id: s
             for s in await session.scalars(select(CrowdSnapshot).where(CrowdSnapshot.moment_id.in_(moment_ids)))
         }
+    tag_map = await tags_for_moments(session, moment_ids)
     game_map = {g.key: g for g in games}
     items: list[dict] = []
     for item in ordered:
@@ -104,7 +128,15 @@ async def build_feed(
             m = by_id[UUID(item.id)]
             snap = snapshots.get(m.id)
             mine = await my_response(session, m.id, user_id, guest_id)
-            items.append(serialize_moment(m, snap, mine.option_id if mine else None))
+            items.append(
+                serialize_moment(
+                    m,
+                    snap,
+                    mine.option_id if mine else None,
+                    tags=tag_map.get(m.id, []),
+                    reveal_correct=bool(mine),
+                )
+            )
         else:
             g = game_map[item.id]
             items.append(serialize_game(g))
@@ -121,26 +153,69 @@ def serialize_game(g: MiniGame) -> dict:
     }
 
 
-def serialize_moment(m: Moment, snap: CrowdSnapshot | None, my_option_id: UUID | None) -> dict:
+def serialize_moment(
+    m: Moment,
+    snap: CrowdSnapshot | None,
+    my_option_id: UUID | None,
+    *,
+    tags: list[dict] | None = None,
+    reveal_correct: bool = False,
+) -> dict:
     options = sorted(m.options, key=lambda o: o.sort_order)
+    correct_id = None
+    if reveal_correct and m.scoring_mode == "correct_option":
+        for o in options:
+            if o.is_correct:
+                correct_id = str(o.id)
+                break
     return {
         "type": "moment",
         "id": str(m.id),
         "cardType": m.type,
         "prompt": m.prompt,
+        "promptImageUrl": media_url(m.prompt_image_key),
+        "scoringMode": m.scoring_mode,
+        "tags": tags or [],
         "category": {"slug": m.category.slug, "name": m.category.name} if m.category else None,
         "status": m.status,
         "startsAt": m.starts_at.isoformat() if m.starts_at else None,
         "endsAt": m.ends_at.isoformat() if m.ends_at else None,
-        "options": [{"id": str(o.id), "label": o.label, "sortOrder": o.sort_order} for o in options],
+        "options": [
+            {
+                "id": str(o.id),
+                "label": o.label,
+                "imageUrl": media_url(o.image_key),
+                "sortOrder": o.sort_order,
+            }
+            for o in options
+        ],
         "myOptionId": str(my_option_id) if my_option_id else None,
-        "result": serialize_snapshot(m.id, snap) if snap else None,
+        "result": serialize_snapshot(m.id, snap, correct_option_id=correct_id) if snap or correct_id else (
+            {"correctOptionId": correct_id, "totalResponses": 0, "optionCounts": {}} if correct_id else None
+        ),
     }
 
 
-def serialize_snapshot(moment_id: UUID, snap: CrowdSnapshot | None) -> dict | None:
-    if snap is None:
+def serialize_snapshot(
+    moment_id: UUID,
+    snap: CrowdSnapshot | None,
+    *,
+    correct_option_id: str | None = None,
+) -> dict | None:
+    if snap is None and not correct_option_id:
         return None
+    if snap is None:
+        return {
+            "event": "crowd.snapshot",
+            "momentId": str(moment_id),
+            "version": 0,
+            "generatedAt": None,
+            "totalResponses": 0,
+            "optionCounts": {},
+            "joinedLastMinute": 0,
+            "volumeState": "nascent",
+            "correctOptionId": correct_option_id,
+        }
     return {
         "event": "crowd.snapshot",
         "momentId": str(moment_id),
@@ -150,6 +225,7 @@ def serialize_snapshot(moment_id: UUID, snap: CrowdSnapshot | None) -> dict | No
         "optionCounts": snap.option_counts,
         "joinedLastMinute": snap.joined_last_minute,
         "volumeState": snap.volume_state or volume_state(snap.total_responses),
+        "correctOptionId": correct_option_id,
     }
 
 

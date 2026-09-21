@@ -16,6 +16,7 @@ from app.modules.feed.service import (
     my_response,
     serialize_moment,
     serialize_snapshot,
+    tags_for_moments,
 )
 from app.modules.responses.service import submit_response
 from app.modules.sharing.service import moment_share_card
@@ -38,7 +39,14 @@ async def get_moment(
         raise AppError("not_found", "Moment not found.", 404)
     mine = await my_response(session, moment_id, actor.user_id, actor.guest_id)
     snap = await session.get(CrowdSnapshot, moment_id)
-    payload = serialize_moment(m, snap, mine.option_id if mine else None)
+    tags = (await tags_for_moments(session, [moment_id])).get(moment_id, [])
+    payload = serialize_moment(
+        m,
+        snap,
+        mine.option_id if mine else None,
+        tags=tags,
+        reveal_correct=bool(mine),
+    )
     if actor.user_id:
         payload["friends"] = await friends_on_moment(session, actor.user_id, moment_id)
     return payload
@@ -53,7 +61,16 @@ async def get_result(
     snap = await session.get(CrowdSnapshot, moment_id)
     if snap is None:
         raise AppError("not_found", "No result yet.", 404)
-    return serialize_snapshot(moment_id, snap) or {}
+    correct_id = None
+    mine = await my_response(session, moment_id, actor.user_id, actor.guest_id)
+    if mine:
+        m = await session.get(Moment, moment_id, options=[selectinload(Moment.options)])
+        if m and m.scoring_mode == "correct_option":
+            for o in m.options:
+                if o.is_correct:
+                    correct_id = str(o.id)
+                    break
+    return serialize_snapshot(moment_id, snap, correct_option_id=correct_id) or {}
 
 
 @router.get("/{moment_id}/friends")

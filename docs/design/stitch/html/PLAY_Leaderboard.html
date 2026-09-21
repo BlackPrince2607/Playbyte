@@ -1,0 +1,347 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PLAY Leaderboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#1d1013",
+                      "surface-container-lowest": "#170a0e",
+                      "surface-tint": "#ffb1c4",
+                      "secondary-fixed-dim": "#a2d801",
+                      "tertiary-fixed": "#75ff75",
+                      "primary-fixed": "#ffd9e0",
+                      "on-background": "#f7dce1",
+                      "surface-container-highest": "#413034",
+                      "on-surface": "#f7dce1",
+                      "on-tertiary-fixed": "#002203",
+                      "inverse-surface": "#f7dce1",
+                      "lilac": "#8F7FC0",
+                      "inverse-primary": "#b90a5a",
+                      "tertiary": "#57e15b",
+                      "on-secondary-fixed-variant": "#384e00",
+                      "outline": "#a8898f",
+                      "on-primary": "#65002e",
+                      "secondary-fixed": "#bdf532",
+                      "line": "rgba(245, 240, 255, 0.12)",
+                      "cardAlt": "#2A1B4E",
+                      "on-surface-variant": "#e1bec5",
+                      "on-tertiary": "#003908",
+                      "on-primary-fixed-variant": "#8f0043",
+                      "ink": "#150E2B",
+                      "error": "#ffb4ab",
+                      "surface-container": "#2a1c1f",
+                      "primary": "#ffb1c4",
+                      "on-error-container": "#ffdad6",
+                      "on-primary-fixed": "#3f001a",
+                      "secondary-container": "#a2d801",
+                      "surface-variant": "#413034",
+                      "on-tertiary-fixed-variant": "#00530f",
+                      "on-primary-container": "#5b0028",
+                      "tertiary-fixed-dim": "#57e15b",
+                      "surface-dim": "#1d1013",
+                      "surface": "#1d1013",
+                      "surface-container-low": "#26181b",
+                      "error-container": "#93000a",
+                      "inverse-on-surface": "#3c2c30",
+                      "primary-fixed-dim": "#ffb1c4",
+                      "card": "#211540",
+                      "on-secondary": "#263500",
+                      "tertiary-container": "#00a92a",
+                      "on-tertiary-container": "#003306",
+                      "surface-container-high": "#362629",
+                      "outline-variant": "#594046",
+                      "on-secondary-fixed": "#141f00",
+                      "paper": "#F5F0FF",
+                      "primary-container": "#ff4d8d",
+                      "surface-bright": "#463538",
+                      "secondary": "#bdf532",
+                      "on-secondary-container": "#425a00",
+                      "on-error": "#690005"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "gutter": "16px",
+                      "margin": "20px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "xl": "32px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "large-score": [
+                              "spaceGrotesk"
+                      ],
+                      "hero": [
+                              "spaceGrotesk"
+                      ],
+                      "game-question-mobile": [
+                              "spaceGrotesk"
+                      ],
+                      "body-lg": [
+                              "inter"
+                      ],
+                      "body-sm": [
+                              "inter"
+                      ],
+                      "game-question": [
+                              "spaceGrotesk"
+                      ],
+                      "micro": [
+                              "inter"
+                      ],
+                      "stats": [
+                              "jetbrainsMono"
+                      ],
+                      "screen-title": [
+                              "spaceGrotesk"
+                      ],
+                      "metadata": [
+                              "inter"
+                      ],
+                      "hero-mobile": [
+                              "spaceGrotesk"
+                      ]
+              },
+              "fontSize": {
+                      "large-score": [
+                              "72px",
+                              {
+                                      "lineHeight": "1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "hero": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "game-question-mobile": [
+                              "30px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "game-question": [
+                              "42px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "micro": [
+                              "10px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "stats": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "screen-title": [
+                              "34px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "metadata": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "hero-mobile": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-ink text-on-background min-h-screen flex flex-col font-body-sm pb-[100px] md:pb-0">
+<!-- TopAppBar (from JSON) -->
+<header class="bg-background dark:bg-background border-b border-line flat no shadows flex justify-between items-center w-full px-margin h-16 sticky top-0 z-40 hidden md:flex">
+<button class="text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-opacity active:scale-95 transition-transform p-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">menu</span>
+</button>
+<div class="font-hero-mobile text-hero-mobile font-black text-primary italic tracking-tighter">PLAY</div>
+<button class="text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-opacity active:scale-95 transition-transform p-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+</header>
+<header class="bg-background dark:bg-background border-b border-line flex justify-between items-center w-full px-margin h-16 md:hidden sticky top-0 z-40">
+<div class="font-hero-mobile text-hero-mobile font-black text-primary italic tracking-tighter">PLAY</div>
+<button class="text-primary dark:text-primary-fixed-dim p-2">
+<img class="w-8 h-8 rounded-full border border-line object-cover" data-alt="A small, stylized avatar portrait of a user in a neon-lit, cyberpunk gaming environment. High contrast pink and lime hues. 3D rendered style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvf-LJT4wyO_Jdnna2V10WZo_wqFa1ppYFqT3kbyNCfMTBr_OZad0Gq4siYCD5Ua5hVKauxoPKDvIEjvNMO8E2nnOqU6bSBKgatMGlxPq6e_aXCPJYq7ccTHiATSx4Er6lchDJkvPDjSupF6JcHoTOnm7Orr9cUH1ASYYkgEbUrrCp75fZ579X9SDOrdagI7kjOi4P95iFRPMTDOClmVPlJljnMgFMPjn-bmSxQYr73Qyrtrw86R8PjQ">
+</button>
+</header>
+<main class="flex-1 px-margin pt-xl max-w-2xl mx-auto w-full">
+<!-- Headline -->
+<h1 class="font-screen-title text-screen-title-mobile text-on-background mb-lg">Who’s winning?</h1>
+<!-- Segmented Tabs -->
+<div class="flex space-x-2 overflow-x-auto scrollbar-hide pb-2 mb-xl">
+<button class="whitespace-nowrap px-4 py-2 rounded-full border border-line bg-cardAlt text-lilac font-metadata text-metadata">Friends</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full border border-line bg-cardAlt text-lilac font-metadata text-metadata">Bengaluru</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full border border-line bg-cardAlt text-lilac font-metadata text-metadata">Karnataka</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-pink-500 bg-primary-container text-paper font-metadata text-metadata font-bold border border-primary-container">India</button>
+</div>
+<!-- Hero Card - User Status -->
+<div class="bg-card rounded-[24px] p-6 border border-line mb-xl relative overflow-hidden">
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-primary rounded-full blur-[80px] opacity-20"></div>
+<div class="flex flex-col items-center text-center relative z-10">
+<div class="text-lilac font-metadata text-metadata mb-sm uppercase tracking-widest">Your Position</div>
+<div class="font-large-score text-large-score text-primary mb-2">#245</div>
+<div class="flex items-center space-x-2">
+<span class="bg-cardAlt border border-line px-3 py-1 rounded-full text-paper font-body-sm text-body-sm">India</span>
+<span class="bg-cardAlt border border-line px-3 py-1 rounded-full text-secondary font-body-sm text-body-sm">Top 16%</span>
+</div>
+</div>
+</div>
+<!-- Leaderboard List -->
+<div class="flex flex-col space-y-3 mb-xl">
+<!-- Rank 1 -->
+<div class="bg-card border border-line rounded-[14px] p-3 flex items-center justify-between">
+<div class="flex items-center space-x-4">
+<span class="font-stats text-stats text-lilac w-8 text-right">#1</span>
+<img class="w-10 h-10 rounded-full border border-line object-cover" data-alt="A vibrant avatar portrait of a competitive gamer, lit with bright neon pink and blue lights. Corporate modern style, confident expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRrYk2vC1He4I893zFsJKuytSBcdnKM9mzj_kTFGK25qCRynuVY-qJMgOvIa3uqgvNLDjp5Q-SjBl5_yXAR15WQbNFOSvxJQd4LG4Q11LRXNT9arTETgje2ohReg3YfKDoXC-fpN81mCuYLAIAFaf2ewJoJG68DbgaVIPe0d-hQ4d061GljitD_GQd765Qvet8eybTwvaUTlXutnJlTDUHhrJ1ycBPnr4UcWxrC3GpXxH8jT8ddR7lXQ">
+<span class="font-body-lg text-body-lg text-paper font-bold">Arjun</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-stats text-stats text-primary">12,420</span>
+<div class="flex items-center text-tertiary space-x-1">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+<span class="font-metadata text-metadata">12</span>
+</div>
+</div>
+</div>
+<!-- Rank 2 -->
+<div class="bg-card border border-line rounded-[14px] p-3 flex items-center justify-between">
+<div class="flex items-center space-x-4">
+<span class="font-stats text-stats text-lilac w-8 text-right">#2</span>
+<img class="w-10 h-10 rounded-full border border-line object-cover" data-alt="A stylized avatar of a user with glowing neon green glasses, set against a deep dark purple ink background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeGDBicis6xyFP-6ANNUPrP0P_piUlrblzIN1CfawcnOzUnxHr5tlemNifCffeJQIz_0eRU25Ij2ektwYuhalEA0P_9EVmJHS0_TifBZhpqrryUmPyNf9t1lKXlj2D3fhdAfjTvzt8m6pcG7w6i48Xggpy8R9EDiJiy6r6cMQ0jOd_xoH-3XUfL62Srx_ho3XF4jNa5IvhBKox40Kb2UXTsNVx_yKEakw80ZXOMMux5fKV2MAomiRuaw">
+<span class="font-body-lg text-body-lg text-paper font-bold">Rahul</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-stats text-stats text-on-background">11,980</span>
+<div class="flex items-center text-error space-x-1">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+<span class="font-metadata text-metadata">3</span>
+</div>
+</div>
+</div>
+<!-- Rank 3 -->
+<div class="bg-card border border-line rounded-[14px] p-3 flex items-center justify-between">
+<div class="flex items-center space-x-4">
+<span class="font-stats text-stats text-lilac w-8 text-right">#3</span>
+<img class="w-10 h-10 rounded-full border border-line object-cover" data-alt="A futuristic avatar portrait of a female gamer, softly lit by pink neon accents on a dark corporate modern backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-qECaU28DZ9KOv7QB6GI3c7vpP1qfzzj1SQe6rBeAiuT5Dk-qNxH9GEDjQ5ILYB5BXBd6BdXPImZmHI6AVu6p988qY5Ep3agHQa2ApaaoxDrJBnZ5mIpJziULH2PyPumcevDNV7BECWbn7XJ9gIVHJHohpRXXr1BeyEUcjkUkDklNzJIlv_fJHIuXdurnEXpJdXPRgMXA-o1WHIbeVAvVgC7WSk80f5INaeJ1hKJUSN-k0x79NTEhOg">
+<span class="font-body-lg text-body-lg text-paper font-bold">Neha</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-stats text-stats text-on-background">11,420</span>
+<div class="flex items-center text-tertiary space-x-1">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+<span class="font-metadata text-metadata">5</span>
+</div>
+</div>
+</div>
+<div class="flex justify-center py-2">
+<span class="material-symbols-outlined text-lilac">more_vert</span>
+</div>
+<!-- Current User (Highlighted) -->
+<div class="bg-primary-container border-2 border-primary rounded-[14px] p-3 flex items-center justify-between scale-105 shadow-[0_0_20px_rgba(255,77,141,0.2)]">
+<div class="flex items-center space-x-4">
+<span class="font-stats text-stats text-paper w-8 text-right">#245</span>
+<img class="w-10 h-10 rounded-full border border-primary-container object-cover" data-alt="A small, stylized avatar portrait of a user in a neon-lit, cyberpunk gaming environment. High contrast pink and lime hues. 3D rendered style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAL43zfYpFLeCNp0I0DhqjiZkzaGH2XU24i1sqM5cHyz6y11fjPEwc8VUbnAgeyxA0-XctlYyz7mWj_16dfIV6QjXg1vu2YcqkM3QDmnu6jpN1w7cG4ZWnYy3VNUlZ2hwRAGMZKVIiLPXlHPNZyh1Cyzl_vVgMm4yTZh48wH0TLLNrdKXCPtV3k_IITKIZ8uVgR2DtN6lrF2TKBh4BbQNF20x2ZnvHDseJWsb9N89uWRM8y3mudruc-nA">
+<span class="font-body-lg text-body-lg text-paper font-bold">You</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-stats text-stats text-paper">9,420</span>
+<div class="flex items-center text-paper opacity-80 space-x-1">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+<span class="font-metadata text-metadata">42</span>
+</div>
+</div>
+</div>
+</div>
+<p class="text-center text-lilac font-metadata text-metadata mt-lg">Play more to climb the leaderboard.</p>
+</main>
+<!-- BottomNavBar (from JSON) -->
+<nav class="bg-surface-container dark:bg-surface-container border-t border-line fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 md:hidden">
+<button class="flex flex-col items-center justify-center text-lilac opacity-70 hover:text-primary transition-colors active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">sports_esports</span>
+<span class="font-metadata text-metadata">Play</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-cardAlt text-primary rounded-xl px-3 py-1 hover:text-primary transition-colors active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">leaderboard</span>
+<span class="font-metadata text-metadata font-bold">Leaderboard</span>
+</button>
+<button class="flex flex-col items-center justify-center text-lilac opacity-70 hover:text-primary transition-colors active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">group</span>
+<span class="font-metadata text-metadata">Social</span>
+</button>
+<button class="flex flex-col items-center justify-center text-lilac opacity-70 hover:text-primary transition-colors active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">person</span>
+<span class="font-metadata text-metadata">Profile</span>
+</button>
+</nav>
+</body></html>

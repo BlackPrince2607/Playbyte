@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, StyleSheet, Text, ViewStyle } from "react-native";
 import { colors, radius, spacing } from "../theme/colors";
-import { type } from "../theme/typography";
+import { fonts, type } from "../theme/typography";
 
 type Props = {
   label: string;
@@ -8,9 +9,19 @@ type Props = {
   variant?: "primary" | "secondary" | "success";
   style?: ViewStyle;
   disabled?: boolean;
+  icon?: keyof typeof Ionicons.glyphMap;
+  trailingIcon?: keyof typeof Ionicons.glyphMap;
 };
 
-export function PrimaryButton({ label, onPress, variant = "primary", style, disabled }: Props) {
+export function PrimaryButton({
+  label,
+  onPress,
+  variant = "primary",
+  style,
+  disabled,
+  icon,
+  trailingIcon,
+}: Props) {
   const bg =
     variant === "primary" ? colors.pink : variant === "success" ? colors.lime : colors.cardAlt;
   const fg = variant === "success" ? colors.ink : colors.paper;
@@ -21,14 +32,21 @@ export function PrimaryButton({ label, onPress, variant = "primary", style, disa
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        { backgroundColor: bg, opacity: pressed || disabled ? 0.85 : 1 },
+        {
+          backgroundColor: bg,
+          opacity: pressed || disabled ? 0.85 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
         variant === "secondary" && styles.secondary,
+        variant === "primary" && styles.primaryGlow,
         style,
       ]}
     >
-      <Text style={[type.bodyLg, { color: fg, fontFamily: type.bodyLg.fontFamily, fontWeight: "700" }]}>
-        {label}
-      </Text>
+      {icon ? <Ionicons name={icon} size={18} color={fg} style={{ marginRight: 8 }} /> : null}
+      <Text style={[type.button, { color: fg, fontFamily: fonts.bodyBold }]}>{label}</Text>
+      {trailingIcon ? (
+        <Ionicons name={trailingIcon} size={20} color={fg} style={{ marginLeft: 8 }} />
+      ) : null}
     </Pressable>
   );
 }
@@ -39,9 +57,18 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
   },
   secondary: {
     borderWidth: 1,
     borderColor: colors.line,
+  },
+  primaryGlow: {
+    shadowColor: colors.pink,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
   },
 });

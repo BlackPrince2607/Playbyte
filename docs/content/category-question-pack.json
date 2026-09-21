@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "note": "Editorial starter pack mapped to live Playbyte categories. Polls are opinion (scoringMode none). Quizzes need isCorrect on one option. Review in CMS before go-live. Time-sensitive cricket/news prompts should be rewritten for the actual match/day.",
+  "moments": [
+    {
+      "categorySlug": "cricket",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Tonight's big match — who takes it?",
+      "options": ["Home side", "Away side"]
+    },
+    {
+      "categorySlug": "cricket",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Powerplay strategy — what wins more games?",
+      "options": ["Go hard from ball 1", "Build then explode", "Depends on pitch"]
+    },
+    {
+      "categorySlug": "cricket",
+      "type": "pulse",
+      "tags": ["quiz"],
+      "scoringMode": "correct_option",
+      "prompt": "In T20, how many overs is a Powerplay?",
+      "options": [
+        { "label": "4", "isCorrect": false },
+        { "label": "6", "isCorrect": true },
+        { "label": "8", "isCorrect": false },
+        { "label": "10", "isCorrect": false }
+      ]
+    },
+    {
+      "categorySlug": "sports",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Weekend sport — what are you watching?",
+      "options": ["Football", "Cricket", "Tennis", "Skipping sport"]
+    },
+    {
+      "categorySlug": "sports",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Gym or ground — what's the real flex?",
+      "options": ["Consistency", "PR lifts", "Team wins", "Just showing up"]
+    },
+    {
+      "categorySlug": "movies",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Friday night — theatre or OTT?",
+      "options": ["Big screen only", "Couch + OTT", "Both, always", "Re-watch old fav"]
+    },
+    {
+      "categorySlug": "movies",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Interval twist or slow burn — what do you prefer?",
+      "options": ["Interval twist", "Slow burn", "Either if writing is good"]
+    },
+    {
+      "categorySlug": "movies",
+      "type": "pulse",
+      "tags": ["quiz"],
+      "scoringMode": "correct_option",
+      "prompt": "Which award is considered film's highest industry honor in the US?",
+      "options": [
+        { "label": "Emmy", "isCorrect": false },
+        { "label": "Oscar", "isCorrect": true },
+        { "label": "Grammy", "isCorrect": false },
+        { "label": "Tony", "isCorrect": false }
+      ]
+    },
+    {
+      "categorySlug": "music",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Playlist war — what's winning your week?",
+      "options": ["Bollywood", "Indie / alt", "Hip-hop", "Lo-fi focus"]
+    },
+    {
+      "categorySlug": "music",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Concert tickets just dropped — you…",
+      "options": ["Buy in 10 seconds", "Wait for friends", "Stream is enough", "FOMO then regret"]
+    },
+    {
+      "categorySlug": "food",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "1am craving — what wins?",
+      "options": ["Maggi", "Biryani", "Pizza", "Fruit + dignity"]
+    },
+    {
+      "categorySlug": "food",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Chai or coffee to start the day?",
+      "options": ["Chai", "Coffee", "Both", "Neither — water"]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Next phone — what matters most?",
+      "options": ["Camera", "Battery", "Clean software", "Just price"]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "AI tools at work — your take?",
+      "options": ["Daily driver", "Sometimes useful", "Overhyped", "Still figuring it out"]
+    },
+    {
+      "categorySlug": "pop-culture",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "This week's meme — are you in or out?",
+      "options": ["Fully in", "Seen it, moved on", "What meme?", "Already cringe"]
+    },
+    {
+      "categorySlug": "pop-culture",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Celebrity drama — do you click?",
+      "options": ["Always", "Only if funny", "Never", "Doomscroll then regret"]
+    },
+    {
+      "categorySlug": "news",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "How do you usually get news?",
+      "options": ["Twitter / X", "Instagram", "YouTube", "Traditional apps"]
+    },
+    {
+      "categorySlug": "weather",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Monsoon mood — love it or dread it?",
+      "options": ["Love the rain", "Only if I'm home", "Traffic nightmare", "AC season forever"]
+    },
+    {
+      "categorySlug": "social",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Group plan just got moved — you…",
+      "options": ["Adapt instantly", "Mildly annoyed", "Bail politely", "Start a new plan"]
+    },
+    {
+      "categorySlug": "casual",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Sunday vibe check — what's the move?",
+      "options": ["Sleep catch-up", "Errands + adulting", "Hang with people", "Solo scroll day"]
+    },
+    {
+      "categorySlug": "casual",
+      "type": "reaction",
+      "tags": ["poll"],
+      "prompt": "Is Monday already winning?",
+      "options": ["Yes", "Not yet"]
+    }
+  ]
+}

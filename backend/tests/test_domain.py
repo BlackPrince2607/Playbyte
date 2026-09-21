@@ -54,8 +54,18 @@ def test_feed_interleave_hot_window() -> None:
 def test_score_clamp_and_percentile() -> None:
     assert clamp_score(-1, 100) == 0
     assert clamp_score(999, 100) == 100
+    assert clamp_score(0, 50) == 0
+    assert clamp_score(50, 50) == 50
     assert percentile(10, [1, 2, 3, 4, 5]) == 100.0
     assert percentile(1, []) == 50.0
+    assert percentile(3, [1, 2, 3, 4, 5]) == 40.0
+    assert percentile(0, [0, 0, 0]) == 0.0
+
+
+def test_game_play_duration_clamp_allows_two_hours() -> None:
+    """Mirrors submit_play duration clamp for open-ended sessions."""
+    assert max(0, min(8_000_000, 7_200_000)) == 7_200_000
+    assert max(0, min(60_000, 7_200_000)) == 60_000
 
 
 def test_notification_cap() -> None:

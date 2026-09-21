@@ -68,7 +68,6 @@ async def test_complete_export_writes_file(tmp_path, monkeypatch) -> None:
     url = await complete_export(session, req_id, session.user_id)
     assert url.startswith("http://localhost:8000/static/exports/")
     key = f"exports/{session.user_id}/{req_id}.json"
-    path = tmp_path / "storage" / "exports" / f"{session.user_id}_{req_id}.json"
     # Local storage flattens slashes in filename
     flat = tmp_path / "storage" / "exports" / key.replace("/", "_")
     data = json.loads(flat.read_text(encoding="utf-8"))

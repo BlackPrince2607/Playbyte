@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     supabase_storage_bucket_avatars: str = "avatars"
     supabase_storage_bucket_shares: str = "share-cards"
     supabase_storage_bucket_exports: str = "exports"
+    supabase_storage_bucket_moment_media: str = "moment-media"
     supabase_jwt_audience: str = "authenticated"
     supabase_jwt_issuer: str = ""
 

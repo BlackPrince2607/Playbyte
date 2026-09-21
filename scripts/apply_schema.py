@@ -12,6 +12,7 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     files = [
         root / "supabase/migrations/0001_init.sql",
+        root / "supabase/migrations/0003_content_tags_media.sql",
         root / "supabase/seed/001_categories_and_games.sql",
         root / "supabase/seed/002_sample_moments.sql",
     ]

@@ -17,6 +17,7 @@ class SupabaseStorage(ObjectStorage):
         bucket_shares: str = "share-cards",
         bucket_avatars: str = "avatars",
         bucket_exports: str = "exports",
+        bucket_moment_media: str = "moment-media",
     ) -> None:
         self._base = supabase_url.rstrip("/")
         self._key = service_role_key
@@ -24,16 +25,21 @@ class SupabaseStorage(ObjectStorage):
             "share-cards": bucket_shares,
             "avatars": bucket_avatars,
             "exports": bucket_exports,
+            "moment-media": bucket_moment_media,
         }
 
     def _bucket_name(self, bucket: str) -> str:
         return self._buckets.get(bucket, bucket)
 
-    def _headers(self, content_type: str, *, upsert: bool = True) -> dict[str, str]:
+    def _headers(self, content_type: str | None = None, *, upsert: bool = False) -> dict[str, str]:
+        # New sb_secret_/sb_publishable_ keys are not JWTs — Storage expects `apikey`.
+        # Send both for compatibility with legacy service_role JWTs and new secret keys.
         headers = {
+            "apikey": self._key,
             "Authorization": f"Bearer {self._key}",
-            "Content-Type": content_type,
         }
+        if content_type:
+            headers["Content-Type"] = content_type
         if upsert:
             headers["x-upsert"] = "true"
         return headers
@@ -43,9 +49,10 @@ class SupabaseStorage(ObjectStorage):
         bucket_name = self._bucket_name(bucket)
         url = f"{self._base}/storage/v1/object/{bucket_name}/{key}"
         async with httpx.AsyncClient(timeout=30.0) as client:
-            res = await client.post(url, content=data, headers=self._headers(content_type))
+            res = await client.post(url, content=data, headers=self._headers(content_type, upsert=True))
             if res.status_code >= 400:
-                raise RuntimeError(f"Storage upload failed ({res.status_code})")
+                detail = (res.text or "")[:300]
+                raise RuntimeError(f"Storage upload failed ({res.status_code}): {detail}")
         if bucket == "exports":
             return await self.create_signed_url(bucket, key, expires_in=86400)
         return self.public_url(bucket, key)
@@ -54,7 +61,7 @@ class SupabaseStorage(ObjectStorage):
         bucket_name = self._bucket_name(bucket)
         url = f"{self._base}/storage/v1/object/{bucket_name}/{key}"
         async with httpx.AsyncClient(timeout=15.0) as client:
-            res = await client.delete(url, headers={"Authorization": f"Bearer {self._key}"})
+            res = await client.delete(url, headers=self._headers())
             if res.status_code not in (200, 204, 404):
                 raise RuntimeError(f"Storage delete failed ({res.status_code})")
 
@@ -69,7 +76,7 @@ class SupabaseStorage(ObjectStorage):
             res = await client.post(
                 url,
                 json={"expiresIn": expires_in},
-                headers={"Authorization": f"Bearer {self._key}", "Content-Type": "application/json"},
+                headers=self._headers("application/json"),
             )
             if res.status_code >= 400:
                 raise RuntimeError(f"Storage sign failed ({res.status_code})")

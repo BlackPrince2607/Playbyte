@@ -7,12 +7,14 @@ ALLOWED_CONTENT_TYPES: dict[str, set[str]] = {
     "share-cards": {"image/png"},
     "avatars": {"image/png", "image/jpeg", "image/webp"},
     "exports": {"application/json"},
+    "moment-media": {"image/png", "image/jpeg", "image/webp"},
 }
 
 MAX_BYTES: dict[str, int] = {
     "share-cards": 2 * 1024 * 1024,
     "avatars": 2 * 1024 * 1024,
     "exports": 10 * 1024 * 1024,
+    "moment-media": 5 * 1024 * 1024,
 }
 
 _KEY_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9/_\-.]{0,512}$")

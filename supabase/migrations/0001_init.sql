@@ -184,7 +184,7 @@ CREATE TABLE game_plays (
     OR (user_id IS NULL AND guest_session_id IS NOT NULL)
   ),
   CONSTRAINT game_plays_score_chk CHECK (score >= 0 AND score <= 1000000),
-  CONSTRAINT game_plays_duration_chk CHECK (duration_ms >= 0 AND duration_ms <= 300000)
+  CONSTRAINT game_plays_duration_chk CHECK (duration_ms >= 0 AND duration_ms <= 7200000)
 );
 CREATE INDEX game_plays_key_time_idx ON game_plays (game_key, created_at);
 CREATE UNIQUE INDEX game_plays_idem_user_uidx ON game_plays (game_key, user_id, idempotency_key) WHERE user_id IS NOT NULL AND idempotency_key IS NOT NULL;

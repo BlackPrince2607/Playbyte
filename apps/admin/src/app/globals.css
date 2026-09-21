@@ -7,10 +7,11 @@
   --color-pink: #ff4d8d;
   --color-pink-soft: #ffb1c4;
   --color-lime: #c6ff3d;
-  --color-live: #57e15b;
+  --color-live: #c6ff3d;
   --color-paper: #f5f0ff;
   --color-lilac: #8f7fc0;
   --color-line: rgba(245, 240, 255, 0.12);
+  --color-background: #150e2b;
   --font-display: var(--font-space-grotesk);
   --font-body: var(--font-inter);
   --font-mono: var(--font-jetbrains);
@@ -28,4 +29,26 @@ body {
 
 .font-mono {
   font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.btn-primary {
+  background: var(--color-pink);
+  color: var(--color-paper);
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.btn-secondary {
+  background: var(--color-card-alt);
+  color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.btn-success {
+  background: var(--color-lime);
+  color: var(--color-ink);
+  border-radius: 14px;
+  font-weight: 700;
 }

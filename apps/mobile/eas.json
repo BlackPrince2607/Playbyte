@@ -13,8 +13,14 @@
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "staging"
+        "EXPO_PUBLIC_APP_ENV": "staging",
+        "EXPO_PUBLIC_API_URL": "https://playbyte-production.up.railway.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://pzemlrjjqmfosprasivr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_b54BLPldgFedFNejqR9YVg_WkROtN5u"
       }
     },
     "production": {

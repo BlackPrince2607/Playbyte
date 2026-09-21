@@ -55,6 +55,7 @@ def get_object_storage(settings: Settings | None = None) -> ObjectStorage:
             bucket_shares=settings.supabase_storage_bucket_shares,
             bucket_avatars=settings.supabase_storage_bucket_avatars,
             bucket_exports=settings.supabase_storage_bucket_exports,
+            bucket_moment_media=settings.supabase_storage_bucket_moment_media,
         )
     if settings.app_env == "production":
         raise RuntimeError("Supabase Storage credentials are required in production.")

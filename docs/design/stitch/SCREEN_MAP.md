@@ -1,23 +1,27 @@
 # Stitch → Playbyte mobile screen map
 
 **Project:** PLAY Social Play Platform (`projects/14973883405125719991`)  
-**Source:** `screens.json` + exported HTML in `html/`
+**Source:** Stitch MCP + exports in `html/` and `screenshots/`  
+**Nav (Stitch-exact):** Feed · Compete · Friends · Vault
 
-| Stitch screen | RN route / component | API / behavior |
-|---------------|---------------------|----------------|
-| Welcome to PLAY - Refined | `WelcomeScreen` | First launch only |
-| PLAY - Get Started (Refined) | `GetStartedScreen` | CTA → language or interests |
-| Choose Your Language - PLAY | `LanguageScreen` | Persist locale preference |
-| Choose Your Interests - PLAY | `InterestsScreen` | `PUT /v1/me/interests` |
-| PLAY - Refined Game Feed Layout | `FeedScreen` + `FeedPager` | `GET /v1/feed`, vertical snap |
-| PLAY - Social Poll Results | `MomentResultOverlay` | After `POST .../responses` |
-| PLAY - Refined Trivia Quiz Feed | `MomentFeedCard` (pulse) | Same as predict |
-| PLAY - Speed Puzzle Feed | `GameIntroCard` | Mini-game in feed |
-| PLAY - Post-Game Result | `PostGameResultScreen` | After game play submit |
-| PLAY - Live Now (Refined) | `LiveNowScreen` | Live moments from feed |
-| PLAY - Friends & Leaderboard | `FriendsScreen` | `GET /v1/friends` (no public ranks) |
-| PLAY - Notifications | `NotificationsScreen` | `PATCH /v1/me/notification-preferences` |
-| PLAY - Settings | `SettingsScreen` | Profile, privacy, GDPR |
-| PLAY - Leaderboard | Deferred / friends-only framing | Post-MVP per PRD |
+| Stitch screen | RN route / component | API / behavior | Fidelity notes |
+|---------------|---------------------|----------------|----------------|
+| Welcome to PLAY - Refined | `WelcomeScreen` | First launch | Floating cards + CTAs |
+| PLAY - Get Started (Refined) | `GetStartedScreen` | → language / games | Live Now carousel + invite CTA |
+| Choose Your Language - PLAY | `LanguageScreen` | Locale persist | Language grid |
+| Choose Your Interests - PLAY | `InterestsScreen` | `PUT /v1/me/interests` | 2-col cards |
+| PLAY - Refined Game Feed Layout | `FeedScreen` + `MomentFeedPage` | `GET /v1/feed` | Card shell + action rail |
+| PLAY - Social Poll Results | `MomentFeedPage` answered | respond + result poll | FriendChoiceStrip + % bars |
+| PLAY - Refined Trivia Quiz Feed | `MomentFeedPage` quiz | same | Quiz tags / correct states |
+| PLAY - Speed Puzzle Feed | `GameIntroPage` + `GameEngine` | `/v1/games/:key/plays` | Shell chrome; 8 local games |
+| PLAY - Post-Game Result | `PostGameResultScreen` | submitPlay percentile | XP/session tiles remapped (no public XP API) |
+| PLAY - Live Now (Refined) | `LiveNowScreen` (Compete) | feed moments | MajorityChip + compact avatars |
+| PLAY - Friends & Leaderboard | `FriendsScreen` | friends APIs | Live strip + invite + embedded ranks |
+| PLAY - Leaderboard | `LeaderboardScreen` | friends-scoped UI | No public geo ranks API |
+| PLAY - Notifications | `NotificationsScreen` | notification-preferences | Prefs chrome (no inbox API) |
+| PLAY - Settings | `SettingsScreen` (Vault) | me / privacy / prefs | Stitch section cards |
 
-**Refined variants** are used over older duplicates where both exist.
+## Intentional deviations (API honesty)
+- No likes/comments/XP economy / India geo ranks / notification inbox / per-question quiz timers.
+- Challenge → share-card / native share.
+- Leaderboard scores are friends-scoped display heuristics until a ranks endpoint exists.

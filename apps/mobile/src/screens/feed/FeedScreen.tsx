@@ -13,9 +13,10 @@ import { MomentFeedPage } from "./MomentFeedPage";
 
 type Props = {
   onPlayGame: (game: FeedGame) => void;
+  onOpenProfile?: () => void;
 };
 
-export function FeedScreen({ onPlayGame }: Props) {
+export function FeedScreen({ onPlayGame, onOpenProfile }: Props) {
   const {
     items,
     streak,
@@ -40,7 +41,12 @@ export function FeedScreen({ onPlayGame }: Props) {
   if (feedLoading && items.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
-        <FeedTopBar streak={streak} refreshing={feedLoading} onRefresh={() => void refreshFeed(true)} />
+        <FeedTopBar
+          streak={streak}
+          refreshing={feedLoading}
+          onRefresh={() => void refreshFeed(true)}
+          onProfile={onOpenProfile}
+        />
         <LoadingSkeleton />
       </View>
     );
@@ -49,7 +55,7 @@ export function FeedScreen({ onPlayGame }: Props) {
   if (feedError && items.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
-        <FeedTopBar streak={streak} onRefresh={() => void refreshFeed(true)} />
+        <FeedTopBar streak={streak} onRefresh={() => void refreshFeed(true)} onProfile={onOpenProfile} />
         <ErrorState message={feedError} onRetry={() => void refreshFeed(true)} />
       </View>
     );
@@ -58,7 +64,7 @@ export function FeedScreen({ onPlayGame }: Props) {
   if (!items.length) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
-        <FeedTopBar streak={streak} onRefresh={() => void refreshFeed(true)} />
+        <FeedTopBar streak={streak} onRefresh={() => void refreshFeed(true)} onProfile={onOpenProfile} />
         <EmptyState
           title="Nothing live right now"
           message="Check back soon — new moments drop throughout the day."
@@ -75,6 +81,7 @@ export function FeedScreen({ onPlayGame }: Props) {
         streak={streak}
         refreshing={feedRefreshing}
         onRefresh={() => void refreshFeed(true)}
+        onProfile={onOpenProfile}
       />
       <PagerView
         ref={pagerRef}

@@ -1,0 +1,144 @@
+{
+  "generatedAt": "2026-09-16T15:14:42.502452+00:00",
+  "count": 5,
+  "tags": [
+    "poll",
+    "quiz"
+  ],
+  "moments": [
+    {
+      "type": "predict",
+      "categorySlug": "sports",
+      "prompt": "Most people get this wrong \u2014 Cricket or Football?",
+      "options": [
+        {
+          "label": "Cricket",
+          "isCorrect": false
+        },
+        {
+          "label": "Football",
+          "isCorrect": false
+        }
+      ],
+      "tags": [
+        "poll"
+      ],
+      "scoringMode": "none",
+      "restrictedTopic": "none",
+      "status": "draft"
+    },
+    {
+      "type": "pulse",
+      "categorySlug": "fashion",
+      "prompt": "Your friends will roast you for this: Best answer for sneaker drops?",
+      "options": [
+        {
+          "label": "Chai",
+          "isCorrect": false
+        },
+        {
+          "label": "Coffee",
+          "isCorrect": false
+        },
+        {
+          "label": "Movies",
+          "isCorrect": true
+        }
+      ],
+      "tags": [
+        "quiz"
+      ],
+      "scoringMode": "correct_option",
+      "restrictedTopic": "none",
+      "status": "draft"
+    },
+    {
+      "type": "pulse",
+      "categorySlug": "movies",
+      "prompt": "Your friends will roast you for this: What's the move for sequel bait?",
+      "options": [
+        {
+          "label": "Go big",
+          "isCorrect": false
+        },
+        {
+          "label": "Play safe",
+          "isCorrect": false
+        },
+        {
+          "label": "Skip it",
+          "isCorrect": false
+        },
+        {
+          "label": "Ask a friend",
+          "isCorrect": false
+        }
+      ],
+      "tags": [
+        "poll"
+      ],
+      "scoringMode": "none",
+      "restrictedTopic": "none",
+      "status": "draft"
+    },
+    {
+      "type": "pulse",
+      "categorySlug": "politics",
+      "prompt": "Only 1 in 5 pick correctly: Which is true about policy debates?",
+      "options": [
+        {
+          "label": "City",
+          "isCorrect": false
+        },
+        {
+          "label": "Hometown",
+          "isCorrect": false
+        },
+        {
+          "label": "Chai",
+          "isCorrect": false
+        },
+        {
+          "label": "Coffee",
+          "isCorrect": true
+        }
+      ],
+      "tags": [
+        "quiz"
+      ],
+      "scoringMode": "correct_option",
+      "restrictedTopic": "none",
+      "status": "draft"
+    },
+    {
+      "type": "pulse",
+      "categorySlug": "music",
+      "prompt": "Quick: which one wins? Pick the vibe for playlist wars.",
+      "options": [
+        {
+          "label": "Chaotic",
+          "isCorrect": false
+        },
+        {
+          "label": "Chill",
+          "isCorrect": false
+        },
+        {
+          "label": "Main character",
+          "isCorrect": false
+        },
+        {
+          "label": "Lowkey",
+          "isCorrect": false
+        }
+      ],
+      "tags": [
+        "poll"
+      ],
+      "scoringMode": "none",
+      "restrictedTopic": "none",
+      "status": "draft"
+    }
+  ],
+  "insertedIds": []
+}

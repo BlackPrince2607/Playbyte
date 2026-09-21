@@ -6,6 +6,7 @@
 
 # Python
 backend/.venv/
+backend/venv/
 backend/**/__pycache__/
 backend/**/*.pyc
 backend/.mypy_cache/
@@ -31,6 +32,8 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+.cursor/mcp.json
+.cursor/mcp.json.local
 
 # Scratch extracts (do not ship)
 _prd_extract.txt

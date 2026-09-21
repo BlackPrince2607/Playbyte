@@ -1,0 +1,350 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>PLAY - Trivia Quiz Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error-container": "#ffdad6",
+                      "inverse-on-surface": "#3c2c30",
+                      "surface": "#1d1013",
+                      "tertiary-fixed": "#75ff75",
+                      "on-error": "#690005",
+                      "tertiary": "#57e15b",
+                      "primary-fixed-dim": "#ffb1c4",
+                      "lilac": "#8F7FC0",
+                      "inverse-primary": "#b90a5a",
+                      "on-secondary-fixed": "#141f00",
+                      "surface-container-high": "#362629",
+                      "line": "rgba(245, 240, 255, 0.12)",
+                      "cardAlt": "#2A1B4E",
+                      "surface-container": "#2a1c1f",
+                      "on-primary-fixed": "#3f001a",
+                      "primary": "#ffb1c4",
+                      "primary-fixed": "#ffd9e0",
+                      "secondary-fixed": "#bdf532",
+                      "on-secondary-fixed-variant": "#384e00",
+                      "inverse-surface": "#f7dce1",
+                      "surface-variant": "#413034",
+                      "secondary-fixed-dim": "#a2d801",
+                      "surface-container-low": "#26181b",
+                      "error-container": "#93000a",
+                      "on-tertiary-container": "#003306",
+                      "on-background": "#f7dce1",
+                      "surface-dim": "#1d1013",
+                      "paper": "#F5F0FF",
+                      "outline-variant": "#594046",
+                      "on-tertiary-fixed-variant": "#00530f",
+                      "on-secondary": "#263500",
+                      "on-surface": "#f7dce1",
+                      "on-primary-container": "#5b0028",
+                      "background": "#1d1013",
+                      "outline": "#a8898f",
+                      "tertiary-fixed-dim": "#57e15b",
+                      "on-primary": "#65002e",
+                      "secondary": "#bdf532",
+                      "tertiary-container": "#00a92a",
+                      "surface-container-highest": "#413034",
+                      "ink": "#150E2B",
+                      "on-surface-variant": "#e1bec5",
+                      "error": "#ffb4ab",
+                      "secondary-container": "#a2d801",
+                      "surface-tint": "#ffb1c4",
+                      "on-tertiary-fixed": "#002203",
+                      "surface-container-lowest": "#170a0e",
+                      "on-primary-fixed-variant": "#8f0043",
+                      "card": "#211540",
+                      "on-secondary-container": "#425a00",
+                      "surface-bright": "#463538",
+                      "on-tertiary": "#003908",
+                      "primary-container": "#ff4d8d"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "margin": "20px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "gutter": "16px",
+                      "md": "16px",
+                      "xl": "32px"
+              },
+              "fontFamily": {
+                      "stats": [
+                              "JetBrains Mono", "monospace"
+                      ],
+                      "hero-mobile": [
+                              "Space Grotesk", "sans-serif"
+                      ],
+                      "game-question": [
+                              "Space Grotesk", "sans-serif"
+                      ],
+                      "body-sm": [
+                              "Inter", "sans-serif"
+                      ],
+                      "game-question-mobile": [
+                              "Space Grotesk", "sans-serif"
+                      ],
+                      "micro": [
+                              "Inter", "sans-serif"
+                      ],
+                      "hero": [
+                              "Space Grotesk", "sans-serif"
+                      ],
+                      "body-lg": [
+                              "Inter", "sans-serif"
+                      ],
+                      "metadata": [
+                              "Inter", "sans-serif"
+                      ],
+                      "large-score": [
+                              "Space Grotesk", "sans-serif"
+                      ],
+                      "screen-title": [
+                              "Space Grotesk", "sans-serif"
+                      ]
+              },
+              "fontSize": {
+                      "stats": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "hero-mobile": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "game-question": [
+                              "42px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "game-question-mobile": [
+                              "30px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "micro": [
+                              "10px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "hero": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "metadata": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "large-score": [
+                              "72px",
+                              {
+                                      "lineHeight": "1",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "screen-title": [
+                              "34px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.ink');
+            color: theme('colors.paper');
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevent scrolling, true full screen experience */
+        }
+        
+        .timer-ring {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+        
+        /* Disable tap highlight on mobile */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Material icons specific fill configuration */
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="h-[884px] w-full flex flex-col relative bg-ink">
+<!-- Background Atmospheric Gradient -->
+<div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background: radial-gradient(circle at 50% 30%, theme('colors.primary') 0%, transparent 60%);"></div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-transparent flex justify-between items-center px-margin py-sm w-full transition-opacity duration-200 active:scale-95">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-line">
+<img class="w-full h-full object-cover" data-alt="A close up, stylized portrait of a user avatar in a modern, neon-lit digital space. High contrast, dark nocturnal aesthetic with subtle pink and lime lighting accents reflecting off sleek surfaces. Professional profile picture styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCphIfrtlzxbX-mhgXrd5sBwmKidGj-arB8bdMxzo2A0dKP1rV8FjFN1l3nIEA9YuJGV_KNVS6RN_9oOzTSNEkcFywrWAJANtRTocPv6KtN7g63lCwQjJBjl6_UqbIEaMA9Hi8f8bkvVYfkgrFm0CPJNKY7Xb3Jt1vOH3MTTL3FXSPtoTkiddal1wvgfoq9y0WZpeFEVYb1Otcz8VAbpA8z3VDLWPBY_OOru_jMyDb6buv1RdzJBqrSgA">
+</div>
+</div>
+<h1 class="font-screen-title text-screen-title font-bold text-primary dark:text-primary tracking-tighter">PLAY</h1>
+<div class="flex items-center bg-cardAlt/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-line">
+<span class="font-stats text-body-sm font-bold text-on-surface">7</span>
+<span class="ml-1 text-primary">🔥</span>
+</div>
+</header>
+<!-- Main Game Canvas -->
+<main class="flex-1 flex flex-col relative z-10 w-full h-full pt-[80px] pb-[120px]">
+<!-- Center Content Stack -->
+<div class="flex-1 flex flex-col items-center justify-center px-margin w-full max-w-md mx-auto gap-xl">
+<!-- Metadata Row -->
+<div class="flex items-center justify-center w-full gap-md">
+<div class="bg-cardAlt border border-line px-4 py-1.5 rounded-full flex items-center">
+<span class="font-metadata text-metadata text-lilac uppercase tracking-wider font-bold">🧠 TRIVIA</span>
+</div>
+<div class="bg-secondary/20 border border-secondary/50 px-4 py-1.5 rounded-full flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+<span class="font-stats text-micro text-secondary tracking-tight">8.7K playing now</span>
+</div>
+</div>
+<!-- Game Card area -->
+<div class="w-full bg-card rounded-[24px] p-6 border border-line relative shadow-lg shadow-card/50 flex flex-col gap-lg items-center text-center">
+<!-- Timer -->
+<div class="relative w-16 h-16 flex items-center justify-center mb-2">
+<svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+<path class="text-cardAlt" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+<path class="timer-ring text-secondary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="100, 100" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<span class="absolute font-stats text-body-lg text-paper font-bold">00:05</span>
+</div>
+<!-- Question -->
+<h2 class="font-game-question-mobile text-game-question-mobile text-paper w-full">
+                    Which city is known as the Pink City?
+                </h2>
+<!-- Answers Grid -->
+<div class="w-full flex flex-col gap-sm mt-4">
+<button class="w-full bg-cardAlt border border-line rounded-lg py-4 px-6 text-center font-body-lg text-body-lg text-paper hover:bg-cardAlt/80 transition-colors active:scale-[0.98]">
+                        Jaipur
+                    </button>
+<button class="w-full bg-cardAlt border border-line rounded-lg py-4 px-6 text-center font-body-lg text-body-lg text-paper hover:bg-cardAlt/80 transition-colors active:scale-[0.98]">
+                        Jodhpur
+                    </button>
+<button class="w-full bg-cardAlt border border-line rounded-lg py-4 px-6 text-center font-body-lg text-body-lg text-paper hover:bg-cardAlt/80 transition-colors active:scale-[0.98]">
+                        Udaipur
+                    </button>
+<button class="w-full bg-cardAlt border border-line rounded-lg py-4 px-6 text-center font-body-lg text-body-lg text-paper hover:bg-cardAlt/80 transition-colors active:scale-[0.98]">
+                        Lucknow
+                    </button>
+</div>
+<div class="w-full flex flex-col gap-md mt-4 border-t border-line pt-6"><div class="flex items-center gap-2"><div class="flex -space-x-2"><div class="w-6 h-6 rounded-full border border-ink overflow-hidden z-30"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYDXFRfDVdzcvNWKsCielClEu2AsOXWpF6S46RA14feVL_SYc9bDZ3fLHI07k7QGDXm3XbH2_GPJZ24oJLoJ19bOAl4i-iigUTRGCXfUlF7aIJlDe85dGUB2optIVaVHWLT92w8xGysETNE1hNJWeWZduAqfwc-FNRKUezRr0-8IJqa-iyjsj22ORXBLKRiBzlTuioZLvfBwm4l9DaXw2qOMvCSXDrV02OpAGggFe55xpCc-TPxI87BQ"></div><div class="w-6 h-6 rounded-full border border-ink overflow-hidden z-20"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAg9-AuJEUoq4uEO5RSboUsocimz5QCXcHjyudSlm3HpTdD5HBnInO9cMzq8NLmsI5r125fydxXooeLu4d_-PPLb35mthuqrH6y4vDxY6oaUne53SvMpzbxwlJQEPnts9YXKq9BqI3n7mDukjpCG9bTIhzpThOC0U9GXn0EC1BsNxcOcsZq83-DM9V-ktXhylnA_oxUuDB4LNrLD9brOcHAN_F7MgPar8sYG4vX5XqPlY5J8M2F1wWAEw"></div></div><p class="font-metadata text-metadata text-lilac truncate"><span class="font-bold text-paper">Rahul</span> + 8.7K people are answering</p></div><div class="flex justify-between items-center w-full"><div class="flex gap-6"><button class="flex items-center gap-1 group"><span class="material-symbols-outlined text-paper text-[24px]" data-icon="favorite">favorite</span><span class="font-stats text-micro text-lilac">1.2K</span></button><button class="flex items-center gap-1 group"><span class="material-symbols-outlined text-paper text-[24px]" data-icon="chat_bubble">chat_bubble</span><span class="font-stats text-micro text-lilac">342</span></button><button class="flex items-center gap-1 group"><span class="material-symbols-outlined text-paper text-[24px]" data-icon="send">send</span><span class="font-stats text-micro text-lilac">Share</span></button></div><button class="flex items-center gap-1 px-4 py-2 bg-primary/20 rounded-full border border-primary/50"><span class="material-symbols-outlined text-primary text-[20px]" data-icon="swords">swords</span><span class="font-stats text-micro text-primary font-bold">Challenge</span></button></div></div></div>
+</div>
+<!-- Floating UI Overlays -->
+<!-- Social Proof (Bottom Left) -->
+<!-- Right Side Actions (Vertical Rail) -->
+</main>
+<!-- Bottom Indicator -->
+<div class="absolute bottom-[100px] w-full text-center z-10 pointer-events-none pb-safe">
+<p class="font-metadata text-metadata text-lilac/70 animate-bounce flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span> Swipe for next game
+        </p>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface dark:bg-surface border-t border-line shadow-lg flex justify-around items-center h-20 px-4 pb-safe transition-transform duration-200 active:scale-90">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary font-bold hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="home" data-weight="fill">home</span>
+<span class="font-metadata text-metadata">Feed</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac dark:text-lilac hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="emoji_events">emoji_events</span>
+<span class="font-metadata text-metadata">Compete</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac dark:text-lilac hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="group">group</span>
+<span class="font-metadata text-metadata">Friends</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac dark:text-lilac hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="inventory_2">inventory_2</span>
+<span class="font-metadata text-metadata">Vault</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for answers
+        const buttons = document.querySelectorAll('button:has(> *:not(span))'); // Select answer buttons crudely
+        const answerButtons = Array.from(document.querySelectorAll('.flex-col.gap-sm button'));
+        
+        answerButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Reset all
+                answerButtons.forEach(b => {
+                    b.classList.remove('bg-primary', 'text-ink', 'border-primary', 'font-bold');
+                    b.classList.add('bg-cardAlt', 'text-paper', 'border-line');
+                });
+                
+                // Set active (simulating correct answer visually for prototype)
+                this.classList.remove('bg-cardAlt', 'text-paper', 'border-line');
+                this.classList.add('bg-primary', 'text-ink', 'border-primary', 'font-bold');
+            });
+        });
+
+        // Timer animation script
+        setTimeout(() => {
+            const circle = document.querySelector('.timer-ring');
+            if(circle) {
+                // Animate to empty over 5 seconds roughly
+                circle.style.strokeDashoffset = '100';
+            }
+        }, 100);
+    </script>
+</body></html>

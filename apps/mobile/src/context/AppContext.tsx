@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import {
   api,
+  CrowdSnapshot,
   ensureGuest,
   FeedItem,
   FeedMoment,
@@ -25,7 +26,9 @@ import type { TabKey } from "../components/BottomNav";
 
 export type FriendRequests = { incoming: FriendRequest[]; outgoing: FriendRequest[] };
 
-export type RespondOutcome = { ok: true } | { ok: false; message: string };
+export type RespondOutcome =
+  | { ok: true; result: CrowdSnapshot | null }
+  | { ok: false; message: string };
 
 type AppState = {
   ready: boolean;
@@ -297,7 +300,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             result: res.result ?? undefined,
           }),
         );
-        return { ok: true };
+        return { ok: true, result: res.result };
       } catch (e) {
         const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "Could not submit";
         return { ok: false, message };

@@ -41,6 +41,7 @@ data_request_status = _pg_enum(
 )
 approval_decision = _pg_enum("approve", "reject", name="approval_decision")
 volume_state = _pg_enum("nascent", "building", "mature", name="volume_state")
+scoring_mode = _pg_enum("none", "correct_option", name="scoring_mode")
 
 
 class Base(DeclarativeBase):
@@ -96,6 +97,22 @@ class Category(Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class ContentTag(Base):
+    __tablename__ = "content_tags"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    slug: Mapped[str] = mapped_column(Text, unique=True)
+    name: Mapped[str] = mapped_column(Text)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class MomentTag(Base):
+    __tablename__ = "moment_tags"
+
+    moment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("moments.id"), primary_key=True)
+    tag_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("content_tags.id"), primary_key=True)
+
+
 class UserInterest(Base):
     __tablename__ = "user_interests"
 
@@ -136,6 +153,8 @@ class Moment(Base):
     status: Mapped[str] = mapped_column(moment_status, default="draft")
     restricted_topic: Mapped[str] = mapped_column(restricted_topic, default="none")
     prompt: Mapped[str] = mapped_column(Text)
+    prompt_image_key: Mapped[str | None] = mapped_column(Text)
+    scoring_mode: Mapped[str] = mapped_column(scoring_mode, default="none")
     starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
@@ -151,7 +170,9 @@ class MomentOption(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     moment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("moments.id"))
-    label: Mapped[str] = mapped_column(Text)
+    label: Mapped[str | None] = mapped_column(Text)
+    image_key: Mapped[str | None] = mapped_column(Text)
+    is_correct: Mapped[bool] = mapped_column(Boolean, default=False)
     sort_order: Mapped[int] = mapped_column(Integer)
     moment: Mapped[Moment] = relationship(back_populates="options")
 

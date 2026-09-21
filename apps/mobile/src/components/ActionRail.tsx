@@ -3,35 +3,48 @@ import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { formatCount } from "../api";
 import { colors, spacing } from "../theme/colors";
-import { type } from "../theme/typography";
+import { fonts, type } from "../theme/typography";
 
 type Props = {
-  /** Crowd response count — shown as a derived engagement indicator, not backend likes. */
   responses?: number;
   onShare?: () => void;
+  onChallenge?: () => void;
   shareDisabled?: boolean;
   shareLoading?: boolean;
 };
 
-export function ActionRail({ responses = 0, onShare, shareDisabled, shareLoading }: Props) {
+export function ActionRail({
+  responses = 0,
+  onShare,
+  onChallenge,
+  shareDisabled,
+  shareLoading,
+}: Props) {
   const derivedBuzz = Math.max(0, Math.floor(responses / 15));
+  const challenge = onChallenge ?? onShare;
+
   const items = [
-    { icon: "heart" as const, label: formatCount(responses), sublabel: "responses", disabled: true },
-    { icon: "chatbubble" as const, label: formatCount(derivedBuzz), sublabel: "buzz", disabled: true },
+    { icon: "heart" as const, label: formatCount(responses), disabled: true },
+    { icon: "chatbubble" as const, label: formatCount(derivedBuzz), disabled: true },
     {
       icon: "share-outline" as const,
       label: shareLoading ? "…" : "Share",
-      sublabel: undefined,
       onPress: onShare,
       disabled: shareDisabled || shareLoading,
     },
-    { icon: "flash-outline" as const, label: "Soon", sublabel: undefined, disabled: true },
+    {
+      icon: "flash" as const,
+      label: "Challenge",
+      onPress: challenge,
+      disabled: !challenge || shareDisabled || shareLoading,
+    },
   ];
+
   return (
     <View style={styles.wrap}>
       {items.map((item) => (
         <Pressable
-          key={item.label + (item.sublabel ?? "")}
+          key={item.label + item.icon}
           style={[styles.item, item.disabled && styles.itemDisabled]}
           disabled={item.disabled}
           onPress={() => {
@@ -47,12 +60,9 @@ export function ActionRail({ responses = 0, onShare, shareDisabled, shareLoading
               <Ionicons name={item.icon} size={20} color={colors.paper} />
             )}
           </View>
-          <Text style={[type.micro, { color: item.onPress ? colors.lilac : colors.paper }]}>
+          <Text style={[type.micro, { color: colors.lilac, fontFamily: fonts.bodyMedium }]}>
             {item.label}
           </Text>
-          {item.sublabel ? (
-            <Text style={[type.micro, { color: colors.lilac, fontSize: 9 }]}>{item.sublabel}</Text>
-          ) : null}
         </Pressable>
       ))}
     </View>
@@ -68,7 +78,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.line,
     backgroundColor: "rgba(21, 14, 43, 0.4)",
   },
-  item: { alignItems: "center", gap: 2 },
+  item: { alignItems: "center", gap: 4, minWidth: 56 },
   itemDisabled: { opacity: 0.85 },
   circle: {
     width: 40,

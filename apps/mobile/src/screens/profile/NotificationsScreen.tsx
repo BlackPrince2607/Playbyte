@@ -114,6 +114,9 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
         <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
       </Pressable>
       <Text style={[type.screenTitle, { color: colors.paper }]}>Notifications</Text>
+      <Text style={[type.hero, { color: colors.paper, fontSize: 28, marginTop: spacing.sm }]}>
+        Your game is getting social.
+      </Text>
       <Text style={[type.bodySm, { color: colors.lilac, marginVertical: spacing.sm }]}>
         Max 3 alerts per day. Toggle each type independently.
       </Text>

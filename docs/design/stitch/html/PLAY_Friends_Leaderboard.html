@@ -1,0 +1,353 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Friends - PLAY</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#1d1013",
+                        "on-surface": "#f7dce1",
+                        "outline-variant": "#594046",
+                        "on-error": "#690005",
+                        "primary": "#ffb1c4",
+                        "on-tertiary-fixed": "#002203",
+                        "primary-fixed": "#ffd9e0",
+                        "on-primary-fixed-variant": "#8f0043",
+                        "on-error-container": "#ffdad6",
+                        "ink": "#150E2B",
+                        "surface-container-highest": "#413034",
+                        "tertiary-container": "#00a92a",
+                        "secondary-fixed": "#bdf532",
+                        "tertiary": "#57e15b",
+                        "on-tertiary-fixed-variant": "#00530f",
+                        "inverse-surface": "#f7dce1",
+                        "on-background": "#f7dce1",
+                        "primary-container": "#ff4d8d",
+                        "lilac": "#8F7FC0",
+                        "on-secondary-container": "#425a00",
+                        "surface-tint": "#ffb1c4",
+                        "surface-container-high": "#362629",
+                        "tertiary-fixed-dim": "#57e15b",
+                        "line": "rgba(245, 240, 255, 0.12)",
+                        "card": "#211540",
+                        "surface-container-low": "#26181b",
+                        "on-primary-fixed": "#3f001a",
+                        "on-secondary-fixed-variant": "#384e00",
+                        "error-container": "#93000a",
+                        "surface-bright": "#463538",
+                        "cardAlt": "#2A1B4E",
+                        "surface-container": "#2a1c1f",
+                        "secondary-container": "#a2d801",
+                        "on-secondary-fixed": "#141f00",
+                        "surface-variant": "#413034",
+                        "inverse-on-surface": "#3c2c30",
+                        "primary-fixed-dim": "#ffb1c4",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#263500",
+                        "secondary": "#bdf532",
+                        "paper": "#F5F0FF",
+                        "outline": "#a8898f",
+                        "on-surface-variant": "#e1bec5",
+                        "on-primary": "#65002e",
+                        "on-primary-container": "#5b0028",
+                        "inverse-primary": "#b90a5a",
+                        "tertiary-fixed": "#75ff75",
+                        "background": "#1d1013",
+                        "secondary-fixed-dim": "#a2d801",
+                        "on-tertiary": "#003908",
+                        "surface-container-lowest": "#170a0e",
+                        "on-tertiary-container": "#003306",
+                        "surface": "#1d1013"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "2xl": "1.5rem"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "margin": "20px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "stats": ["JetBrains Mono"],
+                        "hero": ["Space Grotesk"],
+                        "body-lg": ["Inter"],
+                        "game-question-mobile": ["Space Grotesk"],
+                        "metadata": ["Inter"],
+                        "game-question": ["Space Grotesk"],
+                        "hero-mobile": ["Space Grotesk"],
+                        "screen-title": ["Space Grotesk"],
+                        "large-score": ["Space Grotesk"],
+                        "micro": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "stats": ["24px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "hero": ["48px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "game-question-mobile": ["30px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "metadata": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "game-question": ["42px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "hero-mobile": ["40px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "screen-title": ["34px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "large-score": ["72px", { "lineHeight": "1", "fontWeight": "700" }],
+                        "micro": ["10px", { "lineHeight": "1.2", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-card {
+            background: linear-gradient(145deg, rgba(33, 21, 64, 0.7) 0%, rgba(42, 27, 78, 0.4) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(245, 240, 255, 0.12);
+        }
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(255, 77, 141, 0.3);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-ink text-paper min-h-screen pb-24 font-body-sm antialiased overflow-x-hidden selection:bg-primary-container selection:text-paper">
+<!-- Top App Bar (Mobile) -->
+<header class="md:hidden fixed top-0 w-full z-50 flex justify-between items-center px-margin h-16 bg-ink/80 backdrop-blur-md border-b border-line">
+<button class="text-primary hover:opacity-80 transition-opacity p-2 -ml-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<h1 class="font-hero-mobile text-hero-mobile font-bold tracking-tighter text-primary">PLAY</h1>
+<button class="text-primary hover:opacity-80 transition-opacity p-2 -mr-2 rounded-full flex items-center justify-center relative">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary-container rounded-full animate-pulse"></span>
+</button>
+</header>
+<!-- Top App Bar (Web) -->
+<header class="hidden md:flex fixed top-0 w-full z-50 justify-between items-center px-margin h-16 bg-ink/80 backdrop-blur-md border-b border-line">
+<div class="flex items-center gap-xl">
+<h1 class="font-hero text-hero font-bold tracking-tighter text-primary">PLAY</h1>
+<nav class="flex gap-lg">
+<a class="font-body-lg text-body-lg text-lilac hover:text-paper transition-colors" href="#">Play</a>
+<a class="font-body-lg text-body-lg text-lilac hover:text-paper transition-colors" href="#">Live</a>
+<a class="font-body-lg text-body-lg text-paper font-bold border-b-2 border-primary-container pb-1" href="#">Friends</a>
+<a class="font-body-lg text-body-lg text-lilac hover:text-paper transition-colors" href="#">Create</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-lilac hover:text-paper transition-colors p-2 rounded-full flex items-center justify-center relative bg-cardAlt border border-line">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary-container rounded-full animate-pulse"></span>
+</button>
+<button class="w-10 h-10 rounded-full overflow-hidden border border-line">
+<img class="w-full h-full object-cover" data-alt="A detailed headshot portrait of a stylish user avatar. The image features a young adult looking directly at the camera with a confident expression. The lighting is moody with vibrant pink and lime green neon rim lights illuminating the edges of their face, perfectly matching a high-energy, dark premium social gaming aesthetic. The background is a deep, shadowy ink black to isolate the subject." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPc8emaSg1G6dng0jUntF-RdHYqlJezJtp6tvQvqVIELLW57jyJ5iFqkIFLapMr3S4YrmU0b9NDm7pa5Zb_41FeMR6x7i6emS95jFa1eb_D__qCn5vCss7qpvNzSeRr0GyMe8ovppfrXPyRZkQ2NWeTxVC4pN8Jcap2Oa8sWEWNhSQN1mAiXKfCqh5mCMwWHHWwd6HXY2yfdYoGzDpYsUloNO2hICwhyHcsHYdnnDibbGJl_5N6ZgBzw">
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 md:pt-32 px-margin max-w-5xl mx-auto space-y-xl">
+<!-- Header Section -->
+<section class="space-y-sm">
+<h2 class="font-game-question-mobile md:font-game-question text-game-question-mobile md:text-game-question tracking-tight text-paper">Your friends are playing.</h2>
+<p class="font-body-lg text-body-lg text-lilac max-w-lg">See what your friends are playing and beat their scores.</p>
+</section>
+<!-- Live Now Section -->
+<section class="space-y-md relative z-10">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-tertiary rounded-full animate-pulse shadow-[0_0_8px_#57e15b]"></span>
+<h3 class="font-body-sm text-body-sm font-bold tracking-widest text-lilac uppercase">Live Now</h3>
+</div>
+<!-- Horizontal Scroll Container -->
+<div class="flex overflow-x-auto gap-gutter pb-4 hide-scrollbar -mx-margin px-margin md:mx-0 md:px-0 snap-x snap-mandatory">
+<!-- Friend Card 1: Rahul -->
+<div class="glass-card rounded-2xl min-w-[280px] w-[280px] md:w-[320px] p-lg flex flex-col justify-between gap-xl shrink-0 snap-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="flex justify-between items-start relative z-10">
+<div class="flex items-center gap-md">
+<div class="relative">
+<img class="w-12 h-12 rounded-full border border-line object-cover" data-alt="A vivid, moody profile picture of a young man named Rahul in a dark, premium gaming context. He is lit by cool blue and intense pink neon lights against an ink-black background. He looks focused and competitive, embodying the high-energy, internet-native aesthetic of a modern social gaming platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWDq9DCan_2eFGHEH2izmVBZW14D7aWQ8rAPnB8oU1VBO5aM8AFiTL9sQs5_uxgsZT5Am2bSi5SIYJdNUF8dIGOXZEkJI6hI3cL5Ni_IFtcH5QKUF8HcK70ayJ2F7qkULQWqmdbcWHFnCw593eV3BVU7dWV3TOamhNuKQ8cRLVI1DBLRXe-vxsULiFfF1VGaudjbg5-i_7ne2HXxv3dzO-GyDC5jISYceY5U3WsxKas4OiVX6mp84FQg">
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-tertiary border-2 border-ink rounded-full"></span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg font-bold text-paper">Rahul</h4>
+<div class="flex items-center gap-1 mt-0.5">
+<span class="text-tertiary font-micro text-micro">●</span>
+<span class="font-metadata text-metadata text-lilac">Playing Trivia Royale</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex items-end justify-between">
+<div>
+<span class="font-stats text-stats text-paper tracking-tight">920</span>
+<span class="font-micro text-micro text-lilac uppercase ml-1">pts</span>
+</div>
+<button class="bg-primary-container text-paper font-body-sm text-body-sm font-bold px-4 py-2 rounded-[14px] neon-glow hover:scale-105 active:scale-95 transition-all">
+                            Beat him
+                        </button>
+</div>
+</div>
+<!-- Friend Card 2: Neha -->
+<div class="glass-card rounded-2xl min-w-[280px] w-[280px] md:w-[320px] p-lg flex flex-col justify-between gap-xl shrink-0 snap-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="flex justify-between items-start relative z-10">
+<div class="flex items-center gap-md">
+<div class="relative">
+<img class="w-12 h-12 rounded-full border border-line object-cover" data-alt="A striking portrait of a young woman named Neha for a gaming profile. She is illuminated by a sharp, electric lime green and deep purple lighting setup, creating a high-contrast, modern corporate aesthetic. She appears confident and ready to play, set against a pitch-black, nocturnal background to fit a premium social app style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeEjJWxMaoGHc3MTqpmnMzw1a3w2jWIzckK7sp2iZijnimv0KXdG1J86x96un5QgJsex8rlpEW0Ttc_xTXX3hZ4nuWST9Gb3DPqaEq4Oo7y0RjQZV4ddOHB8bxx9mhnM8bj3IA59fEZ5uX989M7ZZnKAQai9Bk6K-IEi1WwGXXP1L0i4BmUFW2ZXHxijndc6kZWZ48jOrUQcKBNwPwl3CNJ-1sYpLTQpEo0KIzCttk07eADxYY8mT6Rw">
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-tertiary border-2 border-ink rounded-full"></span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg font-bold text-paper">Neha</h4>
+<div class="flex items-center gap-1 mt-0.5">
+<span class="text-tertiary font-micro text-micro">●</span>
+<span class="font-metadata text-metadata text-lilac">Playing Cricket Predict</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex items-end justify-between mt-auto">
+<div class="font-metadata text-metadata text-lilac">
+                            Just started
+                        </div>
+<button class="bg-cardAlt text-secondary border border-line font-body-sm text-body-sm font-bold px-4 py-2 rounded-[14px] hover:border-secondary transition-colors active:scale-95">
+                            Join
+                        </button>
+</div>
+</div>
+<!-- Friend Card 3: Priya -->
+<div class="glass-card rounded-2xl min-w-[280px] w-[280px] md:w-[320px] p-lg flex flex-col justify-between gap-xl shrink-0 snap-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-paper/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="flex justify-between items-start relative z-10">
+<div class="flex items-center gap-md">
+<div class="relative">
+<img class="w-12 h-12 rounded-full border border-line object-cover grayscale opacity-80" data-alt="A stylized digital avatar or high-quality photo of a girl named Priya in a dark mode UI context. The lighting is cinematic with subtle rim lights in soft pink and cool white, contrasting sharply against a deep indigo background. The overall mood is energetic yet sleek, appropriate for a competitive gaming environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZZoe5Sfy_EzpmeM4JSvdpZfd6Sro4039txH-K0NNtT1SfrNTaMKpiJb3Pw6u0YAS5xVcEvSD4Ho_WyN_XjFQ4RIrFWh1wl1MSYnzv8Nvud8Msk87HP_gC3xrVez9QDzqYYmFFpZK3aTUyUCjEdddLDk_a9g3XF6gt0XJK8VBL3sYERCfyp6hr8dDVQEa_JxcK_R1PdbqSKI0Uosi5SCwQXxiQla_a3tmgIHEYfMBwxt5xdJS1O_j_Jw">
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-outline border-2 border-ink rounded-full"></span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg font-bold text-paper">Priya</h4>
+<div class="flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-lilac" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-metadata text-metadata text-lilac">Created a new poll</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex items-end justify-end mt-auto">
+<button class="bg-cardAlt text-paper border border-line font-body-sm text-body-sm font-bold px-4 py-2 rounded-[14px] hover:border-primary-container transition-colors active:scale-95">
+                            Play
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Leaderboard Section -->
+<section class="space-y-md">
+<h3 class="font-body-sm text-body-sm font-bold tracking-widest text-lilac uppercase">Friends Leaderboard</h3>
+<div class="bg-card rounded-2xl border border-line overflow-hidden">
+<!-- Rank 1 -->
+<div class="flex items-center justify-between p-md md:p-lg border-b border-line hover:bg-cardAlt/50 transition-colors">
+<div class="flex items-center gap-md md:gap-lg">
+<span class="font-stats text-stats text-primary-container font-bold w-8 text-center">1</span>
+<img class="w-10 h-10 rounded-full border border-line object-cover" data-alt="A vivid, moody profile picture of a young man named Rahul in a dark, premium gaming context. He is lit by cool blue and intense pink neon lights against an ink-black background. He looks focused and competitive, embodying the high-energy, internet-native aesthetic of a modern social gaming platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPHLN-vYipYZDoFSS4mttN8_-y9biNSkvWj36CX7xhgDZskFrlgxkjQLvMx1JrI-B1aB3-fonlLvXoUm2rcSl3CYgb3c3KXqID3Jink9hML-6IEbH9A8gSL_g72Aec1U5nbid7SNOTmSabecLEfmpqPQwW3L2_jAlngyvHGcNps-BBn0tGzLZ9BhJN29IYWzAkCE72Lc1frAQsbH2VMlEf9VMW5GpE7d9SeJktWxmFeL4yAMcfEI4Bng">
+<span class="font-body-lg text-body-lg font-bold text-paper">Rahul</span>
+</div>
+<div class="text-right">
+<span class="font-stats text-stats text-paper">9,820</span>
+</div>
+</div>
+<!-- Rank 2 (You - Highlighted) -->
+<div class="flex items-center justify-between p-md md:p-lg border-b border-line bg-cardAlt/80 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary-container"></div>
+<div class="flex items-center gap-md md:gap-lg">
+<span class="font-stats text-stats text-paper font-bold w-8 text-center">2</span>
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center border border-primary-container/50">
+<span class="font-body-sm text-body-sm font-bold text-primary-container">YOU</span>
+</div>
+<span class="font-body-lg text-body-lg font-bold text-primary-container">You</span>
+</div>
+<div class="text-right flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">arrow_drop_up</span>
+<span class="font-stats text-stats text-paper">9,420</span>
+</div>
+</div>
+<!-- Rank 3 -->
+<div class="flex items-center justify-between p-md md:p-lg border-b border-line hover:bg-cardAlt/50 transition-colors">
+<div class="flex items-center gap-md md:gap-lg">
+<span class="font-stats text-[20px] text-lilac font-medium w-8 text-center">3</span>
+<img class="w-10 h-10 rounded-full border border-line object-cover" data-alt="A striking portrait of a young woman named Neha for a gaming profile. She is illuminated by a sharp, electric lime green and deep purple lighting setup, creating a high-contrast, modern corporate aesthetic. She appears confident and ready to play, set against a pitch-black, nocturnal background to fit a premium social app style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAF4Xr-BjJ4_brT5D3HpDYyerMT3BcOBhCClljKJopSmaxl_obEeW6h7nS8UgUD-oiWYUJI-3ai6Y43CaDWy_pYXDvLNV7dfE9qg3DhWbByBZIHMqjvknkC0Cws5PBGKKdQ1d9JN2mm-dr1s6VNQeKJBX12CNosNS2A5l4VtiLOyrYwV2TIHiE-3hlcUqVf-OMBe3umGZS2iwgzzOPDhdAyGRl5KOk4XXo5SrSm1sS8csKEpW0R9l9crg">
+<span class="font-body-lg text-body-lg text-paper">Neha</span>
+</div>
+<div class="text-right">
+<span class="font-stats text-[20px] text-lilac">8,980</span>
+</div>
+</div>
+<!-- Rank 4 -->
+<div class="flex items-center justify-between p-md md:p-lg hover:bg-cardAlt/50 transition-colors">
+<div class="flex items-center gap-md md:gap-lg">
+<span class="font-stats text-[20px] text-lilac font-medium w-8 text-center">4</span>
+<img class="w-10 h-10 rounded-full border border-line object-cover grayscale opacity-80" data-alt="A stylized digital avatar or high-quality photo of a girl named Priya in a dark mode UI context. The lighting is cinematic with subtle rim lights in soft pink and cool white, contrasting sharply against a deep indigo background. The overall mood is energetic yet sleek, appropriate for a competitive gaming environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVzV4kYDhw_LUZvjeKkza07tFhXBHyrC0SgwZsg5nkY9WwwKvdqdSPV5yg402Br9oVx0VYhzFdDg4cATQYqqsUT6xEpLmzuAgFAYpTYSsaeb_AkGlwtlhGq0q0rgdI4c4nhHuR81qwkqP8c3D63p3V-H2zkG_t_sJ1ki85RLYbwGJ_rRW9gnB_DTe_TePNklxqNjFUMYEsRKgWuudKcU-MG7DNcr8LKF0MEGZQSQmv9IGuDANcOZ9_hQ">
+<span class="font-body-lg text-body-lg text-paper">Priya</span>
+</div>
+<div class="text-right">
+<span class="font-stats text-[20px] text-lilac">8,450</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Global CTA -->
+<section class="pt-8 pb-12 flex justify-center">
+<button class="flex items-center gap-2 bg-cardAlt hover:bg-surface-container-highest text-paper border border-line font-body-lg text-body-lg font-bold px-8 py-4 rounded-2xl transition-colors active:scale-95 group">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors" style="font-variation-settings: 'FILL' 0;">person_add</span>
+                Invite friends
+            </button>
+</section>
+</main>
+<!-- Bottom Nav Bar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-surface border-t border-line">
+<a class="flex flex-col items-center justify-center text-lilac hover:text-secondary transition-colors p-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">play_circle</span>
+<span class="font-micro text-micro mt-1">Play</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac hover:text-secondary transition-colors p-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">sensors</span>
+<span class="font-micro text-micro mt-1">Live</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-cardAlt text-secondary rounded-xl p-2 scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-micro text-micro mt-1">Friends</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac hover:text-secondary transition-colors p-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">add_box</span>
+<span class="font-micro text-micro mt-1">Create</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lilac hover:text-secondary transition-colors p-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">person</span>
+<span class="font-micro text-micro mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

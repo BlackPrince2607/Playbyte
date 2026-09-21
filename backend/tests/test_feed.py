@@ -11,18 +11,19 @@ from app.modules.feed.service import build_feed, serialize_moment
 def test_serialize_moment_includes_my_option_id() -> None:
     moment_id = uuid4()
     option_id = uuid4()
-    category_id = uuid4()
     m = SimpleNamespace(
         id=moment_id,
         type="poll",
         prompt="Pick one",
+        prompt_image_key=None,
+        scoring_mode="crowd",
         category=SimpleNamespace(slug="sports", name="Sports"),
         status="live",
         starts_at=datetime.now(UTC),
         ends_at=None,
         options=[
-            SimpleNamespace(id=option_id, label="A", sort_order=0),
-            SimpleNamespace(id=uuid4(), label="B", sort_order=1),
+            SimpleNamespace(id=option_id, label="A", sort_order=0, image_key=None, is_correct=False),
+            SimpleNamespace(id=uuid4(), label="B", sort_order=1, image_key=None, is_correct=False),
         ],
     )
     payload = serialize_moment(m, snap=None, my_option_id=option_id)
@@ -38,13 +39,15 @@ async def test_build_feed_includes_my_option_id() -> None:
         id=moment_id,
         type="poll",
         prompt="Pick one",
+        prompt_image_key=None,
+        scoring_mode="crowd",
         category_id=category_id,
         category=SimpleNamespace(slug="sports", name="Sports"),
         status="live",
         content_window_id=None,
         starts_at=datetime.now(UTC),
         ends_at=None,
-        options=[SimpleNamespace(id=option_id, label="A", sort_order=0)],
+        options=[SimpleNamespace(id=option_id, label="A", sort_order=0, image_key=None, is_correct=False)],
     )
     mine = SimpleNamespace(option_id=option_id)
     user_id = uuid4()

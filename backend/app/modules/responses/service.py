@@ -45,7 +45,7 @@ async def submit_response(
     existing = await my_response(session, moment_id, actor.user_id, actor.guest_id)
     if existing:
         snap = await session.get(CrowdSnapshot, moment_id)
-        return _result_payload(actor, existing, snap, created=False)
+        return _result_payload(actor, existing, snap, created=False, moment=moment)
 
     if idempotency_key:
         stmt = select(Response).where(Response.moment_id == moment_id, Response.idempotency_key == idempotency_key)
@@ -56,7 +56,7 @@ async def submit_response(
         dup = await session.scalar(stmt)
         if dup:
             snap = await session.get(CrowdSnapshot, moment_id)
-            return _result_payload(actor, dup, snap, created=False)
+            return _result_payload(actor, dup, snap, created=False, moment=moment)
 
     row = Response(
         moment_id=moment_id,
@@ -74,7 +74,7 @@ async def submit_response(
         if existing is None:
             raise AppError("conflict", "Could not record response.", 409) from None
         snap = await session.get(CrowdSnapshot, moment_id)
-        return _result_payload(actor, existing, snap, created=False)
+        return _result_payload(actor, existing, snap, created=False, moment=moment)
     await enqueue(
         session,
         "response.created",
@@ -89,18 +89,31 @@ async def submit_response(
         await _bump_daily(session, actor.user_id, moments=1)
     await session.flush()
     snap = await _optimistic_snapshot(session, moment_id, option_id)
-    return _result_payload(actor, row, snap, created=True)
+    return _result_payload(actor, row, snap, created=True, moment=moment)
 
 
-def _result_payload(actor: Actor, response: Response, snap: CrowdSnapshot | None, created: bool) -> dict:
+def _result_payload(
+    actor: Actor,
+    response: Response,
+    snap: CrowdSnapshot | None,
+    created: bool,
+    *,
+    moment: Moment | None = None,
+) -> dict:
     settings = get_settings()
     prompt = actor.kind == "guest" and actor.engagements >= settings.account_prompt_after
+    correct_id = None
+    if moment and moment.scoring_mode == "correct_option":
+        for o in moment.options:
+            if o.is_correct:
+                correct_id = str(o.id)
+                break
     return {
         "responseId": str(response.id),
         "optionId": str(response.option_id),
         "created": created,
         "promptAccountCreation": prompt,
-        "result": serialize_snapshot(response.moment_id, snap),
+        "result": serialize_snapshot(response.moment_id, snap, correct_option_id=correct_id),
     }
 
 

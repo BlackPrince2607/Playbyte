@@ -6,14 +6,21 @@ import { StatusPill } from "@/components/StatusPill";
 import { api, isProductionEnv } from "@/lib/api";
 import { createSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
+type MomentOptionRow = { label: string | null; imageUrl?: string | null; isCorrect?: boolean };
+
 type MomentRow = {
   id: string;
   type: string;
   status: string;
   prompt: string;
   restrictedTopic: string;
-  options: string[];
+  scoringMode?: string;
+  tags?: { slug: string; name: string }[];
+  options: MomentOptionRow[] | string[];
 };
+
+type Category = { id: string; slug: string; name: string };
+type ContentTag = { id: string; slug: string; name: string };
 
 type WindowRow = {
   id: string;
@@ -32,8 +39,6 @@ type ReportRow = {
   status: string;
 };
 
-type Category = { id: string; slug: string; name: string };
-
 type Tab = "moments" | "windows" | "reports";
 
 export default function CmsPage() {
@@ -49,11 +54,15 @@ export default function CmsPage() {
   const [windows, setWindows] = useState<WindowRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [contentTags, setContentTags] = useState<ContentTag[]>([]);
   const [error, setError] = useState("");
 
   const [prompt, setPrompt] = useState("");
-  const [type, setType] = useState("predict");
+  const [promptImageKey, setPromptImageKey] = useState("");
+  const [type, setType] = useState("pulse");
   const [options, setOptions] = useState("India,Australia");
+  const [correctIndex, setCorrectIndex] = useState(0);
+  const [contentTag, setContentTag] = useState<"poll" | "quiz">("poll");
   const [restricted, setRestricted] = useState("none");
   const [categoryId, setCategoryId] = useState("");
 
@@ -63,11 +72,14 @@ export default function CmsPage() {
   const [winEnd, setWinEnd] = useState("");
 
   const refresh = useCallback(async () => {
-    const [m, w, r, cats] = await Promise.all([
+    const [m, w, r, cats, tags] = await Promise.all([
       api("/v1/admin/moments"),
       api("/v1/admin/windows"),
       api("/v1/admin/reports"),
       fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/v1/categories`).then((res) =>
+        res.json(),
+      ),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/v1/content-tags`).then((res) =>
         res.json(),
       ),
     ]);
@@ -75,6 +87,7 @@ export default function CmsPage() {
     setWindows(w.windows);
     setReports(r.reports);
     setCategories(cats.categories ?? []);
+    setContentTags(tags.tags ?? []);
     if (!categoryId && cats.categories?.[0]) setCategoryId(cats.categories[0].id);
   }, [categoryId]);
 
@@ -148,20 +161,29 @@ export default function CmsPage() {
 
   async function createMoment(e: FormEvent) {
     e.preventDefault();
+    const optionLabels = options
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const optionPayload = optionLabels.map((label, i) => ({
+      label,
+      isCorrect: contentTag === "quiz" && i === correctIndex,
+    }));
     await api("/v1/admin/moments", {
       method: "POST",
       body: JSON.stringify({
         type,
         categoryId,
         prompt,
-        options: options
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
+        promptImageKey: promptImageKey || null,
+        options: optionPayload,
         restrictedTopic: restricted,
+        tags: [contentTag],
+        scoringMode: contentTag === "quiz" ? "correct_option" : "none",
       }),
     });
     setPrompt("");
+    setPromptImageKey("");
     await refresh();
   }
 
@@ -319,6 +341,25 @@ export default function CmsPage() {
                     </option>
                   ))}
                 </select>
+                <div className="flex gap-2 sm:col-span-2">
+                  {(["poll", "quiz"] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setContentTag(t)}
+                      className={`rounded-full px-4 py-1.5 font-mono text-xs uppercase ${
+                        contentTag === t ? "bg-pink text-ink" : "bg-card-alt text-lilac"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                  {contentTags.length ? (
+                    <span className="self-center text-xs text-lilac">
+                      tags: {contentTags.map((t) => t.name).join(", ")}
+                    </span>
+                  ) : null}
+                </div>
                 <input
                   className={`${inputCls} sm:col-span-2`}
                   value={prompt}
@@ -328,10 +369,33 @@ export default function CmsPage() {
                 />
                 <input
                   className={`${inputCls} sm:col-span-2`}
+                  value={promptImageKey}
+                  onChange={(e) => setPromptImageKey(e.target.value)}
+                  placeholder="Optional prompt image key (moment-media bucket)"
+                />
+                <input
+                  className={`${inputCls} sm:col-span-2`}
                   value={options}
                   onChange={(e) => setOptions(e.target.value)}
-                  placeholder="Options, comma-separated"
+                  placeholder="Options, comma-separated (text; images via imageKey in API)"
                 />
+                {contentTag === "quiz" ? (
+                  <select
+                    className={inputCls}
+                    value={correctIndex}
+                    onChange={(e) => setCorrectIndex(Number(e.target.value))}
+                  >
+                    {options
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean)
+                      .map((label, i) => (
+                        <option key={label + i} value={i}>
+                          Correct: {label}
+                        </option>
+                      ))}
+                  </select>
+                ) : null}
                 <select className={inputCls} value={restricted} onChange={(e) => setRestricted(e.target.value)}>
                   <option value="none">No restricted topic</option>
                   <option value="health">Health</option>
@@ -340,7 +404,7 @@ export default function CmsPage() {
                 </select>
                 <button
                   type="submit"
-                  className="rounded-xl bg-lime py-2.5 font-display font-bold text-ink sm:col-span-2"
+                  className="btn-success rounded-xl bg-lime py-2.5 font-display font-bold text-ink sm:col-span-2"
                 >
                   Save draft
                 </button>
@@ -354,12 +418,21 @@ export default function CmsPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill status={m.status} />
                     <span className="font-mono text-[10px] uppercase tracking-wider text-lilac">{m.type}</span>
+                    {(m.tags ?? []).map((t) => (
+                      <span key={t.slug} className="rounded-full bg-pink/20 px-2 py-0.5 font-mono text-[10px] uppercase text-pink">
+                        {t.name}
+                      </span>
+                    ))}
                     {m.restrictedTopic !== "none" ? (
                       <span className="font-mono text-[10px] uppercase text-pink-soft">{m.restrictedTopic}</span>
                     ) : null}
                   </div>
                   <p className="mt-2 text-lg font-medium">{m.prompt}</p>
-                  <p className="mt-1 text-sm text-lilac">{m.options.join(" · ")}</p>
+                  <p className="mt-1 text-sm text-lilac">
+                    {(Array.isArray(m.options) ? m.options : [])
+                      .map((o) => (typeof o === "string" ? o : o.label ?? "image"))
+                      .join(" · ")}
+                  </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {m.status === "draft" ? (
                       <button

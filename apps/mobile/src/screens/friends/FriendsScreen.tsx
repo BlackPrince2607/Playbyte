@@ -1,30 +1,32 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { api, isApiError } from "../../api";
+import { api, FeedMoment, formatCount, isApiError } from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
 import { PrimaryButton } from "../../components/PrimaryButton";
-import { useApp } from "../../context/AppContext";
+import { isMoment, useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
-import { type } from "../../theme/typography";
+import { fonts, type } from "../../theme/typography";
 
 type Props = {
   onSignIn: () => void;
+  onOpenLeaderboard?: () => void;
 };
 
-export function FriendsScreen({ onSignIn }: Props) {
+export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
   const { isSignedIn } = useAuth();
   const {
     friends,
@@ -35,6 +37,9 @@ export function FriendsScreen({ onSignIn }: Props) {
     friendRequestsLoading,
     friendRequestsError,
     refreshFriendRequests,
+    items,
+    jumpToMoment,
+    streak,
   } = useApp();
   const [refreshing, setRefreshing] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -43,6 +48,19 @@ export function FriendsScreen({ onSignIn }: Props) {
   const [adding, setAdding] = useState(false);
   const [addUserId, setAddUserId] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+
+  const friendLiveMoments = useMemo(() => {
+    return items
+      .filter((i): i is FeedMoment => isMoment(i))
+      .filter((m) => (m.friends?.length ?? 0) > 0)
+      .slice(0, 8);
+  }, [items]);
+
+  /** Friends list only — competitive scores are deferred (no fabricated ranks). */
+  const friendPreview = useMemo(
+    () => friends.map((f, i) => ({ ...f, rank: i + 1 })),
+    [friends],
+  );
 
   const reloadAll = useCallback(async () => {
     setActionError("");
@@ -98,24 +116,32 @@ export function FriendsScreen({ onSignIn }: Props) {
     }
   }
 
+  async function inviteFriends() {
+    try {
+      await Share.share({
+        message: "Come play with me on PLAY — every swipe is a game.",
+      });
+    } catch {
+      /* cancelled */
+    }
+  }
+
   if (!isSignedIn) {
     return (
       <ScrollView style={styles.wrap} contentContainerStyle={styles.inner}>
         <Text style={[type.screenTitle, { color: colors.paper }]}>Friends</Text>
-        <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.sm }]}>
-          See who showed up — no public leaderboard, just belonging.
+        <Text style={[type.bodyLg, { color: colors.lilac, marginTop: spacing.sm }]}>
+          Your friends are playing. Sign in to see what they’re on and beat their scores.
         </Text>
         <View style={styles.card}>
           <Text style={[type.bodyLg, { color: colors.paper }]}>
             Sign in to add friends and see who's playing with you.
           </Text>
-          {isSupabaseConfigured() ? (
-            <PrimaryButton label="Sign in" onPress={onSignIn} />
-          ) : (
-            <Text style={[type.bodySm, { color: colors.lilac }]}>
-              Configure EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to enable sign-in.
-            </Text>
-          )}
+          {isSupabaseConfigured() ? <PrimaryButton label="Sign in" onPress={onSignIn} /> : null}
+          {onOpenLeaderboard ? (
+            <PrimaryButton label="View leaderboard" variant="secondary" onPress={onOpenLeaderboard} />
+          ) : null}
+          <PrimaryButton label="Invite friends" variant="secondary" onPress={() => void inviteFriends()} />
         </View>
       </ScrollView>
     );
@@ -153,11 +179,13 @@ export function FriendsScreen({ onSignIn }: Props) {
     <ScrollView
       style={styles.wrap}
       contentContainerStyle={styles.inner}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.lime} />}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.lime} />
+      }
     >
-      <Text style={[type.screenTitle, { color: colors.paper }]}>Friends</Text>
+      <Text style={[type.screenTitle, { color: colors.paper }]}>Your friends are playing.</Text>
       <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.sm }]}>
-        See who showed up — no public leaderboard, just belonging.
+        See what your friends are playing and beat their scores.
       </Text>
 
       {actionSuccess ? (
@@ -168,6 +196,64 @@ export function FriendsScreen({ onSignIn }: Props) {
           {actionError}
         </Text>
       ) : null}
+
+      {friendLiveMoments.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={[type.metadata, styles.sectionLabel]}>LIVE NOW</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveRow}>
+            {friendLiveMoments.map((m) => {
+              const friendName = m.friends?.[0]?.displayName ?? "Friend";
+              const total = m.result?.totalResponses ?? 0;
+              return (
+                <Pressable key={m.id} style={styles.liveCard} onPress={() => jumpToMoment(m.id)}>
+                  <View style={styles.liveTop}>
+                    <View style={styles.liveDot} />
+                    <Text style={[type.micro, { color: colors.lime, fontFamily: fonts.bodyBold }]}>PLAYING</Text>
+                  </View>
+                  <Text style={[type.bodySm, { color: colors.paper, fontFamily: fonts.bodyBold }]} numberOfLines={1}>
+                    {friendName}
+                  </Text>
+                  <Text style={[type.metadata, { color: colors.lilac }]} numberOfLines={2}>
+                    {m.prompt}
+                  </Text>
+                  <Text style={[type.statsSm, { color: colors.pink, fontSize: 12, marginTop: 6 }]}>
+                    {formatCount(total)} in
+                  </Text>
+                  <PrimaryButton
+                    label="Join"
+                    onPress={() => jumpToMoment(m.id)}
+                    style={{ marginTop: 8, paddingVertical: 8 }}
+                  />
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : null}
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={[type.metadata, styles.sectionLabel]}>FRIENDS</Text>
+          {onOpenLeaderboard ? (
+            <Pressable onPress={onOpenLeaderboard}>
+              <Text style={[type.bodySm, { color: colors.pinkSoft }]}>Board ›</Text>
+            </Pressable>
+          ) : null}
+        </View>
+        {friendPreview.slice(0, 5).map((r) => (
+          <View key={r.userId} style={styles.rankRow}>
+            <Text style={[type.statsSm, { color: colors.lilac, width: 32 }]}>#{r.rank}</Text>
+            <AvatarImage displayName={r.displayName} avatarKey={r.avatarKey} size={36} />
+            <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold, flex: 1 }]}>
+              {r.displayName}
+            </Text>
+            <Text style={[type.micro, { color: colors.lilac }]}>Friend</Text>
+          </View>
+        ))}
+        {!friendPreview.length ? (
+          <Text style={[type.bodySm, { color: colors.lilac }]}>Add friends to see them here. Streak: {streak}</Text>
+        ) : null}
+      </View>
 
       {friendRequests.incoming.length > 0 ? (
         <View style={styles.section}>
@@ -214,7 +300,11 @@ export function FriendsScreen({ onSignIn }: Props) {
               autoCorrect={false}
               style={styles.input}
             />
-            <PrimaryButton label={adding ? "Sending…" : "Send request"} onPress={() => void sendRequest()} disabled={adding} />
+            <PrimaryButton
+              label={adding ? "Sending…" : "Send request"}
+              onPress={() => void sendRequest()}
+              disabled={adding}
+            />
           </View>
         ) : null}
 
@@ -258,6 +348,13 @@ export function FriendsScreen({ onSignIn }: Props) {
           ))}
         </View>
       ) : null}
+
+      <PrimaryButton
+        label="Invite friends"
+        onPress={() => void inviteFriends()}
+        style={{ marginTop: spacing.xl }}
+        trailingIcon="share-outline"
+      />
     </ScrollView>
   );
 }
@@ -265,7 +362,13 @@ export function FriendsScreen({ onSignIn }: Props) {
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.ink },
   inner: { padding: spacing.margin, paddingTop: 60, paddingBottom: 100 },
-  center: { flex: 1, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center", paddingTop: 80 },
+  center: {
+    flex: 1,
+    backgroundColor: colors.ink,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 80,
+  },
   card: {
     marginTop: spacing.lg,
     backgroundColor: colors.card,
@@ -276,6 +379,27 @@ const styles = StyleSheet.create({
   section: { marginTop: spacing.lg, gap: spacing.sm },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionLabel: { color: colors.lilac, letterSpacing: 1 },
+  liveRow: { gap: spacing.sm, paddingRight: spacing.margin },
+  liveCard: {
+    width: 180,
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: spacing.md,
+  },
+  liveTop: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.lime },
+  rankRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 12,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",

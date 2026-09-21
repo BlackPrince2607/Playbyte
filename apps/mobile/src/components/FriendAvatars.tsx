@@ -38,9 +38,12 @@ function MiniAvatar({ friend, index }: { friend: Friend; index: number }) {
 export function FriendAvatars({
   friends,
   extraCount,
+  compact,
 }: {
   friends: Friend[];
   extraCount?: number;
+  /** Stitch Live Now style: stack + “+ playing now” without name list */
+  compact?: boolean;
 }) {
   const shown = friends.slice(0, 2);
   return (
@@ -55,7 +58,9 @@ export function FriendAvatars({
           </View>
         ) : null}
       </View>
-      {friends.length > 0 ? (
+      {compact ? (
+        <Text style={[type.bodySm, { color: colors.lilac }]}>+ playing now</Text>
+      ) : friends.length > 0 ? (
         <Text style={[type.bodySm, { color: colors.paper, flex: 1 }]} numberOfLines={2}>
           <Text style={{ fontWeight: "700" }}>{friends.map((f) => f.displayName).join(", ")}</Text>
           {extraCount ? ` + ${extraCount} people are playing` : " are playing"}

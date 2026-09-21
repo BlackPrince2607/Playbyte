@@ -24,7 +24,7 @@ async def submit_play(
         raise AppError("not_found", "Game not available.", 404)
     max_score = int((game.config or {}).get("maxScore") or 1000000)
     score = clamp_score(score, max_score)
-    duration_ms = max(0, min(duration_ms, 300000))
+    duration_ms = max(0, min(duration_ms, 7_200_000))  # 2h safety max
 
     if idempotency_key:
         stmt = select(GamePlay).where(GamePlay.game_key == game_key, GamePlay.idempotency_key == idempotency_key)

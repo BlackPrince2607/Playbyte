@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - PLAY</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ffb4ab",
+                        "background": "#1d1013",
+                        "surface-container-low": "#26181b",
+                        "line": "rgba(245, 240, 255, 0.12)",
+                        "on-secondary-fixed": "#141f00",
+                        "on-error-container": "#ffdad6",
+                        "card": "#211540",
+                        "tertiary-container": "#00a92a",
+                        "on-secondary": "#263500",
+                        "on-background": "#f7dce1",
+                        "on-surface": "#f7dce1",
+                        "primary-container": "#ff4d8d",
+                        "on-primary": "#65002e",
+                        "primary-fixed": "#ffd9e0",
+                        "on-tertiary-fixed-variant": "#00530f",
+                        "ink": "#150E2B",
+                        "primary": "#ffb1c4",
+                        "paper": "#F5F0FF",
+                        "on-primary-fixed-variant": "#8f0043",
+                        "surface-tint": "#ffb1c4",
+                        "inverse-surface": "#f7dce1",
+                        "tertiary-fixed": "#75ff75",
+                        "surface": "#1d1013",
+                        "surface-container-high": "#362629",
+                        "on-primary-fixed": "#3f001a",
+                        "secondary-container": "#a2d801",
+                        "surface-variant": "#413034",
+                        "surface-container-lowest": "#170a0e",
+                        "tertiary-fixed-dim": "#57e15b",
+                        "secondary": "#bdf532",
+                        "on-tertiary-container": "#003306",
+                        "surface-container": "#2a1c1f",
+                        "primary-fixed-dim": "#ffb1c4",
+                        "outline-variant": "#594046",
+                        "tertiary": "#57e15b",
+                        "lilac": "#8F7FC0",
+                        "on-primary-container": "#5b0028",
+                        "on-secondary-fixed-variant": "#384e00",
+                        "on-surface-variant": "#e1bec5",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#a2d801",
+                        "surface-bright": "#463538",
+                        "surface-dim": "#1d1013",
+                        "on-secondary-container": "#425a00",
+                        "surface-container-highest": "#413034",
+                        "outline": "#a8898f",
+                        "error-container": "#93000a",
+                        "inverse-on-surface": "#3c2c30",
+                        "inverse-primary": "#b90a5a",
+                        "cardAlt": "#2A1B4E",
+                        "on-tertiary-fixed": "#002203",
+                        "on-tertiary": "#003908",
+                        "secondary-fixed": "#bdf532"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "margin": "20px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["inter"],
+                        "game-question": ["spaceGrotesk"],
+                        "game-question-mobile": ["spaceGrotesk"],
+                        "hero": ["spaceGrotesk"],
+                        "micro": ["inter"],
+                        "body-lg": ["inter"],
+                        "large-score": ["spaceGrotesk"],
+                        "metadata": ["inter"],
+                        "stats": ["jetbrainsMono"],
+                        "screen-title": ["spaceGrotesk"],
+                        "hero-mobile": ["spaceGrotesk"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "game-question": ["42px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "game-question-mobile": ["30px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "hero": ["48px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "micro": ["10px", { "lineHeight": "1.2", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "large-score": ["72px", { "lineHeight": "1", "fontWeight": "700" }],
+                        "metadata": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "stats": ["24px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "screen-title": ["34px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "hero-mobile": ["40px", { "lineHeight": "1.1", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #ff4d8d;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #ff4d8d;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
+        .toggle-label {
+            width: 48px;
+            height: 24px;
+            background-color: #413034;
+            border-radius: 9999px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .toggle-label:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-sm antialiased pb-24 pt-20 overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface text-primary dark:text-primary font-screen-title text-screen-title-mobile fixed top-0 w-full z-50 border-b border-line flex items-center justify-between px-margin py-md">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors active:scale-95 transition-transform duration-150 p-2 -ml-2 rounded-full hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-2xl" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-screen-title text-screen-title-mobile text-on-surface dark:text-on-surface text-center flex-1 pr-8">Settings</h1>
+</header>
+<!-- Main Canvas -->
+<main class="px-margin max-w-md mx-auto space-y-8">
+<!-- ACCOUNT -->
+<section>
+<h2 class="font-stats text-metadata text-lilac uppercase tracking-widest mb-sm pl-sm">Account</h2>
+<div class="bg-card rounded-xl border border-line overflow-hidden divide-y divide-line">
+<button class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors text-left group">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary transition-colors">Profile</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors text-left group">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary transition-colors">Phone / Email</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors text-left group">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary transition-colors">Language</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- NOTIFICATIONS -->
+<section>
+<h2 class="font-stats text-metadata text-lilac uppercase tracking-widest mb-sm pl-sm">Notifications</h2>
+<div class="bg-card rounded-xl border border-line overflow-hidden divide-y divide-line">
+<div class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors">
+<span class="font-body-lg text-body-lg text-on-surface">Friend challenges</span>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="toggle-friend-challenges" name="toggle-friend-challenges" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" for="toggle-friend-challenges"></label>
+</div>
+</div>
+<div class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors">
+<span class="font-body-lg text-body-lg text-on-surface">Leaderboard changes</span>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="toggle-leaderboard" name="toggle-leaderboard" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" for="toggle-leaderboard"></label>
+</div>
+</div>
+<div class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors">
+<span class="font-body-lg text-body-lg text-on-surface">Daily 10 reminder</span>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="toggle-daily-10" name="toggle-daily-10" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" for="toggle-daily-10"></label>
+</div>
+</div>
+<div class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors">
+<span class="font-body-lg text-body-lg text-on-surface">New games from friends</span>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="toggle-new-games" name="toggle-new-games" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" for="toggle-new-games"></label>
+</div>
+</div>
+</div>
+</section>
+<!-- PRIVACY -->
+<section>
+<h2 class="font-stats text-metadata text-lilac uppercase tracking-widest mb-sm pl-sm">Privacy</h2>
+<div class="bg-card rounded-xl border border-line overflow-hidden divide-y divide-line">
+<div class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors">
+<span class="font-body-lg text-body-lg text-on-surface">Show me as playing now</span>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="toggle-playing-now" name="toggle-playing-now" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" for="toggle-playing-now"></label>
+</div>
+</div>
+<div class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors">
+<span class="font-body-lg text-body-lg text-on-surface">Allow friends to challenge me</span>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="toggle-allow-challenges" name="toggle-allow-challenges" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" for="toggle-allow-challenges"></label>
+</div>
+</div>
+<div class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors">
+<span class="font-body-lg text-body-lg text-on-surface">Public leaderboard visibility</span>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0" id="toggle-public-leaderboard" name="toggle-public-leaderboard" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" for="toggle-public-leaderboard"></label>
+</div>
+</div>
+</div>
+</section>
+<!-- CONTENT -->
+<section>
+<h2 class="font-stats text-metadata text-lilac uppercase tracking-widest mb-sm pl-sm">Content</h2>
+<div class="bg-card rounded-xl border border-line overflow-hidden divide-y divide-line">
+<button class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors text-left group">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary transition-colors">Preferred languages</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors text-left group">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary transition-colors">Interests</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors text-left group">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary transition-colors">Game difficulty</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- SUPPORT -->
+<section class="pb-8">
+<h2 class="font-stats text-metadata text-lilac uppercase tracking-widest mb-sm pl-sm">Support</h2>
+<div class="bg-card rounded-xl border border-line overflow-hidden divide-y divide-line">
+<button class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors text-left group">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary transition-colors">Help</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors text-left group">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary transition-colors">Report a problem</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md hover:bg-cardAlt transition-colors text-left group">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary transition-colors">Community guidelines</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<div class="mt-8 text-center pb-8">
+<button class="px-lg py-sm bg-surface-container-highest border border-line text-error rounded-full font-body-sm text-body-sm font-bold hover:bg-surface-variant active:scale-95 transition-all w-full max-w-[200px] mx-auto">
+                    Log Out
+                </button>
+<p class="font-micro text-micro text-on-surface-variant mt-sm">App Version 2.4.1 (Build 890)</p>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface-container dark:bg-surface-container text-primary dark:text-primary font-body-sm text-body-sm fixed bottom-0 w-full z-50 border-t border-line flex justify-around items-center h-16 px-2 md:hidden">
+<button class="flex flex-col items-center justify-center text-lilac dark:text-lilac px-4 py-1 hover:text-on-surface dark:hover:text-on-surface active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined mb-1" data-icon="sports_esports">sports_esports</span>
+<span>Play</span>
+</button>
+<button class="flex flex-col items-center justify-center text-lilac dark:text-lilac px-4 py-1 hover:text-on-surface dark:hover:text-on-surface active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined mb-1" data-icon="search">search</span>
+<span>Search</span>
+</button>
+<button class="flex flex-col items-center justify-center text-lilac dark:text-lilac px-4 py-1 hover:text-on-surface dark:hover:text-on-surface active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined mb-1" data-icon="emoji_events">emoji_events</span>
+<span>Leagues</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-cardAlt dark:bg-cardAlt text-primary dark:text-primary rounded-xl px-4 py-1 hover:text-on-surface dark:hover:text-on-surface active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined mb-1" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span>Profile</span>
+</button>
+</nav>
+</body></html>

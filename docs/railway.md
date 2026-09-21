@@ -54,13 +54,18 @@ CORS_ORIGINS=http://localhost:8081,https://YOUR-ADMIN-URL
 DATABASE_URL=postgresql+asyncpg://...   # Supabase pooler / Postgres
 GUEST_TOKEN_SECRET=<long-random>
 SUPABASE_URL=https://YOUR-PROJECT.supabase.co
-SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-SUPABASE_JWT_SECRET=...
+# New Supabase keys (Settings → API Keys):
+SUPABASE_ANON_KEY=sb_publishable_...          # optional for API
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...       # required — put the *secret* key here
+SUPABASE_JWT_SECRET=...                       # JWT secret (Auth), not the API key
 SUPABASE_JWT_AUDIENCE=authenticated
+SUPABASE_STORAGE_BUCKET_SHARES=share-cards
 ADMIN_API_KEY=<long-random>
 ```
 
+> Env var names are still `SUPABASE_*_ANON/SERVICE_ROLE_*` for compatibility. With the new key
+> system, put **publishable** in `SUPABASE_ANON_KEY` and **secret** in `SUPABASE_SERVICE_ROLE_KEY`.
+> Never put `sb_secret_…` in mobile/`EXPO_PUBLIC_*`.
 6. Verify:
 
 ```bash

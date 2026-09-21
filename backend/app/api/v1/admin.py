@@ -1,8 +1,9 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -11,25 +12,36 @@ from app.common.admin import require_admin
 from app.common.auth import Actor
 from app.infrastructure.postgres.db import get_session
 from app.infrastructure.postgres.models import (
+    ContentTag,
     ContentWindow,
     MiniGame,
     Moment,
     Report,
 )
 from app.modules.cms.service import approve_moment, create_moment, transition_moment
+from app.modules.feed.service import media_url, tags_for_moments
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+class OptionIn(BaseModel):
+    label: str | None = None
+    imageKey: str | None = None
+    isCorrect: bool = False
 
 
 class MomentCreateIn(BaseModel):
     type: str
     categoryId: UUID
     prompt: str
-    options: list[str]
+    options: list[Any]
     restrictedTopic: str = "none"
     contentWindowId: UUID | None = None
     startsAt: datetime | None = None
     endsAt: datetime | None = None
+    promptImageKey: str | None = None
+    scoringMode: str = "none"
+    tags: list[str] = Field(default_factory=list)
 
 
 class TransitionIn(BaseModel):
@@ -60,7 +72,10 @@ async def list_moments(
     session: AsyncSession = Depends(get_session),
     _: Actor = Depends(require_admin),
 ) -> dict:
-    rows = await session.scalars(select(Moment).options(selectinload(Moment.options)).order_by(Moment.created_at.desc()))
+    rows = list(
+        await session.scalars(select(Moment).options(selectinload(Moment.options)).order_by(Moment.created_at.desc()))
+    )
+    tag_map = await tags_for_moments(session, [m.id for m in rows])
     return {
         "moments": [
             {
@@ -68,10 +83,20 @@ async def list_moments(
                 "type": m.type,
                 "status": m.status,
                 "prompt": m.prompt,
+                "promptImageUrl": media_url(m.prompt_image_key),
+                "scoringMode": m.scoring_mode,
+                "tags": tag_map.get(m.id, []),
                 "restrictedTopic": m.restricted_topic,
                 "startsAt": m.starts_at.isoformat() if m.starts_at else None,
                 "endsAt": m.ends_at.isoformat() if m.ends_at else None,
-                "options": [o.label for o in sorted(m.options, key=lambda x: x.sort_order)],
+                "options": [
+                    {
+                        "label": o.label,
+                        "imageUrl": media_url(o.image_key),
+                        "isCorrect": o.is_correct,
+                    }
+                    for o in sorted(m.options, key=lambda x: x.sort_order)
+                ],
             }
             for m in rows
         ]
@@ -95,6 +120,9 @@ async def post_moment(
         content_window_id=body.contentWindowId,
         starts_at=body.startsAt,
         ends_at=body.endsAt,
+        prompt_image_key=body.promptImageKey,
+        scoring_mode=body.scoringMode,
+        tag_slugs=body.tags,
     )
     return {"id": str(m.id), "status": m.status}
 
@@ -182,6 +210,15 @@ async def list_reports(
             for r in rows
         ]
     }
+
+
+@router.get("/tags")
+async def list_tags(
+    session: AsyncSession = Depends(get_session),
+    _: Actor = Depends(require_admin),
+) -> dict:
+    rows = await session.scalars(select(ContentTag).order_by(ContentTag.sort_order))
+    return {"tags": [{"id": str(t.id), "slug": t.slug, "name": t.name} for t in rows]}
 
 
 @router.patch("/games/{game_key}")

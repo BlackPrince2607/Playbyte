@@ -8,7 +8,7 @@ import { type } from "../theme/typography";
 
 type Props = {
   streak?: number;
-  variant?: "feed" | "live";
+  variant?: "feed" | "compete";
   refreshing?: boolean;
   onRefresh?: () => void;
   onMenu?: () => void;
@@ -31,14 +31,16 @@ export function FeedTopBar({
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + spacing.sm }]}>
       <View style={styles.inner}>
-        {variant === "live" ? (
+        {variant === "compete" ? (
           <Pressable onPress={onMenu} hitSlop={12} accessibilityRole="button">
             <Ionicons name="menu" size={24} color={colors.pinkSoft} />
           </Pressable>
         ) : (
-          <AvatarImage displayName={avatarDisplayName} avatarKey={avatarKey} size={40} />
+          <Pressable onPress={onProfile} hitSlop={8} accessibilityRole="button" accessibilityLabel="Open profile">
+            <AvatarImage displayName={avatarDisplayName} avatarKey={avatarKey} size={40} />
+          </Pressable>
         )}
-        <PlayLogo />
+        <PlayLogo soft={variant === "compete"} />
         {variant === "feed" ? (
           <Pressable
             style={styles.streak}
@@ -47,7 +49,7 @@ export function FeedTopBar({
             accessibilityRole="button"
             accessibilityLabel="Refresh feed"
           >
-            <Text style={[type.stats, { color: colors.paper }]}>{streak}</Text>
+            <Text style={[type.statsSm, { color: colors.pink }]}>{streak}</Text>
             <Text style={{ fontSize: 14 }}>{refreshing ? "…" : "🔥"}</Text>
           </Pressable>
         ) : (
@@ -69,7 +71,7 @@ const styles = StyleSheet.create({
     zIndex: 50,
     paddingHorizontal: spacing.margin,
     paddingBottom: spacing.md,
-    backgroundColor: "rgba(21, 14, 43, 0.85)",
+    backgroundColor: "transparent",
   },
   inner: {
     flexDirection: "row",

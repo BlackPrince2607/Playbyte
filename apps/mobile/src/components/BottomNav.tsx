@@ -1,16 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, spacing } from "../theme/colors";
-import { type } from "../theme/typography";
+import { colors, radius, spacing } from "../theme/colors";
+import { fonts, type } from "../theme/typography";
 
-export type TabKey = "feed" | "live" | "friends" | "profile";
+/** Stitch bottom nav: Feed · Compete · Friends · Vault */
+export type TabKey = "feed" | "compete" | "friends" | "vault";
 
-const TABS: { key: TabKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { key: "feed", label: "Feed", icon: "play-circle" },
-  { key: "live", label: "Live", icon: "radio" },
-  { key: "friends", label: "Friends", icon: "people" },
-  { key: "profile", label: "You", icon: "person-circle" },
+const TABS: {
+  key: TabKey;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconOn: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { key: "feed", label: "Feed", icon: "play-circle-outline", iconOn: "play-circle" },
+  { key: "compete", label: "Compete", icon: "trophy-outline", iconOn: "trophy" },
+  { key: "friends", label: "Friends", icon: "people-outline", iconOn: "people" },
+  { key: "vault", label: "Vault", icon: "person-circle-outline", iconOn: "person-circle" },
 ];
 
 type Props = {
@@ -30,10 +36,18 @@ export function BottomNav({ active, onChange }: Props) {
             accessibilityRole="button"
             accessibilityState={{ selected: on }}
             onPress={() => onChange(t.key)}
-            style={styles.tab}
+            style={[styles.tab, on && styles.tabOn]}
           >
-            <Ionicons name={t.icon} size={22} color={on ? colors.lime : colors.lilac} />
-            <Text style={[type.micro, { color: on ? colors.lime : colors.lilac, textTransform: "capitalize" }]}>
+            <Ionicons name={on ? t.iconOn : t.icon} size={22} color={on ? colors.lime : colors.lilac} />
+            <Text
+              style={[
+                type.micro,
+                {
+                  color: on ? colors.lime : colors.lilac,
+                  fontFamily: on ? fonts.bodyBold : fonts.body,
+                },
+              ]}
+            >
               {t.label}
             </Text>
           </Pressable>
@@ -52,5 +66,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(21, 14, 43, 0.95)",
     paddingTop: spacing.sm,
   },
-  tab: { alignItems: "center", gap: 4, minWidth: 64 },
+  tab: {
+    alignItems: "center",
+    gap: 4,
+    minWidth: 64,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: radius.md,
+  },
+  tabOn: { backgroundColor: colors.cardAlt },
 });

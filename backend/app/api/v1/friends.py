@@ -6,7 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.auth import Actor, require_user
 from app.infrastructure.postgres.db import get_session
-from app.modules.friends.service import accept_friend, list_friend_requests, list_friends, request_friend
+from app.modules.friends.service import (
+    accept_friend,
+    list_friend_requests,
+    list_friends,
+    request_friend,
+)
 
 router = APIRouter(prefix="/friends", tags=["friends"])
 

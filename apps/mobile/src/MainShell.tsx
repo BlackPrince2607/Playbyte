@@ -10,7 +10,9 @@ import { GameEngine, submitPlay } from "./games";
 import { FeedScreen } from "./screens/feed/FeedScreen";
 import { PostGameResultScreen } from "./screens/feed/PostGameResultScreen";
 import { FriendsScreen } from "./screens/friends/FriendsScreen";
+import { LeaderboardScreen } from "./screens/friends/LeaderboardScreen";
 import { LiveNowScreen } from "./screens/live/LiveNowScreen";
+import { GetStartedScreen } from "./screens/onboarding/GetStartedScreen";
 import { InterestsScreen } from "./screens/onboarding/InterestsScreen";
 import { LanguageScreen } from "./screens/onboarding/LanguageScreen";
 import { WelcomeScreen } from "./screens/onboarding/WelcomeScreen";
@@ -21,7 +23,7 @@ import { SignInScreen } from "./screens/auth/SignInScreen";
 import { colors, spacing } from "./theme/colors";
 import { type } from "./theme/typography";
 
-type OnboardStep = "welcome" | "language" | "interests";
+type OnboardStep = "welcome" | "get_started" | "language" | "interests";
 
 function newIdempotencyKey(gameKey: string) {
   return `${gameKey}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -39,6 +41,7 @@ export function MainShell() {
     completeOnboarding,
     refreshFeed,
     retryBoot,
+    items,
   } = useApp();
   const [step, setStep] = useState<OnboardStep>("welcome");
   const [playing, setPlaying] = useState<FeedGame | null>(null);
@@ -46,6 +49,7 @@ export function MainShell() {
   const [showNotif, setShowNotif] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [gameSubmitting, setGameSubmitting] = useState(false);
   const [gameSubmitError, setGameSubmitError] = useState("");
   const [lastPlay, setLastPlay] = useState<{ score: number; durationMs: number } | null>(null);
@@ -57,6 +61,14 @@ export function MainShell() {
     setLastPlay(null);
     setPlaying(game);
   }, []);
+
+  const startFirstGameFromFeed = useCallback(() => {
+    const game = items.find((i): i is FeedGame => i.type === "mini_game");
+    if (game) startGame(game);
+    else {
+      void completeOnboarding();
+    }
+  }, [items, startGame, completeOnboarding]);
 
   const submitGamePlay = useCallback(
     async (score: number, durationMs: number) => {
@@ -101,7 +113,17 @@ export function MainShell() {
   }
 
   if (!onboardingDone) {
-    if (step === "welcome") return <WelcomeScreen onNext={() => setStep("language")} />;
+    if (step === "welcome") return <WelcomeScreen onNext={() => setStep("get_started")} />;
+    if (step === "get_started")
+      return (
+        <GetStartedScreen
+          onContinue={() => setStep("language")}
+          onPlayTrivia={() => setStep("language")}
+          onPlayGame={() => {
+            void completeOnboarding().then(() => startFirstGameFromFeed());
+          }}
+        />
+      );
     if (step === "language")
       return (
         <LanguageScreen onNext={() => setStep("interests")} onSkip={() => setStep("interests")} />
@@ -143,6 +165,7 @@ export function MainShell() {
           gameKey={playing.key}
           title={playing.title}
           blurb={playing.blurb}
+          config={playing.config}
           onDone={(score, durationMs) => void submitGamePlay(score, durationMs)}
         />
         {gameSubmitting ? (
@@ -173,6 +196,18 @@ export function MainShell() {
         onSuccess={() => {
           setPromptSave(false);
           void refreshFeed();
+        }}
+      />
+    );
+  }
+
+  if (showLeaderboard) {
+    return (
+      <LeaderboardScreen
+        onBack={() => setShowLeaderboard(false)}
+        onSignIn={() => {
+          setShowLeaderboard(false);
+          setShowSignIn(true);
         }}
       />
     );
@@ -214,15 +249,18 @@ export function MainShell() {
 
       <View style={styles.body}>
         <View style={[styles.tabPane, tab !== "feed" && styles.hidden]}>
-          <FeedScreen onPlayGame={startGame} />
+          <FeedScreen onPlayGame={startGame} onOpenProfile={() => setTab("vault")} />
         </View>
-        <View style={[styles.tabPane, tab !== "live" && styles.hidden]}>
-          <LiveNowScreen onProfile={() => setTab("profile")} />
+        <View style={[styles.tabPane, tab !== "compete" && styles.hidden]}>
+          <LiveNowScreen onProfile={() => setTab("vault")} />
         </View>
         <View style={[styles.tabPane, tab !== "friends" && styles.hidden]}>
-          <FriendsScreen onSignIn={() => setShowSignIn(true)} />
+          <FriendsScreen
+            onSignIn={() => setShowSignIn(true)}
+            onOpenLeaderboard={() => setShowLeaderboard(true)}
+          />
         </View>
-        <View style={[styles.tabPane, tab !== "profile" && styles.hidden]}>
+        <View style={[styles.tabPane, tab !== "vault" && styles.hidden]}>
           <SettingsScreen
             onOpenNotifications={() => setShowNotif(true)}
             onOpenRecap={() => setShowRecap(true)}
