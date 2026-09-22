@@ -17,17 +17,31 @@ const LANGS = [
   { id: "mr", glyph: "अ", label: "मराठी" },
 ];
 
-type Props = { onNext: () => void; onSkip: () => void };
+type Props = { onNext: () => void; onSkip: () => void; onBack?: () => void };
 
-export function LanguageScreen({ onNext, onSkip }: Props) {
+export function LanguageScreen({ onNext, onSkip, onBack }: Props) {
   const insets = useSafeAreaInsets();
-  const [selected, setSelected] = useState("hi");
+  const [selected, setSelected] = useState("en");
 
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 16 }]}>
+      {onBack ? (
+        <Pressable
+          onPress={onBack}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          style={{ marginBottom: spacing.md, alignSelf: "flex-start" }}
+        >
+          <Text style={[type.bodySm, { color: colors.lilac }]}>← Back</Text>
+        </Pressable>
+      ) : null}
       <Text style={[type.hero, { color: colors.paper }]}>Play in your language.</Text>
       <Text style={[type.bodyLg, { color: colors.lilac, marginTop: spacing.sm }]}>
         Choose the language that feels most natural to you.
+      </Text>
+      <Text style={[type.metadata, { color: colors.lilac, marginTop: spacing.xs }]}>
+        Preference is saved on this device. Full localization is coming soon — the app UI stays in English for now.
       </Text>
 
       <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
@@ -38,7 +52,10 @@ export function LanguageScreen({ onNext, onSkip }: Props) {
               key={l.id}
               style={[styles.tile, on && styles.tileOn]}
               onPress={() => setSelected(l.id)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
             >
+              {on ? <Text style={styles.check}>✓</Text> : null}
               <Text
                 style={[
                   type.hero,
@@ -100,5 +117,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
+  },
+  check: {
+    position: "absolute",
+    top: 8,
+    right: 10,
+    color: colors.lime,
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

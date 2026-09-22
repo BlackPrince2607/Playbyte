@@ -1,0 +1,556 @@
+{
+  "version": 1,
+  "note": "Funny/famous meme-style image choice polls. Images are generated via memegen.link at refresh time, then uploaded to moment-media (hosted keys). Templates are from the public memegen catalog.",
+  "attribution": "Meme frames generated with https://api.memegen.link/ (open-source memegen).",
+  "moments": [
+    {
+      "categorySlug": "casual",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Which Monday energy are you?",
+      "promptImage": {
+        "source": "memegen",
+        "template": "drake",
+        "lines": ["Meetings all day", "More sleep"]
+      },
+      "options": [
+        {
+          "label": "Meetings",
+          "image": { "source": "memegen", "template": "drake", "lines": ["Meetings", ""] }
+        },
+        {
+          "label": "Sleep",
+          "image": { "source": "memegen", "template": "drake", "lines": ["", "More sleep"] }
+        }
+      ]
+    },
+    {
+      "categorySlug": "pop-culture",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "When a new meme drops, you…",
+      "options": [
+        {
+          "label": "Repost instantly",
+          "image": {
+            "source": "memegen",
+            "template": "buzz",
+            "lines": ["New meme", "Repost everywhere"]
+          }
+        },
+        {
+          "label": "Already tired",
+          "image": {
+            "source": "memegen",
+            "template": "fine",
+            "lines": ["This is fine", "Already tired of it"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "food",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Chai vs coffee — pick a side (visually).",
+      "options": [
+        {
+          "label": "Chai",
+          "image": {
+            "source": "memegen",
+            "template": "success",
+            "lines": ["Chai", "Always wins"]
+          }
+        },
+        {
+          "label": "Coffee",
+          "image": {
+            "source": "memegen",
+            "template": "grumpycat",
+            "lines": ["Coffee", "Or I perish"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Battery at 3% — which face is you?",
+      "options": [
+        {
+          "label": "Panic",
+          "image": {
+            "source": "memegen",
+            "template": "yuno",
+            "lines": ["Y U NO", "Charge phone"]
+          }
+        },
+        {
+          "label": "Denial",
+          "image": {
+            "source": "memegen",
+            "template": "fine",
+            "lines": ["This is fine", "Battery at 3"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "social",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Seen-zoned — pick your response vibe.",
+      "options": [
+        {
+          "label": "Double text",
+          "image": {
+            "source": "memegen",
+            "template": "spongebob",
+            "lines": ["Maybe they", "Did not see it"]
+          }
+        },
+        {
+          "label": "Ignore back",
+          "image": {
+            "source": "memegen",
+            "template": "rollsafe",
+            "lines": ["Cannot be seen-zoned", "If you never text"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "cricket",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Last over of a chase — your face?",
+      "options": [
+        {
+          "label": "Believe",
+          "image": {
+            "source": "memegen",
+            "template": "iw",
+            "lines": ["We got this", "One more six"]
+          }
+        },
+        {
+          "label": "Doom",
+          "image": {
+            "source": "memegen",
+            "template": "sad-biden",
+            "lines": ["Why did we", "Take that single"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "movies",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Interval twist just hit — reaction?",
+      "options": [
+        {
+          "label": "Mind blown",
+          "image": {
+            "source": "memegen",
+            "template": "fry",
+            "lines": ["Not sure if twist", "Or bad writing"]
+          }
+        },
+        {
+          "label": "Saw it coming",
+          "image": {
+            "source": "memegen",
+            "template": "wonka",
+            "lines": ["Tell me more", "About your twist"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "music",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Concert tickets sold out — which meme are you?",
+      "options": [
+        {
+          "label": "Crying",
+          "image": {
+            "source": "memegen",
+            "template": "cryingfloor",
+            "lines": ["Sold out", "In 12 seconds"]
+          }
+        },
+        {
+          "label": "Still dancing",
+          "image": {
+            "source": "memegen",
+            "template": "doge",
+            "lines": ["such stream", "very concert at home"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "weather",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Sudden monsoon on your commute?",
+      "options": [
+        {
+          "label": "Embrace it",
+          "image": {
+            "source": "memegen",
+            "template": "awesome",
+            "lines": ["Rain", "Main character walk"]
+          }
+        },
+        {
+          "label": "Traffic rage",
+          "image": {
+            "source": "memegen",
+            "template": "yuno",
+            "lines": ["Y U NO", "Bring umbrella"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "news",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Breaking news alert at 11pm — you…",
+      "options": [
+        {
+          "label": "Open it",
+          "image": {
+            "source": "memegen",
+            "template": "interesting",
+            "lines": ["Breaking news", "At midnight"]
+          }
+        },
+        {
+          "label": "Sleep wins",
+          "image": {
+            "source": "memegen",
+            "template": "success",
+            "lines": ["Tomorrow me", "Can panic"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "sports",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Your team blew a lead — pick a coping meme.",
+      "options": [
+        {
+          "label": "It's fine",
+          "image": {
+            "source": "memegen",
+            "template": "fine",
+            "lines": ["Still in it", "This is fine"]
+          }
+        },
+        {
+          "label": "Season over",
+          "image": {
+            "source": "memegen",
+            "template": "firstworld",
+            "lines": ["Blew a 5 run lead", "Season cancelled"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "AI wrote your email — pride or shame?",
+      "options": [
+        {
+          "label": "Pride",
+          "image": {
+            "source": "memegen",
+            "template": "success",
+            "lines": ["AI draft", "Sounded smart"]
+          }
+        },
+        {
+          "label": "Shame",
+          "image": {
+            "source": "memegen",
+            "template": "hide",
+            "lines": ["Please never", "Find out"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "casual",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Alarm went off — which one are you?",
+      "options": [
+        {
+          "label": "Snooze army",
+          "image": {
+            "source": "memegen",
+            "template": "leo",
+            "lines": ["One more snooze", "What could go wrong"]
+          }
+        },
+        {
+          "label": "Up instantly",
+          "image": {
+            "source": "memegen",
+            "template": "buzz",
+            "lines": ["Alarm", "I rise"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "social",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Group chat blowing up at 2am?",
+      "options": [
+        {
+          "label": "Mute",
+          "image": {
+            "source": "memegen",
+            "template": "no",
+            "lines": ["2am group chat", "Absolutely not"]
+          }
+        },
+        {
+          "label": "Join chaos",
+          "image": {
+            "source": "memegen",
+            "template": "doge",
+            "lines": ["much chaos", "very friends"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "pop-culture",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Celebrity drama dropped — your move?",
+      "options": [
+        {
+          "label": "Full thread",
+          "image": {
+            "source": "memegen",
+            "template": "interesting",
+            "lines": ["One more comment", "Okay ten more"]
+          }
+        },
+        {
+          "label": "Touch grass",
+          "image": {
+            "source": "memegen",
+            "template": "rollsafe",
+            "lines": ["Not my circus", "Closing the app"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "food",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "1am Maggi vs biryani — visual showdown.",
+      "options": [
+        {
+          "label": "Maggi",
+          "image": {
+            "source": "memegen",
+            "template": "success",
+            "lines": ["2 minutes", "Happiness"]
+          }
+        },
+        {
+          "label": "Biryani",
+          "image": {
+            "source": "memegen",
+            "template": "money",
+            "lines": ["Delivery fee", "Worth it"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "movies",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Theatre or OTT tonight?",
+      "options": [
+        {
+          "label": "Theatre",
+          "image": {
+            "source": "memegen",
+            "template": "buzz",
+            "lines": ["Big screen", "Big screen everywhere"]
+          }
+        },
+        {
+          "label": "OTT",
+          "image": {
+            "source": "memegen",
+            "template": "fine",
+            "lines": ["Pajamas", "Unlimited pauses"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "music",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Earworm stuck for 3 days — pick a face.",
+      "options": [
+        {
+          "label": "Suffer",
+          "image": {
+            "source": "memegen",
+            "template": "cryingfloor",
+            "lines": ["Same 4 lines", "On loop"]
+          }
+        },
+        {
+          "label": "Weaponize it",
+          "image": {
+            "source": "memegen",
+            "template": "rollsafe",
+            "lines": ["Send to friends", "Make them suffer"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "casual",
+      "type": "reaction",
+      "tags": ["poll"],
+      "prompt": "Is this your weekend plan?",
+      "promptImage": {
+        "source": "memegen",
+        "template": "success",
+        "lines": ["Weekend plans", "Nap"]
+      },
+      "options": ["Yes", "Not yet"]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Software update overnight — morning mood?",
+      "options": [
+        {
+          "label": "Everything broke",
+          "image": {
+            "source": "memegen",
+            "template": "fine",
+            "lines": ["Update complete", "Nothing works"]
+          }
+        },
+        {
+          "label": "Actually fine",
+          "image": {
+            "source": "memegen",
+            "template": "nice",
+            "lines": ["Update", "Did not ruin me"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "weather",
+      "type": "reaction",
+      "tags": ["poll"],
+      "prompt": "Is AC season your personality?",
+      "promptImage": {
+        "source": "memegen",
+        "template": "awesome",
+        "lines": ["AC on", "Personality unlocked"]
+      },
+      "options": ["Yes", "No"]
+    },
+    {
+      "categorySlug": "cricket",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "DRS — review or trust the call?",
+      "options": [
+        {
+          "label": "Review",
+          "image": {
+            "source": "memegen",
+            "template": "fry",
+            "lines": ["Must review", "Just in case"]
+          }
+        },
+        {
+          "label": "Trust",
+          "image": {
+            "source": "memegen",
+            "template": "success",
+            "lines": ["Umpire said out", "I believe"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "social",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Birthday story post vs private text?",
+      "options": [
+        {
+          "label": "Story post",
+          "image": {
+            "source": "memegen",
+            "template": "buzz",
+            "lines": ["Happy birthday", "For the feed"]
+          }
+        },
+        {
+          "label": "Private text",
+          "image": {
+            "source": "memegen",
+            "template": "success",
+            "lines": ["Real ones", "Text privately"]
+          }
+        }
+      ]
+    },
+    {
+      "categorySlug": "news",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Fact-check before share — honest meme?",
+      "options": [
+        {
+          "label": "I verify",
+          "image": {
+            "source": "memegen",
+            "template": "wonka",
+            "lines": ["Source", "Or it did not happen"]
+          }
+        },
+        {
+          "label": "Share first",
+          "image": {
+            "source": "memegen",
+            "template": "facepalm",
+            "lines": ["Shared already", "Looks fake oops"]
+          }
+        }
+      ]
+    }
+  ]
+}

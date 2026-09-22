@@ -13,7 +13,8 @@ router = APIRouter(prefix="/games", tags=["games"])
 
 class PlayIn(BaseModel):
     score: int = Field(ge=0, le=1_000_000)
-    durationMs: int = Field(ge=0, le=300_000)
+    # Align with service/DB clamp (2h) so endless sessions can submit.
+    durationMs: int = Field(ge=0, le=7_200_000)
 
 
 @router.get("")

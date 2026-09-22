@@ -17,20 +17,19 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+# Live API category slugs only (see docs/content/QUESTION_LIBRARIES.md).
 CATEGORIES = [
     "sports",
-    "entertainment",
-    "fashion",
-    "politics",
-    "science",
-    "health",
-    "k-drama",
     "cricket",
+    "news",
+    "pop-culture",
+    "food",
+    "weather",
+    "tech",
     "music",
     "movies",
-    "tech",
-    "food",
-    "pop-culture",
+    "social",
+    "casual",
 ]
 
 CTR_HOOKS = [
@@ -42,12 +41,15 @@ CTR_HOOKS = [
     "India is split on this:",
     "Quick: which one wins?",
     "Your friends will roast you for this:",
+    "No wrong answer (except theirs) —",
+    "Group chat is fighting about this:",
 ]
 
 POLL_TEMPLATES = [
     ("{hook} {a} or {b}?", ["{a}", "{b}"]),
     ("{hook} What's the move for {topic}?", ["Go big", "Play safe", "Skip it", "Ask a friend"]),
     ("{hook} Pick the vibe for {topic}.", ["Chaotic", "Chill", "Main character", "Lowkey"]),
+    ("{hook} Honest take on {topic}?", ["Love it", "Hate it", "It's complicated", "No opinion"]),
 ]
 
 QUIZ_TEMPLATES = [
@@ -56,19 +58,17 @@ QUIZ_TEMPLATES = [
 ]
 
 TOPIC_BANK = {
-    "sports": ["IPL final", "Olympics", "football derby", "athlete salaries"],
-    "entertainment": ["box office", "streaming wars", "award night", "celebrity feud"],
-    "fashion": ["streetwear", "wedding fits", "sneaker drops", "red carpet"],
-    "politics": ["election buzz", "policy debates", "city mayor race"],
-    "science": ["space news", "AI breakthroughs", "climate facts", "gadgets"],
-    "health": ["sleep hacks", "gym myths", "nutrition myths", "mental health"],
-    "k-drama": ["latest OST", "plot twist", "couple shipping", "finale theories"],
-    "cricket": ["powerplay", "death overs", "captaincy", "World Cup"],
-    "music": ["chart battle", "concert tickets", "collab drop", "playlist wars"],
-    "movies": ["sequel bait", "interval twist", "cast rumor", "weekend release"],
-    "tech": ["phone launch", "privacy settings", "startup hype", "app wars"],
-    "food": ["street food", "late-night cravings", "diet trends", "chai vs coffee"],
-    "pop-culture": ["meme of the week", "viral audio", "influencer drama", "fandom wars"],
+    "sports": ["IPL final", "Olympics", "football derby", "fantasy squad picks", "injury drama"],
+    "cricket": ["powerplay", "death overs", "captaincy", "World Cup", "DRS reviews", "toss luck"],
+    "news": ["morning headlines", "fact-check habit", "breaking alerts", "longform vs shorts"],
+    "pop-culture": ["meme of the week", "viral audio", "influencer drama", "fandom wars", "reel trends"],
+    "food": ["street food", "late-night cravings", "diet trends", "chai vs coffee", "biryani loyalty"],
+    "weather": ["monsoon commute", "AC season", "unexpected rain", "winter mornings"],
+    "tech": ["phone launch", "privacy settings", "startup hype", "app wars", "AI at work"],
+    "music": ["chart battle", "concert tickets", "collab drop", "playlist wars", "earworms"],
+    "movies": ["sequel bait", "interval twist", "cast rumor", "weekend release", "theatre vs OTT"],
+    "social": ["group plans", "seen-zone etiquette", "birthday wishes", "drama threads"],
+    "casual": ["Sunday reset", "Monday doom", "snooze culture", "free evening chaos"],
 }
 
 PAIR_BANK = [
@@ -78,6 +78,10 @@ PAIR_BANK = [
     ("Cricket", "Football"),
     ("City", "Hometown"),
     ("Save money", "Spend joy"),
+    ("Theatre", "OTT"),
+    ("Mute chat", "Join chaos"),
+    ("Cook", "Order in"),
+    ("iOS", "Android"),
 ]
 
 
@@ -116,7 +120,7 @@ def generate_one(tag: str, category: str | None = None) -> GeneratedMoment:
             options=[{"label": o, "isCorrect": i == correct} for i, o in enumerate(options)],
             tags=["quiz"],
             scoringMode="correct_option",
-            restrictedTopic="none" if cat != "politics" else "election" if random.random() < 0.15 else "none",
+            restrictedTopic="none",
         )
 
     tmpl, opts_tmpl = random.choice(POLL_TEMPLATES)

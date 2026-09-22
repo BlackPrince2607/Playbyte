@@ -20,7 +20,8 @@
         "EXPO_PUBLIC_APP_ENV": "staging",
         "EXPO_PUBLIC_API_URL": "https://playbyte-production.up.railway.app",
         "EXPO_PUBLIC_SUPABASE_URL": "https://pzemlrjjqmfosprasivr.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_b54BLPldgFedFNejqR9YVg_WkROtN5u"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_b54BLPldgFedFNejqR9YVg_WkROtN5u",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "659794545027-5210jtuiaus7gfja0p7pgn8d3blo0n4e.apps.googleusercontent.com"
       }
     },
     "production": {

@@ -1,5 +1,3 @@
-import React from "react";
-import { Text, View } from "react-native";
 import { HigherOrLower } from "./engines/higherOrLower";
 import { MemorySequence } from "./engines/memorySequence";
 import { TrafficLight } from "./engines/trafficLight";
@@ -16,11 +14,14 @@ import { EmojiDecode } from "./engines/emojiDecode";
 import { WordScramble } from "./engines/wordScramble";
 import { WordBlitz } from "./engines/wordBlitz";
 import { GridHunt } from "./engines/gridHunt";
+import { SEEDED_GAME_KEYS } from "./logic/scoring";
 import { GameProps } from "./types";
 import { colors, spacing } from "../theme/colors";
 import { type } from "../theme/typography";
+import React from "react";
+import { Text, View } from "react-native";
 
-export const registry: Record<string, React.ComponentType<GameProps>> = {
+const engines = {
   higher_or_lower: HigherOrLower,
   memory_sequence: MemorySequence,
   traffic_light: TrafficLight,
@@ -37,7 +38,15 @@ export const registry: Record<string, React.ComponentType<GameProps>> = {
   word_scramble: WordScramble,
   word_blitz: WordBlitz,
   grid_hunt: GridHunt,
-};
+} as const;
+
+export const registry: Record<string, React.ComponentType<GameProps>> = { ...engines };
+
+if (__DEV__) {
+  for (const key of SEEDED_GAME_KEYS) {
+    if (!registry[key]) console.warn(`[games] Missing engine for seeded key: ${key}`);
+  }
+}
 
 export function GameEngine(props: GameProps) {
   const Cmp = registry[props.gameKey];
@@ -48,6 +57,13 @@ export function GameEngine(props: GameProps) {
         <Text style={[type.gameQuestion, { color: colors.paper }]}>Game unavailable</Text>
         <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.sm }]}>
           Unknown key: {props.gameKey}
+        </Text>
+        <Text
+          onPress={() => props.onDone(0, 0)}
+          style={[type.bodySm, { color: colors.lime, marginTop: spacing.lg }]}
+          accessibilityRole="button"
+        >
+          Back to feed
         </Text>
       </View>
     );

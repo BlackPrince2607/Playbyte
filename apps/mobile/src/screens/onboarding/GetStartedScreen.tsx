@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, Share, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PlayLogo } from "../../components/PlayLogo";
 import { PrimaryButton } from "../../components/PrimaryButton";
@@ -10,6 +10,7 @@ type Props = {
   onContinue: () => void;
   onPlayTrivia?: () => void;
   onPlayGame?: () => void;
+  onBack?: () => void;
 };
 
 const PREVIEWS = [
@@ -17,7 +18,8 @@ const PREVIEWS = [
     tag: "TRIVIA",
     title: "TRIVIA",
     blurb: "Quick-fire general knowledge. Jump into the live feed next.",
-    viewers: "Live",
+    badge: "Feed",
+    accent: colors.pink,
     ctaVariant: "primary" as const,
     on: "trivia" as const,
   },
@@ -25,7 +27,8 @@ const PREVIEWS = [
     tag: "CYBER SPRINT",
     title: "CYBER SPRINT",
     blurb: "Test your reaction time. Opens a mini-game from the feed.",
-    viewers: "Play",
+    badge: "Game",
+    accent: colors.lime,
     ctaVariant: "success" as const,
     on: "game" as const,
   },
@@ -33,19 +36,30 @@ const PREVIEWS = [
     tag: "GRIDLOCK",
     title: "GRIDLOCK",
     blurb: "Spatial puzzles waiting in Compete after setup.",
-    viewers: "Soon",
-    ctaVariant: "success" as const,
+    badge: "Soon",
+    accent: colors.lilac,
+    ctaVariant: "secondary" as const,
     on: "continue" as const,
   },
 ];
 
-export function GetStartedScreen({ onContinue, onPlayTrivia, onPlayGame }: Props) {
+export function GetStartedScreen({ onContinue, onPlayTrivia, onPlayGame, onBack }: Props) {
   const insets = useSafeAreaInsets();
 
   function handleCard(kind: "trivia" | "game" | "continue") {
     if (kind === "trivia") (onPlayTrivia ?? onContinue)();
     else if (kind === "game") (onPlayGame ?? onContinue)();
     else onContinue();
+  }
+
+  async function invite() {
+    try {
+      await Share.share({
+        message: "Come play with me on PLAY — every swipe is a game.",
+      });
+    } catch {
+      /* cancelled */
+    }
   }
 
   return (
@@ -62,6 +76,18 @@ export function GetStartedScreen({ onContinue, onPlayTrivia, onPlayGame }: Props
           <Text style={[type.micro, { color: colors.pinkSoft }]}>● Live</Text>
         </View>
 
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={{ marginTop: spacing.sm, alignSelf: "flex-start" }}
+          >
+            <Text style={[type.bodySm, { color: colors.lilac }]}>← Back</Text>
+          </Pressable>
+        ) : null}
+
         <Text style={[type.screenTitle, styles.title]}>Your game is waiting.</Text>
         <Text style={[type.bodyLg, { color: colors.lilac, marginTop: spacing.sm }]}>
           Moments and mini-games are waiting in your feed.
@@ -69,20 +95,18 @@ export function GetStartedScreen({ onContinue, onPlayTrivia, onPlayGame }: Props
 
         <View style={styles.sectionHead}>
           <Text style={[type.bodySm, { color: colors.paper, fontFamily: fonts.bodyBold, letterSpacing: 2 }]}>
-            LIVE NOW
+            WHAT YOU CAN PLAY
           </Text>
-          <Text style={[type.statsSm, { color: colors.limeLive, fontSize: 12 }]}>● Global Feed</Text>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
           {PREVIEWS.map((p) => (
             <View key={p.tag} style={styles.card}>
-              <View style={styles.cardHero}>
-                <View style={styles.viewers}>
-                  <Text style={[type.micro, { color: colors.ink, fontFamily: fonts.bodyBold }]}>
-                    {p.viewers}
-                  </Text>
+              <View style={[styles.cardHero, { borderBottomColor: p.accent }]}>
+                <View style={[styles.viewers, { backgroundColor: p.accent }]}>
+                  <Text style={[type.micro, { color: colors.ink, fontFamily: fonts.bodyBold }]}>{p.badge}</Text>
                 </View>
+                <Text style={[type.hero, { color: p.accent, fontSize: 28, opacity: 0.35 }]}>{p.title[0]}</Text>
               </View>
               <View style={styles.cardBody}>
                 <Text style={[type.gameQuestion, { color: colors.paper, fontSize: 24 }]}>{p.title}</Text>
@@ -90,7 +114,7 @@ export function GetStartedScreen({ onContinue, onPlayTrivia, onPlayGame }: Props
                   {p.blurb}
                 </Text>
                 <PrimaryButton
-                  label="Join Game"
+                  label={p.on === "continue" ? "Continue setup" : "Join Game"}
                   variant={p.ctaVariant}
                   trailingIcon="arrow-forward"
                   onPress={() => handleCard(p.on)}
@@ -101,22 +125,22 @@ export function GetStartedScreen({ onContinue, onPlayTrivia, onPlayGame }: Props
           ))}
         </ScrollView>
 
-        <Pressable style={styles.challenge} onPress={onContinue}>
+        <View style={styles.challenge}>
           <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
-            Daily Challenges
+            Make it more fun with friends
           </Text>
           <Text style={[type.metadata, { color: colors.lilac, marginTop: 4 }]}>
-            Perfect Score Club · Trivia · 150 players attempting
+            Invite friends after you finish setup — then find them in the Friends tab.
           </Text>
-        </Pressable>
+        </View>
 
         <PrimaryButton label="Continue setup" onPress={onContinue} style={{ marginTop: spacing.md }} />
         <PrimaryButton
           label="Invite friends"
           variant="secondary"
-          onPress={onContinue}
+          onPress={() => void invite()}
           style={{ marginTop: spacing.sm }}
-          icon="people-outline"
+          icon="share-outline"
         />
       </ScrollView>
     </View>
@@ -147,12 +171,14 @@ const styles = StyleSheet.create({
   cardHero: {
     height: 140,
     backgroundColor: colors.cardAlt,
+    borderBottomWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
   viewers: {
     position: "absolute",
     top: spacing.sm,
     right: spacing.sm,
-    backgroundColor: colors.limeLive,
     borderRadius: radius.pill,
     paddingHorizontal: 10,
     paddingVertical: 4,

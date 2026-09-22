@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Share, StyleSheet, Text, View } from "react-native";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { ResultBar } from "../../components/StitchPrimitives";
 import { colors, radius, spacing } from "../../theme/colors";
@@ -9,7 +10,8 @@ type Props = {
   percentile: number;
   gameTitle: string;
   onContinue: () => void;
-  onShare?: () => void;
+  /** When true, shows Share CTA that uses native share of score text (no share-card API for games). */
+  enableShare?: boolean;
   optionBreakdown?: { label: string; percent: number; highlight?: boolean }[];
 };
 
@@ -18,11 +20,30 @@ export function PostGameResultScreen({
   percentile,
   gameTitle,
   onContinue,
-  onShare,
+  enableShare = true,
   optionBreakdown,
 }: Props) {
-  const nailedIt = percentile >= 50;
-  const betterThan = Math.max(0, Math.min(100, percentile));
+  const betterThan = Math.max(0, Math.min(100, Math.round(percentile)));
+  const nailedIt = betterThan >= 50;
+  const [sharing, setSharing] = useState(false);
+  const [shareError, setShareError] = useState("");
+
+  async function shareScore() {
+    setSharing(true);
+    setShareError("");
+    try {
+      const result = await Share.share({
+        message: `I scored ${score} on ${gameTitle} — better than ${betterThan}% of players today on PLAY.`,
+      });
+      if (result.action === Share.dismissedAction) {
+        /* user cancelled — not an error */
+      }
+    } catch {
+      setShareError("Could not open share sheet. Try again.");
+    } finally {
+      setSharing(false);
+    }
+  }
 
   return (
     <View style={styles.wrap}>
@@ -61,9 +82,19 @@ export function PostGameResultScreen({
       ) : null}
 
       <View style={styles.actions}>
-        <PrimaryButton label="Keep playing" onPress={onContinue} trailingIcon="arrow-forward" />
-        {onShare ? (
-          <PrimaryButton label="Challenge a friend" variant="secondary" onPress={onShare} />
+        <PrimaryButton label="Next game" onPress={onContinue} trailingIcon="arrow-forward" />
+        {enableShare ? (
+          <PrimaryButton
+            label={sharing ? "Opening…" : shareError ? "Retry share" : "Share score"}
+            variant="secondary"
+            disabled={sharing}
+            onPress={() => void shareScore()}
+            icon="share-outline"
+          />
+        ) : null}
+        {sharing ? <ActivityIndicator color={colors.lime} style={{ marginTop: 4 }} /> : null}
+        {shareError ? (
+          <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{shareError}</Text>
         ) : null}
       </View>
     </View>

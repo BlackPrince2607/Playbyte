@@ -46,11 +46,12 @@ function flood(board: Cell[], start: number): number[] {
 
 /** Endless: pop groups of 2+ same color; refill; End anytime. */
 export function BubbleBurst({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const [board, setBoard] = useState(makeBoard);
   const [score, setScore] = useState(0);
 
   function tap(i: number) {
+    if (done) return;
     const group = flood(board, i);
     if (group.length < 2) return;
     setBoard((prev) =>
@@ -75,6 +76,7 @@ export function BubbleBurst({ title, config, onDone }: GameProps) {
         {board.map((cell, i) => (
           <Pressable
             key={cell.id}
+            disabled={done}
             onPress={() => tap(i)}
             style={{
               width: SIZE,
@@ -83,6 +85,7 @@ export function BubbleBurst({ title, config, onDone }: GameProps) {
               backgroundColor: PALETTE[cell.color],
               borderWidth: 1,
               borderColor: colors.line,
+              opacity: done ? 0.5 : 1,
             }}
           />
         ))}

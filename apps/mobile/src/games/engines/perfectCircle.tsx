@@ -3,31 +3,17 @@ import { Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Canvas, Path, Skia } from "@shopify/react-native-skia";
 import { Shell } from "../Shell";
+import { scoreCircle } from "../logic/scoring";
 import { GameProps, configTag } from "../types";
 import { useGameSession } from "../useGameSession";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
 
-function scoreCircle(points: { x: number; y: number }[]): number {
-  if (points.length < 12) return 0;
-  const cx = points.reduce((s, p) => s + p.x, 0) / points.length;
-  const cy = points.reduce((s, p) => s + p.y, 0) / points.length;
-  const radii = points.map((p) => Math.hypot(p.x - cx, p.y - cy));
-  const mean = radii.reduce((s, r) => s + r, 0) / radii.length;
-  if (mean < 20) return 5;
-  const variance = radii.reduce((s, r) => s + (r - mean) ** 2, 0) / radii.length;
-  const cv = Math.sqrt(variance) / mean;
-  const first = points[0];
-  const last = points[points.length - 1];
-  const closure = Math.hypot(first.x - last.x, first.y - last.y) / mean;
-  const roundness = Math.max(0, 1 - cv * 2.5);
-  const closed = Math.max(0, 1 - closure);
-  return Math.round(Math.min(100, (roundness * 0.7 + closed * 0.3) * 100));
-}
+export { scoreCircle } from "../logic/scoring";
 
-/** Finite: draw once, lift to score. */
+/** Finite: draw once, lift to score. Short accidental strokes reset. */
 export function PerfectCircle({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const [path, setPath] = useState(() => Skia.Path.Make());
   const [score, setScore] = useState(0);
   const points = useRef<{ x: number; y: number }[]>([]);
@@ -42,6 +28,7 @@ export function PerfectCircle({ title, config, onDone }: GameProps) {
   };
 
   const pan = Gesture.Pan()
+    .enabled(!done)
     .onBegin((e) => {
       if (doneStroke.current) return;
       points.current = [{ x: e.x, y: e.y }];
@@ -54,6 +41,11 @@ export function PerfectCircle({ title, config, onDone }: GameProps) {
     })
     .onEnd(() => {
       if (doneStroke.current) return;
+      if (points.current.length < 12) {
+        points.current = [];
+        setPath(Skia.Path.Make());
+        return;
+      }
       doneStroke.current = true;
       const s = scoreCircle(points.current);
       setScore(s);

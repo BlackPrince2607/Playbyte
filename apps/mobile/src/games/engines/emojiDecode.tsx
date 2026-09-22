@@ -1,39 +1,50 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { Shell } from "../Shell";
 import { pickEmojiPuzzles } from "../content/emojiPuzzles";
+import { normalizeGuess } from "../logic/scoring";
 import { GameProps, configTag } from "../types";
 import { useGameSession } from "../useGameSession";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
-function normalize(s: string) {
-  return s.trim().toUpperCase().replace(/[^A-Z0-9 ]+/g, "").replace(/\s+/g, " ");
-}
+export { normalizeGuess } from "../logic/scoring";
 
 /** Finite: fixed emoji puzzles then complete. */
 export function EmojiDecode({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const levels = typeof config?.levels === "number" ? config.levels : 5;
   const puzzles = useMemo(() => pickEmojiPuzzles(levels), [levels]);
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [guess, setGuess] = useState("");
   const [feedback, setFeedback] = useState("");
+  const locked = useRef(false);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const p = puzzles[idx];
 
+  useEffect(() => {
+    return () => {
+      if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    };
+  }, []);
+
   function submit() {
-    if (!p) return;
-    const ok = normalize(guess) === normalize(p.answer);
+    if (!p || done || locked.current) return;
+    locked.current = true;
+    const ok = normalizeGuess(guess) === normalizeGuess(p.answer);
     const nextScore = score + (ok ? 20 : 0);
     setScore(nextScore);
     setFeedback(ok ? "Nice!" : `It was: ${p.answer}`);
     setGuess("");
-    setTimeout(() => {
+    advanceTimer.current = setTimeout(() => {
       setFeedback("");
       if (idx + 1 >= puzzles.length) finish(nextScore);
-      else setIdx((i) => i + 1);
+      else {
+        setIdx((i) => i + 1);
+        locked.current = false;
+      }
     }, 700);
   }
 
@@ -57,6 +68,7 @@ export function EmojiDecode({ title, config, onDone }: GameProps) {
       <TextInput
         value={guess}
         onChangeText={setGuess}
+        editable={!done && !locked.current}
         placeholder="Your guess"
         placeholderTextColor={colors.lilac}
         autoCapitalize="characters"
@@ -70,7 +82,7 @@ export function EmojiDecode({ title, config, onDone }: GameProps) {
           marginBottom: spacing.md,
         }}
       />
-      <PrimaryButton label="Check" onPress={submit} />
+      <PrimaryButton label="Check" onPress={submit} disabled={done} />
       {feedback ? (
         <Text style={[type.bodySm, { color: colors.lime, marginTop: spacing.md }]}>{feedback}</Text>
       ) : null}

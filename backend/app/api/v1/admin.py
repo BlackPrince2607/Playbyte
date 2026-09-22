@@ -1,8 +1,10 @@
-from datetime import datetime
+import base64
+import re
+from datetime import UTC, datetime
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, Form, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +12,7 @@ from sqlalchemy.orm import selectinload
 
 from app.common.admin import require_admin
 from app.common.auth import Actor
+from app.common.errors import AppError
 from app.infrastructure.postgres.db import get_session
 from app.infrastructure.postgres.models import (
     ContentTag,
@@ -18,10 +21,19 @@ from app.infrastructure.postgres.models import (
     Moment,
     Report,
 )
+from app.infrastructure.storage.objects import get_object_storage
+from app.infrastructure.storage.validation import StorageValidationError
 from app.modules.cms.service import approve_moment, create_moment, transition_moment
 from app.modules.feed.service import media_url, tags_for_moments
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+_EXT_BY_TYPE = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/webp": "webp",
+}
+_SAFE_KEY_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9/_\-.]{0,512}$")
 
 
 class OptionIn(BaseModel):
@@ -65,6 +77,61 @@ class WindowIn(BaseModel):
 
 class GameToggleIn(BaseModel):
     status: str
+
+
+class MediaUploadIn(BaseModel):
+    """JSON upload alternative to multipart (useful for scripts / CI)."""
+
+    contentType: str
+    base64: str
+    key: str | None = None
+
+
+def _normalize_media_key(key: str | None, content_type: str) -> str:
+    if key:
+        cleaned = key.lstrip("/")
+        if not _SAFE_KEY_RE.match(cleaned) or ".." in cleaned:
+            raise AppError("invalid", "Invalid object key.", 422)
+        return cleaned
+    ext = _EXT_BY_TYPE.get(content_type, "bin")
+    stamp = datetime.now(UTC).strftime("%Y%m%d")
+    return f"prompts/{stamp}/{uuid4().hex}.{ext}"
+
+
+async def _store_moment_media(*, key: str, data: bytes, content_type: str) -> dict[str, str]:
+    storage = get_object_storage()
+    try:
+        url = await storage.put_bytes("moment-media", key, data, content_type)
+    except StorageValidationError as exc:
+        raise AppError("invalid", str(exc), 422) from exc
+    except RuntimeError as exc:
+        raise AppError("storage_unavailable", str(exc), 503) from exc
+    return {"key": key, "url": url}
+
+
+@router.post("/media")
+async def post_media_json(
+    body: MediaUploadIn,
+    _: Actor = Depends(require_admin),
+) -> dict[str, str]:
+    try:
+        data = base64.b64decode(body.base64, validate=True)
+    except Exception as exc:
+        raise AppError("invalid", "Invalid base64 payload.", 422) from exc
+    key = _normalize_media_key(body.key, body.contentType)
+    return await _store_moment_media(key=key, data=data, content_type=body.contentType)
+
+
+@router.post("/media/upload")
+async def post_media_multipart(
+    _: Actor = Depends(require_admin),
+    file: UploadFile = File(...),
+    key: str | None = Form(default=None),
+) -> dict[str, str]:
+    content_type = (file.content_type or "").split(";")[0].strip() or "application/octet-stream"
+    data = await file.read()
+    object_key = _normalize_media_key(key, content_type)
+    return await _store_moment_media(key=object_key, data=data, content_type=content_type)
 
 
 @router.get("/moments")

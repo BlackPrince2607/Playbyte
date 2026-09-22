@@ -1,0 +1,32 @@
+name: Refresh feed content
+
+on:
+  schedule:
+    # Every 4 hours
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Refresh live feed moments
+        env:
+          PLAYBYTE_API_URL: ${{ secrets.PLAYBYTE_API_URL }}
+          PLAYBYTE_ADMIN_KEY: ${{ secrets.PLAYBYTE_ADMIN_KEY }}
+        run: |
+          if [ -z "$PLAYBYTE_API_URL" ] || [ -z "$PLAYBYTE_ADMIN_KEY" ]; then
+            echo "Missing PLAYBYTE_API_URL or PLAYBYTE_ADMIN_KEY secrets."
+            exit 1
+          fi
+          python scripts/refresh_feed_content.py \
+            --api-url "$PLAYBYTE_API_URL" \
+            --admin-key "$PLAYBYTE_ADMIN_KEY" \
+            --count 40 \
+            --include-images

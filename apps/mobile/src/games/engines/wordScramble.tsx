@@ -10,7 +10,7 @@ import { fonts, type } from "../../theme/typography";
 
 /** Endless: unscramble forever; End anytime. */
 export function WordScramble({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const [answer, setAnswer] = useState(() => pickWord());
   const [mixed, setMixed] = useState(() => scramble(answer));
   const [guess, setGuess] = useState("");
@@ -25,6 +25,7 @@ export function WordScramble({ title, config, onDone }: GameProps) {
   }
 
   function submit() {
+    if (done) return;
     if (guess.trim().toUpperCase() === answer) {
       const ns = streak + 1;
       setStreak(ns);
@@ -50,6 +51,7 @@ export function WordScramble({ title, config, onDone }: GameProps) {
       <TextInput
         value={guess}
         onChangeText={setGuess}
+        editable={!done}
         placeholder="Type the word"
         placeholderTextColor={colors.lilac}
         autoCapitalize="characters"
@@ -67,8 +69,17 @@ export function WordScramble({ title, config, onDone }: GameProps) {
         }}
       />
       <View style={{ gap: 10 }}>
-        <PrimaryButton label="Submit" onPress={submit} />
-        <PrimaryButton label="Skip" variant="secondary" onPress={() => { setStreak(0); nextWord(answer); }} />
+        <PrimaryButton label="Submit" onPress={submit} disabled={done} />
+        <PrimaryButton
+          label="Skip"
+          variant="secondary"
+          disabled={done}
+          onPress={() => {
+            if (done) return;
+            setStreak(0);
+            nextWord(answer);
+          }}
+        />
       </View>
     </Shell>
   );

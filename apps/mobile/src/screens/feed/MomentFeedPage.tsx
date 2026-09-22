@@ -7,8 +7,10 @@ import { ActionRail } from "../../components/ActionRail";
 import { AnswerButton } from "../../components/AnswerButton";
 import { FriendAvatars } from "../../components/FriendAvatars";
 import { LivePill } from "../../components/PlayLogo";
+import { PrimaryButton } from "../../components/PrimaryButton";
 import { FriendChoiceStrip } from "../../components/StitchPrimitives";
 import { useApp } from "../../context/AppContext";
+import { ensureLocalShareUri } from "../../lib/shareLocalFile";
 import { useMountedRef } from "../../lib/useMounted";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
@@ -119,7 +121,8 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
         if (mounted.current) setShareError("Sharing is not available on this device.");
         return;
       }
-      await Sharing.shareAsync(card.assetUrl);
+      const localUri = await ensureLocalShareUri(card.assetUrl, `moment-${item.id}.png`);
+      await Sharing.shareAsync(localUri, { mimeType: "image/png", UTI: "public.png" });
     } catch (e) {
       if (mounted.current && !isShareCancelled(e)) {
         setShareError(shareErrorMessage(e));
@@ -218,7 +221,7 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
                 <FriendChoiceStrip
                   name={disagreeingFriend.displayName}
                   choice={disagreeChoice}
-                  onChallenge={() => void handleShare()}
+                  onShare={() => void handleShare()}
                 />
               </View>
             ) : null}
@@ -260,14 +263,20 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
           </Text>
         ) : null}
 
-        {friends.length > 0 ? (
-          <FriendAvatars friends={friends} extraCount={Math.max(0, total - friends.length)} />
+        {friends.length > 0 ? <FriendAvatars friends={friends} /> : null}
+
+        {shareError ? (
+          <PrimaryButton
+            label="Retry share card"
+            variant="secondary"
+            onPress={() => void handleShare()}
+            disabled={sharing}
+            style={{ marginTop: spacing.xs }}
+          />
         ) : null}
 
         <ActionRail
-          responses={total}
           onShare={() => void handleShare()}
-          onChallenge={() => void handleShare()}
           shareDisabled={sharing}
           shareLoading={sharing}
         />

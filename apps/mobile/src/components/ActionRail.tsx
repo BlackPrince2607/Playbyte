@@ -1,42 +1,33 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { formatCount } from "../api";
 import { colors, spacing } from "../theme/colors";
 import { fonts, type } from "../theme/typography";
 
 type Props = {
   responses?: number;
   onShare?: () => void;
-  onChallenge?: () => void;
   shareDisabled?: boolean;
   shareLoading?: boolean;
 };
 
+/**
+ * Heart / Chat are decorative until likes & comments APIs ship.
+ * Challenge is not aliased to Share — use Share only when that is the real action.
+ */
 export function ActionRail({
-  responses = 0,
   onShare,
-  onChallenge,
   shareDisabled,
   shareLoading,
 }: Props) {
-  const derivedBuzz = Math.max(0, Math.floor(responses / 15));
-  const challenge = onChallenge ?? onShare;
-
   const items = [
-    { icon: "heart" as const, label: formatCount(responses), disabled: true },
-    { icon: "chatbubble" as const, label: formatCount(derivedBuzz), disabled: true },
+    { icon: "heart-outline" as const, label: "Soon", disabled: true },
+    { icon: "chatbubble-outline" as const, label: "Soon", disabled: true },
     {
       icon: "share-outline" as const,
       label: shareLoading ? "…" : "Share",
       onPress: onShare,
-      disabled: shareDisabled || shareLoading,
-    },
-    {
-      icon: "flash" as const,
-      label: "Challenge",
-      onPress: challenge,
-      disabled: !challenge || shareDisabled || shareLoading,
+      disabled: !onShare || shareDisabled || shareLoading,
     },
   ];
 
@@ -44,9 +35,11 @@ export function ActionRail({
     <View style={styles.wrap}>
       {items.map((item) => (
         <Pressable
-          key={item.label + item.icon}
+          key={item.icon}
           style={[styles.item, item.disabled && styles.itemDisabled]}
           disabled={item.disabled}
+          accessibilityState={{ disabled: Boolean(item.disabled) }}
+          accessibilityLabel={item.label === "Soon" ? `${item.icon} coming soon` : item.label}
           onPress={() => {
             if (item.disabled) return;
             void Haptics.selectionAsync();
@@ -79,7 +72,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(21, 14, 43, 0.4)",
   },
   item: { alignItems: "center", gap: 4, minWidth: 56 },
-  itemDisabled: { opacity: 0.85 },
+  itemDisabled: { opacity: 0.55 },
   circle: {
     width: 40,
     height: 40,

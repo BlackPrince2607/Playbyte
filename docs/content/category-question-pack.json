@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "note": "Editorial starter pack mapped to live Playbyte categories. Polls are opinion (scoringMode none). Quizzes need isCorrect on one option. Review in CMS before go-live. Time-sensitive cricket/news prompts should be rewritten for the actual match/day.",
+  "version": 2,
+  "note": "Editorial pack mapped to live Playbyte categories. Polls are opinion (scoringMode none). Quizzes need isCorrect on one option. Auto-refresh may publish these with a short endsAt window.",
   "moments": [
     {
       "categorySlug": "cricket",
@@ -30,6 +30,40 @@
       ]
     },
     {
+      "categorySlug": "cricket",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Death overs — who do you trust most?",
+      "options": ["Pace battery", "Mystery spinner", "Part-timer chaos", "Just pray"]
+    },
+    {
+      "categorySlug": "cricket",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Chase or defend — which feels scarier?",
+      "options": ["Chase", "Defend"]
+    },
+    {
+      "categorySlug": "cricket",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "DRS review — your honest reaction?",
+      "options": ["Always review", "Trust the umpire", "Only if 3 wickets down", "Panic review"]
+    },
+    {
+      "categorySlug": "cricket",
+      "type": "pulse",
+      "tags": ["quiz"],
+      "scoringMode": "correct_option",
+      "prompt": "How many players per side on the field in cricket?",
+      "options": [
+        { "label": "9", "isCorrect": false },
+        { "label": "10", "isCorrect": false },
+        { "label": "11", "isCorrect": true },
+        { "label": "12", "isCorrect": false }
+      ]
+    },
+    {
       "categorySlug": "sports",
       "type": "pulse",
       "tags": ["poll"],
@@ -42,6 +76,27 @@
       "tags": ["poll"],
       "prompt": "Gym or ground — what's the real flex?",
       "options": ["Consistency", "PR lifts", "Team wins", "Just showing up"]
+    },
+    {
+      "categorySlug": "sports",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Big final energy — are you more nervous or hyped?",
+      "options": ["Nervous", "Hyped"]
+    },
+    {
+      "categorySlug": "sports",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Fantasy team pick — your strategy?",
+      "options": ["Safe captains", "Differentials only", "Copy a friend", "Chaos mode"]
+    },
+    {
+      "categorySlug": "sports",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Olympics or World Cup — bigger vibe?",
+      "options": ["Olympics", "World Cup", "Both equal", "Neither — club season"]
     },
     {
       "categorySlug": "movies",
@@ -71,6 +126,34 @@
       ]
     },
     {
+      "categorySlug": "movies",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Sequel announcement — your first reaction?",
+      "options": ["Book tickets early", "Wait for reviews", "Protect the original", "Already theorizing"]
+    },
+    {
+      "categorySlug": "movies",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Dubbed or original language — which do you pick?",
+      "options": ["Original", "Dubbed"]
+    },
+    {
+      "categorySlug": "movies",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Interval snack tax — worth it?",
+      "options": ["Always popcorn", "Sneak snacks", "Skip food", "Full meal combo"]
+    },
+    {
+      "categorySlug": "movies",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Bollywood vs South Indian cinema this year?",
+      "options": ["Bollywood", "South Indian", "Both bangers", "Depends on week"]
+    },
+    {
       "categorySlug": "music",
       "type": "pulse",
       "tags": ["poll"],
@@ -83,6 +166,27 @@
       "tags": ["poll"],
       "prompt": "Concert tickets just dropped — you…",
       "options": ["Buy in 10 seconds", "Wait for friends", "Stream is enough", "FOMO then regret"]
+    },
+    {
+      "categorySlug": "music",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Live gig vs studio album — which hits harder?",
+      "options": ["Live gig", "Studio album"]
+    },
+    {
+      "categorySlug": "music",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Earworm stuck — how do you deal?",
+      "options": ["Replay until clear", "Switch genre hard", "Suffer in silence", "Make friends suffer too"]
+    },
+    {
+      "categorySlug": "music",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Collab drop rumor — believable?",
+      "options": ["Already hyped", "Wait for proof", "Probably fake", "Don't care"]
     },
     {
       "categorySlug": "food",
@@ -99,6 +203,34 @@
       "options": ["Chai", "Coffee", "Both", "Neither — water"]
     },
     {
+      "categorySlug": "food",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Street food stall or fancy cafe — tonight?",
+      "options": ["Street food", "Fancy cafe"]
+    },
+    {
+      "categorySlug": "food",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Filter coffee filter — how strong?",
+      "options": ["Mild", "Medium", "Rocket fuel", "Decaf pretend"]
+    },
+    {
+      "categorySlug": "food",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Home-cooked or delivery after a long day?",
+      "options": ["Cook something", "Order in", "Leftovers win", "Skip dinner"]
+    },
+    {
+      "categorySlug": "food",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Spicy level — what's your honest max?",
+      "options": ["Mild forever", "Medium brave", "Extra spicy", "Ask for hotter"]
+    },
+    {
       "categorySlug": "tech",
       "type": "pulse",
       "tags": ["poll"],
@@ -111,6 +243,40 @@
       "tags": ["poll"],
       "prompt": "AI tools at work — your take?",
       "options": ["Daily driver", "Sometimes useful", "Overhyped", "Still figuring it out"]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "iOS or Android for your next phone?",
+      "options": ["iOS", "Android"]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "App notification spam — your move?",
+      "options": ["Mute everything", "Allow a few", "Delete the app", "Suffer for FOMO"]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Startup hype cycle — where are you?",
+      "options": ["Early believer", "Wait for product", "Skeptical by default", "Already bored"]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "pulse",
+      "tags": ["quiz"],
+      "scoringMode": "correct_option",
+      "prompt": "What does CPU stand for?",
+      "options": [
+        { "label": "Central Processing Unit", "isCorrect": true },
+        { "label": "Computer Personal Utility", "isCorrect": false },
+        { "label": "Core Power Unit", "isCorrect": false },
+        { "label": "Central Program Upload", "isCorrect": false }
+      ]
     },
     {
       "categorySlug": "pop-culture",
@@ -127,11 +293,60 @@
       "options": ["Always", "Only if funny", "Never", "Doomscroll then regret"]
     },
     {
+      "categorySlug": "pop-culture",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Viral audio — do you use it or mute it?",
+      "options": ["Use it", "Mute it"]
+    },
+    {
+      "categorySlug": "pop-culture",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Influencer brand deal — believable?",
+      "options": ["They mean it", "Paid vibes only", "Depends who", "Never trust"]
+    },
+    {
+      "categorySlug": "pop-culture",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Fandom wars — are you participating?",
+      "options": ["Frontline", "Silent lurker", "Both sides wrong", "Touch grass"]
+    },
+    {
+      "categorySlug": "pop-culture",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Reels algorithm — friend or enemy?",
+      "options": ["Best friend", "Time thief", "Both", "I deleted the app"]
+    },
+    {
       "categorySlug": "news",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "How do you usually get news?",
       "options": ["Twitter / X", "Instagram", "YouTube", "Traditional apps"]
+    },
+    {
+      "categorySlug": "news",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Breaking news alert — first reaction?",
+      "options": ["Open immediately", "Check later", "Ignore until verified", "Ask a group chat"]
+    },
+    {
+      "categorySlug": "news",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Longform article or 60-second summary?",
+      "options": ["Longform", "60-second"]
+    },
+    {
+      "categorySlug": "news",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Fact-check habit — honest score?",
+      "options": ["Always verify", "Sometimes", "Trust the source", "Share first, oops later"]
     },
     {
       "categorySlug": "weather",
@@ -141,11 +356,60 @@
       "options": ["Love the rain", "Only if I'm home", "Traffic nightmare", "AC season forever"]
     },
     {
+      "categorySlug": "weather",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Unexpected rain — cancel plans or push through?",
+      "options": ["Cancel", "Push through"]
+    },
+    {
+      "categorySlug": "weather",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Peak summer survival kit?",
+      "options": ["AC + naps", "Nimbu pani spam", "Night walks only", "Leave the city"]
+    },
+    {
+      "categorySlug": "weather",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Winter mornings — blanket or gym?",
+      "options": ["Blanket wins", "Gym anyway", "Work from bed", "Chai then decide"]
+    },
+    {
       "categorySlug": "social",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Group plan just got moved — you…",
       "options": ["Adapt instantly", "Mildly annoyed", "Bail politely", "Start a new plan"]
+    },
+    {
+      "categorySlug": "social",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Seen-zoned for 3 hours — your move?",
+      "options": ["Double text", "Wait patiently", "Leave them on read back", "Call instead"]
+    },
+    {
+      "categorySlug": "social",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Big group dinner or 1:1 hang?",
+      "options": ["Big group", "1:1"]
+    },
+    {
+      "categorySlug": "social",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Friend starts a drama thread — you…",
+      "options": ["Mediator mode", "Popcorn mode", "Mute chat", "Take a side"]
+    },
+    {
+      "categorySlug": "social",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Birthday wish style?",
+      "options": ["Story post", "Private text", "Call them", "Late but heartfelt"]
     },
     {
       "categorySlug": "casual",
@@ -160,6 +424,122 @@
       "tags": ["poll"],
       "prompt": "Is Monday already winning?",
       "options": ["Yes", "Not yet"]
+    },
+    {
+      "categorySlug": "casual",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Productivity hack that actually works?",
+      "options": ["Timers", "To-do lists", "Body doubling", "Panic deadline"]
+    },
+    {
+      "categorySlug": "casual",
+      "type": "predict",
+      "tags": ["poll"],
+      "prompt": "Night owl or early bird — real talk?",
+      "options": ["Night owl", "Early bird"]
+    },
+    {
+      "categorySlug": "casual",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Phone battery at 12% — your move?",
+      "options": ["Power saver panic", "Find a charger now", "Ignore it", "Borrow a friend's"]
+    },
+    {
+      "categorySlug": "casual",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Unexpected free evening — how do you spend it?",
+      "options": ["Catch up sleep", "Finish chores", "Call friends", "Do absolutely nothing"]
+    },
+    {
+      "categorySlug": "casual",
+      "type": "pulse",
+      "tags": ["poll"],
+      "prompt": "Alarm snooze count — honest number?",
+      "options": ["0 — robotic", "1–2", "3–5", "Lost count"]
+    },
+    {
+      "categorySlug": "sports",
+      "type": "pulse",
+      "tags": ["quiz"],
+      "scoringMode": "correct_option",
+      "prompt": "How many players are on a football (soccer) team on the pitch?",
+      "options": [
+        { "label": "9", "isCorrect": false },
+        { "label": "10", "isCorrect": false },
+        { "label": "11", "isCorrect": true },
+        { "label": "12", "isCorrect": false }
+      ]
+    },
+    {
+      "categorySlug": "music",
+      "type": "pulse",
+      "tags": ["quiz"],
+      "scoringMode": "correct_option",
+      "prompt": "How many strings does a standard guitar usually have?",
+      "options": [
+        { "label": "4", "isCorrect": false },
+        { "label": "5", "isCorrect": false },
+        { "label": "6", "isCorrect": true },
+        { "label": "8", "isCorrect": false }
+      ]
+    },
+    {
+      "categorySlug": "food",
+      "type": "pulse",
+      "tags": ["quiz"],
+      "scoringMode": "correct_option",
+      "prompt": "Which spice is the main flavor in traditional chai masala blends?",
+      "options": [
+        { "label": "Cardamom (among others)", "isCorrect": true },
+        { "label": "Vanilla only", "isCorrect": false },
+        { "label": "Saffron only", "isCorrect": false },
+        { "label": "Oregano", "isCorrect": false }
+      ]
+    },
+    {
+      "categorySlug": "weather",
+      "type": "reaction",
+      "tags": ["poll"],
+      "prompt": "Umbrella packed today?",
+      "options": ["Yes", "Nope"]
+    },
+    {
+      "categorySlug": "news",
+      "type": "reaction",
+      "tags": ["poll"],
+      "prompt": "Did you doomscroll the headlines today?",
+      "options": ["Yes", "Not today"]
+    },
+    {
+      "categorySlug": "social",
+      "type": "reaction",
+      "tags": ["poll"],
+      "prompt": "Did you leave someone on read today?",
+      "options": ["Guilty", "Clean streak"]
+    },
+    {
+      "categorySlug": "tech",
+      "type": "reaction",
+      "tags": ["poll"],
+      "prompt": "Did AI write any of your messages today?",
+      "options": ["Yes", "Pure human"]
+    },
+    {
+      "categorySlug": "pop-culture",
+      "type": "reaction",
+      "tags": ["poll"],
+      "prompt": "Did a meme make you laugh out loud today?",
+      "options": ["Yes", "Not yet"]
+    },
+    {
+      "categorySlug": "cricket",
+      "type": "reaction",
+      "tags": ["poll"],
+      "prompt": "Checking live scores right now?",
+      "options": ["Yes", "Later"]
     }
   ]
 }

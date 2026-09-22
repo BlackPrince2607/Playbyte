@@ -217,6 +217,14 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
           ) : null}
 
           <SectionCard title="Notifications">
+            <Text
+              style={[
+                type.metadata,
+                { color: colors.lilac, paddingHorizontal: spacing.md, paddingTop: spacing.sm },
+              ]}
+            >
+              Preference toggles only — push delivery and an activity inbox are not enabled yet.
+            </Text>
             {prefRows.map((r) => (
               <View key={r.key} style={styles.toggleRow}>
                 <Text style={[type.bodyLg, { color: colors.paper, flex: 1 }]}>{r.label}</Text>

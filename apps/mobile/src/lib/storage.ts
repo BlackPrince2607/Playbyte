@@ -4,9 +4,23 @@ const KEYS = {
   guestToken: "playbyte_guest_token",
   legacyToken: "playbyte_token",
   onboarding: "playbyte_onboarding_done",
+  onboardingStep: "playbyte_onboarding_step",
   language: "playbyte_language",
   streak: "playbyte_streak",
 } as const;
+
+export type OnboardingStep = "welcome" | "get_started" | "language" | "interests";
+
+const ONBOARDING_STEPS: readonly OnboardingStep[] = [
+  "welcome",
+  "get_started",
+  "language",
+  "interests",
+];
+
+function isOnboardingStep(v: string | null): v is OnboardingStep {
+  return v != null && (ONBOARDING_STEPS as readonly string[]).includes(v);
+}
 
 export async function getStoredGuestToken() {
   const current = await AsyncStorage.getItem(KEYS.guestToken);
@@ -37,8 +51,22 @@ export async function isOnboardingDone() {
   return (await AsyncStorage.getItem(KEYS.onboarding)) === "1";
 }
 
+export async function getOnboardingStep(): Promise<OnboardingStep> {
+  const v = await AsyncStorage.getItem(KEYS.onboardingStep);
+  return isOnboardingStep(v) ? v : "welcome";
+}
+
+export async function setOnboardingStep(step: OnboardingStep) {
+  await AsyncStorage.setItem(KEYS.onboardingStep, step);
+}
+
+export async function clearOnboardingStep() {
+  await AsyncStorage.removeItem(KEYS.onboardingStep);
+}
+
 export async function setOnboardingDone() {
   await AsyncStorage.setItem(KEYS.onboarding, "1");
+  await clearOnboardingStep();
 }
 
 export async function getLanguage() {

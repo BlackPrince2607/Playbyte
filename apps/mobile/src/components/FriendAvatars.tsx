@@ -59,11 +59,11 @@ export function FriendAvatars({
         ) : null}
       </View>
       {compact ? (
-        <Text style={[type.bodySm, { color: colors.lilac }]}>+ playing now</Text>
+        <Text style={[type.bodySm, { color: colors.lilac }]}>friends playing</Text>
       ) : friends.length > 0 ? (
         <Text style={[type.bodySm, { color: colors.paper, flex: 1 }]} numberOfLines={2}>
           <Text style={{ fontWeight: "700" }}>{friends.map((f) => f.displayName).join(", ")}</Text>
-          {extraCount ? ` + ${extraCount} people are playing` : " are playing"}
+          {extraCount && extraCount > 0 ? ` + ${extraCount} more friends` : " are playing"}
         </Text>
       ) : null}
     </View>

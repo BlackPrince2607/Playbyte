@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.auth import Actor
@@ -9,6 +10,20 @@ from app.config import get_settings
 from app.infrastructure.postgres.models import GamePlay, GuestSession, MiniGame
 from app.modules.games.scoring import clamp_score, percentile
 from app.modules.responses.service import _bump_daily
+
+
+async def _existing_play(
+    session: AsyncSession,
+    actor: Actor,
+    game_key: str,
+    idempotency_key: str,
+) -> GamePlay | None:
+    stmt = select(GamePlay).where(GamePlay.game_key == game_key, GamePlay.idempotency_key == idempotency_key)
+    if actor.user_id:
+        stmt = stmt.where(GamePlay.user_id == actor.user_id)
+    else:
+        stmt = stmt.where(GamePlay.guest_session_id == actor.guest_id)
+    return await session.scalar(stmt)
 
 
 async def submit_play(
@@ -27,15 +42,16 @@ async def submit_play(
     duration_ms = max(0, min(duration_ms, 7_200_000))  # 2h safety max
 
     if idempotency_key:
-        stmt = select(GamePlay).where(GamePlay.game_key == game_key, GamePlay.idempotency_key == idempotency_key)
-        if actor.user_id:
-            stmt = stmt.where(GamePlay.user_id == actor.user_id)
-        else:
-            stmt = stmt.where(GamePlay.guest_session_id == actor.guest_id)
-        existing = await session.scalar(stmt)
+        existing = await _existing_play(session, actor, game_key, idempotency_key)
         if existing:
             stats = await game_stats(session, game_key, existing.score)
-            return {"playId": str(existing.id), "score": existing.score, "created": False, **stats, "promptAccountCreation": _prompt(actor)}
+            return {
+                "playId": str(existing.id),
+                "score": existing.score,
+                "created": False,
+                **stats,
+                "promptAccountCreation": _prompt(actor),
+            }
 
     play = GamePlay(
         game_key=game_key,
@@ -46,6 +62,24 @@ async def submit_play(
         idempotency_key=idempotency_key,
     )
     session.add(play)
+    try:
+        await session.flush()
+    except IntegrityError:
+        await session.rollback()
+        if not idempotency_key:
+            raise AppError("conflict", "Could not record play.", 409) from None
+        existing = await _existing_play(session, actor, game_key, idempotency_key)
+        if existing is None:
+            raise AppError("conflict", "Could not record play.", 409) from None
+        stats = await game_stats(session, game_key, existing.score)
+        return {
+            "playId": str(existing.id),
+            "score": existing.score,
+            "created": False,
+            **stats,
+            "promptAccountCreation": _prompt(actor),
+        }
+
     if actor.guest_id:
         guest = await session.get(GuestSession, actor.guest_id)
         if guest:

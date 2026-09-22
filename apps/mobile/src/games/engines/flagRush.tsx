@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { GameBtn } from "../GameBtn";
 import { Shell } from "../Shell";
@@ -10,14 +10,17 @@ import { type } from "../../theme/typography";
 
 /** Finite: fixed flag questions then complete. */
 export function FlagRush({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const total = typeof config?.questions === "number" ? config.questions : 10;
   const questions = useMemo(() => pickFlagQuestions(total), [total]);
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
+  const locked = useRef(false);
   const q = questions[idx];
 
   function answer(name: string) {
+    if (done || locked.current || !q) return;
+    locked.current = true;
     const correct = name === q.name;
     const nextScore = score + (correct ? 10 : 0);
     setScore(nextScore);
@@ -26,6 +29,7 @@ export function FlagRush({ title, config, onDone }: GameProps) {
       return;
     }
     setIdx((i) => i + 1);
+    locked.current = false;
   }
 
   if (!q) {
@@ -50,7 +54,13 @@ export function FlagRush({ title, config, onDone }: GameProps) {
       </Text>
       <View style={{ gap: 10 }}>
         {q.options.map((opt) => (
-          <GameBtn key={opt} label={opt} onPress={() => answer(opt)} style={{ alignSelf: "stretch" }} />
+          <GameBtn
+            key={opt}
+            label={opt}
+            disabled={done}
+            onPress={() => answer(opt)}
+            style={{ alignSelf: "stretch" }}
+          />
         ))}
       </View>
     </Shell>

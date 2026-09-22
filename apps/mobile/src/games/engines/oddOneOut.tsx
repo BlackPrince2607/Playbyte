@@ -9,8 +9,9 @@ import { type } from "../../theme/typography";
 
 /** Finite: pick the odd shape. */
 export function OddOneOut({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const [score, setScore] = useState(0);
+  const maxScore = typeof config?.maxScore === "number" ? config.maxScore : 20;
   const options = useMemo(() => {
     const oddIndex = Math.floor(Math.random() * 4);
     return [0, 1, 2, 3].map((i) => (i === oddIndex ? "▲" : "●"));
@@ -30,8 +31,10 @@ export function OddOneOut({ title, config, onDone }: GameProps) {
           <GameBtn
             key={`${label}-${i}`}
             label={label}
+            disabled={done}
             onPress={() => {
-              const s = label === "▲" ? 15 : 0;
+              if (done) return;
+              const s = label === "▲" ? maxScore : 0;
               setScore(s);
               finish(s);
             }}

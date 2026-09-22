@@ -8,7 +8,7 @@ import { colors, spacing } from "../../theme/colors";
 
 /** Finite: one reaction tap. */
 export function TrafficLight({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const [phase, setPhase] = useState<"red" | "green">("red");
   const [at, setAt] = useState(0);
   const [score, setScore] = useState(0);
@@ -27,6 +27,18 @@ export function TrafficLight({ title, config, onDone }: GameProps) {
     transform: [{ scale: glow.value }],
     shadowOpacity: glow.value,
   }));
+
+  function tap() {
+    if (done) return;
+    if (phase !== "green") {
+      finish(0);
+      return;
+    }
+    const ms = Date.now() - at;
+    const s = Math.max(0, 1000 - ms);
+    setScore(s);
+    finish(s);
+  }
 
   return (
     <Shell
@@ -49,19 +61,7 @@ export function TrafficLight({ title, config, onDone }: GameProps) {
           lightStyle,
         ]}
       />
-      <PrimaryButton
-        label="Tap"
-        onPress={() => {
-          if (phase !== "green") {
-            finish(0);
-            return;
-          }
-          const ms = Date.now() - at;
-          const s = Math.max(0, 1000 - ms);
-          setScore(s);
-          finish(s);
-        }}
-      />
+      <PrimaryButton label="Tap" onPress={tap} disabled={done} />
     </Shell>
   );
 }

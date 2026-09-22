@@ -252,7 +252,14 @@ export function shareErrorMessage(err: unknown): string {
     if (err.status === 403) return "Answer this moment first to share your card.";
     return err.userMessage;
   }
-  return err instanceof Error ? err.message : "Could not create share card.";
+  if (err instanceof Error) {
+    const lower = err.message.toLowerCase();
+    if (lower.includes("only local file") || lower.includes("expected scheme")) {
+      return "Could not prepare the share image. Try again.";
+    }
+    return err.message;
+  }
+  return "Could not create share card.";
 }
 
 export function isShareCancelled(err: unknown): boolean {

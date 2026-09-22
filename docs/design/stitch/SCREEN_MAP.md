@@ -23,5 +23,10 @@
 
 ## Intentional deviations (API honesty)
 - No likes/comments/XP economy / India geo ranks / notification inbox / per-question quiz timers.
-- Challenge → share-card / native share.
-- Leaderboard scores are friends-scoped display heuristics until a ranks endpoint exists.
+- Heart / Chat on ActionRail labeled **Soon** (disabled) until likes/comments APIs exist.
+- Share uses `POST /v1/moments/{id}/share-card` (moments) or native `Share` (post-game scores). No fake “Challenge” duel.
+- Friend strips show real friend choices only; response totals are labeled as responses, not extra friends.
+- Leaderboard / invite UIs do not invent ranks or player counts.
+- Language preference is device-local; UI remains English until localization ships.
+- Notification toggles save preferences only — push delivery and inbox are deferred.
+- Deferred contracts: `docs/api-deferred-stitch.md`. Security: `docs/security-supabase-posture.md`.

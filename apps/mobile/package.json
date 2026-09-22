@@ -8,6 +8,7 @@
     "@expo-google-fonts/space-grotesk": "^0.4.1",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-google-signin/google-signin": "^16.1.5",
     "@react-navigation/bottom-tabs": "^7.18.18",
     "@react-navigation/native": "^7.3.18",
     "@react-navigation/native-stack": "^7.18.10",
@@ -15,6 +16,7 @@
     "@supabase/supabase-js": "^2.112.4",
     "babel-preset-expo": "~57.0.0",
     "expo": "~57.0.20",
+    "expo-file-system": "~57.0.7",
     "expo-font": "~57.0.3",
     "expo-haptics": "~57.0.2",
     "expo-linear-gradient": "~57.0.1",
@@ -33,16 +35,19 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "tsx": "^4.20.5",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"expo lint skipped\"",
-    "test": "echo \"no mobile unit tests\""
+    "test": "tsx --test src/games/logic.test.ts",
+    "postinstall": "node ./scripts/ensure-skia-libs.js",
+    "eas-build-post-install": "node ./scripts/ensure-skia-libs.js"
   },
   "private": true
 }

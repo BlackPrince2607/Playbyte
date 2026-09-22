@@ -64,7 +64,6 @@ export function LiveNowScreen({ onProfile }: Props) {
           {moments.map((m) => {
             const shownFriends = friendsForMoment(m);
             const total = m.result?.totalResponses ?? 0;
-            const extra = Math.max(0, total - shownFriends.length);
             const tag = m.tags?.[0];
             const counts = m.result?.optionCounts ?? {};
             let majorityLabel = "";
@@ -104,9 +103,10 @@ export function LiveNowScreen({ onProfile }: Props) {
                 </Text>
                 {majorityLabel ? <MajorityChip label={majorityLabel} percent={majorityPct} /> : null}
                 {shownFriends.length > 0 ? (
-                  <FriendAvatars friends={shownFriends} extraCount={extra > 0 ? extra : undefined} compact />
-                ) : total > 0 ? (
-                  <Text style={[type.bodySm, { color: colors.lilac }]}>{formatCount(total)} playing now</Text>
+                  <FriendAvatars friends={shownFriends} compact />
+                ) : null}
+                {total > 0 ? (
+                  <Text style={[type.bodySm, { color: colors.lilac }]}>{formatCount(total)} responses</Text>
                 ) : null}
               </Pressable>
             );

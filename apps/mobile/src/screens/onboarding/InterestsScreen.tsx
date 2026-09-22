@@ -6,7 +6,7 @@ import { PrimaryButton } from "../../components/PrimaryButton";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
-type Props = { onDone: (ids: string[]) => void };
+type Props = { onDone: (ids: string[]) => void; onBack?: () => void };
 
 type Category = { id: string; name: string };
 
@@ -21,7 +21,32 @@ const FALLBACK: Category[] = [
   { id: "politics", name: "Politics" },
 ];
 
-export function InterestsScreen({ onDone }: Props) {
+const ICONS: Record<string, string> = {
+  cricket: "🏏",
+  bollywood: "🎬",
+  food: "🍜",
+  tech: "💻",
+  sports: "⚽",
+  memes: "😂",
+  music: "🎵",
+  politics: "📰",
+  relationships: "💜",
+  puzzles: "🧩",
+  trending: "🔥",
+  india: "🇮🇳",
+};
+
+function iconFor(name: string, id: string): string {
+  const key = id.toLowerCase();
+  if (ICONS[key]) return ICONS[key];
+  const lower = name.toLowerCase();
+  for (const [k, v] of Object.entries(ICONS)) {
+    if (lower.includes(k)) return v;
+  }
+  return "✨";
+}
+
+export function InterestsScreen({ onDone, onBack }: Props) {
   const insets = useSafeAreaInsets();
   const [categories, setCategories] = useState<Category[]>([]);
   const [picked, setPicked] = useState<string[]>([]);
@@ -42,7 +67,7 @@ export function InterestsScreen({ onDone }: Props) {
       } else {
         setCategories(FALLBACK);
         setUsingFallback(true);
-        setLoadError("No categories from server — showing defaults.");
+        setLoadError("No categories from server — showing defaults. Selections won’t sync until reload.");
       }
     } catch (e) {
       setCategories(FALLBACK);
@@ -79,6 +104,17 @@ export function InterestsScreen({ onDone }: Props) {
 
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + 24 }]}>
+      {onBack ? (
+        <Pressable
+          onPress={onBack}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          style={{ marginBottom: spacing.md, alignSelf: "flex-start" }}
+        >
+          <Text style={[type.bodySm, { color: colors.lilac }]}>← Back</Text>
+        </Pressable>
+      ) : null}
       <Text style={[type.hero, { color: colors.paper }]}>What do you love?</Text>
       <Text style={[type.bodyLg, { color: colors.lilac, marginTop: spacing.sm }]}>
         Pick a few — we’ll personalize your feed.
@@ -105,9 +141,11 @@ export function InterestsScreen({ onDone }: Props) {
                   accessibilityRole="button"
                   accessibilityState={{ selected: on }}
                 >
-                  <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
+                  <Text style={styles.emoji}>{iconFor(c.name, c.id)}</Text>
+                  <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold, textAlign: "center" }]}>
                     {c.name}
                   </Text>
+                  {on ? <Text style={styles.check}>✓</Text> : null}
                 </Pressable>
               );
             })}
@@ -125,7 +163,7 @@ export function InterestsScreen({ onDone }: Props) {
           </View>
         ) : null}
         <PrimaryButton
-          label={saving ? "Saving…" : picked.length ? "Let’s play" : "Skip"}
+          label={saving ? "Saving…" : picked.length ? "Build my feed" : "Skip"}
           trailingIcon={picked.length && !saving ? "arrow-forward" : undefined}
           disabled={loading || saving}
           onPress={() => void finish()}
@@ -150,7 +188,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "47%",
-    height: 96,
+    minHeight: 104,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 1,
@@ -158,11 +196,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: spacing.md,
+    gap: 6,
   },
   cardOn: {
     backgroundColor: colors.cardAlt,
     borderColor: colors.pink,
     borderWidth: 2,
+  },
+  emoji: { fontSize: 28 },
+  check: {
+    position: "absolute",
+    top: 8,
+    right: 10,
+    color: colors.lime,
+    fontSize: 16,
+    fontWeight: "700",
   },
   footer: {
     position: "absolute",

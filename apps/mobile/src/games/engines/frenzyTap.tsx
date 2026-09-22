@@ -16,10 +16,11 @@ import { type } from "../../theme/typography";
 
 /** Endless: tap freely; End anytime (no forced timer exit). */
 export function FrenzyTap({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const [count, setCount] = useState(0);
   const scale = useSharedValue(1);
   const tapStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const maxScore = typeof config?.maxScore === "number" ? config.maxScore : 2000;
 
   return (
     <Shell
@@ -33,9 +34,11 @@ export function FrenzyTap({ title, config, onDone }: GameProps) {
       <Animated.View style={[{ marginTop: spacing.xl }, tapStyle]}>
         <PrimaryButton
           label="TAP"
+          disabled={done}
           onPress={() => {
+            if (done) return;
             scale.value = withSequence(withTiming(0.9, { duration: 40 }), withSpring(1));
-            setCount((c) => c + 1);
+            setCount((c) => Math.min(c + 1, maxScore));
           }}
         />
       </Animated.View>

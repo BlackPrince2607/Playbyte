@@ -1,11 +1,14 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Shell } from "../Shell";
 import { pickWord } from "../content/words";
+import { scoreGuess } from "../logic/scoring";
 import { GameProps, configTag } from "../types";
 import { useGameSession } from "../useGameSession";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
+
+export { scoreGuess } from "../logic/scoring";
 
 const KEYS = "QWERTYUIOPASDFGHJKLZXCVBNM".split("");
 
@@ -13,26 +16,6 @@ type Cell = { ch: string; state: "empty" | "tbd" | "correct" | "present" | "abse
 
 function emptyRow(): Cell[] {
   return Array.from({ length: 5 }, () => ({ ch: "", state: "empty" as const }));
-}
-
-function scoreGuess(guess: string, answer: string): Cell[] {
-  const res: Cell[] = guess.split("").map((ch) => ({ ch, state: "absent" as const }));
-  const remaining = answer.split("");
-  guess.split("").forEach((ch, i) => {
-    if (ch === answer[i]) {
-      res[i].state = "correct";
-      remaining[i] = "";
-    }
-  });
-  guess.split("").forEach((ch, i) => {
-    if (res[i].state === "correct") return;
-    const idx = remaining.indexOf(ch);
-    if (idx >= 0) {
-      res[i].state = "present";
-      remaining[idx] = "";
-    }
-  });
-  return res;
 }
 
 function cellColor(state: Cell["state"]) {
@@ -44,57 +27,72 @@ function cellColor(state: Cell["state"]) {
 
 /** Finite: one 5-letter word, 6 guesses. */
 export function WordBlitz({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const answer = useMemo(() => pickWord(), []);
   const [rows, setRows] = useState<Cell[][]>(() => Array.from({ length: 6 }, emptyRow));
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
   const [row, setRow] = useState(0);
   const [col, setCol] = useState(0);
+  const rowRef = useRef(0);
+  const colRef = useRef(0);
   const [score, setScore] = useState(0);
-  const [done, setDone] = useState(false);
+  const [finishedBoard, setFinishedBoard] = useState(false);
 
   function typeChar(ch: string) {
-    if (done || col >= 5) return;
+    if (done || finishedBoard || colRef.current >= 5) return;
+    const r = rowRef.current;
+    const c = colRef.current;
     setRows((prev) => {
-      const copy = prev.map((r) => r.map((c) => ({ ...c })));
-      copy[row][col] = { ch, state: "tbd" };
+      const copy = prev.map((rowCells) => rowCells.map((cell) => ({ ...cell })));
+      copy[r][c] = { ch, state: "tbd" };
+      rowsRef.current = copy;
       return copy;
     });
-    setCol((c) => c + 1);
+    colRef.current = c + 1;
+    setCol(c + 1);
   }
 
   function backspace() {
-    if (done || col <= 0) return;
-    const nextCol = col - 1;
+    if (done || finishedBoard || colRef.current <= 0) return;
+    const r = rowRef.current;
+    const nextCol = colRef.current - 1;
     setRows((prev) => {
-      const copy = prev.map((r) => r.map((c) => ({ ...c })));
-      copy[row][nextCol] = { ch: "", state: "empty" };
+      const copy = prev.map((rowCells) => rowCells.map((cell) => ({ ...cell })));
+      copy[r][nextCol] = { ch: "", state: "empty" };
+      rowsRef.current = copy;
       return copy;
     });
+    colRef.current = nextCol;
     setCol(nextCol);
   }
 
   function enter() {
-    if (done || col < 5) return;
-    const guess = rows[row].map((c) => c.ch).join("");
+    if (done || finishedBoard || colRef.current < 5) return;
+    const r = rowRef.current;
+    const guess = rowsRef.current[r].map((c) => c.ch).join("");
     const scored = scoreGuess(guess, answer);
     setRows((prev) => {
-      const copy = prev.map((r) => r.map((c) => ({ ...c })));
-      copy[row] = scored;
+      const copy = prev.map((rowCells) => rowCells.map((cell) => ({ ...cell })));
+      copy[r] = scored;
+      rowsRef.current = copy;
       return copy;
     });
     if (guess === answer) {
-      const s = (6 - row) * 20;
+      const s = (6 - r) * 20;
       setScore(s);
-      setDone(true);
+      setFinishedBoard(true);
       finish(s);
       return;
     }
-    if (row >= 5) {
-      setDone(true);
+    if (r >= 5) {
+      setFinishedBoard(true);
       finish(0);
       return;
     }
-    setRow((r) => r + 1);
+    rowRef.current = r + 1;
+    colRef.current = 0;
+    setRow(r + 1);
     setCol(0);
   }
 
@@ -103,7 +101,7 @@ export function WordBlitz({ title, config, onDone }: GameProps) {
       tag={configTag(config, "WORD")}
       title={title}
       score={score}
-      subtitle={done ? `Answer: ${answer}` : `Guess ${row + 1} / 6`}
+      subtitle={finishedBoard || done ? `Answer: ${answer}` : `Guess ${row + 1} / 6`}
       onEnd={() => finish(score)}
     >
       <View style={{ gap: 6, alignItems: "center", marginBottom: spacing.md }}>
@@ -141,6 +139,7 @@ export function WordBlitz({ title, config, onDone }: GameProps) {
         {KEYS.map((k) => (
           <Pressable
             key={k}
+            disabled={done || finishedBoard}
             onPress={() => typeChar(k)}
             style={{
               width: 30,
@@ -151,6 +150,7 @@ export function WordBlitz({ title, config, onDone }: GameProps) {
               borderColor: colors.line,
               alignItems: "center",
               justifyContent: "center",
+              opacity: done || finishedBoard ? 0.5 : 1,
             }}
           >
             <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold, fontSize: 12 }}>{k}</Text>
@@ -159,6 +159,7 @@ export function WordBlitz({ title, config, onDone }: GameProps) {
       </View>
       <View style={{ flexDirection: "row", gap: 10, marginTop: spacing.md, justifyContent: "center" }}>
         <Pressable
+          disabled={done || finishedBoard}
           onPress={backspace}
           style={{
             paddingHorizontal: 16,
@@ -172,6 +173,7 @@ export function WordBlitz({ title, config, onDone }: GameProps) {
           <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold }}>DEL</Text>
         </Pressable>
         <Pressable
+          disabled={done || finishedBoard}
           onPress={enter}
           style={{
             paddingHorizontal: 16,

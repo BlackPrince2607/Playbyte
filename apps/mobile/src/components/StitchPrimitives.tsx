@@ -102,11 +102,12 @@ export function ResultBar({
 export function FriendChoiceStrip({
   name,
   choice,
-  onChallenge,
+  onShare,
 }: {
   name: string;
   choice: string;
-  onChallenge?: () => void;
+  /** Real share action only — not a duel challenge. */
+  onShare?: () => void;
 }) {
   return (
     <View style={styles.strip}>
@@ -115,9 +116,9 @@ export function FriendChoiceStrip({
           <Text style={{ fontFamily: fonts.bodyBold }}>{name}</Text> chose {choice}
         </Text>
       </View>
-      {onChallenge ? (
-        <Pressable style={styles.challengeBtn} onPress={onChallenge} accessibilityRole="button">
-          <Text style={[type.micro, { color: colors.ink, fontFamily: fonts.bodyBold }]}>Challenge</Text>
+      {onShare ? (
+        <Pressable style={styles.challengeBtn} onPress={onShare} accessibilityRole="button">
+          <Text style={[type.micro, { color: colors.ink, fontFamily: fonts.bodyBold }]}>Share</Text>
         </Pressable>
       ) : null}
     </View>

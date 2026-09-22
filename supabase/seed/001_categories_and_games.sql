@@ -29,7 +29,7 @@ INSERT INTO mini_games (key, title, blurb, status, sort_order, config) VALUES
   ('memory_sequence', 'Memory Sequence', 'Watch the sequence and tap it back.', 'enabled', 2, '{"maxScore": 40, "genre": "puzzle", "tag": "PUZZLE", "mode": "finite"}'),
   ('traffic_light', 'Traffic Light', 'Tap as soon as it turns green.', 'enabled', 3, '{"maxScore": 1000, "genre": "arcade", "tag": "ARCADE", "mode": "finite"}'),
   ('timer_stop', 'Timer Stop', 'Stop the clock as close to 9.999s as you can.', 'enabled', 4, '{"maxScore": 1000, "genre": "puzzle", "tag": "PUZZLE", "mode": "finite", "targetMs": 9999}'),
-  ('color_match', 'Color Match', 'Does the word match the ink color?', 'enabled', 5, '{"maxScore": 40, "genre": "puzzle", "tag": "PUZZLE", "mode": "finite"}'),
+  ('color_match', 'Color Match', 'Does the word match the ink color?', 'enabled', 5, '{"maxScore": 40, "genre": "puzzle", "tag": "PUZZLE", "mode": "finite", "questions": 4}'),
   ('frenzy_tap', 'Frenzy Tap', 'Tap as much as you want — End when ready.', 'enabled', 6, '{"maxScore": 2000, "genre": "arcade", "tag": "ARCADE", "mode": "endless"}'),
   ('odd_one_out', 'Odd One Out', 'Find the shape that does not belong.', 'enabled', 7, '{"maxScore": 20, "genre": "puzzle", "tag": "PUZZLE", "mode": "finite"}'),
   ('perfect_circle', 'Perfect Circle', 'Draw the roundest circle you can.', 'enabled', 8, '{"maxScore": 100, "genre": "puzzle", "tag": "PUZZLE", "mode": "finite"}'),

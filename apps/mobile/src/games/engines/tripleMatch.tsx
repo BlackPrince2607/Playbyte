@@ -31,13 +31,14 @@ function deal(n = 9): Tile[] {
 
 /** Endless: select 3 matching tiles; board refills; End anytime. */
 export function TripleMatch({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const [tiles, setTiles] = useState(() => deal());
   const [picked, setPicked] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
 
   function select(id: number) {
+    if (done) return;
     if (picked.includes(id)) {
       setPicked((p) => p.filter((x) => x !== id));
       return;
@@ -75,6 +76,7 @@ export function TripleMatch({ title, config, onDone }: GameProps) {
           return (
             <Pressable
               key={t.id}
+              disabled={done}
               onPress={() => select(t.id)}
               style={{
                 width: 72,
@@ -85,6 +87,7 @@ export function TripleMatch({ title, config, onDone }: GameProps) {
                 backgroundColor: on ? "rgba(198,255,61,0.15)" : colors.cardAlt,
                 alignItems: "center",
                 justifyContent: "center",
+                opacity: done ? 0.5 : 1,
               }}
             >
               <Text style={{ fontSize: 28, color: colors.paper }}>{t.symbol}</Text>

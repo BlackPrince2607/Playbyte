@@ -20,9 +20,19 @@ import {
   RespondResult,
 } from "../api";
 import { useAuth } from "./AuthContext";
-import { bumpStreak, getStreak, isOnboardingDone, setOnboardingDone } from "../lib/storage";
+import {
+  bumpStreak,
+  getOnboardingStep,
+  getStreak,
+  isOnboardingDone,
+  setOnboardingDone,
+  setOnboardingStep as persistOnboardingStep,
+  type OnboardingStep,
+} from "../lib/storage";
 import { isCacheFresh } from "../lib/cache";
 import type { TabKey } from "../components/BottomNav";
+
+export type { OnboardingStep };
 
 export type FriendRequests = { incoming: FriendRequest[]; outgoing: FriendRequest[] };
 
@@ -34,6 +44,7 @@ type AppState = {
   ready: boolean;
   bootError: string;
   onboardingDone: boolean;
+  onboardingStep: OnboardingStep;
   tab: TabKey;
   items: FeedItem[];
   feedLoading: boolean;
@@ -45,6 +56,7 @@ type AppState = {
   refreshFeed: (force?: boolean) => Promise<void>;
   retryBoot: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  setOnboardingStep: (step: OnboardingStep) => void;
   setTab: (t: TabKey) => void;
   setPromptSave: (v: boolean) => void;
   respond: (momentId: string, optionId: string) => Promise<RespondOutcome>;
@@ -75,6 +87,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [bootError, setBootError] = useState("");
   const [onboardingDone, setOnboardingDoneState] = useState(false);
+  const [onboardingStep, setOnboardingStepState] = useState<OnboardingStep>("welcome");
   const [tab, setTab] = useState<TabKey>("feed");
   const [items, setItems] = useState<FeedItem[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
@@ -252,8 +265,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await ensureGuest();
       const done = await isOnboardingDone();
       setOnboardingDoneState(done);
+      if (!done) {
+        setOnboardingStepState(await getOnboardingStep());
+      }
       setStreak(await getStreak());
-      await loadFeed();
+      // Feed failure must not set bootError — FeedScreen already shows feedError;
+      // other tabs (Compete / Friends / Vault) stay reachable.
+      try {
+        await loadFeed();
+      } catch {
+        /* feedError set inside loadFeed */
+      }
       setReady(true);
     } catch (e) {
       const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "Could not start";
@@ -269,13 +291,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const retryBoot = useCallback(async () => {
     setReady(false);
+    setBootError("");
     await boot();
   }, [boot]);
+
+  const setOnboardingStep = useCallback((step: OnboardingStep) => {
+    setOnboardingStepState(step);
+    void persistOnboardingStep(step);
+  }, []);
 
   const completeOnboarding = useCallback(async () => {
     await setOnboardingDone();
     setOnboardingDoneState(true);
-    await refreshFeed(true);
+    setOnboardingStepState("welcome");
+    setBootError("");
+    try {
+      await refreshFeed(true);
+    } catch {
+      // feedError already set — main app can retry; do not leave onboarding incomplete
+    }
   }, [refreshFeed]);
 
   const respond = useCallback(
@@ -333,6 +367,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ready,
       bootError,
       onboardingDone,
+      onboardingStep,
       tab,
       items,
       feedLoading,
@@ -344,6 +379,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       refreshFeed,
       retryBoot,
       completeOnboarding,
+      setOnboardingStep,
       setTab,
       setPromptSave,
       respond,
@@ -366,6 +402,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ready,
       bootError,
       onboardingDone,
+      onboardingStep,
       tab,
       items,
       feedLoading,
@@ -377,6 +414,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       refreshFeed,
       retryBoot,
       completeOnboarding,
+      setOnboardingStep,
       respond,
       isResponding,
       jumpToMoment,

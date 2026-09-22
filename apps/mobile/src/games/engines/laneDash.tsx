@@ -10,7 +10,7 @@ type Obstacle = { id: number; lane: number; y: number };
 
 /** Endless: 3-lane dodge; crash restarts run; best score until End. */
 export function LaneDash({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const [lane, setLane] = useState(1);
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [runScore, setRunScore] = useState(0);
@@ -18,10 +18,17 @@ export function LaneDash({ title, config, onDone }: GameProps) {
   const [alive, setAlive] = useState(true);
   const idRef = useRef(0);
   const laneRef = useRef(lane);
+  const restartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   laneRef.current = lane;
 
   useEffect(() => {
-    if (!alive) return;
+    return () => {
+      if (restartTimer.current) clearTimeout(restartTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!alive || done) return;
     const tick = setInterval(() => {
       setRunScore((s) => {
         const next = s + 1;
@@ -40,7 +47,8 @@ export function LaneDash({ title, config, onDone }: GameProps) {
         if (hit) {
           setAlive(false);
           setRunScore(0);
-          setTimeout(() => {
+          if (restartTimer.current) clearTimeout(restartTimer.current);
+          restartTimer.current = setTimeout(() => {
             setObstacles([]);
             setAlive(true);
           }, 700);
@@ -50,7 +58,7 @@ export function LaneDash({ title, config, onDone }: GameProps) {
       });
     }, 80);
     return () => clearInterval(tick);
-  }, [alive]);
+  }, [alive, done]);
 
   return (
     <Shell
@@ -74,6 +82,7 @@ export function LaneDash({ title, config, onDone }: GameProps) {
         {[0, 1, 2].map((l) => (
           <Pressable
             key={l}
+            disabled={done || !alive}
             onPress={() => setLane(l)}
             style={{
               flex: 1,

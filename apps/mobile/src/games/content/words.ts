@@ -15,12 +15,20 @@ export function pickWord(exclude?: string): string {
   return pool[Math.floor(Math.random() * pool.length)] ?? "PLAYS";
 }
 
-export function scramble(word: string): string {
-  const chars = word.split("");
-  for (let i = chars.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [chars[i], chars[j]] = [chars[j], chars[i]];
+export function scramble(word: string, attempts = 12): string {
+  if (word.length < 2) return word;
+  for (let n = 0; n < attempts; n++) {
+    const chars = word.split("");
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+    const out = chars.join("");
+    if (out !== word) return out;
   }
-  const out = chars.join("");
-  return out === word ? scramble(word) : out;
+  // Guaranteed different when ≥2 distinct chars; otherwise return as-is.
+  if (new Set(word).size < 2) return word;
+  const chars = word.split("");
+  [chars[0], chars[1]] = [chars[1], chars[0]];
+  return chars.join("");
 }

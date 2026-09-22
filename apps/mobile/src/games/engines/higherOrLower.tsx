@@ -13,25 +13,37 @@ import { useGameSession } from "../useGameSession";
 import { colors, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
 
+function nextNumber(current: number): number {
+  let next = current;
+  let guard = 0;
+  while (next === current && guard < 20) {
+    next = 1 + Math.floor(Math.random() * 50);
+    guard += 1;
+  }
+  return next;
+}
+
 /** Endless streak — miss resets streak; End anytime. */
 export function HigherOrLower({ title, config, onDone }: GameProps) {
-  const { finish } = useGameSession(onDone);
+  const { finish, done } = useGameSession(onDone);
   const [n, setN] = useState(() => 1 + Math.floor(Math.random() * 50));
   const [streak, setStreak] = useState(0);
   const [best, setBest] = useState(0);
   const flash = useSharedValue(0);
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+  const maxScore = typeof config?.maxScore === "number" ? config.maxScore : 50;
 
   function guess(higher: boolean) {
-    const next = 1 + Math.floor(Math.random() * 50);
-    const ok = higher ? next >= n : next <= n;
+    if (done) return;
+    const next = nextNumber(n);
+    const ok = higher ? next > n : next < n;
     if (!ok) {
       setStreak(0);
       setN(next);
       return;
     }
     flash.value = withSequence(withTiming(1, { duration: 80 }), withTiming(0, { duration: 200 }));
-    const nextStreak = streak + 1;
+    const nextStreak = Math.min(streak + 1, maxScore);
     setStreak(nextStreak);
     setBest((b) => Math.max(b, nextStreak));
     setN(next);
@@ -61,8 +73,8 @@ export function HigherOrLower({ title, config, onDone }: GameProps) {
       />
       <Text style={[type.largeScore, { color: colors.paper, marginVertical: spacing.lg }]}>{n}</Text>
       <View style={{ flexDirection: "row", gap: 12, marginTop: spacing.lg }}>
-        <GameBtn label="Lower" onPress={() => guess(false)} />
-        <GameBtn label="Higher" onPress={() => guess(true)} />
+        <GameBtn label="Lower" onPress={() => guess(false)} disabled={done} />
+        <GameBtn label="Higher" onPress={() => guess(true)} disabled={done} />
       </View>
     </Shell>
   );

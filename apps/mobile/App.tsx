@@ -19,7 +19,7 @@ import MainShell from "./src/MainShell";
 import { colors } from "./src/theme/colors";
 
 export default function App() {
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
     SpaceGrotesk_700Bold,
     Inter_400Regular,
     Inter_500Medium,
@@ -27,7 +27,8 @@ export default function App() {
     JetBrainsMono_500Medium,
   });
 
-  if (!loaded) {
+  // Don't block forever if font download fails on a flaky network.
+  if (!loaded && !error) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator color={colors.lime} />

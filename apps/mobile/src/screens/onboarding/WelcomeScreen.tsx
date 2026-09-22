@@ -1,41 +1,60 @@
+import { useEffect, type ReactNode } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
-type Props = { onNext: () => void };
+type Props = {
+  onNext: () => void;
+  onGoogleSignIn?: () => void;
+  onEmailSignIn?: () => void;
+  googleAvailable?: boolean;
+};
 
 function FloatingCard({
   rotate,
-  translateY,
+  baseY,
   scale,
   opacity,
+  duration,
   children,
 }: {
   rotate: string;
-  translateY: number;
+  baseY: number;
   scale: number;
   opacity: number;
-  children: React.ReactNode;
+  duration: number;
+  children: ReactNode;
 }) {
-  return (
-    <View
-      style={[
-        styles.floatCard,
-        {
-          transform: [{ rotate }, { translateY }, { scale }],
-          opacity,
-        },
-      ]}
-    >
-      {children}
-    </View>
-  );
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.value = withRepeat(
+      withTiming(1, { duration, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true,
+    );
+  }, [duration, t]);
+  const style = useAnimatedStyle(() => ({
+    transform: [
+      { rotate },
+      { translateY: baseY + t.value * 10 },
+      { scale },
+    ],
+    opacity,
+  }));
+  return <Animated.View style={[styles.floatCard, style]}>{children}</Animated.View>;
 }
 
-export function WelcomeScreen({ onNext }: Props) {
+export function WelcomeScreen({ onNext, onGoogleSignIn, onEmailSignIn, googleAvailable }: Props) {
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.wrap}>
@@ -43,7 +62,7 @@ export function WelcomeScreen({ onNext }: Props) {
       <View style={styles.blurLime} />
 
       <View style={[styles.stack, { paddingTop: insets.top + 24 }]}>
-        <FloatingCard rotate="-6deg" translateY={56} scale={0.9} opacity={0.8}>
+        <FloatingCard rotate="-6deg" baseY={56} scale={0.9} opacity={0.8} duration={7000}>
           <Text style={[type.metadata, { color: colors.lilac }]}>FUNNY POLL</Text>
           <Text style={[type.gameQuestion, { color: colors.paper, fontSize: 22, marginTop: 8 }]}>
             Chai or Coffee?
@@ -58,7 +77,7 @@ export function WelcomeScreen({ onNext }: Props) {
           </View>
         </FloatingCard>
 
-        <FloatingCard rotate="3deg" translateY={28} scale={0.95} opacity={0.9}>
+        <FloatingCard rotate="3deg" baseY={28} scale={0.95} opacity={0.9} duration={8000}>
           <Text style={[type.metadata, { color: colors.lilac }]}>BOLLYWOOD QUIZ</Text>
           <Text style={[type.gameQuestion, { color: colors.paper, fontSize: 22, marginTop: 8 }]}>
             Name this movie...
@@ -66,7 +85,7 @@ export function WelcomeScreen({ onNext }: Props) {
           <View style={styles.imagePlaceholder} />
         </FloatingCard>
 
-        <FloatingCard rotate="-2deg" translateY={0} scale={1} opacity={1}>
+        <FloatingCard rotate="-2deg" baseY={0} scale={1} opacity={1} duration={6500}>
           <Text style={[type.metadata, { color: colors.lime, fontFamily: fonts.bodyBold, letterSpacing: 1 }]}>
             CRICKET PREDICT
           </Text>
@@ -75,11 +94,9 @@ export function WelcomeScreen({ onNext }: Props) {
           </Text>
           <View style={styles.answerRow}>
             <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]}>Mumbai</Text>
-            <Text style={[type.statsSm, { color: colors.lilac }]}>52%</Text>
           </View>
           <View style={[styles.answerRow, { marginTop: 8 }]}>
             <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]}>Chennai</Text>
-            <Text style={[type.statsSm, { color: colors.lilac }]}>48%</Text>
           </View>
         </FloatingCard>
       </View>
@@ -98,16 +115,34 @@ export function WelcomeScreen({ onNext }: Props) {
           Every swipe is a game.
         </Text>
         <PrimaryButton label="Start playing" onPress={onNext} trailingIcon="arrow-forward" />
-        <PrimaryButton
-          label="Google sign-in soon"
-          variant="secondary"
-          onPress={onNext}
-          icon="person-circle-outline"
-          style={{ marginTop: spacing.sm, opacity: 0.75 }}
-        />
+        {googleAvailable && onGoogleSignIn ? (
+          <PrimaryButton
+            label="Continue with Google"
+            variant="secondary"
+            onPress={onGoogleSignIn}
+            icon="logo-google"
+            style={{ marginTop: spacing.sm }}
+          />
+        ) : onEmailSignIn ? (
+          <PrimaryButton
+            label="Sign in with email"
+            variant="secondary"
+            onPress={onEmailSignIn}
+            icon="mail-outline"
+            style={{ marginTop: spacing.sm }}
+          />
+        ) : (
+          <PrimaryButton
+            label="Google sign-in soon"
+            variant="secondary"
+            disabled
+            style={{ marginTop: spacing.sm }}
+            icon="logo-google"
+          />
+        )}
         <Text style={[type.micro, styles.legal]}>
-          Continues as guest for now. Email sign-in is available later in Vault. By continuing, you agree to our
-          Terms of Service and Privacy Policy.
+          Start playing continues as a guest. Sign in anytime in Vault to save progress. By continuing, you agree to
+          our Terms of Service and Privacy Policy.
         </Text>
       </LinearGradient>
     </View>

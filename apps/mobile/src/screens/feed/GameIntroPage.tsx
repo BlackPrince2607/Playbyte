@@ -26,8 +26,10 @@ function modeHint(item: FeedGame): string {
   if (item.config?.mode === "endless") return "End anytime";
   const q = item.config?.questions;
   const levels = item.config?.levels;
+  const words = item.config?.wordsToFind;
   if (typeof q === "number") return `${q} rounds`;
   if (typeof levels === "number") return `${levels} puzzles`;
+  if (typeof words === "number") return `${words} words`;
   return "One level";
 }
 
@@ -36,12 +38,18 @@ export function GameIntroPage({ item, height, onStart }: Props) {
   return (
     <View style={[styles.page, { height }]}>
       <LinearGradient colors={["rgba(198,255,61,0.18)", "transparent", colors.ink]} style={StyleSheet.absoluteFill} />
+      <View style={styles.glowOrb} />
       <View style={styles.card}>
+        <View style={styles.artBand}>
+          <Text style={[type.hero, { color: colors.lime, fontSize: 42, opacity: 0.35 }]}>
+            {item.title.slice(0, 1).toUpperCase()}
+          </Text>
+        </View>
         <View style={styles.tagRow}>
           <View style={styles.tag}>
             <Text style={[type.micro, { color: colors.lime, fontFamily: fonts.bodyBold }]}>{tag}</Text>
           </View>
-          <LivePill label="LIVE" />
+          <LivePill label="IN FEED" />
         </View>
         <Text style={[type.gameQuestion, { color: colors.paper, marginTop: spacing.md }]}>{item.title}</Text>
         <Text style={[type.bodyLg, { color: colors.lilac, marginTop: spacing.sm }]}>{item.blurb}</Text>
@@ -55,7 +63,7 @@ export function GameIntroPage({ item, height, onStart }: Props) {
             <Text style={[type.micro, { color: colors.lilac }]}>MODE</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={[type.statsSm, { color: colors.paper }]}>1vCrowd</Text>
+            <Text style={[type.statsSm, { color: colors.paper }]}>Percentile</Text>
             <Text style={[type.micro, { color: colors.lilac }]}>SCORE</Text>
           </View>
         </View>
@@ -81,6 +89,15 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     justifyContent: "center",
   },
+  glowOrb: {
+    position: "absolute",
+    top: 80,
+    right: -40,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: "rgba(198,255,61,0.12)",
+  },
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
@@ -88,6 +105,18 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     padding: spacing.lg,
     gap: spacing.sm,
+    overflow: "hidden",
+  },
+  artBand: {
+    height: 88,
+    marginHorizontal: -spacing.lg,
+    marginTop: -spacing.lg,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.cardAlt,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    alignItems: "center",
+    justifyContent: "center",
   },
   tagRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   tag: {
