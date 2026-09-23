@@ -167,7 +167,16 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
         <ActivityIndicator color={colors.lime} style={{ marginTop: spacing.lg }} />
       ) : (
         <>
-          {loadError ? <Text style={[type.bodySm, { color: colors.pink }]}>{loadError}</Text> : null}
+          {loadError ? (
+            <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
+              <Text style={[type.bodySm, { color: colors.pink }]}>{loadError}</Text>
+              {loadError.toLowerCase().includes("session") ? (
+                <PrimaryButton label="Sign in again" onPress={onSignIn} />
+              ) : (
+                <PrimaryButton label="Retry" variant="secondary" onPress={() => void loadMe()} />
+              )}
+            </View>
+          ) : null}
 
           <SectionCard title="Account">
             <SettingsRow

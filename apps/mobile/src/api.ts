@@ -66,6 +66,11 @@ export function setGuestToken(value: string) {
   void setStoredGuestToken(value);
 }
 
+export function clearGuestToken() {
+  guestToken = "";
+  void setStoredGuestToken("");
+}
+
 export async function loadToken() {
   const stored = await getStoredGuestToken();
   if (stored) guestToken = stored;
@@ -93,7 +98,7 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
   }
 }
 
-async function fetchApi<T>(path: string, init: RequestInit, retried401: boolean): Promise<T> {
+async function fetchApi<T>(path: string, init: RequestInit, authRetries: number): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(init.headers as Record<string, string>),
@@ -105,9 +110,10 @@ async function fetchApi<T>(path: string, init: RequestInit, retried401: boolean)
   const data = await res.json().catch(() => ({}));
   const body = parseErrorBody(data);
 
-  if (res.status === 401 && !retried401 && unauthorizedHandler) {
+  // Allow refresh-then-guest demotion (up to 2 recoveries).
+  if (res.status === 401 && authRetries < 2 && unauthorizedHandler) {
     const recovered = await unauthorizedHandler();
-    if (recovered) return fetchApi(path, init, true);
+    if (recovered) return fetchApi(path, init, authRetries + 1);
   }
 
   if (!res.ok) {
@@ -122,13 +128,15 @@ async function fetchApi<T>(path: string, init: RequestInit, retried401: boolean)
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  return fetchApi(path, init, false);
+  return fetchApi(path, init, 0);
 }
 
-export async function ensureGuest(): Promise<string> {
-  if (userAccessToken) return guestToken;
-  if (!guestToken) await loadToken();
-  if (guestToken) return guestToken;
+export async function ensureGuest(opts?: { forceNew?: boolean }): Promise<string> {
+  const forceNew = opts?.forceNew ?? false;
+  if (userAccessToken && !forceNew) return guestToken;
+  if (forceNew) clearGuestToken();
+  else if (!guestToken) await loadToken();
+  if (guestToken && !forceNew) return guestToken;
   const res = await fetchWithTimeout(`${getApiBaseUrl()}/v1/guest/sessions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

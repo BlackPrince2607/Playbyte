@@ -6,13 +6,13 @@ from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID
 
-import jwt
 from fastapi import Depends, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.errors import AppError
 from app.common.security import hash_token
+from app.common.supabase_jwt import decode_supabase_subject
 from app.config import Settings, get_settings
 from app.infrastructure.postgres.db import get_session
 from app.infrastructure.postgres.models import GuestSession, User
@@ -81,7 +81,7 @@ async def _guest_actor(session: AsyncSession, token: str) -> Actor:
 
 
 async def _user_actor(session: AsyncSession, settings: Settings, token: str) -> Actor:
-    subject = _decode_subject(settings, token)
+    subject = decode_supabase_subject(settings, token)
     user = await session.scalar(select(User).where(User.auth_subject == subject))
     if user is None:
         user = User(auth_subject=subject)
@@ -90,28 +90,3 @@ async def _user_actor(session: AsyncSession, settings: Settings, token: str) -> 
     if user.status != "active":
         raise AppError("forbidden", "Account is not active.", 403)
     return Actor(kind="user", user_id=user.id)
-
-
-def _decode_subject(settings: Settings, token: str) -> str:
-    if settings.supabase_jwt_secret:
-        try:
-            options: dict = {"verify_aud": bool(settings.supabase_jwt_audience)}
-            decode_kwargs: dict = {
-                "algorithms": ["HS256"],
-                "options": options,
-            }
-            if settings.supabase_jwt_audience:
-                decode_kwargs["audience"] = settings.supabase_jwt_audience
-            if settings.supabase_jwt_issuer:
-                decode_kwargs["issuer"] = settings.supabase_jwt_issuer
-            payload = jwt.decode(token, settings.supabase_jwt_secret, **decode_kwargs)
-            sub = payload.get("sub")
-            if not sub:
-                raise AppError("unauthenticated", "Invalid token.", 401)
-            return str(sub)
-        except jwt.PyJWTError as exc:
-            raise AppError("unauthenticated", "Invalid token.", 401) from exc
-    if settings.app_env == "production":
-        raise AppError("unauthenticated", "Auth is not configured.", 401)
-    # Development fallback: treat bearer as opaque subject so local flows work.
-    return f"dev:{hash_token(token, settings.guest_token_secret)[:24]}"

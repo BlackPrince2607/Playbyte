@@ -34,6 +34,10 @@ export async function getStoredGuestToken() {
 }
 
 export async function setStoredGuestToken(token: string) {
+  if (!token) {
+    await AsyncStorage.multiRemove([KEYS.guestToken, KEYS.legacyToken]);
+    return;
+  }
   await AsyncStorage.setItem(KEYS.guestToken, token);
 }
 

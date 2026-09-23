@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import type { AuthError, User } from "@supabase/supabase-js";
 import {
   api,
+  clearGuestToken,
   ensureGuest,
   getGuestToken,
   isApiError,
@@ -115,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const authInitId = useRef(0);
   const readyOnce = useRef(false);
+  const recoverTriedRefresh = useRef(false);
 
   const markReady = useCallback(() => {
     if (readyOnce.current) return;
@@ -127,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserAccessToken(null);
       setUser(null);
       try {
-        await ensureGuest();
+        await ensureGuest({ forceNew: true });
         return true;
       } catch {
         return false;
@@ -136,22 +138,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const sb = getSupabase();
       const { data, error } = await withTimeout(sb.auth.refreshSession(), 8_000, "refreshSession");
-      if (error || !data.session) {
-        await clearLocalSupabaseSession();
-        setUserAccessToken(null);
-        setUser(null);
-        await ensureGuest();
-        return true;
+      if (!error && data.session?.access_token) {
+        // Only keep the refreshed session if we have not already tried this path.
+        // A second 401 means the backend still rejects the JWT — demote to guest.
+        if (!recoverTriedRefresh.current) {
+          recoverTriedRefresh.current = true;
+          setUserAccessToken(data.session.access_token);
+          setUser(data.session.user);
+          return true;
+        }
       }
-      setUserAccessToken(data.session.access_token);
-      setUser(data.session.user);
+      await clearLocalSupabaseSession();
+      setUserAccessToken(null);
+      setUser(null);
+      clearGuestToken();
+      await ensureGuest({ forceNew: true });
+      recoverTriedRefresh.current = false;
       return true;
     } catch {
       await clearLocalSupabaseSession();
       setUserAccessToken(null);
       setUser(null);
       try {
-        await ensureGuest();
+        clearGuestToken();
+        await ensureGuest({ forceNew: true });
+        recoverTriedRefresh.current = false;
         return true;
       } catch {
         return false;
@@ -244,6 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw new Error(mapAuthError(error));
     setUserAccessToken(data.session?.access_token ?? null);
     setUser(data.user);
+    recoverTriedRefresh.current = false;
     deferAuthSideEffect(convertGuestIfNeeded);
   }, []);
 
@@ -255,6 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.session) {
       setUserAccessToken(data.session.access_token);
       setUser(data.user);
+      recoverTriedRefresh.current = false;
       deferAuthSideEffect(convertGuestIfNeeded);
       return "session" as const;
     }
@@ -279,6 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       setUserAccessToken(data.session?.access_token ?? null);
       setUser(data.user);
+      recoverTriedRefresh.current = false;
       deferAuthSideEffect(convertGuestIfNeeded);
     } catch (e) {
       if (isGoogleNativeError(e)) throw new Error(mapGoogleSignInError(e));
@@ -296,7 +310,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUserAccessToken(null);
     setUser(null);
-    await ensureGuest();
+    recoverTriedRefresh.current = false;
+    await ensureGuest({ forceNew: true });
   }, []);
 
   const value = useMemo(

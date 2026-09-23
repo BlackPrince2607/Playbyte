@@ -56,8 +56,9 @@ GUEST_TOKEN_SECRET=<long-random>
 SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 # New Supabase keys (Settings → API Keys):
 SUPABASE_ANON_KEY=sb_publishable_...          # optional for API
-SUPABASE_SERVICE_ROLE_KEY=sb_secret_...       # required — put the *secret* key here
-SUPABASE_JWT_SECRET=...                       # JWT secret (Auth), not the API key
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...       # required — put the *secret* key here (or legacy service_role JWT)
+# Optional if project still signs HS256 access tokens; JWKS via SUPABASE_URL covers ES256/RS256
+SUPABASE_JWT_SECRET=...
 SUPABASE_JWT_AUDIENCE=authenticated
 SUPABASE_STORAGE_BUCKET_SHARES=share-cards
 ADMIN_API_KEY=<long-random>

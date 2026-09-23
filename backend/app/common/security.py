@@ -26,10 +26,8 @@ def validate_production_settings(settings: Settings) -> list[str]:
         errors.append("ADMIN_API_KEY must be a strong secret (32+ chars) in production.")
     if settings.guest_token_secret == DEFAULT_GUEST_SECRET or len(settings.guest_token_secret) < 32:
         errors.append("GUEST_TOKEN_SECRET must be a strong secret (32+ chars) in production.")
-    if not settings.supabase_jwt_secret:
-        errors.append("SUPABASE_JWT_SECRET is required in production.")
     if not settings.supabase_url:
-        errors.append("SUPABASE_URL is required in production.")
+        errors.append("SUPABASE_URL is required in production (JWKS JWT verification).")
     if not settings.supabase_service_role_key:
         errors.append("SUPABASE_SERVICE_ROLE_KEY is required in production (server-side storage/realtime).")
     if "localhost" in settings.database_url or "127.0.0.1" in settings.database_url:
