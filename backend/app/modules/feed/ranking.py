@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -29,6 +31,24 @@ def interleave(
     while gi < len(games):
         out.append(games[gi])
         gi += 1
+    return out
+
+
+def rotate_games[T](games: list[T], engine_of: Callable[[T], str | None], rng: random.Random) -> list[T]:
+    """Round-robin across engines in a shuffled order, so a feed page (only a handful of game slots)
+    covers as many engines as possible and successive feeds surface every enabled game."""
+    by_engine: dict[str, list[T]] = {}
+    for g in games:
+        by_engine.setdefault(engine_of(g) or "", []).append(g)
+    queues = list(by_engine.values())
+    for q in queues:
+        rng.shuffle(q)
+    rng.shuffle(queues)
+    out: list[T] = []
+    while any(queues):
+        for q in queues:
+            if q:
+                out.append(q.pop())
     return out
 
 

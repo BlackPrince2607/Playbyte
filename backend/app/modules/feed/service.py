@@ -1,3 +1,4 @@
+import random
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -21,7 +22,7 @@ from app.infrastructure.postgres.models import (
 )
 from app.infrastructure.storage.objects import get_object_storage
 from app.modules.crowd.volume import volume_state
-from app.modules.feed.ranking import RankedItem, interleave, moment_score
+from app.modules.feed.ranking import RankedItem, interleave, moment_score, rotate_games
 
 
 def media_url(key: str | None) -> str | None:
@@ -86,6 +87,7 @@ async def build_feed(
     user_id: UUID | None,
     guest_id: UUID | None,
     limit: int = 10,
+    rng: random.Random | None = None,
 ) -> list[dict]:
     interests = await interest_ids(session, user_id, guest_id)
     windows = await active_window_ids(session)
@@ -109,7 +111,8 @@ async def build_feed(
     ranked_moments.sort(key=lambda x: x.score, reverse=True)
 
     games = list(await session.scalars(select(MiniGame).where(MiniGame.status == "enabled").order_by(MiniGame.sort_order)))
-    ranked_games = [RankedItem(kind="mini_game", id=g.key, score=float(100 - g.sort_order)) for g in games]
+    rotated = rotate_games(games, lambda g: getattr(g, "engine", None), rng or random.Random())
+    ranked_games = [RankedItem(kind="mini_game", id=g.key, score=float(100 - g.sort_order)) for g in rotated]
     hot = bool(windows)
     ordered = interleave(ranked_moments, ranked_games, hot_window=hot)[:limit]
 
