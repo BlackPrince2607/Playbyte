@@ -7,11 +7,22 @@ import type { RoundRecord } from "../../game/session/types";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
+/** "queued": the play is stored on the phone and syncs later; "rejected": the server refused it. */
+export type SaveState = "saved" | "queued" | "rejected";
+
 type Props = {
   score: number;
-  percentile: number;
+  /** Null when the play has not reached the server yet. */
+  percentile: number | null;
   gameTitle: string;
-  onContinue: () => void;
+  onBackToFeed: () => void;
+  onPlayAgain?: () => void;
+  /** Absent when the feed has no other game. */
+  onNextGame?: () => void;
+  saveState?: SaveState;
+  saveMessage?: string;
+  onRetrySave?: () => void;
+  retryingSave?: boolean;
   /** When true, shows Share CTA that uses native share of score text (no share-card API for games). */
   enableShare?: boolean;
   optionBreakdown?: { label: string; percent: number; highlight?: boolean }[];
@@ -85,7 +96,13 @@ export function PostGameResultScreen({
   score,
   percentile,
   gameTitle,
-  onContinue,
+  onBackToFeed,
+  onPlayAgain,
+  onNextGame,
+  saveState = "saved",
+  saveMessage,
+  onRetrySave,
+  retryingSave = false,
   enableShare = true,
   optionBreakdown,
   correct,
@@ -93,8 +110,8 @@ export function PostGameResultScreen({
   rounds,
   scoreBreakdown,
 }: Props) {
-  const betterThan = Math.max(0, Math.min(100, Math.round(percentile)));
-  const nailedIt = betterThan >= 50;
+  const betterThan = percentile === null ? null : Math.max(0, Math.min(100, Math.round(percentile)));
+  const headline = betterThan === null ? "Run complete." : betterThan >= 50 ? "Strong run." : "Nice try.";
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState("");
   const showAccuracy = attempts !== undefined && attempts > 0 && correct !== undefined;
@@ -104,7 +121,10 @@ export function PostGameResultScreen({
     setShareError("");
     try {
       const result = await Share.share({
-        message: `I scored ${score} on ${gameTitle} — better than ${betterThan}% of players today on PLAY.`,
+        message:
+          betterThan === null
+            ? `I scored ${score} on ${gameTitle} on PLAY.`
+            : `I scored ${score} on ${gameTitle} — better than ${betterThan}% of players today on PLAY.`,
       });
       if (result.action === Share.dismissedAction) {
         /* user cancelled — not an error */
@@ -119,26 +139,51 @@ export function PostGameResultScreen({
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.ink }} contentContainerStyle={styles.wrap}>
       <Text style={[type.hero, { color: colors.paper, textAlign: "center" }]}>
-        {nailedIt ? "Strong run." : "Nice try."}
+        {headline}
       </Text>
       <Text style={[type.metadata, styles.eyebrow]}>{gameTitle.toUpperCase()} · RESULT</Text>
 
       <View style={styles.scoreWrap}>
         <Text style={[type.largeScore, { color: colors.lime }]}>{score}</Text>
       </View>
-      <Text style={[type.bodyLg, { color: colors.lilac }]}>
-        Better than {betterThan}% of players today
-      </Text>
+      {betterThan !== null ? (
+        <Text style={[type.bodyLg, { color: colors.lilac }]}>Better than {betterThan}% of players today</Text>
+      ) : null}
+
+      {saveState !== "saved" ? (
+        <View
+          style={[styles.saveBanner, saveState === "rejected" && { borderColor: colors.pinkSoft }]}
+          accessibilityRole="alert"
+        >
+          <Text style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>
+            {saveMessage ??
+              (saveState === "queued"
+                ? "Couldn't reach the server. Your score is saved on this phone and will sync automatically."
+                : "This score couldn't be recorded.")}
+          </Text>
+          {saveState === "queued" && onRetrySave ? (
+            <PrimaryButton
+              label={retryingSave ? "Saving…" : "Try saving now"}
+              variant="secondary"
+              disabled={retryingSave}
+              onPress={onRetrySave}
+              icon="cloud-upload-outline"
+            />
+          ) : null}
+        </View>
+      ) : null}
 
       <View style={styles.tiles}>
         <View style={styles.tile}>
           <Text style={[type.statsSm, { color: colors.paper }]}>{score}</Text>
           <Text style={[type.micro, { color: colors.lilac }]}>YOUR SCORE</Text>
         </View>
-        <View style={styles.tile}>
-          <Text style={[type.statsSm, { color: colors.limeLive }]}>{betterThan}%</Text>
-          <Text style={[type.micro, { color: colors.lilac, textAlign: "center" }]}>BETTER THAN{"\n"}PLAYERS</Text>
-        </View>
+        {betterThan !== null ? (
+          <View style={styles.tile}>
+            <Text style={[type.statsSm, { color: colors.limeLive }]}>{betterThan}%</Text>
+            <Text style={[type.micro, { color: colors.lilac, textAlign: "center" }]}>BETTER THAN{"\n"}PLAYERS</Text>
+          </View>
+        ) : null}
         {showAccuracy ? (
           <View style={styles.tile} accessible accessibilityLabel={`${correct} of ${attempts} correct`}>
             <Text style={[type.statsSm, { color: colors.paper }]}>
@@ -162,16 +207,28 @@ export function PostGameResultScreen({
       ) : null}
 
       <View style={styles.actions}>
-        <PrimaryButton label="Next game" onPress={onContinue} trailingIcon="arrow-forward" />
-        {enableShare ? (
+        {onPlayAgain ? <PrimaryButton label="Play again" onPress={onPlayAgain} icon="refresh" /> : null}
+        {onNextGame ? (
           <PrimaryButton
-            label={sharing ? "Opening…" : shareError ? "Retry share" : "Share score"}
-            variant="secondary"
-            disabled={sharing}
-            onPress={() => void shareScore()}
-            icon="share-outline"
+            label="Next game"
+            variant={onPlayAgain ? "secondary" : "primary"}
+            onPress={onNextGame}
+            trailingIcon="arrow-forward"
           />
         ) : null}
+        <View style={styles.actionRow}>
+          {enableShare ? (
+            <PrimaryButton
+              label={sharing ? "Opening…" : shareError ? "Retry share" : "Share"}
+              variant="secondary"
+              disabled={sharing}
+              onPress={() => void shareScore()}
+              icon="share-outline"
+              style={styles.actionRowItem}
+            />
+          ) : null}
+          <PrimaryButton label="Feed" variant="secondary" onPress={onBackToFeed} icon="home-outline" style={styles.actionRowItem} />
+        </View>
         {sharing ? <ActivityIndicator color={colors.lime} style={{ marginTop: 4 }} /> : null}
         {shareError ? (
           <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{shareError}</Text>
@@ -236,4 +293,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardAlt,
   },
   actions: { width: "100%", gap: spacing.sm, marginTop: spacing.xl },
+  actionRow: { flexDirection: "row", gap: spacing.sm },
+  actionRowItem: { flex: 1, paddingHorizontal: spacing.sm },
+  saveBanner: {
+    width: "100%",
+    marginTop: spacing.sm,
+    padding: spacing.md,
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.cardAlt,
+  },
 });

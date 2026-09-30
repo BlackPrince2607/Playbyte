@@ -13,12 +13,14 @@ import { BottomNav, TabKey } from "./components/BottomNav";
 import { ErrorState } from "./components/ErrorState";
 import { PrimaryButton } from "./components/PrimaryButton";
 import { useApp } from "./context/AppContext";
+import { nextGame } from "./game/discovery";
 import { startGameAnalytics } from "./game/platform/analytics";
 import { sessionStore, submitQueue } from "./game/platform/services";
+import type { SubmitError } from "./game/session/submitQueue";
 import type { CompletedPlay, GameSession } from "./game/session/types";
 import { GameHost } from "./game/ui/GameHost";
 import { FeedScreen } from "./screens/feed/FeedScreen";
-import { PostGameResultScreen } from "./screens/feed/PostGameResultScreen";
+import { PostGameResultScreen, type SaveState } from "./screens/feed/PostGameResultScreen";
 import { FriendsScreen } from "./screens/friends/FriendsScreen";
 import { LeaderboardScreen } from "./screens/friends/LeaderboardScreen";
 import { LiveNowScreen } from "./screens/live/LiveNowScreen";
@@ -34,6 +36,9 @@ import { useAuth } from "./context/AuthContext";
 import { clearLocalSupabaseSession, isSupabaseConfigured } from "./lib/supabase";
 import { colors, spacing } from "./theme/colors";
 import { type } from "./theme/typography";
+
+type SaveOutcome = { score: number; percentile: number | null; saveState: SaveState; saveMessage?: string };
+type GameResult = SaveOutcome & { game: FeedGame; play: CompletedPlay };
 
 function BootLoading({ onRetry }: { onRetry: () => void }) {
   const [showRetry, setShowRetry] = useState(false);
@@ -76,16 +81,13 @@ export function MainShell() {
   } = useApp();
   const { googleAvailable, signInWithGoogle, isSignedIn } = useAuth();
   const [playing, setPlaying] = useState<FeedGame | null>(null);
-  const [gameResult, setGameResult] = useState<{ title: string; score: number; percentile: number; play: CompletedPlay } | null>(
-    null,
-  );
+  const [gameResult, setGameResult] = useState<GameResult | null>(null);
+  const [retryingSave, setRetryingSave] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [gameSubmitting, setGameSubmitting] = useState(false);
-  const [gameSubmitError, setGameSubmitError] = useState("");
-  const [lastPlay, setLastPlay] = useState<CompletedPlay | null>(null);
   const [resumable, setResumable] = useState<GameSession | null>(null);
   const [restoring, setRestoring] = useState<GameSession | undefined>(undefined);
   const [welcomeAuthBusy, setWelcomeAuthBusy] = useState(false);
@@ -112,8 +114,6 @@ export function MainShell() {
     setPlaying(null);
     setRestoring(undefined);
     setGameResult(null);
-    setGameSubmitError("");
-    setLastPlay(null);
   }, []);
 
   // After logout: drop auth-gated overlays and land on Feed as guest.
@@ -153,8 +153,7 @@ export function MainShell() {
   }, [signInWithGoogle, welcomeAuthBusy, setOnboardingStep]);
 
   const startGame = useCallback((game: FeedGame) => {
-    setGameSubmitError("");
-    setLastPlay(null);
+    setGameResult(null);
     setRestoring(undefined);
     setResumable(null);
     void sessionStore.clear().catch(() => {});
@@ -163,8 +162,6 @@ export function MainShell() {
 
   const resumeGame = useCallback((session: GameSession) => {
     const def = session.definition;
-    setGameSubmitError("");
-    setLastPlay(null);
     setResumable(null);
     setRestoring(session);
     setPlaying({
@@ -186,8 +183,6 @@ export function MainShell() {
   const cancelGame = useCallback(() => {
     setPlaying(null);
     setRestoring(undefined);
-    setGameSubmitError("");
-    setLastPlay(null);
     setGameSubmitting(false);
   }, []);
 
@@ -199,29 +194,51 @@ export function MainShell() {
     }
   }, [items, startGame, completeOnboarding]);
 
+  // A failed save never hides the result: the play stays in the persisted queue unless the server rejected it.
+  const savePlay = useCallback(
+    async (play: CompletedPlay): Promise<SaveOutcome> => {
+      try {
+        const res = await submitQueue.submit(play);
+        if (res.promptAccountCreation) setPromptSave(true);
+        void submitQueue.flush().catch(() => {});
+        return { score: res.score, percentile: res.percentile, saveState: "saved" };
+      } catch (e) {
+        if ((e as SubmitError)?.permanent) {
+          return {
+            score: play.score,
+            percentile: null,
+            saveState: "rejected",
+            saveMessage: isApiError(e) ? e.userMessage : undefined,
+          };
+        }
+        return { score: play.score, percentile: null, saveState: "queued" };
+      }
+    },
+    [setPromptSave],
+  );
+
   const submitGamePlay = useCallback(
     async (play: CompletedPlay) => {
       if (!playing) return;
-      setLastPlay(play);
+      const game = playing;
       setGameSubmitting(true);
-      setGameSubmitError("");
-      try {
-        const res = await submitQueue.submit(play);
-        const title = playing.title;
-        setPlaying(null);
-        setRestoring(undefined);
-        setLastPlay(null);
-        setGameResult({ title, score: res.score, percentile: res.percentile, play });
-        if (res.promptAccountCreation) setPromptSave(true);
-      } catch (e) {
-        const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "Could not save score";
-        setGameSubmitError(message);
-      } finally {
-        setGameSubmitting(false);
-      }
+      const outcome = await savePlay(play);
+      setPlaying(null);
+      setRestoring(undefined);
+      setGameSubmitting(false);
+      setGameResult({ ...outcome, game, play });
     },
-    [playing, setPromptSave],
+    [playing, savePlay],
   );
+
+  const retrySave = useCallback(async () => {
+    if (!gameResult || retryingSave) return;
+    const { sessionId } = gameResult.play;
+    setRetryingSave(true);
+    const outcome = await savePlay(gameResult.play);
+    setGameResult((r) => (r && r.play.sessionId === sessionId ? { ...r, ...outcome } : r));
+    setRetryingSave(false);
+  }, [gameResult, retryingSave, savePlay]);
 
   const goBackOnboarding = useCallback(() => {
     if (onboardingStep === "interests") setOnboardingStep("language");
@@ -244,10 +261,6 @@ export function MainShell() {
       }
       if (playing) {
         if (gameSubmitting) return true;
-        if (gameSubmitError) {
-          cancelGame();
-          return true;
-        }
         // GameHost owns back while a game is on screen (pause menu / exit).
         return false;
       }
@@ -278,8 +291,6 @@ export function MainShell() {
     goBackOnboarding,
     playing,
     gameSubmitting,
-    gameSubmitError,
-    cancelGame,
     gameResult,
     showLeaderboard,
     showNotif,
@@ -372,25 +383,6 @@ export function MainShell() {
   }
 
   if (playing) {
-    if (gameSubmitError && lastPlay) {
-      return (
-        <View style={styles.centerPad}>
-          <ErrorState
-            title="Score not saved"
-            message={gameSubmitError}
-            onRetry={() => void submitGamePlay(lastPlay)}
-            retryLabel="Retry"
-          />
-          <PrimaryButton
-            label="Back to feed"
-            onPress={() => {
-              cancelGame();
-            }}
-          />
-        </View>
-      );
-    }
-
     return (
       <View style={{ flex: 1 }}>
         <GameHost
@@ -410,16 +402,26 @@ export function MainShell() {
   }
 
   if (gameResult) {
+    const upNext = nextGame(
+      items.filter((i): i is FeedGame => i.type === "mini_game"),
+      gameResult.game.key,
+    );
     return (
       <PostGameResultScreen
-        gameTitle={gameResult.title}
+        gameTitle={gameResult.game.title}
         score={gameResult.score}
         percentile={gameResult.percentile}
         correct={gameResult.play.correct}
         attempts={gameResult.play.attempts}
         rounds={gameResult.play.rounds}
         scoreBreakdown={gameResult.play.breakdown}
-        onContinue={() => setGameResult(null)}
+        saveState={gameResult.saveState}
+        saveMessage={gameResult.saveMessage}
+        onRetrySave={() => void retrySave()}
+        retryingSave={retryingSave}
+        onPlayAgain={() => startGame(gameResult.game)}
+        onNextGame={upNext ? () => startGame(upNext) : undefined}
+        onBackToFeed={() => setGameResult(null)}
         enableShare
       />
     );

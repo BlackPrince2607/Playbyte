@@ -13,3 +13,16 @@ export function isPlayable(card: GameCard): boolean {
     }).kind !== "unavailable"
   );
 }
+
+/** The game after `key` in feed order, wrapping around; null when there is no other game. */
+export function nextGame<G extends { key: string }>(games: readonly G[], key: string): G | null {
+  const others = games.filter((g) => g.key !== key);
+  if (!others.length) return null;
+  const at = games.findIndex((g) => g.key === key);
+  if (at < 0) return others[0];
+  for (let i = 1; i <= games.length; i++) {
+    const g = games[(at + i) % games.length];
+    if (g.key !== key) return g;
+  }
+  return others[0];
+}
