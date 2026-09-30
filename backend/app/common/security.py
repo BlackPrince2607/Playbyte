@@ -18,6 +18,17 @@ DEFAULT_ADMIN_KEY = "dev-admin-key"
 DEFAULT_GUEST_SECRET = "change-me-guest-token-secret"
 
 
+def admin_key_accepted(settings: Settings, presented: str | None) -> bool:
+    """X-Admin-Key is an automation credential for non-production environments. The shipped
+    default and short keys are public knowledge, so they never grant access, in any environment."""
+    if settings.app_env == "production" or not presented:
+        return False
+    key = settings.admin_api_key
+    if key == DEFAULT_ADMIN_KEY or len(key) < 32:
+        return False
+    return hmac.compare_digest(presented, key)
+
+
 def validate_production_settings(settings: Settings) -> list[str]:
     if settings.app_env != "production":
         return []

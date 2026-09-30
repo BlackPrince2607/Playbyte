@@ -1,12 +1,9 @@
-
-import hmac
-
 from fastapi import Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.auth import Actor, _user_actor
 from app.common.errors import AppError
-from app.common.security import rate_limiter
+from app.common.security import admin_key_accepted, rate_limiter
 from app.config import Settings, get_settings
 from app.infrastructure.postgres.db import get_session
 from app.infrastructure.postgres.models import AdminUser
@@ -18,9 +15,8 @@ async def require_admin(
     x_admin_key: str | None = Header(default=None, alias="X-Admin-Key"),
     authorization: str | None = Header(default=None),
 ) -> Actor:
-    if settings.app_env != "production":
-        if x_admin_key and hmac.compare_digest(x_admin_key, settings.admin_api_key):
-            return Actor(kind="user", is_admin=True)
+    if admin_key_accepted(settings, x_admin_key):
+        return Actor(kind="user", is_admin=True)
 
     client_key = x_admin_key or "jwt"
     if not rate_limiter.allow(f"admin:{client_key}", limit=30, window_seconds=60):
