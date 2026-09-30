@@ -19,9 +19,9 @@ DEFAULT_GUEST_SECRET = "change-me-guest-token-secret"
 
 
 def admin_key_accepted(settings: Settings, presented: str | None) -> bool:
-    """X-Admin-Key is an automation credential for non-production environments. The shipped
-    default and short keys are public knowledge, so they never grant access, in any environment."""
-    if settings.app_env == "production" or not presented:
+    """X-Admin-Key is the automation credential (scheduled content refresh). The shipped default
+    and short keys are public knowledge, so they never grant access, in any environment."""
+    if not presented:
         return False
     key = settings.admin_api_key
     if key == DEFAULT_ADMIN_KEY or len(key) < 32:

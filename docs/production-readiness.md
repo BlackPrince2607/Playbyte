@@ -65,7 +65,7 @@ Auth (email + Android Google) is implemented in the mobile app; Google still nee
 | `APP_ENV` | development | staging/prod | production | Yes | Unverified on Railway |
 | `CORS_ORIGINS` | * / local | Hosted | Explicit HTTPS | Prod yes | Config tests |
 | `SENTRY_DSN` | optional | optional | recommended | No | Not wired |
-| `ADMIN_API_KEY` | local only | non-prod | Must not unlock prod | — | Code blocks in production |
+| `ADMIN_API_KEY` | local only | 32+ chars | 32+ chars (feed-refresh automation) | — | Default and short keys rejected in code |
 | Android package / iOS bundle | `app.playbyte.mobile` | same | same | Yes | In `app.json` |
 | EAS projectId | set | set | set | Yes | In `app.json` |
 

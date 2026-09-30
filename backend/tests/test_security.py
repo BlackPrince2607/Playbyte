@@ -21,11 +21,13 @@ def test_short_admin_key_never_grants_access() -> None:
     assert not admin_key_accepted(settings, "short-key")
 
 
-def test_strong_admin_key_works_outside_production_only() -> None:
-    assert admin_key_accepted(Settings(app_env="development", admin_api_key=STRONG_KEY), STRONG_KEY)
-    assert not admin_key_accepted(Settings(app_env="development", admin_api_key=STRONG_KEY), "k" * 39 + "x")
-    assert not admin_key_accepted(Settings(app_env="development", admin_api_key=STRONG_KEY), None)
-    assert not admin_key_accepted(Settings(app_env="production", admin_api_key=STRONG_KEY), STRONG_KEY)
+def test_only_the_exact_strong_admin_key_grants_access() -> None:
+    for env in ("development", "production"):
+        settings = Settings(app_env=env, admin_api_key=STRONG_KEY)
+        assert admin_key_accepted(settings, STRONG_KEY)
+        assert not admin_key_accepted(settings, "k" * 39 + "x")
+        assert not admin_key_accepted(settings, None)
+        assert not admin_key_accepted(settings, "")
 
 
 def test_hash_token_uses_secret() -> None:
