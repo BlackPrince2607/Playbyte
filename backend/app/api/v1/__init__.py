@@ -1,6 +1,18 @@
 from fastapi import APIRouter
 
-from app.api.v1 import admin, catalog, content, events, feed, friends, games, guest, me, moments, reports
+from app.api.v1 import (
+    admin,
+    catalog,
+    content,
+    events,
+    feed,
+    friends,
+    games,
+    guest,
+    me,
+    moments,
+    reports,
+)
 
 api_router = APIRouter(prefix="/v1")
 api_router.include_router(guest.router)
