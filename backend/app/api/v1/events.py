@@ -22,6 +22,8 @@ _NAME_RE = re.compile(r"^[a-z][a-z0-9_]{0,59}$")
 
 
 class EventIn(BaseModel):
+    # Assigned by the client when the event is queued; the same id on a retry is stored once.
+    eventId: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_.:-]{8,64}$")
     type: str = Field(max_length=40)
     name: str | None = Field(default=None, max_length=60)
     sessionId: str = Field(min_length=1, max_length=80)

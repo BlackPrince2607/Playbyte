@@ -86,7 +86,13 @@ async def upsert_items(session: AsyncSession, items: list[dict]) -> int:
     choice_ids = [it["id"] for it in items if it["type"] == "choice_pair"]
     existing: dict[str, dict] = {}
     if choice_ids:
-        rows = await session.execute(select(ContentItem.id, ContentItem.attributes).where(ContentItem.id.in_(choice_ids)))
+        # Same lock order as analytics vote ingestion, so a live tally is never overwritten by a stale read.
+        rows = await session.execute(
+            select(ContentItem.id, ContentItem.attributes)
+            .where(ContentItem.id.in_(choice_ids))
+            .order_by(ContentItem.id)
+            .with_for_update()
+        )
         existing = {row[0]: row[1] or {} for row in rows}
     for it in items:
         attributes = merge_crowd(it["attributes"], existing.get(it["id"]))

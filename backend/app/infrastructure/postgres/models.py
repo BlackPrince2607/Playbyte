@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     Text,
     UniqueConstraint,
@@ -308,6 +309,15 @@ class ContentPack(Base):
 
 class GameEvent(Base):
     __tablename__ = "game_events"
+    __table_args__ = (
+        Index(
+            "game_events_session_client_event_uidx",
+            "session_id",
+            "client_event_id",
+            unique=True,
+            postgresql_where=text("client_event_id IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     type: Mapped[str] = mapped_column(Text)
@@ -325,7 +335,24 @@ class GameEvent(Base):
     app_version: Mapped[str | None] = mapped_column(Text)
     user_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
     guest_session_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("guest_sessions.id"))
+    client_event_id: Mapped[str | None] = mapped_column(Text)
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ChoiceVote(Base):
+    """One preference vote per game session and Choice pair; the source of truth for crowd tallies."""
+
+    __tablename__ = "choice_votes"
+    __table_args__ = (CheckConstraint("vote IN ('a', 'b')", name="choice_votes_vote_check"),)
+
+    item_id: Mapped[str] = mapped_column(Text, ForeignKey("content_items.id", ondelete="CASCADE"), primary_key=True)
+    session_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    vote: Mapped[str] = mapped_column(Text)
+    user_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    guest_session_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("guest_sessions.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class ShareCard(Base):
