@@ -1,9 +1,28 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { nextGame } from "./discovery";
+import { isPlayable, nextGame } from "./discovery";
 
 const g = (key: string) => ({ key });
+
+describe("isPlayable", () => {
+  const card = (key: string, extra: object = {}) => ({ key, title: key, blurb: "", ...extra });
+
+  it("keeps cards this build can play and hides the rest before next-game selection", () => {
+    const feed = [
+      card("guess_flag", { engine: "guess", variation: "flag" }),
+      card("lane_dash"),
+      card("future_game", { engine: "rhythm", variation: "beats" }),
+      card("flag_rush"),
+      card("broken", { engine: "guess" }),
+      card("maze_exit", { engine: "maze", variation: "exit" }),
+    ];
+    const playable = feed.filter(isPlayable);
+    assert.deepEqual(playable.map((c) => c.key), ["guess_flag", "flag_rush", "maze_exit"]);
+    assert.equal(nextGame(playable, "guess_flag")?.key, "flag_rush");
+    assert.equal(nextGame(playable, "maze_exit")?.key, "guess_flag");
+  });
+});
 
 describe("nextGame", () => {
   it("returns the following game in feed order", () => {

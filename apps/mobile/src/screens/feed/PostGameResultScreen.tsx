@@ -3,12 +3,10 @@ import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, View } from "re
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { ResultBar } from "../../components/StitchPrimitives";
 import { scoreRows, statRows } from "../../game/ui/resultSummary";
+import type { SaveState } from "../../game/session/submitQueue";
 import type { RoundRecord } from "../../game/session/types";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
-
-/** "queued": the play is stored on the phone and syncs later; "rejected": the server refused it. */
-export type SaveState = "saved" | "queued" | "rejected";
 
 type Props = {
   score: number;

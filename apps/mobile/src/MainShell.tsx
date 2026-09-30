@@ -16,11 +16,11 @@ import { useApp } from "./context/AppContext";
 import { nextGame } from "./game/discovery";
 import { startGameAnalytics } from "./game/platform/analytics";
 import { sessionStore, submitQueue } from "./game/platform/services";
-import type { SubmitError } from "./game/session/submitQueue";
+import { savePlay as submitAndDescribe, type SaveOutcome } from "./game/session/submitQueue";
 import type { CompletedPlay, GameSession } from "./game/session/types";
 import { GameHost } from "./game/ui/GameHost";
 import { FeedScreen } from "./screens/feed/FeedScreen";
-import { PostGameResultScreen, type SaveState } from "./screens/feed/PostGameResultScreen";
+import { PostGameResultScreen } from "./screens/feed/PostGameResultScreen";
 import { FriendsScreen } from "./screens/friends/FriendsScreen";
 import { LeaderboardScreen } from "./screens/friends/LeaderboardScreen";
 import { LiveNowScreen } from "./screens/live/LiveNowScreen";
@@ -37,7 +37,6 @@ import { clearLocalSupabaseSession, isSupabaseConfigured } from "./lib/supabase"
 import { colors, spacing } from "./theme/colors";
 import { type } from "./theme/typography";
 
-type SaveOutcome = { score: number; percentile: number | null; saveState: SaveState; saveMessage?: string };
 type GameResult = SaveOutcome & { game: FeedGame; play: CompletedPlay };
 
 function BootLoading({ onRetry }: { onRetry: () => void }) {
@@ -197,22 +196,11 @@ export function MainShell() {
   // A failed save never hides the result: the play stays in the persisted queue unless the server rejected it.
   const savePlay = useCallback(
     async (play: CompletedPlay): Promise<SaveOutcome> => {
-      try {
-        const res = await submitQueue.submit(play);
-        if (res.promptAccountCreation) setPromptSave(true);
-        void submitQueue.flush().catch(() => {});
-        return { score: res.score, percentile: res.percentile, saveState: "saved" };
-      } catch (e) {
-        if ((e as SubmitError)?.permanent) {
-          return {
-            score: play.score,
-            percentile: null,
-            saveState: "rejected",
-            saveMessage: isApiError(e) ? e.userMessage : undefined,
-          };
-        }
-        return { score: play.score, percentile: null, saveState: "queued" };
-      }
+      const { promptAccountCreation, ...outcome } = await submitAndDescribe(submitQueue, play, (e) =>
+        isApiError(e) ? e.userMessage : undefined,
+      );
+      if (promptAccountCreation) setPromptSave(true);
+      return outcome;
     },
     [setPromptSave],
   );

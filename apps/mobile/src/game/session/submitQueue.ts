@@ -17,6 +17,37 @@ export type SubmitQueue<R> = {
   pending(): Promise<PendingPlay[]>;
 };
 
+/** "queued": the play is stored on the phone and syncs later; "rejected": the server refused it. */
+export type SaveState = "saved" | "queued" | "rejected";
+export type SaveOutcome = {
+  score: number;
+  percentile: number | null;
+  saveState: SaveState;
+  saveMessage?: string;
+  promptAccountCreation?: boolean;
+};
+
+/**
+ * Submits a finished play and describes it for the result screen; never throws. A failed save keeps
+ * the play queued for later unless the server rejected it, and a successful one retries older queued plays.
+ */
+export async function savePlay(
+  queue: SubmitQueue<{ score: number; percentile: number; promptAccountCreation?: boolean }>,
+  play: CompletedPlay,
+  messageOf: (e: unknown) => string | undefined = () => undefined,
+): Promise<SaveOutcome> {
+  try {
+    const res = await queue.submit(play);
+    void queue.flush().catch(() => {});
+    return { score: res.score, percentile: res.percentile, saveState: "saved", promptAccountCreation: res.promptAccountCreation };
+  } catch (e) {
+    if ((e as SubmitError)?.permanent === true) {
+      return { score: play.score, percentile: null, saveState: "rejected", saveMessage: messageOf(e) };
+    }
+    return { score: play.score, percentile: null, saveState: "queued" };
+  }
+}
+
 export function idempotencyKeyFor(play: Pick<CompletedPlay, "gameKey" | "sessionId">) {
   return `${play.gameKey}-${play.sessionId}`.slice(0, 128);
 }

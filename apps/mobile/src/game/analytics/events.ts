@@ -38,6 +38,8 @@ export type GameEvent = {
   /** Wall-clock epoch ms. */
   ts: number;
   props?: Record<string, Json>;
+  /** Assigned when queued for upload and kept across retries, so the server can drop replays. */
+  eventId?: string;
 };
 
 /** The streak length at which a run counts as a streak (STREAK_STARTED / STREAK_BROKEN). */

@@ -1,3 +1,4 @@
+import { randomSeed } from "../core/rng";
 import type { KeyValueStore } from "../session/types";
 import type { EventSink } from "./bus";
 import type { GameEvent } from "./events";
@@ -39,6 +40,12 @@ export function createBatchSink(opts: BatchSinkOptions): BatchSink {
   const persistDelayMs = opts.persistDelayMs ?? 1500;
   const now = opts.now ?? (() => Date.now());
 
+  // Unique per sink instance; with the sequence number every queued event gets an id matching the server's
+  // ^[A-Za-z0-9_.:-]{8,64}$ that stays the same however often its batch is retried.
+  const runId = randomSeed();
+  let seq = 0;
+  const stamp = (ev: GameEvent): GameEvent => (ev.eventId ? ev : { ...ev, eventId: `${runId}.${seq++}` });
+
   let queue: GameEvent[] = [];
   let failures = 0;
   let retryAt = 0;
@@ -49,7 +56,7 @@ export function createBatchSink(opts: BatchSinkOptions): BatchSink {
     try {
       const raw = await opts.storage.getItem(QUEUE_KEY);
       const saved = raw ? (JSON.parse(raw) as unknown) : [];
-      if (Array.isArray(saved)) queue = [...(saved as GameEvent[]), ...queue].slice(-maxQueue);
+      if (Array.isArray(saved)) queue = [...(saved as GameEvent[]).map(stamp), ...queue].slice(-maxQueue);
     } catch {
       // A corrupt queue is not worth crashing for; start empty.
     }
@@ -108,7 +115,7 @@ export function createBatchSink(opts: BatchSinkOptions): BatchSink {
 
   const sink: EventSink = (event) => {
     if (DROPPED.has(event.type)) return;
-    queue.push(event);
+    queue.push(stamp(event));
     if (queue.length > maxQueue) queue = queue.slice(-maxQueue);
     if (queue.length >= batchSize || FLUSH_ON.has(event.type)) void flush();
     else persistSoon();

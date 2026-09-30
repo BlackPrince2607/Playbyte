@@ -95,6 +95,102 @@ describe("batch analytics sink", () => {
     assert.equal(await storage.getItem("playbyte.game.events"), null);
   });
 
+  it("gives every queued event a unique id the server accepts", async () => {
+    const sent: GameEvent[] = [];
+    const s = createBatchSink({ storage: memoryStore(), send: async (b) => void sent.push(...b) });
+    for (let i = 0; i < 5; i++) s.sink(ev("ROUND_STARTED", i));
+    await s.flush();
+    const ids = sent.map((e) => e.eventId);
+    assert.equal(new Set(ids).size, 5);
+    for (const id of ids) assert.match(id ?? "", /^[A-Za-z0-9_.:-]{8,64}$/);
+  });
+
+  it("resends a failed batch with the same event ids", async () => {
+    let t = 0;
+    const attempts: (string | undefined)[][] = [];
+    const s = createBatchSink({
+      storage: memoryStore(),
+      now: () => t,
+      send: async (b) => {
+        attempts.push(b.map((e) => e.eventId));
+        if (attempts.length === 1) throw new Error("timeout after the server stored it");
+      },
+    });
+    s.sink(ev("GAME_STARTED"));
+    s.sink(ev("ROUND_STARTED"));
+    await s.flush();
+    t = 2_000;
+    await s.flush();
+    assert.equal(attempts.length, 2);
+    assert.deepEqual(attempts[1], attempts[0]);
+  });
+
+  it("keeps event ids across a restart and assigns ids to events saved without one", async () => {
+    const storage = memoryStore();
+    await storage.setItem("playbyte.game.events", JSON.stringify([ev("GAME_STARTED")]));
+    const first = createBatchSink({ storage, send: async () => Promise.reject(new Error("offline")) });
+    first.sink(ev("ROUND_STARTED"));
+    await first.persist();
+    const saved = (JSON.parse((await storage.getItem("playbyte.game.events")) ?? "[]") as GameEvent[]).map((e) => e.eventId);
+    assert.equal(saved.length, 2);
+    assert.ok(saved.every(Boolean));
+
+    const sent: GameEvent[] = [];
+    const second = createBatchSink({ storage, send: async (b) => void sent.push(...b) });
+    second.sink(ev("GAME_COMPLETED"));
+    await second.flush();
+    assert.deepEqual(sent.slice(0, 2).map((e) => e.eventId), saved);
+    assert.equal(new Set(sent.map((e) => e.eventId)).size, 3);
+  });
+
+  it("gives every queued event a unique id the server accepts", async () => {
+    const sent: GameEvent[] = [];
+    const s = createBatchSink({ storage: memoryStore(), send: async (b) => void sent.push(...b) });
+    for (let i = 0; i < 5; i++) s.sink(ev("ROUND_STARTED", i));
+    await s.flush();
+    const ids = sent.map((e) => e.eventId);
+    assert.equal(new Set(ids).size, 5);
+    for (const id of ids) assert.match(id ?? "", /^[A-Za-z0-9_.:-]{8,64}$/);
+  });
+
+  it("resends a failed batch with the same event ids", async () => {
+    let t = 0;
+    const attempts: (string | undefined)[][] = [];
+    const s = createBatchSink({
+      storage: memoryStore(),
+      now: () => t,
+      send: async (b) => {
+        attempts.push(b.map((e) => e.eventId));
+        if (attempts.length === 1) throw new Error("timeout after the server stored it");
+      },
+    });
+    s.sink(ev("GAME_STARTED"));
+    s.sink(ev("ROUND_STARTED"));
+    await s.flush();
+    t = 2_000;
+    await s.flush();
+    assert.equal(attempts.length, 2);
+    assert.deepEqual(attempts[1], attempts[0]);
+  });
+
+  it("keeps event ids across a restart and assigns ids to events saved without one", async () => {
+    const storage = memoryStore();
+    await storage.setItem("playbyte.game.events", JSON.stringify([ev("GAME_STARTED")]));
+    const first = createBatchSink({ storage, send: async () => Promise.reject(new Error("offline")) });
+    first.sink(ev("ROUND_STARTED"));
+    await first.persist();
+    const saved = (JSON.parse((await storage.getItem("playbyte.game.events")) ?? "[]") as GameEvent[]).map((e) => e.eventId);
+    assert.equal(saved.length, 2);
+    assert.ok(saved.every(Boolean));
+
+    const sent: GameEvent[] = [];
+    const second = createBatchSink({ storage, send: async (b) => void sent.push(...b) });
+    second.sink(ev("GAME_COMPLETED"));
+    await second.flush();
+    assert.deepEqual(sent.slice(0, 2).map((e) => e.eventId), saved);
+    assert.equal(new Set(sent.map((e) => e.eventId)).size, 3);
+  });
+
   it("caps the queue, dropping the oldest events", async () => {
     const s = createBatchSink({ storage: memoryStore(), send: async () => Promise.reject(new Error("x")), maxQueue: 5, batchSize: 100 });
     await tick();
