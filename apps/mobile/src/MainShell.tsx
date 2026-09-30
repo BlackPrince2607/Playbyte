@@ -13,7 +13,10 @@ import { BottomNav, TabKey } from "./components/BottomNav";
 import { ErrorState } from "./components/ErrorState";
 import { PrimaryButton } from "./components/PrimaryButton";
 import { useApp } from "./context/AppContext";
-import { GameEngine, submitPlay } from "./games";
+import { startGameAnalytics } from "./game/platform/analytics";
+import { sessionStore, submitQueue } from "./game/platform/services";
+import type { CompletedPlay, GameSession } from "./game/session/types";
+import { GameHost } from "./game/ui/GameHost";
 import { FeedScreen } from "./screens/feed/FeedScreen";
 import { PostGameResultScreen } from "./screens/feed/PostGameResultScreen";
 import { FriendsScreen } from "./screens/friends/FriendsScreen";
@@ -31,10 +34,6 @@ import { useAuth } from "./context/AuthContext";
 import { clearLocalSupabaseSession, isSupabaseConfigured } from "./lib/supabase";
 import { colors, spacing } from "./theme/colors";
 import { type } from "./theme/typography";
-
-function newIdempotencyKey(gameKey: string) {
-  return `${gameKey}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
 
 function BootLoading({ onRetry }: { onRetry: () => void }) {
   const [showRetry, setShowRetry] = useState(false);
@@ -77,7 +76,7 @@ export function MainShell() {
   } = useApp();
   const { googleAvailable, signInWithGoogle, isSignedIn } = useAuth();
   const [playing, setPlaying] = useState<FeedGame | null>(null);
-  const [gameResult, setGameResult] = useState<{ title: string; score: number; percentile: number } | null>(
+  const [gameResult, setGameResult] = useState<{ title: string; score: number; percentile: number; play: CompletedPlay } | null>(
     null,
   );
   const [showNotif, setShowNotif] = useState(false);
@@ -86,11 +85,23 @@ export function MainShell() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [gameSubmitting, setGameSubmitting] = useState(false);
   const [gameSubmitError, setGameSubmitError] = useState("");
-  const [lastPlay, setLastPlay] = useState<{ score: number; durationMs: number } | null>(null);
+  const [lastPlay, setLastPlay] = useState<CompletedPlay | null>(null);
+  const [resumable, setResumable] = useState<GameSession | null>(null);
+  const [restoring, setRestoring] = useState<GameSession | undefined>(undefined);
   const [welcomeAuthBusy, setWelcomeAuthBusy] = useState(false);
   const [signInError, setSignInError] = useState("");
-  const playIdempotencyKey = useRef("");
   const wasSignedIn = useRef<boolean | null>(null);
+
+  // Once the app is up: start analytics, retry plays that failed to submit and offer to resume an interrupted game.
+  useEffect(() => {
+    if (!ready || !onboardingDone) return;
+    startGameAnalytics();
+    void submitQueue.flush().catch(() => {});
+    void sessionStore
+      .load()
+      .then(setResumable)
+      .catch(() => {});
+  }, [ready, onboardingDone]);
 
   const dismissOverlays = useCallback(() => {
     setShowSignIn(false);
@@ -99,6 +110,7 @@ export function MainShell() {
     setShowNotif(false);
     setShowRecap(false);
     setPlaying(null);
+    setRestoring(undefined);
     setGameResult(null);
     setGameSubmitError("");
     setLastPlay(null);
@@ -141,14 +153,39 @@ export function MainShell() {
   }, [signInWithGoogle, welcomeAuthBusy, setOnboardingStep]);
 
   const startGame = useCallback((game: FeedGame) => {
-    playIdempotencyKey.current = newIdempotencyKey(game.key);
     setGameSubmitError("");
     setLastPlay(null);
+    setRestoring(undefined);
+    setResumable(null);
+    void sessionStore.clear().catch(() => {});
     setPlaying(game);
+  }, []);
+
+  const resumeGame = useCallback((session: GameSession) => {
+    const def = session.definition;
+    setGameSubmitError("");
+    setLastPlay(null);
+    setResumable(null);
+    setRestoring(session);
+    setPlaying({
+      type: "mini_game",
+      key: session.gameKey,
+      title: session.title ?? session.gameKey,
+      blurb: "",
+      engine: def.engine,
+      variation: def.variation,
+      config: { ...def },
+    });
+  }, []);
+
+  const dismissResume = useCallback(() => {
+    setResumable(null);
+    void sessionStore.clear().catch(() => {});
   }, []);
 
   const cancelGame = useCallback(() => {
     setPlaying(null);
+    setRestoring(undefined);
     setGameSubmitError("");
     setLastPlay(null);
     setGameSubmitting(false);
@@ -163,17 +200,18 @@ export function MainShell() {
   }, [items, startGame, completeOnboarding]);
 
   const submitGamePlay = useCallback(
-    async (score: number, durationMs: number) => {
+    async (play: CompletedPlay) => {
       if (!playing) return;
-      setLastPlay({ score, durationMs });
+      setLastPlay(play);
       setGameSubmitting(true);
       setGameSubmitError("");
       try {
-        const res = await submitPlay(playing.key, score, durationMs, playIdempotencyKey.current);
+        const res = await submitQueue.submit(play);
         const title = playing.title;
         setPlaying(null);
+        setRestoring(undefined);
         setLastPlay(null);
-        setGameResult({ title, score: res.score, percentile: res.percentile });
+        setGameResult({ title, score: res.score, percentile: res.percentile, play });
         if (res.promptAccountCreation) setPromptSave(true);
       } catch (e) {
         const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "Could not save score";
@@ -206,8 +244,12 @@ export function MainShell() {
       }
       if (playing) {
         if (gameSubmitting) return true;
-        cancelGame();
-        return true;
+        if (gameSubmitError) {
+          cancelGame();
+          return true;
+        }
+        // GameHost owns back while a game is on screen (pause menu / exit).
+        return false;
       }
       if (gameResult) {
         setGameResult(null);
@@ -236,6 +278,7 @@ export function MainShell() {
     goBackOnboarding,
     playing,
     gameSubmitting,
+    gameSubmitError,
     cancelGame,
     gameResult,
     showLeaderboard,
@@ -335,7 +378,7 @@ export function MainShell() {
           <ErrorState
             title="Score not saved"
             message={gameSubmitError}
-            onRetry={() => void submitGamePlay(lastPlay.score, lastPlay.durationMs)}
+            onRetry={() => void submitGamePlay(lastPlay)}
             retryLabel="Retry"
           />
           <PrimaryButton
@@ -350,12 +393,11 @@ export function MainShell() {
 
     return (
       <View style={{ flex: 1 }}>
-        <GameEngine
-          gameKey={playing.key}
-          title={playing.title}
-          blurb={playing.blurb}
-          config={playing.config}
-          onDone={(score, durationMs) => void submitGamePlay(score, durationMs)}
+        <GameHost
+          card={playing}
+          restore={restoring}
+          onComplete={(play) => void submitGamePlay(play)}
+          onExit={cancelGame}
         />
         {gameSubmitting ? (
           <View style={styles.submitOverlay} accessibilityLabel="Saving score">
@@ -373,6 +415,10 @@ export function MainShell() {
         gameTitle={gameResult.title}
         score={gameResult.score}
         percentile={gameResult.percentile}
+        correct={gameResult.play.correct}
+        attempts={gameResult.play.attempts}
+        rounds={gameResult.play.rounds}
+        scoreBreakdown={gameResult.play.breakdown}
         onContinue={() => setGameResult(null)}
         enableShare
       />
@@ -417,6 +463,18 @@ export function MainShell() {
 
   return (
     <View style={styles.root}>
+      {resumable ? (
+        <View style={[styles.banner, styles.resumeBanner]}>
+          <Pressable style={{ flex: 1 }} onPress={() => resumeGame(resumable)} accessibilityRole="button">
+            <Text style={[type.bodySm, { color: colors.paper }]}>
+              Resume {resumable.title ?? "your game"}? Score {resumable.score}
+            </Text>
+          </Pressable>
+          <Pressable onPress={dismissResume} accessibilityRole="button" accessibilityLabel="Dismiss" hitSlop={10}>
+            <Text style={[type.bodySm, { color: colors.lilac }]}>✕</Text>
+          </Pressable>
+        </View>
+      ) : null}
       {promptSave ? (
         <Pressable style={styles.banner} onPress={() => setShowSignIn(true)}>
           <Text style={[type.bodySm, { color: colors.paper }]}>
@@ -475,6 +533,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     zIndex: 100,
   },
+  resumeBanner: { flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1, borderColor: colors.lime },
   submitOverlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(21,14,43,0.85)",

@@ -49,6 +49,15 @@
           "resizeMode": "contain",
           "imageWidth": 200
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
       ]
     ]
   }

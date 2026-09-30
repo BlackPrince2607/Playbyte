@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.112.4",
     "babel-preset-expo": "~57.0.0",
     "expo": "~57.0.20",
+    "expo-build-properties": "~57.0.22",
     "expo-file-system": "~57.0.7",
     "expo-font": "~57.0.3",
     "expo-haptics": "~57.0.2",
@@ -45,7 +46,9 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"expo lint skipped\"",
-    "test": "tsx --test src/games/logic.test.ts",
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "size": "node scripts/size-report.mjs",
+    "size:check": "node scripts/size-report.mjs --check",
     "postinstall": "node ./scripts/ensure-skia-libs.js",
     "eas-build-post-install": "node ./scripts/ensure-skia-libs.js"
   },

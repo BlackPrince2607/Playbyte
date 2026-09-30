@@ -188,6 +188,8 @@ export type FeedGame = {
   title: string;
   blurb: string;
   config?: Record<string, unknown>;
+  engine?: string;
+  variation?: string;
 };
 
 export type FeedItem = FeedMoment | FeedGame;

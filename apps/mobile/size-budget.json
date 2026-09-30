@@ -1,0 +1,9 @@
+{
+  "$comment": "Limits in bytes for `node scripts/size-report.mjs --check`. Baseline and rationale: docs/game-sdk/size-baseline.md",
+  "limits": {
+    "jsBundleBytes": 4718592,
+    "assetBytes": 1887436,
+    "fontCount": 6,
+    "imageBytes": 307200
+  }
+}

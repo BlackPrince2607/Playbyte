@@ -2,10 +2,13 @@ from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import (
+    ARRAY,
+    BigInteger,
     Boolean,
     CheckConstraint,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     Text,
@@ -240,6 +243,10 @@ class MiniGame(Base):
     status: Mapped[str] = mapped_column(game_status, default="enabled")
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     config: Mapped[dict] = mapped_column(JSONB, default=dict)
+    engine: Mapped[str | None] = mapped_column(Text)
+    variation: Mapped[str | None] = mapped_column(Text)
+    config_version: Mapped[int] = mapped_column(Integer, default=1)
+    score_direction: Mapped[str] = mapped_column(Text, default="higher_is_better")
 
 
 class GamePlay(Base):
@@ -252,7 +259,73 @@ class GamePlay(Base):
     score: Mapped[int] = mapped_column(Integer)
     duration_ms: Mapped[int] = mapped_column(Integer)
     idempotency_key: Mapped[str | None] = mapped_column(Text)
+    engine: Mapped[str | None] = mapped_column(Text)
+    variation: Mapped[str | None] = mapped_column(Text)
+    seed: Mapped[str | None] = mapped_column(Text)
+    engine_version: Mapped[int | None] = mapped_column(Integer)
+    config_version: Mapped[int | None] = mapped_column(Integer)
+    summary: Mapped[dict | None] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ContentItem(Base):
+    __tablename__ = "content_items"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    type: Mapped[str] = mapped_column(Text)
+    schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    locale: Mapped[str] = mapped_column(Text, default="en-IN")
+    categories: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    tags: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    difficulty: Mapped[float] = mapped_column(Float, default=0.5)
+    popularity: Mapped[float] = mapped_column(Float, default=0.5)
+    answer: Mapped[str | None] = mapped_column(Text)
+    aliases: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    attributes: Mapped[dict] = mapped_column(JSONB, default=dict)
+    media: Mapped[list] = mapped_column(JSONB, default=list)
+    facts: Mapped[list] = mapped_column(JSONB, default=list)
+    hints: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    distractor_group: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[dict | None] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(Text, default="draft")
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ContentPack(Base):
+    __tablename__ = "content_packs"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    title: Mapped[str] = mapped_column(Text)
+    types: Mapped[list[str]] = mapped_column(ARRAY(Text))
+    categories: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    locale: Mapped[str | None] = mapped_column(Text)
+    max_items: Mapped[int] = mapped_column(Integer, default=500)
+    status: Mapped[str] = mapped_column(Text, default="enabled")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class GameEvent(Base):
+    __tablename__ = "game_events"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    type: Mapped[str] = mapped_column(Text)
+    name: Mapped[str | None] = mapped_column(Text)
+    session_id: Mapped[str] = mapped_column(Text)
+    game_key: Mapped[str] = mapped_column(Text)
+    engine: Mapped[str | None] = mapped_column(Text)
+    engine_version: Mapped[int | None] = mapped_column(Integer)
+    variation: Mapped[str | None] = mapped_column(Text)
+    round: Mapped[int | None] = mapped_column(Integer)
+    seed: Mapped[str | None] = mapped_column(Text)
+    clock_ms: Mapped[int | None] = mapped_column(Integer)
+    props: Mapped[dict | None] = mapped_column(JSONB)
+    client_ts: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    app_version: Mapped[str | None] = mapped_column(Text)
+    user_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
+    guest_session_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("guest_sessions.id"))
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class ShareCard(Base):

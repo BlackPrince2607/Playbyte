@@ -121,7 +121,8 @@ async def test_submit_play_integrity_error_replays_existing() -> None:
     existing = SimpleNamespace(id=uuid4(), score=17)
     session = _session_for_game(game)
     session.flush = AsyncMock(side_effect=IntegrityError("dup", {}, None))
-    session.scalar = AsyncMock(side_effect=[None, existing])
+    # existing-play lookup, recent-play count (rate limit), lookup after the conflict
+    session.scalar = AsyncMock(side_effect=[None, 0, existing])
 
     with (
         patch("app.modules.games.service.game_stats", AsyncMock(return_value={"playsToday": 1, "averageScore": 17.0, "percentile": 50.0})),

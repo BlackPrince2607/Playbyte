@@ -19,6 +19,7 @@ import {
   loadToken,
   RespondResult,
 } from "../api";
+import { isPlayable } from "../game/discovery";
 import { useAuth } from "./AuthContext";
 import {
   bumpStreak,
@@ -214,7 +215,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const feed = await api<{ items: FeedItem[] }>("/v1/feed?limit=20");
-        setItems(feed.items);
+        setItems(feed.items.filter((i) => i.type !== "mini_game" || isPlayable(i)));
         hasLoadedFeed.current = true;
       } catch (e) {
         const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "Could not load feed";

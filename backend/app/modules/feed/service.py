@@ -144,13 +144,17 @@ async def build_feed(
 
 
 def serialize_game(g: MiniGame) -> dict:
-    return {
+    out = {
         "type": "mini_game",
         "key": g.key,
         "title": g.title,
         "blurb": g.blurb,
         "config": g.config or {},
     }
+    if getattr(g, "engine", None):
+        out["engine"] = g.engine
+        out["variation"] = g.variation
+    return out
 
 
 def serialize_moment(

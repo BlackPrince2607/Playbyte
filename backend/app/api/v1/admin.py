@@ -15,6 +15,7 @@ from app.common.auth import Actor
 from app.common.errors import AppError
 from app.infrastructure.postgres.db import get_session
 from app.infrastructure.postgres.models import (
+    AuditLog,
     ContentTag,
     ContentWindow,
     MiniGame,
@@ -24,6 +25,8 @@ from app.infrastructure.postgres.models import (
 from app.infrastructure.storage.objects import get_object_storage
 from app.infrastructure.storage.validation import StorageValidationError
 from app.modules.cms.service import approve_moment, create_moment, transition_moment
+from app.modules.content.service import upsert_items, upsert_pack
+from app.modules.content.validation import validate_items
 from app.modules.feed.service import media_url, tags_for_moments
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -286,6 +289,50 @@ async def list_tags(
 ) -> dict:
     rows = await session.scalars(select(ContentTag).order_by(ContentTag.sort_order))
     return {"tags": [{"id": str(t.id), "slug": t.slug, "name": t.name} for t in rows]}
+
+
+class ContentItemsIn(BaseModel):
+    items: list[Any] = Field(min_length=1, max_length=1000)
+    # Reject the whole batch on any invalid item (default) or skip bad items.
+    partial: bool = False
+
+
+class ContentPackIn(BaseModel):
+    title: str = Field(min_length=1, max_length=120)
+    types: list[str] = Field(min_length=1, max_length=10)
+    categories: list[str] = Field(default_factory=list, max_length=50)
+    locale: str | None = None
+    maxItems: int = Field(default=500, ge=1, le=5000)
+    status: str = Field(default="enabled", pattern="^(enabled|disabled)$")
+
+
+@router.post("/content/items")
+async def upsert_content_items(
+    body: ContentItemsIn,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(require_admin),
+) -> dict:
+    """Validated upsert (same pipeline for editorial, imported and generated content)."""
+    items, errors = validate_items(body.items)
+    if errors and not body.partial:
+        raise AppError("invalid_content", f"{len(errors)} invalid item(s): " + "; ".join(errors[:5]), 422)
+    count = await upsert_items(session, items)
+    session.add(AuditLog(actor_id=actor.user_id, action="content.upsert", resource="content_items", resource_id=str(count)))
+    return {"upserted": count, "rejected": errors}
+
+
+@router.put("/content/packs/{pack_id}")
+async def put_content_pack(
+    pack_id: str,
+    body: ContentPackIn,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(require_admin),
+) -> dict:
+    if not re.match(r"^[a-z0-9][a-z0-9_.-]{0,79}$", pack_id):
+        raise AppError("invalid_pack", "Invalid pack id.", 422)
+    await upsert_pack(session, pack_id, body.title, body.types, body.categories, body.locale, body.maxItems, body.status)
+    session.add(AuditLog(actor_id=actor.user_id, action="content.pack", resource="content_packs", resource_id=pack_id))
+    return {"ok": True}
 
 
 @router.patch("/games/{game_key}")

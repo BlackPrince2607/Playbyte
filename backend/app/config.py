@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     sentry_dsn: str = ""
     rate_limit_response_per_minute: int = 60
     rate_limit_guest_create_per_hour: int = 30
+    rate_limit_event_batches_per_minute: int = 30
 
     @property
     def cors_origin_list(self) -> list[str]:
