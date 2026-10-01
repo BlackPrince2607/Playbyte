@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -33,18 +33,24 @@ function StatementCard({ q, answered, disabled, onAnswer }: CardProps) {
     tx.value = withSequence(withTiming(dir * 36, { duration: 110 }), withSpring(0, { damping: 14 }));
   }, [answered, tx]);
 
-  const pan = Gesture.Pan()
-    .enabled(!disabled)
-    .runOnJS(true)
-    .activeOffsetX([-12, 12])
-    .onUpdate((e) => {
-      tx.value = e.translationX;
-    })
-    .onEnd((e) => {
-      const commit = Math.abs(e.translationX) > threshold || Math.abs(e.velocityX) > 900;
-      if (commit) onAnswer(e.translationX > 0 ? FACT_ID : FAKE_ID);
-      tx.value = withSpring(0, { damping: 16 });
-    });
+  const answerRef = useRef(onAnswer);
+  answerRef.current = onAnswer;
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .enabled(!disabled)
+        .runOnJS(true)
+        .activeOffsetX([-12, 12])
+        .onUpdate((e) => {
+          tx.value = e.translationX;
+        })
+        .onEnd((e) => {
+          const commit = Math.abs(e.translationX) > threshold || Math.abs(e.velocityX) > 900;
+          if (commit) answerRef.current(e.translationX > 0 ? FACT_ID : FAKE_ID);
+          tx.value = withSpring(0, { damping: 16 });
+        }),
+    [disabled, threshold, tx],
+  );
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: tx.value }, { rotate: `${tx.value / 22}deg` }],

@@ -61,15 +61,46 @@ export function GameHost({ card, onComplete, onExit, restore }: Props) {
   }
 
   return (
-    <SdkSession
-      key={`${card.key}:${restore?.sessionId ?? "new"}`}
-      gameKey={card.key}
-      title={card.title}
-      definition={resolved.definition}
-      restore={restore}
-      onComplete={onComplete}
-      onExit={onExit}
-    />
+    <GameErrorBoundary key={`${card.key}:${restore?.sessionId ?? "new"}`} gameKey={card.key} onExit={onExit}>
+      <SdkSession
+        gameKey={card.key}
+        title={card.title}
+        definition={resolved.definition}
+        restore={restore}
+        onComplete={onComplete}
+        onExit={onExit}
+      />
+    </GameErrorBoundary>
+  );
+}
+
+/** A render error inside a game shows a recoverable screen instead of closing the whole app. */
+class GameErrorBoundary extends React.Component<{ gameKey: string; onExit: () => void; children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    if (__DEV__) console.warn(`[game] ${this.props.gameKey} crashed`, error);
+    // The saved session may be what crashed; never offer to resume it.
+    void sessionStore.clear().catch(() => {});
+  }
+
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return <Crashed onExit={this.props.onExit} />;
+  }
+}
+
+function Crashed({ onExit }: { onExit: () => void }) {
+  useBackToExit(onExit);
+  return (
+    <View style={styles.center}>
+      <ErrorState title="Something went wrong" message="This game hit a problem and had to stop." />
+      <PrimaryButton label="Back to feed" onPress={onExit} />
+    </View>
   );
 }
 

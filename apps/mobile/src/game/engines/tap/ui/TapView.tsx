@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
-  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -38,6 +37,14 @@ function TargetField({ state, dispatch, snapshot, now }: EngineViewProps<TapStat
   const short = Math.min(size.w, size.h);
 
   const onLayout = (e: LayoutChangeEvent) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
+  const onHit = useCallback(
+    (tg: TapTarget) => {
+      if (!playing) return;
+      feedback(tg.kind === "decoy" ? "error" : "tap");
+      dispatch({ type: "tap", id: tg.id });
+    },
+    [playing, dispatch],
+  );
 
   return (
     <View style={styles.fieldWrap}>
@@ -66,19 +73,7 @@ function TargetField({ state, dispatch, snapshot, now }: EngineViewProps<TapStat
             })
           : null}
         {visible.map((tg) => (
-          <Target
-            key={tg.id}
-            target={tg}
-            size={size}
-            now={t}
-            grid={state.grid}
-            rule={state.rule ?? null}
-            onHit={() => {
-              if (!playing) return;
-              feedback(tg.kind === "decoy" ? "error" : "tap");
-              dispatch({ type: "tap", id: tg.id });
-            }}
-          />
+          <Target key={tg.id} target={tg} size={size} now={t} grid={state.grid} rule={state.rule ?? null} onHit={onHit} />
         ))}
         {state.lastHit && size.w ? <FloatingPoints key={state.lastHit.id} hit={state.lastHit} size={size} /> : null}
       </Pressable>
@@ -111,7 +106,15 @@ function targetLabel(kind: TapTarget["kind"], rule: TapRule | null) {
   return rule ? `${rule.tapLabel}, tap` : "Target";
 }
 
-function Target({ target, size, now, grid, rule, onHit }: { target: TapTarget; size: Size; now: number; grid: number; rule: TapRule | null; onHit: () => void }) {
+type TargetProps = { target: TapTarget; size: Size; now: number; grid: number; rule: TapRule | null; onHit: (t: TapTarget) => void };
+
+/** `now` is only read on mount to start the animations, so clock ticks alone never re-render a target. */
+const Target = memo(
+  TargetImpl,
+  (a, b) => a.target === b.target && a.size === b.size && a.grid === b.grid && a.rule === b.rule && a.onHit === b.onHit,
+);
+
+function TargetImpl({ target, size, now, grid, rule, onHit }: TargetProps) {
   const short = Math.min(size.w, size.h);
   const rp = Math.max(22, grid > 0 ? (short / grid) * 0.34 : target.r * short);
   const reduce = prefersReducedMotion();
@@ -136,11 +139,10 @@ function Target({ target, size, now, grid, rule, onHit }: { target: TapTarget; s
 
   return (
     <Animated.View
-      exiting={reduce ? undefined : FadeOut.duration(120)}
       style={[{ position: "absolute", left: target.x * size.w - rp, top: target.y * size.h - rp, width: rp * 2, height: rp * 2 }, body]}
     >
       <Pressable
-        onPressIn={onHit}
+        onPressIn={() => onHit(target)}
         hitSlop={8}
         accessibilityRole="button"
         accessibilityLabel={targetLabel(target.kind, rule)}

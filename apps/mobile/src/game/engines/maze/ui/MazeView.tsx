@@ -52,6 +52,15 @@ export function MazeView({ state, dispatch, snapshot, requestHint }: EngineViewP
   const exitOpen = state.got.length >= state.gems.length;
   const seen = useMemo(() => new Set(state.seen), [state.seen]);
   const visible = (c: number) => !state.fog || seen.has(c);
+  const fog = useMemo(
+    () =>
+      state.fog
+        ? Array.from({ length: size * size }, (_, c) =>
+            seen.has(c) ? null : <Rect key={`f${c}`} x={(c % size) * cell - 0.5} y={Math.floor(c / size) * cell - 0.5} width={cell + 1} height={cell + 1} color={FOG} />,
+          )
+        : null,
+    [state.fog, seen, size, cell],
+  );
 
   const step = (dir: Dir, run = false) => {
     if (!playing) return false;
@@ -78,11 +87,17 @@ export function MazeView({ state, dispatch, snapshot, requestHint }: EngineViewP
     }
   };
 
-  const pan = Gesture.Pan()
-    .runOnJS(true)
-    .minDistance(4)
-    .onBegin((e) => followFinger(e.x, e.y))
-    .onUpdate((e) => followFinger(e.x, e.y));
+  const follow = useRef(followFinger);
+  follow.current = followFinger;
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .runOnJS(true)
+        .minDistance(4)
+        .onBegin((e) => follow.current(e.x, e.y))
+        .onUpdate((e) => follow.current(e.x, e.y)),
+    [],
+  );
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -145,11 +160,7 @@ export function MazeView({ state, dispatch, snapshot, requestHint }: EngineViewP
                 })}
                 <Walls walls={state.walls} size={size} cell={cell} />
                 <Circle cx={player.x} cy={player.y} r={cell * 0.32} color={colors.pink} />
-                {state.fog
-                  ? Array.from({ length: size * size }, (_, c) =>
-                      seen.has(c) ? null : <Rect key={`f${c}`} x={(c % size) * cell - 0.5} y={Math.floor(c / size) * cell - 0.5} width={cell + 1} height={cell + 1} color={FOG} />,
-                    )
-                  : null}
+                {fog}
               </Canvas>
               {visible(state.exit) ? (
                 <Text pointerEvents="none" style={[styles.emoji, { left: exitAt.x - cell / 2, top: exitAt.y - cell / 2, width: cell, fontSize: cell * 0.55, lineHeight: cell }]}>

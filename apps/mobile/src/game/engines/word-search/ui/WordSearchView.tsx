@@ -99,45 +99,59 @@ export function WordSearchView({ state, dispatch, requestHint, snapshot }: Engin
     dispatch({ type: "select", from, to });
   };
 
-  const pan = Gesture.Pan()
-    .minDistance(0)
-    .enabled(playing)
-    .onBegin((e) => {
-      const c = cellAt(e.x, e.y);
-      startRef.current = c;
-      if (c) {
-        feedback("select");
-        setSel({ from: c, to: c });
-      }
-    })
-    .onUpdate((e) => {
-      const s = startRef.current;
-      if (!s) return;
-      const dr = e.y / cell - (s[0] + 0.5);
-      const dc = e.x / cell - (s[1] + 0.5);
-      const to = snapEnd(s, dr, dc, n);
-      const prev = selRef.current;
-      if (!prev || prev.to[0] !== to[0] || prev.to[1] !== to[1]) setSel({ from: s, to });
-    })
-    .onEnd(() => {
-      const s = selRef.current;
-      const pending = pendingRef.current;
-      if (s && (s.from[0] !== s.to[0] || s.from[1] !== s.to[1])) {
+  const begin = (x: number, y: number) => {
+    const c = cellAt(x, y);
+    startRef.current = c;
+    if (c) {
+      feedback("select");
+      setSel({ from: c, to: c });
+    }
+  };
+
+  const move = (x: number, y: number) => {
+    const s = startRef.current;
+    if (!s) return;
+    const dr = y / cell - (s[0] + 0.5);
+    const dc = x / cell - (s[1] + 0.5);
+    const to = snapEnd(s, dr, dc, n);
+    const prev = selRef.current;
+    if (!prev || prev.to[0] !== to[0] || prev.to[1] !== to[1]) setSel({ from: s, to });
+  };
+
+  const end = () => {
+    const s = selRef.current;
+    const pending = pendingRef.current;
+    if (s && (s.from[0] !== s.to[0] || s.from[1] !== s.to[1])) {
+      setPending(null);
+      submit(s.from, s.to);
+    } else if (s) {
+      // Tap-tap selection: first tap marks the start, second tap the end.
+      if (pending && (pending[0] !== s.from[0] || pending[1] !== s.from[1]) && lineCells(pending, s.from)) {
+        submit(pending, s.from);
         setPending(null);
-        submit(s.from, s.to);
-      } else if (s) {
-        // Tap-tap selection: first tap marks the start, second tap the end.
-        if (pending && (pending[0] !== s.from[0] || pending[1] !== s.from[1]) && lineCells(pending, s.from)) {
-          submit(pending, s.from);
-          setPending(null);
-        } else setPending(s.from);
-      }
-    })
-    .onFinalize(() => {
-      startRef.current = null;
-      setSel(null);
-    })
-    .runOnJS(true);
+      } else setPending(s.from);
+    }
+  };
+
+  const handlers = useRef({ begin, move, end });
+  handlers.current = { begin, move, end };
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .minDistance(0)
+        .enabled(playing)
+        .onBegin((e) => handlers.current.begin(e.x, e.y))
+        .onUpdate((e) => handlers.current.move(e.x, e.y))
+        .onEnd(() => handlers.current.end())
+        .onFinalize(() => {
+          startRef.current = null;
+          setSel(null);
+        })
+        .runOnJS(true),
+    // setSel only touches refs and state setters, which are stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [playing],
+  );
 
   const doneWords = new Set(state.found.map((f) => f.word));
 

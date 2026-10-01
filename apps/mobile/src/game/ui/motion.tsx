@@ -114,7 +114,7 @@ export function TimerBar({ deadline, now, paused }: { deadline?: number; now: ()
     if (!paused) progress.value = withTiming(0, { duration: remaining, easing: Easing.linear });
   }, [deadline, paused, now, progress]);
   const style = useAnimatedStyle(() => ({
-    width: `${Math.max(0, progress.value) * 100}%`,
+    transform: [{ scaleX: Math.max(0, progress.value) }],
     backgroundColor: progress.value < 0.25 ? colors.pink : colors.lime,
   }));
   if (deadline === undefined) return null;
@@ -138,10 +138,13 @@ function Particle({ index, seed }: { index: number; seed: number }) {
     y.value = withDelay(r(1) * 150, withTiming(1, { duration: 900 + r(2) * 500, easing: Easing.out(Easing.quad) }));
     o.value = withDelay(700, withTiming(0, { duration: 600 }));
   }, [o, y]);
+  // Animated styles run on the UI thread and may only call worklets, so `r` is evaluated here.
   const dx = (r(3) - 0.5) * 320;
+  const fall = 260 + r(4) * 200;
+  const spin = 540 * (r(5) - 0.5);
   const style = useAnimatedStyle(() => ({
     opacity: o.value,
-    transform: [{ translateX: dx * y.value }, { translateY: -40 + y.value * (260 + r(4) * 200) }, { rotate: `${y.value * 540 * (r(5) - 0.5)}deg` }],
+    transform: [{ translateX: dx * y.value }, { translateY: -40 + y.value * fall }, { rotate: `${y.value * spin}deg` }],
   }));
   return <Animated.View style={[styles.particle, { backgroundColor: CONFETTI_COLORS[index % CONFETTI_COLORS.length] }, style]} />;
 }
@@ -169,6 +172,6 @@ const styles = StyleSheet.create({
   center: { alignItems: "center", justifyContent: "center" },
   streak: { backgroundColor: colors.lime, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
   timerTrack: { height: 6, borderRadius: 3, backgroundColor: colors.cardAlt, overflow: "hidden" },
-  timerFill: { height: 6, borderRadius: 3 },
+  timerFill: { width: "100%", height: 6, borderRadius: 3, transformOrigin: "left" },
   particle: { position: "absolute", top: "35%", width: 8, height: 12, borderRadius: 2 },
 });

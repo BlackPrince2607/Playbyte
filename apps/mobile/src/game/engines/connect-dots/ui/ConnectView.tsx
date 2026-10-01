@@ -119,14 +119,20 @@ export function ConnectView({ state, dispatch, snapshot, requestHint }: EngineVi
     }
   };
 
-  const pan = Gesture.Pan()
-    .runOnJS(true)
-    .minDistance(0)
-    .onBegin((e) => begin(e.x, e.y))
-    .onUpdate((e) => extend(e.x, e.y))
-    .onFinalize(() => {
-      drag.current = { color: -1, path: [] };
-    });
+  const handlers = useRef({ begin, extend });
+  handlers.current = { begin, extend };
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .runOnJS(true)
+        .minDistance(0)
+        .onBegin((e) => handlers.current.begin(e.x, e.y))
+        .onUpdate((e) => handlers.current.extend(e.x, e.y))
+        .onFinalize(() => {
+          drag.current = { color: -1, path: [] };
+        }),
+    [],
+  );
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
