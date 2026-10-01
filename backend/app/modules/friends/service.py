@@ -60,16 +60,19 @@ async def list_friends(session: AsyncSession, user_id: UUID) -> list[dict]:
 
 async def request_friend(session: AsyncSession, from_id: UUID, to_id: UUID) -> Friendship:
     if from_id == to_id:
-        raise AppError("invalid", "Cannot friend yourself.", 422)
+        raise AppError("invalid", "That's your own player ID.", 422)
     a, b = _pair(from_id, to_id)
     existing = await session.scalar(select(Friendship).where(Friendship.user_a == a, Friendship.user_b == b))
     if existing:
         if existing.status == "blocked":
             raise AppError("forbidden", "Cannot create this connection.", 403)
+        # They already asked us: sending one back means both want it.
+        if existing.status == "pending" and existing.requested_by != from_id:
+            existing.status = "accepted"
         return existing
     other = await session.get(User, to_id)
     if other is None:
-        raise AppError("not_found", "User not found.", 404)
+        raise AppError("user_not_found", "No player has that ID.", 404)
     row = Friendship(user_a=a, user_b=b, status="pending", requested_by=from_id)
     session.add(row)
     await session.flush()
@@ -84,3 +87,19 @@ async def accept_friend(session: AsyncSession, user_id: UUID, request_id: UUID) 
         raise AppError("forbidden", "Cannot accept this request.", 403)
     row.status = "accepted"
     return row
+
+
+async def delete_friend_request(session: AsyncSession, user_id: UUID, request_id: UUID) -> None:
+    """Declines an incoming request or cancels an outgoing one."""
+    row = await session.get(Friendship, request_id)
+    if row is None or user_id not in {row.user_a, row.user_b} or row.status != "pending":
+        raise AppError("not_found", "Request not found.", 404)
+    await session.delete(row)
+
+
+async def remove_friend(session: AsyncSession, user_id: UUID, friend_id: UUID) -> None:
+    a, b = _pair(user_id, friend_id)
+    row = await session.scalar(select(Friendship).where(Friendship.user_a == a, Friendship.user_b == b))
+    if row is None or row.status != "accepted":
+        raise AppError("not_found", "You're not friends with this player.", 404)
+    await session.delete(row)

@@ -31,7 +31,10 @@ export class ApiError extends Error {
 function friendlyMessage(status: number, code: string, backendMessage: string): string {
   if (status === 401) return "Your session expired. Sign in again or continue as guest.";
   if (status === 403) return "You don't have permission to do that.";
-  if (status === 404) return "That content is no longer available.";
+  if (status === 404) {
+    if (code === "user_not_found") return backendMessage || "No player has that ID.";
+    return "That content is no longer available.";
+  }
   if (status === 409) {
     if (code === "moment_closed") return "This moment is closed.";
     return backendMessage || "That action isn't available right now.";

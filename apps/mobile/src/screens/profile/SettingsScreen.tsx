@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { api, isApiError, MeProfile, NotificationPreferences } from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
+import { PlayerIdCard } from "../../components/PlayerIdCard";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { SectionCard, SettingsRow } from "../../components/StitchPrimitives";
 import { useAuth } from "../../context/AuthContext";
@@ -175,6 +176,18 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
               ) : (
                 <PrimaryButton label="Retry" variant="secondary" onPress={() => void loadMe()} />
               )}
+            </View>
+          ) : null}
+
+          {me ? (
+            <View style={{ marginTop: spacing.md }}>
+              <PlayerIdCard
+                id={me.id}
+                displayName={me.displayName}
+                avatarKey={me.avatarKey}
+                bio={me.bio}
+                caption="Share this ID so friends can add you."
+              />
             </View>
           ) : null}
 
