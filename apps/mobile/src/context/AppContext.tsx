@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { AppState as RNAppState } from "react-native";
 import {
   api,
   CrowdSnapshot,
@@ -78,6 +79,9 @@ type AppState = {
 };
 
 const Ctx = createContext<AppState | null>(null);
+
+/** Coming back sooner than this (share sheet, Google sign-in) keeps the feed where it was. */
+const REOPEN_REFRESH_AFTER_MS = 30_000;
 
 function patchMoment(items: FeedItem[], momentId: string, patch: Partial<FeedMoment>): FeedItem[] {
   return items.map((i) => (i.type === "moment" && i.id === momentId ? { ...i, ...patch } : i));
@@ -289,6 +293,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!authReady) return;
     void boot();
   }, [authReady, boot]);
+
+  // Reopening the app shows a fresh feed from the first post.
+  useEffect(() => {
+    if (!ready || !onboardingDone) return;
+    let backgroundedAt: number | null = null;
+    const sub = RNAppState.addEventListener("change", (s) => {
+      if (s === "background") {
+        backgroundedAt = Date.now();
+        return;
+      }
+      if (s !== "active" || backgroundedAt === null) return;
+      const away = Date.now() - backgroundedAt;
+      backgroundedAt = null;
+      if (away < REOPEN_REFRESH_AFTER_MS) return;
+      refreshFeed(true).then(
+        () => setFeedIndex(0),
+        () => {},
+      );
+    });
+    return () => sub.remove();
+  }, [ready, onboardingDone, refreshFeed]);
 
   const retryBoot = useCallback(async () => {
     setReady(false);

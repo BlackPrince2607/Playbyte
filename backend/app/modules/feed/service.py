@@ -24,6 +24,10 @@ from app.infrastructure.storage.objects import get_object_storage
 from app.modules.crowd.volume import volume_state
 from app.modules.feed.ranking import RankedItem, interleave, moment_score, rotate_games
 
+# Random score added per request: reshuffles moments within the same tier (interest match is +100,
+# freshness up to +50) while active-window moments (+1000) still lead.
+MOMENT_JITTER = 100.0
+
 
 def media_url(key: str | None) -> str | None:
     if not key:
@@ -81,6 +85,16 @@ async def active_window_ids(session: AsyncSession) -> set[UUID]:
     return set(rows)
 
 
+async def answered_moment_ids(
+    session: AsyncSession, moment_ids: list[UUID], user_id: UUID | None, guest_id: UUID | None
+) -> set[UUID]:
+    if not moment_ids or not (user_id or guest_id):
+        return set()
+    owner = Response.user_id == user_id if user_id else Response.guest_session_id == guest_id
+    rows = await session.scalars(select(Response.moment_id).where(Response.moment_id.in_(moment_ids), owner))
+    return set(rows)
+
+
 async def build_feed(
     session: AsyncSession,
     *,
@@ -89,9 +103,13 @@ async def build_feed(
     limit: int = 10,
     rng: random.Random | None = None,
 ) -> list[dict]:
+    """Live moments the viewer has not answered yet, reshuffled on every request, with games interleaved."""
+    rng = rng or random.Random()
     interests = await interest_ids(session, user_id, guest_id)
     windows = await active_window_ids(session)
     moments = await load_live_moments(session)
+    answered = await answered_moment_ids(session, [m.id for m in moments], user_id, guest_id)
+    moments = [m for m in moments if m.id not in answered]
     now = datetime.now(UTC)
     ranked_moments: list[RankedItem] = []
     by_id = {m.id: m for m in moments}
@@ -105,13 +123,14 @@ async def build_feed(
                     starts_at=m.starts_at,
                     in_active_window=m.content_window_id in windows if m.content_window_id else False,
                     interest_match=m.category_id in interests,
-                ),
+                )
+                + rng.uniform(0, MOMENT_JITTER),
             )
         )
     ranked_moments.sort(key=lambda x: x.score, reverse=True)
 
     games = list(await session.scalars(select(MiniGame).where(MiniGame.status == "enabled").order_by(MiniGame.sort_order)))
-    rotated = rotate_games(games, lambda g: getattr(g, "engine", None), rng or random.Random())
+    rotated = rotate_games(games, lambda g: getattr(g, "engine", None), rng)
     ranked_games = [RankedItem(kind="mini_game", id=g.key, score=float(100 - g.sort_order)) for g in rotated]
     hot = bool(windows)
     ordered = interleave(ranked_moments, ranked_games, hot_window=hot)[:limit]
@@ -129,17 +148,7 @@ async def build_feed(
     for item in ordered:
         if item.kind == "moment":
             m = by_id[UUID(item.id)]
-            snap = snapshots.get(m.id)
-            mine = await my_response(session, m.id, user_id, guest_id)
-            items.append(
-                serialize_moment(
-                    m,
-                    snap,
-                    mine.option_id if mine else None,
-                    tags=tag_map.get(m.id, []),
-                    reveal_correct=bool(mine),
-                )
-            )
+            items.append(serialize_moment(m, snapshots.get(m.id), None, tags=tag_map.get(m.id, [])))
         else:
             g = game_map[item.id]
             items.append(serialize_game(g))

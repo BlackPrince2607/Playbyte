@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink,
     paddingHorizontal: spacing.margin,
     paddingTop: 100,
-    paddingBottom: 100,
+    paddingBottom: spacing.lg,
   },
   content: { flex: 1, justifyContent: "space-between", gap: spacing.md },
   metaRow: {

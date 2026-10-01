@@ -71,7 +71,7 @@ async def test_build_feed_game_slots_span_distinct_engines() -> None:
         patch("app.modules.feed.service.interest_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.active_window_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=[moment(i) for i in range(14)])),
-        patch("app.modules.feed.service.my_response", AsyncMock(return_value=None)),
+        patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
     ):
         items = await build_feed(session, user_id=None, guest_id=uuid4(), limit=20, rng=random.Random(3))
@@ -103,38 +103,33 @@ def test_serialize_moment_includes_my_option_id() -> None:
     assert payload["myOptionId"] == str(option_id)
 
 
-@pytest.mark.asyncio
-async def test_build_feed_includes_my_option_id() -> None:
-    moment_id = uuid4()
-    option_id = uuid4()
-    category_id = uuid4()
-    m = SimpleNamespace(
-        id=moment_id,
-        type="poll",
-        prompt="Pick one",
-        prompt_image_key=None,
-        scoring_mode="crowd",
-        category_id=category_id,
-        category=SimpleNamespace(slug="sports", name="Sports"),
-        status="live",
-        content_window_id=None,
-        starts_at=datetime.now(UTC),
-        ends_at=None,
-        options=[SimpleNamespace(id=option_id, label="A", sort_order=0, image_key=None, is_correct=False)],
-    )
-    mine = SimpleNamespace(option_id=option_id)
-    user_id = uuid4()
+async def feed_moment_ids(moments: list[SimpleNamespace], answered: set, seed: int, user_id=None) -> list[str]:
     session = AsyncMock()
     session.scalars = AsyncMock(return_value=[])
-
     with (
         patch("app.modules.feed.service.interest_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.active_window_ids", AsyncMock(return_value=set())),
-        patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=[m])),
-        patch("app.modules.feed.service.my_response", AsyncMock(return_value=mine)) as my_response,
+        patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=moments)),
+        patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=answered)) as answered_ids,
+        patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
     ):
-        items = await build_feed(session, user_id=user_id, guest_id=None, limit=10)
+        items = await build_feed(session, user_id=user_id, guest_id=None, limit=20, rng=random.Random(seed))
+    if user_id:
+        answered_ids.assert_awaited_once_with(session, [m.id for m in moments], user_id, None)
+    return [i["id"] for i in items if i["type"] == "moment"]
 
-    my_response.assert_awaited_once_with(session, moment_id, user_id, None)
-    assert items[0]["type"] == "moment"
-    assert items[0]["myOptionId"] == str(option_id)
+
+@pytest.mark.asyncio
+async def test_build_feed_leaves_out_answered_moments() -> None:
+    moments = [moment(i) for i in range(6)]
+    answered = {moments[0].id, moments[3].id}
+    ids = await feed_moment_ids(moments, answered, seed=1, user_id=uuid4())
+    assert sorted(ids) == sorted(str(m.id) for m in moments if m.id not in answered)
+
+
+@pytest.mark.asyncio
+async def test_build_feed_reshuffles_moments_each_request() -> None:
+    moments = [moment(i) for i in range(10)]
+    orders = {tuple(await feed_moment_ids(moments, set(), seed=s)) for s in range(5)}
+    assert len(orders) > 1
+    assert all(sorted(o) == sorted(str(m.id) for m in moments) for o in orders)
