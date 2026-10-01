@@ -1,4 +1,4 @@
-"""Retire live feed moments and flood a fresh text + image/meme batch via admin API.
+"""Publish a fresh text + image/meme batch via admin API, then retire the previous live moments.
 
 Usage:
   python scripts/refresh_feed_content.py --dry-run
@@ -221,9 +221,12 @@ def hydrate_images(
     return out
 
 
-def retire_live(*, api_url: str, headers: dict[str, str], dry_run: bool) -> int:
+def list_live(*, api_url: str, headers: dict[str, str]) -> list[dict[str, Any]]:
     existing = req("GET", f"{api_url}/v1/admin/moments", headers=headers)
-    live = [m for m in existing.get("moments", []) if m.get("status") == "live"]
+    return [m for m in existing.get("moments", []) if m.get("status") == "live"]
+
+
+def retire_moments(live: list[dict[str, Any]], *, api_url: str, headers: dict[str, str], dry_run: bool) -> int:
     retired = 0
     for m in live:
         mid = m["id"]
@@ -323,7 +326,7 @@ def build_batch(count: int, *, include_images: bool) -> list[dict[str, Any]]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Retire live moments and flood a fresh feed batch")
+    parser = argparse.ArgumentParser(description="Publish a fresh feed batch, then retire the previous live moments")
     parser.add_argument("--api-url", default="https://playbyte-production.up.railway.app")
     parser.add_argument("--admin-key", default="dev-admin-key")
     parser.add_argument("--count", type=int, default=40)
@@ -347,9 +350,9 @@ def main() -> int:
     if missing:
         raise SystemExit(f"Missing categories on API: {', '.join(sorted(missing))}")
 
-    retired = 0
-    if not args.skip_retire:
-        retired = retire_live(api_url=api_url, headers=headers, dry_run=args.dry_run)
+    # Snapshot the old batch now but retire it only after the new one is live, so a cancelled
+    # or failed run never leaves the feed without moments.
+    previous = [] if args.skip_retire else list_live(api_url=api_url, headers=headers)
 
     batch = build_batch(args.count, include_images=args.include_images)
     starts = datetime.now(UTC)
@@ -393,6 +396,12 @@ def main() -> int:
             created += 1
         else:
             failed += 1
+
+    retired = 0
+    if created:
+        retired = retire_moments(previous, api_url=api_url, headers=headers, dry_run=args.dry_run)
+    elif previous:
+        print(f"Nothing published; keeping the {len(previous)} live moments.")
 
     print(
         f"\nRefresh done: retired={retired} created={created} failed={failed} "
