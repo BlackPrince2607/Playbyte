@@ -1,4 +1,4 @@
--- Supabase Storage buckets for Playbyte (apply after 0001_init.sql)
+-- Supabase Storage buckets for Maja (apply after 0001_init.sql)
 -- Buckets are created idempotently. API uploads via service role; clients never receive service keys.
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

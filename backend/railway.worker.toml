@@ -1,4 +1,4 @@
-# Railway — Playbyte outbox worker (same image as API, different start command)
+# Railway — Maja outbox worker (same image as API, different start command)
 # Create a second Railway service from the same repo:
 #   Root Directory = backend
 #   Override start command to: python -m worker.main

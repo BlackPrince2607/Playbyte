@@ -1,31 +1,42 @@
 import * as Sharing from "expo-sharing";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import { api, FeedMoment, formatCount, isShareCancelled, shareErrorMessage, ShareCardResponse } from "../../api";
 import { ActionRail } from "../../components/ActionRail";
 import { AnswerButton } from "../../components/AnswerButton";
+import { CommentsSheet } from "../../components/CommentsSheet";
 import { FriendAvatars } from "../../components/FriendAvatars";
-import { LivePill } from "../../components/PlayLogo";
+import { LivePill } from "../../components/MajaLogo";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { FriendChoiceStrip } from "../../components/StitchPrimitives";
 import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
+import { promptTextStyle } from "../../lib/promptSize";
+import { seededCount, withSeededCrowd } from "../../lib/seededEngagement";
+import { recordShare, setLike } from "../../lib/social";
 import { ensureLocalShareUri } from "../../lib/shareLocalFile";
 import { useMountedRef } from "../../lib/useMounted";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
 const POLL_MS = 3000;
+const PROMPT_LINES = 5;
 
 type Props = {
   item: FeedMoment;
   height: number;
   isActive: boolean;
+  onSignIn?: () => void;
 };
 
-export function MomentFeedPage({ item, height, isActive }: Props) {
-  const { respond, isResponding, friendAvatars } = useApp();
+export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
+  const { respond, isResponding, friendAvatars, engagementFor, updateEngagement } = useApp();
+  const { isSignedIn } = useAuth();
   const mounted = useMountedRef();
+  const engagement = engagementFor(item);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const likeInflight = useRef(false);
   const pollInflight = useRef(false);
   const [local, setLocal] = useState(item);
   const [respondError, setRespondError] = useState("");
@@ -34,8 +45,8 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
   const shareInflight = useRef(false);
   const answered = Boolean(local.myOptionId);
   const submitting = isResponding(item.id);
-  const total = local.result?.totalResponses ?? 0;
-  const volume = local.result?.volumeState;
+  const crowd = withSeededCrowd(local);
+  const total = crowd.totalResponses;
   const isQuiz = local.tags?.some((t) => t.slug === "quiz") ?? local.scoringMode === "correct_option";
   const contentTag = local.tags?.[0];
   const myOption = local.options.find((o) => o.id === local.myOptionId);
@@ -110,6 +121,27 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
     }
   }
 
+  async function toggleLike() {
+    if (likeInflight.current) return;
+    likeInflight.current = true;
+    const before = { likedByMe: engagement.likedByMe, likes: engagement.likes };
+    const next = !before.likedByMe;
+    updateEngagement(item.id, { likedByMe: next, likes: Math.max(0, before.likes + (next ? 1 : -1)) });
+    try {
+      const res = await setLike(item.id, next);
+      updateEngagement(item.id, { likedByMe: res.liked, likes: res.likes });
+    } catch {
+      updateEngagement(item.id, before);
+    } finally {
+      likeInflight.current = false;
+    }
+  }
+
+  const onCommentTotal = useCallback(
+    (comments: number) => updateEngagement(item.id, { comments }),
+    [item.id, updateEngagement],
+  );
+
   async function handleShare() {
     if (shareInflight.current || sharing) return;
     shareInflight.current = true;
@@ -123,6 +155,9 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
       }
       const localUri = await ensureLocalShareUri(card.assetUrl, `moment-${item.id}.png`);
       await Sharing.shareAsync(localUri, { mimeType: "image/png", UTI: "public.png" });
+      recordShare(item.id)
+        .then((r) => updateEngagement(item.id, { shares: r.shares }))
+        .catch(() => {});
     } catch (e) {
       if (mounted.current && !isShareCancelled(e)) {
         setShareError(shareErrorMessage(e));
@@ -143,6 +178,8 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
   const disagreeChoice = disagreeingFriend
     ? local.options.find((o) => o.id === disagreeingFriend.optionId)?.label ?? "something else"
     : null;
+  const crowded = Boolean(local.promptImageUrl) || local.options.length > 3;
+  const promptStyle = promptTextStyle(local.prompt, { crowded });
 
   return (
     <View style={[styles.page, { height }]}>
@@ -164,19 +201,27 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
               {contentTag?.slug === "quiz" ? "📝 QUIZ" : contentTag?.slug === "poll" ? "📊 POLL" : `🔥 ${tagLabel}`}
             </Text>
           </View>
-          <LivePill
-            count={total}
-            label={volume === "nascent" ? "Be the first 50" : `${formatCount(total)} playing now`}
-          />
+          <LivePill count={total} label={`${formatCount(total)} playing now`} />
         </View>
 
         {answered ? (
           <View style={styles.resultCard}>
             <View style={styles.cardGlow} />
             {local.promptImageUrl ? (
-              <Image source={{ uri: local.promptImageUrl }} style={styles.promptImage} resizeMode="cover" />
+              <Image
+                source={{ uri: local.promptImageUrl }}
+                style={[styles.promptImage, local.options.length > 3 && styles.promptImageCompact]}
+                resizeMode="cover"
+              />
             ) : null}
-            <Text style={[type.gameQuestion, styles.prompt]}>{local.prompt}</Text>
+            <Text
+              style={[type.gameQuestion, styles.prompt, promptStyle]}
+              numberOfLines={PROMPT_LINES}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
+              {local.prompt}
+            </Text>
             {myOption ? (
               <View style={styles.yourAnswer}>
                 <Text style={[type.metadata, { color: colors.lime }]}>
@@ -189,7 +234,6 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
                 {local.myOptionId === correctId ? "Correct!" : "Not this time — see the right answer below."}
               </Text>
             ) : null}
-            {submitting ? <ActivityIndicator color={colors.lime} /> : null}
             {respondError ? (
               <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]} accessibilityRole="alert">
                 {respondError}
@@ -197,7 +241,7 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
             ) : null}
             <View style={styles.options}>
               {local.options.map((o) => {
-                const count = local.result?.optionCounts?.[o.id] ?? 0;
+                const count = crowd.optionCounts[o.id] ?? 0;
                 const pct = total > 0 ? Math.round((count / total) * 100) : 0;
                 const isCorrect = correctId === o.id;
                 const isMine = local.myOptionId === o.id;
@@ -232,12 +276,20 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
               <Text style={[type.micro, styles.categoryHint]}>{local.category.name.toUpperCase()}</Text>
             ) : null}
             {local.promptImageUrl ? (
-              <Image source={{ uri: local.promptImageUrl }} style={styles.promptImage} resizeMode="cover" />
+              <Image
+                source={{ uri: local.promptImageUrl }}
+                style={[styles.promptImage, local.options.length > 3 && styles.promptImageCompact]}
+                resizeMode="cover"
+              />
             ) : null}
-            <Text style={[type.gameQuestion, styles.prompt]}>{local.prompt}</Text>
-            {submitting ? (
-              <ActivityIndicator color={colors.lime} style={{ marginVertical: spacing.sm }} accessibilityLabel="Submitting" />
-            ) : null}
+            <Text
+              style={[type.gameQuestion, styles.prompt, promptStyle]}
+              numberOfLines={PROMPT_LINES}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
+              {local.prompt}
+            </Text>
             {respondError ? (
               <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]} accessibilityRole="alert">
                 {respondError}
@@ -254,6 +306,11 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
                 />
               ))}
             </View>
+            {submitting ? (
+              <View style={styles.submitOverlay} accessibilityLabel="Submitting">
+                <ActivityIndicator color={colors.lime} size="large" />
+              </View>
+            ) : null}
           </View>
         )}
 
@@ -276,9 +333,23 @@ export function MomentFeedPage({ item, height, isActive }: Props) {
         ) : null}
 
         <ActionRail
+          likes={seededCount(item.id, "likes") + engagement.likes}
+          liked={engagement.likedByMe}
+          onToggleLike={() => void toggleLike()}
+          comments={engagement.comments}
+          onComments={() => setCommentsOpen(true)}
+          shares={seededCount(item.id, "shares") + engagement.shares}
           onShare={() => void handleShare()}
           shareDisabled={sharing}
           shareLoading={sharing}
+        />
+        <CommentsSheet
+          momentId={item.id}
+          visible={commentsOpen}
+          onClose={() => setCommentsOpen(false)}
+          isSignedIn={isSignedIn}
+          onSignIn={onSignIn}
+          onTotalChange={onCommentTotal}
         />
 
         <Text style={[type.metadata, styles.swipeHint]}>Swipe up for next play</Text>
@@ -319,6 +390,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     padding: spacing.lg,
     flexGrow: 1,
+    flexShrink: 1,
     overflow: "hidden",
   },
   playCard: {
@@ -328,6 +400,14 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     padding: spacing.lg,
     flexGrow: 1,
+    flexShrink: 1,
+    overflow: "hidden",
+  },
+  submitOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "rgba(21,14,43,0.55)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   cardGlow: {
     position: "absolute",
@@ -344,6 +424,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     marginBottom: spacing.md,
   },
+  promptImageCompact: { height: 110 },
   prompt: { color: colors.paper, textAlign: "center", marginVertical: spacing.md },
   yourAnswer: {
     alignSelf: "center",

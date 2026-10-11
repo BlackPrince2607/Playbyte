@@ -4,7 +4,7 @@ Scope: what the Game Engine SDK (11 engines, 42 game rows) needs from the backen
 mobile build. General infrastructure lives in `docs/railway.md` and `docs/production-deployment.md`
 (`docs/deployment-runbook.md` still describes Fly.io; Railway is what is live).
 
-Live API: `https://playbyte-production.up.railway.app` (Railway service, root directory `backend`,
+Live API: `https://maja-production.up.railway.app` (Railway service, root directory `backend`,
 `backend/railway.toml`). Railway auto-deploys `main`. Both the `preview` and `production` EAS
 profiles point at this API — there is no separate staging backend.
 
@@ -20,7 +20,7 @@ and any of the starred values are missing or weak.
 | `API_PUBLIC_URL` | ★ | Public `https://` URL of the API. |
 | `CORS_ORIGINS` | ★ | Comma list, HTTPS only, no `*` (admin origin). Mobile is not subject to CORS. |
 | `GUEST_TOKEN_SECRET` | ★ | 32+ random chars. Rotating it invalidates every guest session. |
-| `ADMIN_API_KEY` | ★ | 32+ random chars. Accepted as `X-Admin-Key` for automation; the feed-refresh workflow's `PLAYBYTE_ADMIN_KEY` secret must match. The default or a shorter key never grants access. |
+| `ADMIN_API_KEY` | ★ | 32+ random chars. Accepted as `X-Admin-Key` for automation; the feed-refresh workflow's `MAJA_ADMIN_KEY` secret must match. The default or a shorter key never grants access. |
 | `SUPABASE_URL` | ★ | JWKS verification of user JWTs. |
 | `SUPABASE_SERVICE_ROLE_KEY` | ★ | Server-side storage (share cards, avatars, exports). |
 | `SUPABASE_JWT_SECRET` | optional | Only if the project still signs HS256 tokens. |
@@ -45,8 +45,11 @@ replica until a shared limiter exists, or accept N× the configured limits.
 7. `supabase/migrations/0007_event_idempotency.sql` — `game_events.client_event_id` with its
    per-session unique index, and the `choice_votes` table. Apply **before** deploying an API build
    that writes them.
+8. `supabase/migrations/0008_moment_social.sql` — `moment_likes`, `moment_shares` and
+   `moment_comments`. Apply **before** deploying an API build with likes/comments: `/v1/feed` and
+   `GET /v1/moments/{id}` read these tables and fail without them.
 
-0006 and 0007 are idempotent and can be re-run.
+0006, 0007 and 0008 are idempotent and can be re-run.
 
 Then the seed: `supabase/seed/003_sdk_games.sql` (42 SDK rows enabled, 16 legacy keys disabled).
 The seed must run **after** 0005 (it inserts into the new columns). It is idempotent (upserts).
@@ -124,7 +127,7 @@ through `game/platform/assetCache.ts`.
   (or `PATCH /v1/admin/games/{key}`). Clients hide cards they cannot resolve.
 - **Content:** set `content_items.status='retired'` for bad items, or delete a pack row — the app
   falls back to its bundled pack.
-- **Migrations 0005 and 0007:** additive only (new columns/tables). Do not drop them on rollback;
+- **Migrations 0005, 0007 and 0008:** additive only (new columns/tables). Do not drop them on rollback;
   older API builds ignore them.
 - **Legacy games:** app builds released before the SDK cannot play SDK rows (they show "Game
   unavailable"). Re-enabling the 16 legacy rows helps only those old builds; new builds never

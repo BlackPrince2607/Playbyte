@@ -15,6 +15,8 @@ import { PlayerIdCard } from "../../components/PlayerIdCard";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { SectionCard, SettingsRow } from "../../components/StitchPrimitives";
 import { useAuth } from "../../context/AuthContext";
+import { APP_LANGUAGES, supportedLanguage } from "../../lib/languages";
+import { getLanguage, setLanguage } from "../../lib/storage";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
@@ -41,7 +43,17 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   const [dataStatus, setDataStatus] = useState("");
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
+  const [language, setLanguageState] = useState("en");
   const loadedUserId = useRef<string | null>(null);
+
+  useEffect(() => {
+    void getLanguage().then((l) => setLanguageState(supportedLanguage(l)));
+  }, []);
+
+  function chooseLanguage(id: string) {
+    setLanguageState(id);
+    void setLanguage(id);
+  }
 
   const loadMe = useCallback(async () => {
     if (!isSignedIn) {
@@ -153,7 +165,22 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   return (
     <ScrollView style={styles.wrap} contentContainerStyle={styles.inner}>
       <Text style={[type.screenTitle, { color: colors.paper }]}>Settings</Text>
-      <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.xs }]}>Vault · profile & preferences</Text>
+
+      <SectionCard title="Language" style={{ marginTop: spacing.md, marginBottom: 0 }}>
+        <View style={styles.visRow}>
+          {APP_LANGUAGES.map((l) => (
+            <Pressable
+              key={l.id}
+              onPress={() => chooseLanguage(l.id)}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: language === l.id }}
+              style={[styles.visChip, language === l.id && styles.visChipActive]}
+            >
+              <Text style={[type.bodySm, { color: language === l.id ? colors.ink : colors.paper }]}>{l.name}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </SectionCard>
 
       {!isSignedIn ? (
         <View style={styles.guestCard}>
@@ -198,7 +225,6 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
               onPress={() => setEditingProfile((v) => !v)}
             />
             <SettingsRow label="Email" value={user?.email ?? "—"} />
-            <SettingsRow label="Language" value="Managed in onboarding" />
           </SectionCard>
 
           {editingProfile ? (
@@ -239,14 +265,6 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
           ) : null}
 
           <SectionCard title="Notifications">
-            <Text
-              style={[
-                type.metadata,
-                { color: colors.lilac, paddingHorizontal: spacing.md, paddingTop: spacing.sm },
-              ]}
-            >
-              Preference toggles only — push delivery and an activity inbox are not enabled yet.
-            </Text>
             {prefRows.map((r) => (
               <View key={r.key} style={styles.toggleRow}>
                 <Text style={[type.bodyLg, { color: colors.paper, flex: 1 }]}>{r.label}</Text>
@@ -286,17 +304,14 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
 
           <SectionCard title="Content">
             <SettingsRow label="Weekly recap" onPress={onOpenRecap} />
-            <SettingsRow label="Interests" value="Set during onboarding" />
           </SectionCard>
 
           <SectionCard title="Support">
-            <SettingsRow label="Help" value="Coming soon" />
             <SettingsRow label="Report a problem" value="Email support@play.app" />
-            <SettingsRow label="Community guidelines" value="Coming soon" />
           </SectionCard>
 
           <PrimaryButton label="Log Out" variant="secondary" onPress={() => void signOut()} />
-          <Text style={[type.micro, styles.version]}>PLAY · Vault</Text>
+          <Text style={[type.micro, styles.version]}>MAJA</Text>
         </>
       )}
     </ScrollView>

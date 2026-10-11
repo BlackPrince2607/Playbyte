@@ -12,6 +12,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { promptTextStyle } from "../../../../lib/promptSize";
 import { colors, radius, spacing } from "../../../../theme/colors";
 import { fonts, type } from "../../../../theme/typography";
 import { prefersReducedMotion } from "../../../ui/feedback";
@@ -74,7 +75,14 @@ function StatementCard({ q, answered, disabled, onAnswer }: CardProps) {
         <Animated.Text style={[styles.tag, styles.tagFact, factTag]}>FACT</Animated.Text>
         <Animated.Text style={[styles.tag, styles.tagFake, fakeTag]}>FAKE</Animated.Text>
         {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
-        <Text style={styles.statement}>{q.prompt}</Text>
+        <Text
+          style={[styles.statement, promptTextStyle(q.prompt, { max: 24 })]}
+          numberOfLines={7}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {q.prompt}
+        </Text>
         {answered ? (
           <Animated.View entering={prefersReducedMotion() ? undefined : FadeIn.duration(200)} style={[styles.stamp, { borderColor: truthIsFact ? colors.lime : colors.pink }]}>
             <Text style={[styles.stampText, { color: truthIsFact ? colors.lime : colors.pink }]}>{truthIsFact ? "✓ FACT" : "✗ FAKE"}</Text>

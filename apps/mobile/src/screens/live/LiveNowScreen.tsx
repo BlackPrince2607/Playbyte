@@ -7,6 +7,7 @@ import { FeedTopBar } from "../../components/FeedTopBar";
 import { FriendAvatars } from "../../components/FriendAvatars";
 import { MajorityChip } from "../../components/StitchPrimitives";
 import { isMoment, useApp } from "../../context/AppContext";
+import { withSeededCrowd } from "../../lib/seededEngagement";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
@@ -21,7 +22,8 @@ export function LiveNowScreen({ onProfile }: Props) {
     return items
       .filter((i): i is FeedMoment => isMoment(i))
       .filter((m) => m.status !== "closed")
-      .sort((a, b) => (b.result?.totalResponses ?? 0) - (a.result?.totalResponses ?? 0));
+      .map((m) => ({ ...m, result: withSeededCrowd(m) }))
+      .sort((a, b) => b.result.totalResponses - a.result.totalResponses);
   }, [items]);
 
   function friendsForMoment(m: FeedMoment) {

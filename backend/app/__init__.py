@@ -1,1 +1,1 @@
-# Playbyte API
+# Maja API

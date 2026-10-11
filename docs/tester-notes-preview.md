@@ -1,7 +1,7 @@
-# Tester notes — Playbyte preview
+# Tester notes — Maja preview
 
 **Audience:** external testers on an EAS **preview** Android build  
-**API:** `https://playbyte-production.up.railway.app` (baked into `eas.json` preview profile)  
+**API:** `https://maja-production.up.railway.app` (baked into `eas.json` preview profile)  
 **Last API smoke (2026-09-21):** core guest/feed/respond/games/share-card — **PASS** (12/12 after storage fix).
 
 ## What to test

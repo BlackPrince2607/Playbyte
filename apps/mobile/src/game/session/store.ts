@@ -1,7 +1,7 @@
 import { GameSession, KeyValueStore } from "./types";
 
-const ACTIVE_KEY = "playbyte.game.session.active";
-const LEVEL_PREFIX = "playbyte.game.level.";
+const ACTIVE_KEY = "maja.game.session.active";
+const LEVEL_PREFIX = "maja.game.level.";
 
 export type SessionStore = {
   save(session: GameSession): Promise<void>;
@@ -10,11 +10,17 @@ export type SessionStore = {
   clear(): Promise<void>;
 };
 
+/** Finished sessions, and ones the player never acted in, are not worth offering to resume. */
+function worthResuming(s: GameSession): boolean {
+  if (s.status === "completed" || s.status === "abandoned" || s.status === "ready") return false;
+  return Array.isArray(s.actions) && s.actions.length > 0;
+}
+
 export function createSessionStore(kv: KeyValueStore, opts: { maxAgeMs?: number } = {}): SessionStore {
   const maxAgeMs = opts.maxAgeMs ?? 30 * 60_000;
   return {
     async save(session) {
-      if (session.status === "completed" || session.status === "abandoned") {
+      if (!worthResuming(session)) {
         await kv.removeItem(ACTIVE_KEY);
         return;
       }
@@ -27,8 +33,7 @@ export function createSessionStore(kv: KeyValueStore, opts: { maxAgeMs?: number 
         const s = JSON.parse(raw) as GameSession;
         const live = s && s.schemaVersion === 1 && typeof s.sessionId === "string" && s.engineState !== undefined;
         const fresh = typeof s.updatedAt === "number" && now - s.updatedAt <= maxAgeMs;
-        const resumable = s.status !== "completed" && s.status !== "abandoned";
-        if (live && fresh && resumable) return s;
+        if (live && fresh && worthResuming(s)) return s;
       } catch {
         // corrupted entry: fall through and clear
       }

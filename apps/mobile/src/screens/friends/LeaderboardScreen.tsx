@@ -3,7 +3,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvatarImage } from "../../components/AvatarImage";
-import { PlayLogo } from "../../components/PlayLogo";
+import { MajaLogo } from "../../components/MajaLogo";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
@@ -32,7 +32,7 @@ export function LeaderboardScreen({ onBack, onSignIn }: Props) {
         <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back">
           <Ionicons name="arrow-back" size={24} color={colors.paper} />
         </Pressable>
-        <PlayLogo soft />
+        <MajaLogo soft />
         <View style={{ width: 24 }} />
       </View>
 

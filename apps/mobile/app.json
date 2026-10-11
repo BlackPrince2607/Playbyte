@@ -1,21 +1,21 @@
 {
   "expo": {
-    "name": "PLAY",
-    "slug": "playbyte",
+    "name": "MAJA",
+    "slug": "maja",
     "version": "1.0.0",
-    "scheme": "playbyte",
+    "scheme": "maja",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.playbyte.mobile",
+      "bundleIdentifier": "app.maja.mobile",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Share your PLAY moment results."
+        "NSPhotoLibraryUsageDescription": "Share your MAJA moment results."
       }
     },
     "android": {
-      "package": "app.playbyte.mobile",
+      "package": "app.maja.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#150E2B",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -29,16 +29,22 @@
     },
     "extra": {
       "eas": {
-        "projectId": "d4604f3d-6fb5-4a81-acf6-5843ceea2fb5"
+        "projectId": "0281a553-56b1-4c0b-b55a-2194e66c1ff0"
       }
     },
     "plugins": [
       "expo-font",
       "expo-sharing",
       [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "MAJA uses this to measure which ads brought you here and to show you more relevant ads."
+        }
+      ],
+      [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.playbyte-android-only"
+          "iosUrlScheme": "com.googleusercontent.apps.maja-android-only"
         }
       ],
       [
@@ -59,6 +65,7 @@
           }
         }
       ]
-    ]
+    ],
+    "owner": "anish2607s-team"
   }
 }

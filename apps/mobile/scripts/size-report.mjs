@@ -76,7 +76,7 @@ const report = {
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(path.join(outDir, "report.json"), JSON.stringify(report, null, 2));
 
-console.log("\nPlayByte mobile size report (android export)");
+console.log("\nMaja mobile size report (android export)");
 console.log(`  JS bundle (Hermes): ${kb(report.jsBundleBytes)}`);
 console.log(`  Assets total:       ${kb(report.assetBytes)}  (${report.fontCount} fonts ${kb(report.fontBytes)}, ${report.imageCount} images ${kb(report.imageBytes)})`);
 for (const a of report.largestAssets) console.log(`    ${kb(a.bytes).padStart(10)}  ${a.file}`);

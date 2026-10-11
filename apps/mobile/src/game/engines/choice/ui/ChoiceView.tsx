@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { promptTextStyle } from "../../../../lib/promptSize";
+import { seededCount } from "../../../../lib/seededEngagement";
 import { colors, radius, spacing } from "../../../../theme/colors";
 import { fonts, type } from "../../../../theme/typography";
 import { feedback, prefersReducedMotion } from "../../../ui/feedback";
@@ -85,7 +87,13 @@ export function ChoiceView({ state, dispatch, snapshot }: EngineViewProps<Choice
         <Text style={[type.metadata, { color: colors.lilac, textAlign: "center", letterSpacing: 1 }]}>
           {predict ? "WHAT DID MOST PEOPLE PICK?" : "PICK YOUR SIDE"}
         </Text>
-        <Text style={styles.prompt} accessibilityRole="header">
+        <Text
+          style={[styles.prompt, promptTextStyle(q.prompt, { max: 26 })]}
+          accessibilityRole="header"
+          numberOfLines={4}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
           {q.prompt}
         </Text>
         <View style={styles.row}>
@@ -101,7 +109,7 @@ export function ChoiceView({ state, dispatch, snapshot }: EngineViewProps<Choice
           <Text style={[type.bodyLg, { color: pick.withCrowd ? colors.lime : predict ? colors.pink : colors.pinkSoft, textAlign: "center", fontFamily: fonts.bodyBold }]}>{verdict}</Text>
           {pick.points > 0 ? <Text style={[type.statsSm, { color: colors.paper, textAlign: "center" }]}>+{pick.points}</Text> : null}
           <Text style={[type.metadata, { color: colors.lilac, textAlign: "center" }]}>
-            {q.votes > 0 ? `${q.votes.toLocaleString()} votes` : "Crowd estimate, updated as people play"}
+            {`${(q.votes + seededCount(q.id, "votes")).toLocaleString()} votes`}
           </Text>
         </Animated.View>
       ) : null}

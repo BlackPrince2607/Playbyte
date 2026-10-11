@@ -22,16 +22,16 @@ jobs:
 
       - name: Refresh live feed moments
         env:
-          PLAYBYTE_API_URL: ${{ secrets.PLAYBYTE_API_URL }}
-          PLAYBYTE_ADMIN_KEY: ${{ secrets.PLAYBYTE_ADMIN_KEY }}
+          MAJA_API_URL: ${{ secrets.MAJA_API_URL }}
+          MAJA_ADMIN_KEY: ${{ secrets.MAJA_ADMIN_KEY }}
         run: |
-          if [ -z "$PLAYBYTE_API_URL" ] || [ -z "$PLAYBYTE_ADMIN_KEY" ]; then
-            echo "Missing PLAYBYTE_API_URL or PLAYBYTE_ADMIN_KEY secrets."
+          if [ -z "$MAJA_API_URL" ] || [ -z "$MAJA_ADMIN_KEY" ]; then
+            echo "Missing MAJA_API_URL or MAJA_ADMIN_KEY secrets."
             exit 1
           fi
           python scripts/refresh_feed_content.py \
-            --api-url "$PLAYBYTE_API_URL" \
-            --admin-key "$PLAYBYTE_ADMIN_KEY" \
+            --api-url "$MAJA_API_URL" \
+            --admin-key "$MAJA_ADMIN_KEY" \
             --count 40 \
             --window-hours 12 \
             --include-images

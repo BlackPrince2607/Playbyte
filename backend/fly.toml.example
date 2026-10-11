@@ -1,7 +1,7 @@
 # Fly.io configuration example — copy to fly.toml and customize.
 # Deploy API and worker as separate Fly apps using the same Docker image.
 
-app = "playbyte-api-staging"
+app = "maja-api-staging"
 primary_region = "bom"
 
 [build]

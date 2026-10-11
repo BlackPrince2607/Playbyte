@@ -74,7 +74,7 @@ def main() -> None:
             b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00"
             b"\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82"
         )
-        key = "probe/playbyte-check.png"
+        key = "probe/maja-check.png"
         up = c.post(
             f"{base}/storage/v1/object/share-cards/{key}",
             content=png,

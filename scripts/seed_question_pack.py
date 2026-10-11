@@ -2,7 +2,7 @@
 
 Usage:
   python scripts/seed_question_pack.py
-  python scripts/seed_question_pack.py --api-url https://playbyte-production.up.railway.app --go-live
+  python scripts/seed_question_pack.py --api-url https://maja-production.up.railway.app --go-live
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ def normalize_options(options: list) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Seed question pack via admin API")
-    parser.add_argument("--api-url", default="https://playbyte-production.up.railway.app")
+    parser.add_argument("--api-url", default="https://maja-production.up.railway.app")
     parser.add_argument("--admin-key", default="dev-admin-key")
     parser.add_argument("--pack", type=Path, default=DEFAULT_PACK)
     parser.add_argument("--go-live", action="store_true", help="Transition draft → ready → live")

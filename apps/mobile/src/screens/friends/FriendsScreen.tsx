@@ -7,7 +7,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -22,6 +21,8 @@ import { isMoment, useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { extractPlayerId, shortPlayerId } from "../../lib/playerId";
+import { withSeededCrowd } from "../../lib/seededEngagement";
+import { shareAppInvite } from "../../lib/shareInvite";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
@@ -31,8 +32,6 @@ type Props = {
 };
 
 type Notice = { kind: "success" | "error"; text: string } | null;
-
-const INVITE_MESSAGE = "Come play with me on PLAY — every swipe is a game.";
 
 export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
   const { isSignedIn, user } = useAuth();
@@ -209,11 +208,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
   }
 
   async function inviteFriends() {
-    try {
-      await Share.share({ message: me ? `${INVITE_MESSAGE}\nMy player ID: ${me.id}` : INVITE_MESSAGE });
-    } catch {
-      /* cancelled */
-    }
+    await shareAppInvite(me?.id);
   }
 
   if (!isSignedIn) {
@@ -371,7 +366,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveRow}>
             {friendLiveMoments.map((m) => {
               const friendName = m.friends?.[0]?.displayName ?? "Friend";
-              const total = m.result?.totalResponses ?? 0;
+              const total = withSeededCrowd(m).totalResponses;
               return (
                 <Pressable key={m.id} style={styles.liveCard} onPress={() => jumpToMoment(m.id)}>
                   <View style={styles.liveTop}>
@@ -500,7 +495,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
       </View>
 
       <PrimaryButton
-        label="Invite friends to PLAY"
+        label="Invite friends to MAJA"
         variant="secondary"
         onPress={() => void inviteFriends()}
         style={{ marginTop: spacing.xl }}

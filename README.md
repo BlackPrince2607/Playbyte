@@ -1,8 +1,8 @@
-# Playbyte
+# Maja
 
-Playbyte is a participation-first swipeable play feed. Every card is a short live **moment** (Predict, Pulse, Reaction) or a built-in **mini-game**. Users weigh in in seconds and see how they fit into a live crowd.
+Maja is a participation-first swipeable play feed. Every card is a short live **moment** (Predict, Pulse, Reaction) or a built-in **mini-game**. Users weigh in in seconds and see how they fit into a live crowd.
 
-The consumer UI brand in Stitch is **PLAY**. The product and repository name is **Playbyte**. Public leaderboards are deferred past MVP.
+The product name is **Maja**; the in-app wordmark is **MAJA** (the original Stitch designs were exported under the earlier name **PLAY**). Public leaderboards are deferred past MVP.
 
 ## Architecture
 
@@ -40,9 +40,9 @@ docs                 PRD extracts, ADRs, design, runbooks
 cp .env.example .env
 docker compose up -d postgres
 # apply schema
-psql postgresql://playbyte:playbyte@localhost:5432/playbyte -f supabase/migrations/0001_init.sql
-psql postgresql://playbyte:playbyte@localhost:5432/playbyte -f supabase/seed/001_categories_and_games.sql
-psql postgresql://playbyte:playbyte@localhost:5432/playbyte -f supabase/seed/002_sample_moments.sql
+psql postgresql://maja:maja@localhost:5432/maja -f supabase/migrations/0001_init.sql
+psql postgresql://maja:maja@localhost:5432/maja -f supabase/seed/001_categories_and_games.sql
+psql postgresql://maja:maja@localhost:5432/maja -f supabase/seed/002_sample_moments.sql
 
 cd backend
 python -m uv sync

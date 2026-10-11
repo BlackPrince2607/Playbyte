@@ -154,12 +154,31 @@ export function WordSearchView({ state, dispatch, requestHint, snapshot }: Engin
   );
 
   const doneWords = new Set(state.found.map((f) => f.word));
+  const wordList = useMemo(() => [...state.words].sort((a, b) => b.word.length - a.word.length), [state.words]);
 
   return (
     <View style={{ flex: 1, alignItems: "center", paddingHorizontal: spacing.margin, gap: spacing.md }}>
       <Text style={[type.bodyLg, { color: colors.lilac }]} accessibilityRole="header">
         Theme: <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold }}>{state.theme}</Text>
       </Text>
+      <View style={styles.words}>
+        {wordList.map((p) => {
+          const done = doneWords.has(p.word);
+          const reveal = !state.hidden || done || state.roundOver;
+          const hint = state.hinted.includes(p.word);
+          const label = reveal ? p.word : hint ? `${p.word[0]}${" _".repeat(p.word.length - 1)}` : `${p.word.length} letters`;
+          return (
+            <View key={p.word} style={[styles.chip, done && styles.chipDone]}>
+              <Text
+                style={[type.metadata, { color: done ? colors.ink : colors.paper, fontFamily: fonts.bodyBold, textDecorationLine: done ? "line-through" : "none" }]}
+                accessibilityLabel={done ? `${p.word}, found` : reveal ? p.word : `Hidden word, ${p.word.length} letters`}
+              >
+                {label}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
       <GestureDetector gesture={pan}>
         <Animated.View
           style={[{ width: cell * n, height: cell * n }, styles.grid, shake]}
@@ -188,24 +207,6 @@ export function WordSearchView({ state, dispatch, requestHint, snapshot }: Engin
           ))}
         </Animated.View>
       </GestureDetector>
-      <View style={styles.words}>
-        {state.words.map((p) => {
-          const done = doneWords.has(p.word);
-          const reveal = !state.hidden || done || state.roundOver;
-          const hint = state.hinted.includes(p.word);
-          const label = reveal ? p.word : hint ? `${p.word[0]}${" _".repeat(p.word.length - 1)}` : `${p.word.length} letters`;
-          return (
-            <View key={p.word} style={[styles.chip, done && styles.chipDone]}>
-              <Text
-                style={[type.metadata, { color: done ? colors.ink : colors.paper, fontFamily: fonts.bodyBold, textDecorationLine: done ? "line-through" : "none" }]}
-                accessibilityLabel={done ? `${p.word}, found` : reveal ? p.word : `Hidden word, ${p.word.length} letters`}
-              >
-                {label}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
       <HintBar hints={snapshot.hints} onHint={requestHint} />
       {state.roundOver ? (
         <Text style={[type.bodyLg, { color: foundCount >= state.words.length ? colors.lime : colors.pink }]} accessibilityLiveRegion="polite">

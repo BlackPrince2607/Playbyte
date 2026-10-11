@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { PlayLogo } from "@/components/PlayLogo";
+import { MajaLogo } from "@/components/MajaLogo";
 import { StatusPill } from "@/components/StatusPill";
 import { api, isProductionEnv } from "@/lib/api";
 import { createSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
@@ -106,7 +106,7 @@ export default function CmsPage() {
           }
         }
         if (!isProductionEnv()) {
-          const stored = localStorage.getItem("playbyte_admin_key");
+          const stored = localStorage.getItem("maja_admin_key");
           if (stored) {
             setDevKey(stored);
             await refresh();
@@ -138,14 +138,14 @@ export default function CmsPage() {
 
   async function devLogin(e: FormEvent) {
     e.preventDefault();
-    localStorage.setItem("playbyte_admin_key", devKey);
+    localStorage.setItem("maja_admin_key", devKey);
     try {
       await refresh();
       setAuthed(true);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid API key");
-      localStorage.removeItem("playbyte_admin_key");
+      localStorage.removeItem("maja_admin_key");
     }
   }
 
@@ -154,7 +154,7 @@ export default function CmsPage() {
       const sb = createSupabaseBrowserClient();
       await sb.auth.signOut();
     }
-    localStorage.removeItem("playbyte_admin_key");
+    localStorage.removeItem("maja_admin_key");
     setAuthed(false);
     setUserEmail(null);
   }
@@ -218,7 +218,7 @@ export default function CmsPage() {
   if (checking) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <PlayLogo />
+        <MajaLogo />
       </main>
     );
   }
@@ -226,7 +226,7 @@ export default function CmsPage() {
   if (!authed) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-8">
-        <PlayLogo />
+        <MajaLogo />
         <p className="text-sm text-lilac">
           Editorial console for moments, seasonal windows, and moderation. Sign in with your Supabase account
           (must be in <code className="font-mono text-paper">admin_users</code>).
@@ -293,7 +293,7 @@ export default function CmsPage() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-line bg-ink/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-          <PlayLogo size="sm" />
+          <MajaLogo size="sm" />
           <div className="flex items-center gap-4">
             {userEmail ? <span className="hidden text-sm text-lilac sm:inline">{userEmail}</span> : null}
             <button type="button" className="text-sm text-lilac hover:text-paper" onClick={() => void signOut()}>

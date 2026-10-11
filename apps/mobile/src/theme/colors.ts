@@ -19,6 +19,25 @@ export const colors = {
   pinkGlow: "rgba(255, 77, 141, 0.3)",
 };
 
+/** Warm Stitch "surface" palette used by the onboarding flow. */
+export const surface = {
+  base: "#1d1013",
+  deep: "#140a0e",
+  lowest: "#170a0e",
+  low: "#26181b",
+  container: "#2a1c1f",
+  high: "#362629",
+  highest: "#413034",
+  outlineVariant: "#594046",
+  onSurface: "#f7dce1",
+  onSurfaceVariant: "#e1bec5",
+  lime: "#bdf532",
+  limeDeep: "#a2d801",
+  onLimeDeep: "#425a00",
+  success: "#57e15b",
+  gold: "#ffb800",
+};
+
 export const radius = {
   sm: 8,
   md: 14,

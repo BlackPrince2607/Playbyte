@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme/colors";
 import { fonts, type } from "../theme/typography";
 
-export function PlayLogo({
+export function MajaLogo({
   size = "md",
   soft = false,
 }: {
@@ -22,7 +22,7 @@ export function PlayLogo({
       ]}
       accessibilityRole="header"
     >
-      PLAY
+      MAJA
     </Text>
   );
 }

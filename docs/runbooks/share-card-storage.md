@@ -2,7 +2,7 @@
 
 **Symptom:** `POST /v1/moments/{id}/share-card` returns `500 internal_error` (after a successful respond).
 
-**Confirmed (2026-09-21 smoke):** still failing on `https://playbyte-production.up.railway.app` with opaque 500.
+**Confirmed (2026-09-21 smoke):** still failing on `https://maja-production.up.railway.app` with opaque 500.
 
 **Likely cause:** Supabase Storage bucket `share-cards` missing or service role not configured on Railway. Deployed build may also predate clearer `503 storage_unavailable` mapping (local code now maps config + upload failures to 503).
 
@@ -29,7 +29,7 @@ Or create bucket `share-cards` (public, PNG, 2MB) in Dashboard → Storage.
 4. Re-test:
 
 ```bash
-python scripts/smoke_api.py https://playbyte-production.up.railway.app
+python scripts/smoke_api.py https://maja-production.up.railway.app
 # share-card step should PASS with assetUrl (or 503 with storage_unavailable if intentionally unavailable)
 ```
 

@@ -1,7 +1,7 @@
-# Railway deployment (Playbyte API)
+# Railway deployment (Maja API)
 
 Use **one public API service** from `backend/`. Mobile and admin both call that API.
-Do **not** deploy `@playbyte/mobile` or `@playbyte/admin` as the API.
+Do **not** deploy `@maja/mobile` or `@maja/admin` as the API.
 
 ## Fix: “Detected Node / No start command” (Railpack)
 
@@ -19,7 +19,7 @@ That error means Railway is building the **monorepo root** (pnpm workspace), not
 3. **Settings → Build** → use **Dockerfile** (Railway will find `backend/Dockerfile` once root is `backend`).
 4. Redeploy.
 
-Optional: delete the broken `@playbyte/mobile` / `@playbyte/admin` services if they were auto-created from the monorepo.
+Optional: delete the broken `@maja/mobile` / `@maja/admin` services if they were auto-created from the monorepo.
 
 ## Recommended services
 

@@ -1,6 +1,6 @@
 import { CompletedPlay, KeyValueStore } from "./types";
 
-const QUEUE_KEY = "playbyte.game.submitQueue";
+const QUEUE_KEY = "maja.game.submitQueue";
 const MAX_QUEUE = 50;
 const MAX_ATTEMPTS = 8;
 

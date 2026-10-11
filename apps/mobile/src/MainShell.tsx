@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   BackHandler,
@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { FeedGame, isApiError } from "./api";
 import { BottomNav, TabKey } from "./components/BottomNav";
@@ -21,12 +22,15 @@ import type { CompletedPlay, GameSession } from "./game/session/types";
 import { GameHost } from "./game/ui/GameHost";
 import { FeedScreen } from "./screens/feed/FeedScreen";
 import { PostGameResultScreen } from "./screens/feed/PostGameResultScreen";
+import { StreakScreen } from "./screens/feed/StreakScreen";
 import { FriendsScreen } from "./screens/friends/FriendsScreen";
 import { LeaderboardScreen } from "./screens/friends/LeaderboardScreen";
 import { LiveNowScreen } from "./screens/live/LiveNowScreen";
-import { GetStartedScreen } from "./screens/onboarding/GetStartedScreen";
 import { InterestsScreen } from "./screens/onboarding/InterestsScreen";
+import { IntroSlidesScreen } from "./screens/onboarding/IntroSlidesScreen";
 import { LanguageScreen } from "./screens/onboarding/LanguageScreen";
+import { ProfileSetupScreen } from "./screens/onboarding/ProfileSetupScreen";
+import { ReadyScreen } from "./screens/onboarding/ReadyScreen";
 import { WelcomeScreen } from "./screens/onboarding/WelcomeScreen";
 import { NotificationsScreen } from "./screens/profile/NotificationsScreen";
 import { SettingsScreen } from "./screens/profile/SettingsScreen";
@@ -48,7 +52,7 @@ function BootLoading({ onRetry }: { onRetry: () => void }) {
 
   return (
     <View style={styles.center}>
-      <Text style={[type.logo, { color: colors.pink, fontSize: 36 }]}>PLAY</Text>
+      <Text style={[type.logo, { color: colors.pink, fontSize: 36 }]}>MAJA</Text>
       <ActivityIndicator color={colors.lime} style={{ marginTop: 16 }} />
       {showRetry ? (
         <View style={{ marginTop: 24, paddingHorizontal: 32, alignItems: "center", gap: 12 }}>
@@ -77,13 +81,15 @@ export function MainShell() {
     refreshFeed,
     retryBoot,
     items,
+    streak,
   } = useApp();
-  const { googleAvailable, signInWithGoogle, isSignedIn } = useAuth();
+  const { googleAvailable, signInWithGoogle, isSignedIn, user } = useAuth();
   const [playing, setPlaying] = useState<FeedGame | null>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [retryingSave, setRetryingSave] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
+  const [showStreak, setShowStreak] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [gameSubmitting, setGameSubmitting] = useState(false);
@@ -91,6 +97,9 @@ export function MainShell() {
   const [restoring, setRestoring] = useState<GameSession | undefined>(undefined);
   const [welcomeAuthBusy, setWelcomeAuthBusy] = useState(false);
   const [signInError, setSignInError] = useState("");
+  const [introPage, setIntroPage] = useState(0);
+  const [pickedInterests, setPickedInterests] = useState<string[]>([]);
+  const [finishingOnboarding, setFinishingOnboarding] = useState(false);
   const wasSignedIn = useRef<boolean | null>(null);
 
   // Once the app is up: start analytics, retry plays that failed to submit and offer to resume an interrupted game.
@@ -110,6 +119,7 @@ export function MainShell() {
     setShowLeaderboard(false);
     setShowNotif(false);
     setShowRecap(false);
+    setShowStreak(false);
     setPlaying(null);
     setRestoring(undefined);
     setGameResult(null);
@@ -139,7 +149,7 @@ export function MainShell() {
     setWelcomeAuthBusy(true);
     try {
       await signInWithGoogle();
-      setOnboardingStep("get_started");
+      setOnboardingStep("profile");
     } catch (e) {
       const message = e instanceof Error ? e.message : "Google Sign-In failed";
       if (!message.toLowerCase().includes("cancelled")) {
@@ -185,14 +195,6 @@ export function MainShell() {
     setGameSubmitting(false);
   }, []);
 
-  const startFirstGameFromFeed = useCallback(() => {
-    const game = items.find((i): i is FeedGame => i.type === "mini_game");
-    if (game) startGame(game);
-    else {
-      void completeOnboarding();
-    }
-  }, [items, startGame, completeOnboarding]);
-
   // A failed save never hides the result: the play stays in the persisted queue unless the server rejected it.
   const savePlay = useCallback(
     async (play: CompletedPlay): Promise<SaveOutcome> => {
@@ -229,10 +231,27 @@ export function MainShell() {
   }, [gameResult, retryingSave, savePlay]);
 
   const goBackOnboarding = useCallback(() => {
-    if (onboardingStep === "interests") setOnboardingStep("language");
-    else if (onboardingStep === "language") setOnboardingStep("get_started");
-    else if (onboardingStep === "get_started") setOnboardingStep("welcome");
-  }, [onboardingStep, setOnboardingStep]);
+    if (onboardingStep === "ready") setOnboardingStep("interests");
+    else if (onboardingStep === "interests") setOnboardingStep("profile");
+    else if (onboardingStep === "profile") setOnboardingStep("signup");
+    else if (onboardingStep === "signup") {
+      setIntroPage(1);
+      setOnboardingStep("intro");
+    } else if (onboardingStep === "intro") {
+      if (introPage > 0) setIntroPage(introPage - 1);
+      else setOnboardingStep("language");
+    }
+  }, [onboardingStep, setOnboardingStep, introPage]);
+
+  const finishOnboarding = useCallback(async () => {
+    if (finishingOnboarding) return;
+    setFinishingOnboarding(true);
+    try {
+      await completeOnboarding();
+    } finally {
+      setFinishingOnboarding(false);
+    }
+  }, [completeOnboarding, finishingOnboarding]);
 
   // Android system back — unwind overlays / onboarding; exit only from root.
   useEffect(() => {
@@ -243,7 +262,7 @@ export function MainShell() {
         return true;
       }
       if (!onboardingDone) {
-        if (onboardingStep === "welcome") return false;
+        if (onboardingStep === "language") return false;
         goBackOnboarding();
         return true;
       }
@@ -268,6 +287,10 @@ export function MainShell() {
         setShowRecap(false);
         return true;
       }
+      if (showStreak) {
+        setShowStreak(false);
+        return true;
+      }
       // Root tab screen — allow default (minimize / exit).
       return false;
     });
@@ -283,6 +306,7 @@ export function MainShell() {
     showLeaderboard,
     showNotif,
     showRecap,
+    showStreak,
   ]);
 
   if (!ready) {
@@ -311,8 +335,8 @@ export function MainShell() {
           setPromptSave(false);
           setSignInError("");
           void refreshFeed();
-          if (!onboardingDone && onboardingStep === "welcome") {
-            setOnboardingStep("get_started");
+          if (!onboardingDone && onboardingStep === "signup") {
+            setOnboardingStep("profile");
           }
         }}
       />
@@ -321,42 +345,64 @@ export function MainShell() {
 
   // Onboarding before feed boot errors — first-time users must not be trapped.
   if (!onboardingDone) {
-    if (onboardingStep === "welcome") {
-      return (
-        <WelcomeScreen
-          onNext={() => setOnboardingStep("get_started")}
-          googleAvailable={googleAvailable}
-          onGoogleSignIn={() => void welcomeGoogle()}
-          onEmailSignIn={isSupabaseConfigured() ? openSignIn : undefined}
-        />
-      );
-    }
-    if (onboardingStep === "get_started")
-      return (
-        <GetStartedScreen
-          onBack={goBackOnboarding}
-          onContinue={() => setOnboardingStep("language")}
-          onPlayTrivia={() => setOnboardingStep("language")}
-          onPlayGame={() => {
-            void completeOnboarding().then(() => startFirstGameFromFeed());
+    let screen: ReactNode;
+    if (onboardingStep === "language") {
+      screen = (
+        <LanguageScreen
+          onNext={() => {
+            setIntroPage(0);
+            setOnboardingStep("intro");
           }}
         />
       );
-    if (onboardingStep === "language")
-      return (
-        <LanguageScreen
+    } else if (onboardingStep === "intro") {
+      screen = (
+        <IntroSlidesScreen
+          page={introPage}
+          onPageChange={setIntroPage}
           onBack={goBackOnboarding}
-          onNext={() => setOnboardingStep("interests")}
-          onSkip={() => setOnboardingStep("interests")}
+          onNext={() => setOnboardingStep("signup")}
         />
       );
+    } else if (onboardingStep === "signup") {
+      screen = (
+        <WelcomeScreen
+          onBack={goBackOnboarding}
+          onGuest={() => setOnboardingStep("profile")}
+          googleAvailable={googleAvailable}
+          onGoogleSignIn={() => void welcomeGoogle()}
+          onEmailSignIn={isSupabaseConfigured() ? openSignIn : undefined}
+          busy={welcomeAuthBusy}
+          signedInAs={isSignedIn ? (user?.email ?? "your account") : null}
+          onContinueSignedIn={() => setOnboardingStep("profile")}
+        />
+      );
+    } else if (onboardingStep === "profile") {
+      screen = <ProfileSetupScreen onBack={goBackOnboarding} onNext={() => setOnboardingStep("interests")} />;
+    } else if (onboardingStep === "interests") {
+      screen = (
+        <InterestsScreen
+          onBack={goBackOnboarding}
+          onDone={(picked) => {
+            setPickedInterests(picked.map((c) => c.name));
+            setOnboardingStep("ready");
+          }}
+        />
+      );
+    } else {
+      screen = (
+        <ReadyScreen
+          interests={pickedInterests}
+          onBack={goBackOnboarding}
+          onDone={() => void finishOnboarding()}
+          busy={finishingOnboarding}
+        />
+      );
+    }
     return (
-      <InterestsScreen
-        onBack={goBackOnboarding}
-        onDone={async () => {
-          await completeOnboarding();
-        }}
-      />
+      <Animated.View key={onboardingStep} entering={FadeIn.duration(220)} style={styles.root}>
+        {screen}
+      </Animated.View>
     );
   }
 
@@ -451,8 +497,39 @@ export function MainShell() {
     );
   }
 
+  if (showStreak) {
+    return <StreakScreen streak={streak} onBack={() => setShowStreak(false)} />;
+  }
+
   return (
     <View style={styles.root}>
+      <View style={styles.body}>
+        <View style={[styles.tabPane, tab !== "feed" && styles.hidden]}>
+          <FeedScreen
+            onPlayGame={startGame}
+            onOpenProfile={() => setTab("vault")}
+            onOpenStreak={() => setShowStreak(true)}
+            onSignIn={isSupabaseConfigured() ? () => setShowSignIn(true) : undefined}
+          />
+        </View>
+        <View style={[styles.tabPane, tab !== "compete" && styles.hidden]}>
+          <LiveNowScreen onProfile={() => setTab("vault")} />
+        </View>
+        <View style={[styles.tabPane, tab !== "friends" && styles.hidden]}>
+          <FriendsScreen
+            onSignIn={() => setShowSignIn(true)}
+            onOpenLeaderboard={() => setShowLeaderboard(true)}
+          />
+        </View>
+        <View style={[styles.tabPane, tab !== "vault" && styles.hidden]}>
+          <SettingsScreen
+            onOpenNotifications={() => setShowNotif(true)}
+            onOpenRecap={() => setShowRecap(true)}
+            onSignIn={() => setShowSignIn(true)}
+          />
+        </View>
+      </View>
+
       {resumable ? (
         <View style={[styles.banner, styles.resumeBanner]}>
           <Pressable style={{ flex: 1 }} onPress={() => resumeGame(resumable)} accessibilityRole="button">
@@ -472,28 +549,6 @@ export function MainShell() {
           </Text>
         </Pressable>
       ) : null}
-
-      <View style={styles.body}>
-        <View style={[styles.tabPane, tab !== "feed" && styles.hidden]}>
-          <FeedScreen onPlayGame={startGame} onOpenProfile={() => setTab("vault")} />
-        </View>
-        <View style={[styles.tabPane, tab !== "compete" && styles.hidden]}>
-          <LiveNowScreen onProfile={() => setTab("vault")} />
-        </View>
-        <View style={[styles.tabPane, tab !== "friends" && styles.hidden]}>
-          <FriendsScreen
-            onSignIn={() => setShowSignIn(true)}
-            onOpenLeaderboard={() => setShowLeaderboard(true)}
-          />
-        </View>
-        <View style={[styles.tabPane, tab !== "vault" && styles.hidden]}>
-          <SettingsScreen
-            onOpenNotifications={() => setShowNotif(true)}
-            onOpenRecap={() => setShowRecap(true)}
-            onSignIn={() => setShowSignIn(true)}
-          />
-        </View>
-      </View>
 
       <BottomNav active={tab} onChange={(t: TabKey) => setTab(t)} />
     </View>
@@ -518,7 +573,7 @@ const styles = StyleSheet.create({
   banner: {
     backgroundColor: colors.cardAlt,
     marginHorizontal: spacing.md,
-    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
     padding: 12,
     borderRadius: 12,
     zIndex: 100,

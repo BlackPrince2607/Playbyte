@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { scoreRows, statRows } from "./resultSummary";
+import { resultHeadline, scoreRows, statRows } from "./resultSummary";
 
 describe("result summary", () => {
   it("lists non-zero point components in a stable order and skips totals", () => {
@@ -22,5 +22,13 @@ describe("result summary", () => {
     ]);
     assert.deepEqual(scoreRows(undefined), []);
     assert.deepEqual(statRows(undefined), []);
+  });
+
+  it("picks a headline from the percentile, falling back to accuracy", () => {
+    assert.deepEqual(resultHeadline({ percentile: 95 }), { title: "Legendary run!", celebrate: true });
+    assert.deepEqual(resultHeadline({ percentile: 20 }), { title: "Nice try.", celebrate: false });
+    assert.deepEqual(resultHeadline({ percentile: 20, correct: 5, attempts: 5 }), { title: "Flawless!", celebrate: true });
+    assert.deepEqual(resultHeadline({ percentile: null, correct: 3, attempts: 4 }), { title: "Strong run!", celebrate: true });
+    assert.deepEqual(resultHeadline({ percentile: null }), { title: "Run complete.", celebrate: false });
   });
 });

@@ -1,6 +1,6 @@
 # Production deployment architecture
 
-Playbyte production runs as **separate deployable units** sharing one Supabase project per environment.
+Maja production runs as **separate deployable units** sharing one Supabase project per environment.
 
 ## Architecture diagram
 

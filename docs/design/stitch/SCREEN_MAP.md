@@ -1,4 +1,4 @@
-# Stitch → Playbyte mobile screen map
+# Stitch → Maja mobile screen map
 
 **Project:** PLAY Social Play Platform (`projects/14973883405125719991`)  
 **Source:** Stitch MCP + exports in `html/` and `screenshots/`  

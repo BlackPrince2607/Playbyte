@@ -183,7 +183,20 @@ export type FeedMoment = {
   myOptionId: string | null;
   result: CrowdSnapshot | null;
   friends?: { displayName: string; avatarKey: string | null; optionId: string }[];
+  engagement?: MomentEngagement;
 };
+
+export type MomentEngagement = { likes: number; shares: number; comments: number; likedByMe: boolean };
+
+export type MomentComment = {
+  id: string;
+  body: string;
+  createdAt: string | null;
+  author: { userId: string; displayName: string; avatarKey: string | null };
+  mine: boolean;
+};
+
+export type CommentsPage = { comments: MomentComment[]; nextCursor: string | null; total: number };
 
 export type FeedGame = {
   type: "mini_game";

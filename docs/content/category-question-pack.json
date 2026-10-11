@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "note": "Editorial pack mapped to live Playbyte categories. Polls are opinion (scoringMode none). Quizzes need isCorrect on one option. Auto-refresh may publish these with a short endsAt window.",
+  "note": "Editorial pack mapped to live Maja categories. Polls are opinion (scoringMode none). Quizzes need isCorrect on one option. Auto-refresh may publish these with a short endsAt window.",
   "moments": [
     {
       "categorySlug": "cricket",

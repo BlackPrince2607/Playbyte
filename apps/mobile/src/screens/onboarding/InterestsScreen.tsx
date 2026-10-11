@@ -1,49 +1,61 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api, isApiError } from "../../api";
-import { PrimaryButton } from "../../components/PrimaryButton";
-import { colors, radius, spacing } from "../../theme/colors";
+import { colors, spacing, surface } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
+import { BackButton, CtaButton, onboardingStyles } from "./ui";
 
-type Props = { onDone: (ids: string[]) => void; onBack?: () => void };
+export type Category = { id: string; name: string };
 
-type Category = { id: string; name: string };
+type Props = { onDone: (picked: Category[]) => void; onBack?: () => void };
 
 const FALLBACK: Category[] = [
-  { id: "cricket", name: "Cricket" },
-  { id: "bollywood", name: "Bollywood" },
-  { id: "food", name: "Food" },
-  { id: "tech", name: "Tech" },
   { id: "sports", name: "Sports" },
-  { id: "memes", name: "Memes" },
+  { id: "cricket", name: "Cricket" },
+  { id: "news", name: "News" },
+  { id: "pop-culture", name: "Pop Culture" },
+  { id: "food", name: "Food" },
+  { id: "weather", name: "Weather" },
+  { id: "tech", name: "Tech" },
   { id: "music", name: "Music" },
-  { id: "politics", name: "Politics" },
+  { id: "travel", name: "Travel" },
+  { id: "general-knowledge", name: "General Knowledge" },
 ];
 
-const ICONS: Record<string, string> = {
-  cricket: "🏏",
-  bollywood: "🎬",
-  food: "🍜",
-  tech: "💻",
-  sports: "⚽",
-  memes: "😂",
-  music: "🎵",
-  politics: "📰",
-  relationships: "💜",
-  puzzles: "🧩",
-  trending: "🔥",
-  india: "🇮🇳",
-};
+const ICONS: [string, string][] = [
+  ["cricket", "🏏"],
+  ["sport", "⚽"],
+  ["news", "📰"],
+  ["politic", "🏛️"],
+  ["pop", "🎬"],
+  ["bollywood", "🎬"],
+  ["entertainment", "🎬"],
+  ["movie", "🎬"],
+  ["cinema", "🎬"],
+  ["k-drama", "📺"],
+  ["food", "🍜"],
+  ["weather", "⛅"],
+  ["tech", "💻"],
+  ["science", "🔬"],
+  ["music", "🎵"],
+  ["travel", "✈️"],
+  ["knowledge", "💡"],
+  ["trivia", "💡"],
+  ["meme", "😂"],
+  ["fashion", "👗"],
+  ["health", "💪"],
+  ["relationship", "💜"],
+  ["puzzle", "🧩"],
+  ["trending", "🔥"],
+  ["india", "🇮🇳"],
+];
 
-function iconFor(name: string, id: string): string {
-  const key = id.toLowerCase();
-  if (ICONS[key]) return ICONS[key];
-  const lower = name.toLowerCase();
-  for (const [k, v] of Object.entries(ICONS)) {
-    if (lower.includes(k)) return v;
-  }
-  return "✨";
+function iconFor(c: Category): string {
+  const hay = `${c.id} ${c.name}`.toLowerCase();
+  return ICONS.find(([k]) => hay.includes(k))?.[1] ?? "✨";
 }
 
 export function InterestsScreen({ onDone, onBack }: Props) {
@@ -67,7 +79,7 @@ export function InterestsScreen({ onDone, onBack }: Props) {
       } else {
         setCategories(FALLBACK);
         setUsingFallback(true);
-        setLoadError("No categories from server — showing defaults. Selections won’t sync until reload.");
+        setLoadError("Couldn't load interests from the server — showing defaults.");
       }
     } catch (e) {
       setCategories(FALLBACK);
@@ -93,142 +105,142 @@ export function InterestsScreen({ onDone, onBack }: Props) {
         });
       } catch (e) {
         setSaveError(isApiError(e) ? e.userMessage : "Could not save interests.");
-        setSaving(false);
         return;
       } finally {
         setSaving(false);
       }
     }
-    onDone(picked);
+    onDone(categories.filter((c) => picked.includes(c.id)));
   }
 
   return (
-    <View style={[styles.wrap, { paddingTop: insets.top + 24 }]}>
-      {onBack ? (
-        <Pressable
-          onPress={onBack}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          style={{ marginBottom: spacing.md, alignSelf: "flex-start" }}
-        >
-          <Text style={[type.bodySm, { color: colors.lilac }]}>← Back</Text>
-        </Pressable>
-      ) : null}
-      <Text style={[type.hero, { color: colors.paper }]}>What do you love?</Text>
-      <Text style={[type.bodyLg, { color: colors.lilac, marginTop: spacing.sm }]}>
-        Pick a few — we’ll personalize your feed.
-      </Text>
+    <View style={[onboardingStyles.root, { paddingTop: insets.top + 4 }]}>
+      <View style={styles.pad}>
+        <View style={onboardingStyles.header}>{onBack ? <BackButton onPress={onBack} plain /> : null}</View>
+      </View>
 
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.lime} size="large" />
-          <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md }]}>Loading interests…</Text>
-        </View>
-      ) : (
-        <>
-          {loadError ? (
-            <Text style={[type.metadata, { color: colors.pinkSoft, marginTop: spacing.sm }]}>{loadError}</Text>
-          ) : null}
-          <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-            {categories.map((c) => {
-              const on = picked.includes(c.id);
-              return (
-                <Pressable
-                  key={c.id}
-                  onPress={() => setPicked((p) => (on ? p.filter((x) => x !== c.id) : [...p, c.id]))}
-                  style={[styles.card, on && styles.cardOn]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: on }}
-                >
-                  <Text style={styles.emoji}>{iconFor(c.name, c.id)}</Text>
-                  <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold, textAlign: "center" }]}>
-                    {c.name}
-                  </Text>
-                  {on ? <Text style={styles.check}>✓</Text> : null}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </>
-      )}
+      <ScrollView contentContainerStyle={[styles.pad, { paddingBottom: 170 + insets.bottom }]} showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>
+          What do you <Text style={{ color: colors.pink }}>love?</Text>
+        </Text>
+        <Text style={[type.bodySm, { color: colors.lilac, marginTop: 6 }]}>Pick a few — we'll personalize your game feed.</Text>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        {saveError ? (
-          <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{saveError}</Text>
-        ) : null}
-        {picked.length > 0 ? (
-          <View style={styles.countPill}>
-            <Text style={[type.statsSm, { color: colors.pink }]}>{picked.length} selected</Text>
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={surface.lime} size="large" />
+            <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md }]}>Loading interests…</Text>
           </View>
+        ) : (
+          <>
+            {loadError ? (
+              <Pressable onPress={() => void loadCategories()} accessibilityRole="button" style={{ marginTop: spacing.sm }}>
+                <Text style={[type.metadata, { color: colors.pinkSoft }]}>
+                  {loadError} <Text style={{ fontFamily: fonts.bodyBold, textDecorationLine: "underline" }}>Retry</Text>
+                </Text>
+              </Pressable>
+            ) : null}
+            <View style={styles.grid}>
+              {categories.map((c) => {
+                const on = picked.includes(c.id);
+                return (
+                  <Pressable
+                    key={c.id}
+                    onPress={() => setPicked((p) => (on ? p.filter((x) => x !== c.id) : [...p, c.id]))}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: on }}
+                    style={({ pressed }) => [styles.tile, on && styles.tileOn, pressed && { transform: [{ scale: 0.95 }] }]}
+                  >
+                    {on ? (
+                      <View style={styles.check}>
+                        <Ionicons name="checkmark" size={14} color={colors.ink} />
+                      </View>
+                    ) : null}
+                    <View style={styles.iconBox}>
+                      <Text style={styles.emoji}>{iconFor(c)}</Text>
+                    </View>
+                    <Text
+                      style={[styles.tileLabel, on && { color: surface.lime, fontFamily: fonts.bodyBold }]}
+                      numberOfLines={2}
+                    >
+                      {c.name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      <LinearGradient
+        colors={["transparent", "rgba(29,16,19,0.95)", surface.base]}
+        locations={[0, 0.35, 1]}
+        style={[styles.dock, { paddingBottom: insets.bottom + 12 }]}
+      >
+        {saveError ? (
+          <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]} accessibilityRole="alert">
+            {saveError}
+          </Text>
         ) : null}
-        <PrimaryButton
-          label={saving ? "Saving…" : picked.length ? "Build my feed" : "Skip"}
-          trailingIcon={picked.length && !saving ? "arrow-forward" : undefined}
+        <CtaButton
+          label={saving ? "Saving…" : "Continue"}
+          icon={saving ? null : "arrow-forward"}
           disabled={loading || saving}
           onPress={() => void finish()}
+          style={{ alignSelf: "stretch" }}
         />
-        {loadError ? (
-          <PrimaryButton label="Retry load" variant="secondary" onPress={() => void loadCategories()} />
-        ) : null}
-      </View>
+        <Text style={onboardingStyles.stepLabel}>Step 5 of 5</Text>
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: colors.ink, paddingHorizontal: spacing.margin },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-    paddingBottom: 160,
-  },
-  card: {
-    width: "47%",
-    minHeight: 104,
+  pad: { paddingHorizontal: spacing.margin },
+  title: { fontFamily: fonts.display, fontSize: 40, lineHeight: 44, letterSpacing: -0.6, color: colors.paper, marginTop: spacing.md },
+  center: { paddingVertical: 80, alignItems: "center" },
+  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 12, marginTop: spacing.lg },
+  tile: {
+    width: "48.2%",
+    aspectRatio: 1 / 0.95,
+    borderRadius: 12,
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
     alignItems: "center",
     justifyContent: "center",
     padding: spacing.md,
-    gap: 6,
+    boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
   },
-  cardOn: {
-    backgroundColor: colors.cardAlt,
-    borderColor: colors.pink,
-    borderWidth: 2,
-  },
-  emoji: { fontSize: 28 },
+  tileOn: { backgroundColor: colors.cardAlt, boxShadow: "0 10px 20px rgba(189,245,50,0.1)" },
   check: {
     position: "absolute",
-    top: 8,
+    top: 10,
     right: 10,
-    color: colors.lime,
-    fontSize: 16,
-    fontWeight: "700",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: surface.lime,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  footer: {
+  iconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: surface.container,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  emoji: { fontSize: 32 },
+  tileLabel: { ...type.bodySm, fontFamily: fonts.bodyMedium, color: colors.paper, textAlign: "center", letterSpacing: 0.3 },
+  dock: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
     paddingHorizontal: spacing.margin,
-    paddingTop: spacing.lg,
-    backgroundColor: colors.ink,
+    paddingTop: spacing.xl,
+    alignItems: "center",
     gap: spacing.sm,
-  },
-  countPill: {
-    alignSelf: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: "rgba(255,77,141,0.3)",
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    marginBottom: spacing.xs,
   },
 });

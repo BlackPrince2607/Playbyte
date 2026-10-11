@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { ResultBar } from "../../components/StitchPrimitives";
-import { scoreRows, statRows } from "../../game/ui/resultSummary";
+import { prefersReducedMotion } from "../../game/ui/feedback";
+import { Confetti } from "../../game/ui/motion";
+import { resultHeadline, scoreRows, statRows } from "../../game/ui/resultSummary";
 import type { SaveState } from "../../game/session/submitQueue";
 import type { RoundRecord } from "../../game/session/types";
 import { colors, radius, spacing } from "../../theme/colors";
@@ -31,6 +34,27 @@ type Props = {
 };
 
 const BAR_MAX_HEIGHT = 72;
+const COUNT_UP_MS = 900;
+
+function useCountUp(target: number) {
+  const [value, setValue] = useState(() => (prefersReducedMotion() ? target : 0));
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      setValue(target);
+      return;
+    }
+    const start = Date.now();
+    let frame = 0;
+    const step = () => {
+      const t = Math.min(1, (Date.now() - start) / COUNT_UP_MS);
+      setValue(Math.round(target * (1 - Math.pow(1 - t, 3))));
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [target]);
+  return value;
+}
 
 function RoundBars({ rounds }: { rounds: RoundRecord[] }) {
   const top = Math.max(1, ...rounds.map((r) => r.points));
@@ -90,6 +114,15 @@ function ScoreComposition({ breakdown }: { breakdown?: Record<string, number> })
   );
 }
 
+function Tile({ value, label, color = colors.paper }: { value: string; label: string; color?: string }) {
+  return (
+    <View style={styles.tile} accessible accessibilityLabel={`${label}: ${value}`}>
+      <Text style={[type.statsSm, { color }]}>{value}</Text>
+      <Text style={[type.micro, { color: colors.lilac, textAlign: "center" }]}>{label}</Text>
+    </View>
+  );
+}
+
 export function PostGameResultScreen({
   score,
   percentile,
@@ -108,25 +141,25 @@ export function PostGameResultScreen({
   rounds,
   scoreBreakdown,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const betterThan = percentile === null ? null : Math.max(0, Math.min(100, Math.round(percentile)));
-  const headline = betterThan === null ? "Run complete." : betterThan >= 50 ? "Strong run." : "Nice try.";
+  const { title: headline, celebrate } = resultHeadline({ percentile: betterThan, correct, attempts });
+  const shownScore = useCountUp(score);
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState("");
   const showAccuracy = attempts !== undefined && attempts > 0 && correct !== undefined;
+  const accuracyPct = showAccuracy ? Math.round((correct / attempts) * 100) : 0;
 
   async function shareScore() {
     setSharing(true);
     setShareError("");
+    const brag =
+      betterThan === null
+        ? `I scored ${score} on ${gameTitle} on MAJA. Can you beat it?`
+        : `I scored ${score} on ${gameTitle} — better than ${betterThan}% of players today on MAJA. Can you beat it?`;
+    const link = process.env.EXPO_PUBLIC_APP_SHARE_URL?.trim();
     try {
-      const result = await Share.share({
-        message:
-          betterThan === null
-            ? `I scored ${score} on ${gameTitle} on PLAY.`
-            : `I scored ${score} on ${gameTitle} — better than ${betterThan}% of players today on PLAY.`,
-      });
-      if (result.action === Share.dismissedAction) {
-        /* user cancelled — not an error */
-      }
+      await Share.share({ message: link ? `${brag}\n${link}` : brag });
     } catch {
       setShareError("Could not open share sheet. Try again.");
     } finally {
@@ -135,104 +168,108 @@ export function PostGameResultScreen({
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.ink }} contentContainerStyle={styles.wrap}>
-      <Text style={[type.hero, { color: colors.paper, textAlign: "center" }]}>
-        {headline}
-      </Text>
-      <Text style={[type.metadata, styles.eyebrow]}>{gameTitle.toUpperCase()} · RESULT</Text>
+    <View style={{ flex: 1, backgroundColor: colors.ink }}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.wrap,
+          { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg },
+        ]}
+      >
+        <Text style={[type.metadata, styles.eyebrow]} numberOfLines={1}>
+          {gameTitle.toUpperCase()} · RESULT
+        </Text>
+        <Text style={[type.hero, { color: colors.paper, textAlign: "center" }]}>{headline}</Text>
 
-      <View style={styles.scoreWrap}>
-        <Text style={[type.largeScore, { color: colors.lime }]}>{score}</Text>
-      </View>
-      {betterThan !== null ? (
-        <Text style={[type.bodyLg, { color: colors.lilac }]}>Better than {betterThan}% of players today</Text>
-      ) : null}
-
-      {saveState !== "saved" ? (
-        <View
-          style={[styles.saveBanner, saveState === "rejected" && { borderColor: colors.pinkSoft }]}
-          accessibilityRole="alert"
-        >
-          <Text style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>
-            {saveMessage ??
-              (saveState === "queued"
-                ? "Couldn't reach the server. Your score is saved on this phone and will sync automatically."
-                : "This score couldn't be recorded.")}
-          </Text>
-          {saveState === "queued" && onRetrySave ? (
-            <PrimaryButton
-              label={retryingSave ? "Saving…" : "Try saving now"}
-              variant="secondary"
-              disabled={retryingSave}
-              onPress={onRetrySave}
-              icon="cloud-upload-outline"
-            />
+        <View style={styles.hero} accessible accessibilityLabel={`Score ${score}`}>
+          <Text style={[type.largeScore, { color: colors.lime }]}>{shownScore}</Text>
+          <Text style={[type.micro, { color: colors.lilac, letterSpacing: 2 }]}>POINTS</Text>
+          {betterThan !== null ? (
+            <View style={styles.percentPill}>
+              <Text style={[type.bodySm, { color: colors.ink, fontFamily: fonts.bodyBold }]}>
+                Better than {betterThan}% of players today
+              </Text>
+            </View>
           ) : null}
         </View>
-      ) : null}
 
-      <View style={styles.tiles}>
-        <View style={styles.tile}>
-          <Text style={[type.statsSm, { color: colors.paper }]}>{score}</Text>
-          <Text style={[type.micro, { color: colors.lilac }]}>YOUR SCORE</Text>
-        </View>
-        {betterThan !== null ? (
-          <View style={styles.tile}>
-            <Text style={[type.statsSm, { color: colors.limeLive }]}>{betterThan}%</Text>
-            <Text style={[type.micro, { color: colors.lilac, textAlign: "center" }]}>BETTER THAN{"\n"}PLAYERS</Text>
-          </View>
-        ) : null}
-        {showAccuracy ? (
-          <View style={styles.tile} accessible accessibilityLabel={`${correct} of ${attempts} correct`}>
-            <Text style={[type.statsSm, { color: colors.paper }]}>
-              {correct}/{attempts}
+        {saveState !== "saved" ? (
+          <View
+            style={[styles.saveBanner, saveState === "rejected" && { borderColor: colors.pinkSoft }]}
+            accessibilityRole="alert"
+          >
+            <Text style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>
+              {saveMessage ??
+                (saveState === "queued"
+                  ? "Couldn't reach the server. Your score is saved on this phone and will sync automatically."
+                  : "This score couldn't be recorded.")}
             </Text>
-            <Text style={[type.micro, { color: colors.lilac }]}>CORRECT</Text>
+            {saveState === "queued" && onRetrySave ? (
+              <PrimaryButton
+                label={retryingSave ? "Saving…" : "Try saving now"}
+                variant="secondary"
+                disabled={retryingSave}
+                onPress={onRetrySave}
+                icon="cloud-upload-outline"
+              />
+            ) : null}
           </View>
         ) : null}
-      </View>
 
-      {rounds && rounds.length > 1 ? <RoundBars rounds={rounds} /> : null}
-      <ScoreComposition breakdown={scoreBreakdown} />
-
-      {optionBreakdown && optionBreakdown.length > 0 ? (
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>HOW THE CROWD VOTED</Text>
-          {optionBreakdown.map((o) => (
-            <ResultBar key={o.label} label={o.label} percent={o.percent} highlight={o.highlight} />
-          ))}
-        </View>
-      ) : null}
-
-      <View style={styles.actions}>
-        {onPlayAgain ? <PrimaryButton label="Play again" onPress={onPlayAgain} icon="refresh" /> : null}
-        {onNextGame ? (
-          <PrimaryButton
-            label="Next game"
-            variant={onPlayAgain ? "secondary" : "primary"}
-            onPress={onNextGame}
-            trailingIcon="arrow-forward"
-          />
+        {showAccuracy || (rounds && rounds.length > 0) ? (
+          <View style={styles.tiles}>
+            {showAccuracy ? (
+              <Tile value={`${accuracyPct}%`} label={`ACCURACY\n${correct}/${attempts} RIGHT`} color={colors.limeLive} />
+            ) : null}
+            {rounds && rounds.length > 0 ? <Tile value={String(rounds.length)} label="ROUNDS" /> : null}
+          </View>
         ) : null}
-        <View style={styles.actionRow}>
-          {enableShare ? (
-            <PrimaryButton
-              label={sharing ? "Opening…" : shareError ? "Retry share" : "Share"}
-              variant="secondary"
-              disabled={sharing}
-              onPress={() => void shareScore()}
-              icon="share-outline"
-              style={styles.actionRowItem}
-            />
+
+        <View style={styles.actions}>
+          {onPlayAgain ? <PrimaryButton label="Play again" onPress={onPlayAgain} icon="refresh" /> : null}
+          <View style={styles.actionRow}>
+            {onNextGame ? (
+              <PrimaryButton
+                label="Next game"
+                variant="secondary"
+                onPress={onNextGame}
+                trailingIcon="arrow-forward"
+                style={styles.actionRowItem}
+              />
+            ) : null}
+            {enableShare ? (
+              <PrimaryButton
+                label={sharing ? "Opening…" : shareError ? "Retry share" : "Share"}
+                variant="secondary"
+                disabled={sharing}
+                onPress={() => void shareScore()}
+                icon="share-outline"
+                style={styles.actionRowItem}
+              />
+            ) : null}
+          </View>
+          {sharing ? <ActivityIndicator color={colors.lime} /> : null}
+          {shareError ? (
+            <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{shareError}</Text>
           ) : null}
-          <PrimaryButton label="Feed" variant="secondary" onPress={onBackToFeed} icon="home-outline" style={styles.actionRowItem} />
+          <Pressable onPress={onBackToFeed} accessibilityRole="button" hitSlop={8} style={styles.feedLink}>
+            <Text style={[type.bodySm, { color: colors.lilac, fontFamily: fonts.bodyBold }]}>Back to feed</Text>
+          </Pressable>
         </View>
-        {sharing ? <ActivityIndicator color={colors.lime} style={{ marginTop: 4 }} /> : null}
-        {shareError ? (
-          <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{shareError}</Text>
+
+        {rounds && rounds.length > 1 ? <RoundBars rounds={rounds} /> : null}
+        <ScoreComposition breakdown={scoreBreakdown} />
+
+        {optionBreakdown && optionBreakdown.length > 0 ? (
+          <View style={styles.panel}>
+            <Text style={styles.panelTitle}>HOW THE CROWD VOTED</Text>
+            {optionBreakdown.map((o) => (
+              <ResultBar key={o.label} label={o.label} percent={o.percent} highlight={o.highlight} />
+            ))}
+          </View>
         ) : null}
-      </View>
-    </ScrollView>
+      </ScrollView>
+      <Confetti active={celebrate} />
+    </View>
   );
 }
 
@@ -240,18 +277,37 @@ const styles = StyleSheet.create({
   wrap: {
     flexGrow: 1,
     alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.margin,
+    paddingHorizontal: spacing.margin,
     gap: spacing.sm,
+    maxWidth: 480,
+    width: "100%",
+    alignSelf: "center",
   },
   eyebrow: {
     color: colors.lilac,
     letterSpacing: 2,
-    marginTop: spacing.xs,
     fontFamily: fonts.bodyBold,
   },
-  scoreWrap: { position: "relative", marginVertical: spacing.md },
-  tiles: { flexDirection: "row", gap: spacing.sm, width: "100%", marginTop: spacing.md },
+  hero: {
+    width: "100%",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  percentPill: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.lime,
+    borderRadius: radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  tiles: { flexDirection: "row", gap: spacing.sm, width: "100%", marginTop: spacing.xs },
   tile: {
     flex: 1,
     backgroundColor: colors.cardAlt,
@@ -259,6 +315,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
     alignItems: "center",
     gap: 4,
   },
@@ -290,9 +347,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     backgroundColor: colors.cardAlt,
   },
-  actions: { width: "100%", gap: spacing.sm, marginTop: spacing.xl },
+  actions: { width: "100%", gap: spacing.sm, marginTop: spacing.md },
   actionRow: { flexDirection: "row", gap: spacing.sm },
   actionRowItem: { flex: 1, paddingHorizontal: spacing.sm },
+  feedLink: { alignSelf: "center", paddingVertical: spacing.sm },
   saveBanner: {
     width: "100%",
     marginTop: spacing.sm,

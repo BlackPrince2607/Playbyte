@@ -56,7 +56,12 @@ export function AnswerButton({
         <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
       ) : null}
       <View style={styles.row}>
-        <Text style={[type.bodyLg, styles.label, { fontFamily: fonts.bodyBold }]}>
+        <Text
+          style={[type.bodyLg, styles.label, { fontFamily: fonts.bodyBold }]}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
           {emoji ? `${emoji} ` : ""}
           {label ?? ""}
         </Text>

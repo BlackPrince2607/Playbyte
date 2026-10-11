@@ -1,4 +1,4 @@
-# Production Readiness Audit — Playbyte
+# Production Readiness Audit — Maja
 
 **Audit date:** 2026-08-31 (updated after production-prep pass)  
 **Verdict:** **NOT READY FOR STAGING**
@@ -9,7 +9,7 @@ Code and configuration hardening for deployment is substantially complete, but *
 
 ## Executive summary
 
-Playbyte MVP is implemented across FastAPI, Supabase Postgres, Supabase Auth, Supabase Storage, Expo mobile, Next.js CMS, and a Postgres outbox worker. This pass focused on **production deployability** (storage, auth fail-closed, health checks, worker safety, CI, runbooks) — not new product features.
+Maja MVP is implemented across FastAPI, Supabase Postgres, Supabase Auth, Supabase Storage, Expo mobile, Next.js CMS, and a Postgres outbox worker. This pass focused on **production deployability** (storage, auth fail-closed, health checks, worker safety, CI, runbooks) — not new product features.
 
 ### Build verification (this machine — 2026-08-31)
 

@@ -2,7 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 import { FeedGame } from "../../api";
 import { PrimaryButton } from "../../components/PrimaryButton";
-import { LivePill } from "../../components/PlayLogo";
+import { LivePill } from "../../components/MajaLogo";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 

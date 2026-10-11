@@ -2,15 +2,14 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvatarImage } from "./AvatarImage";
-import { PlayLogo } from "./PlayLogo";
+import { MajaLogo } from "./MajaLogo";
 import { colors, spacing } from "../theme/colors";
 import { type } from "../theme/typography";
 
 type Props = {
   streak?: number;
   variant?: "feed" | "compete";
-  refreshing?: boolean;
-  onRefresh?: () => void;
+  onStreak?: () => void;
   onMenu?: () => void;
   onProfile?: () => void;
   avatarDisplayName?: string;
@@ -20,8 +19,7 @@ type Props = {
 export function FeedTopBar({
   streak = 0,
   variant = "feed",
-  refreshing,
-  onRefresh,
+  onStreak,
   onMenu,
   onProfile,
   avatarDisplayName = "You",
@@ -40,17 +38,18 @@ export function FeedTopBar({
             <AvatarImage displayName={avatarDisplayName} avatarKey={avatarKey} size={40} />
           </Pressable>
         )}
-        <PlayLogo soft={variant === "compete"} />
+        <MajaLogo soft={variant === "compete"} />
         {variant === "feed" ? (
           <Pressable
-            style={styles.streak}
-            onPress={onRefresh}
-            disabled={refreshing || !onRefresh}
+            style={({ pressed }) => [styles.streak, pressed && { opacity: 0.7 }]}
+            onPress={onStreak}
+            disabled={!onStreak}
+            hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="Refresh feed"
+            accessibilityLabel={`Streak ${streak}. Open streak details`}
           >
             <Text style={[type.statsSm, { color: colors.pink }]}>{streak}</Text>
-            <Text style={{ fontSize: 14 }}>{refreshing ? "…" : "🔥"}</Text>
+            <Text style={{ fontSize: 14 }}>🔥</Text>
           </Pressable>
         ) : (
           <Pressable onPress={onProfile} hitSlop={8} accessibilityRole="button">

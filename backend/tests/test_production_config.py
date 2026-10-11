@@ -12,8 +12,8 @@ def test_production_requires_supabase_storage_credentials() -> None:
         supabase_url="",
         supabase_service_role_key="",
         database_url="postgresql+asyncpg://user:pass@db.supabase.co:5432/postgres",
-        api_public_url="https://api.playbyte.app",
-        cors_origins="https://admin.playbyte.app",
+        api_public_url="https://api.maja.app",
+        cors_origins="https://admin.maja.app",
     )
     errors = validate_production_settings(settings)
     assert any("SUPABASE_URL" in e for e in errors)
@@ -29,8 +29,8 @@ def test_production_requires_https_api_url() -> None:
         supabase_url="https://x.supabase.co",
         supabase_service_role_key="service",
         database_url="postgresql+asyncpg://user:pass@db.supabase.co:5432/postgres",
-        api_public_url="http://api.playbyte.app",
-        cors_origins="https://admin.playbyte.app",
+        api_public_url="http://api.maja.app",
+        cors_origins="https://admin.maja.app",
     )
     errors = validate_production_settings(settings)
     assert any("HTTPS" in e for e in errors)

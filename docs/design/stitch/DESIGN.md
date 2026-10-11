@@ -1,5 +1,5 @@
 ---
-name: PLAY
+name: MAJA
 colors:
   surface: '#1d1013'
   surface-dim: '#1d1013'
@@ -127,10 +127,10 @@ spacing:
   margin: 20px
 ---
 
-# PLAY Master Design System
+# MAJA Master Design System
 
 ## Brand Identity
-**Product:** PLAY is a vernacular-first social play platform where every swipe turns passive scrolling into active participation.
+**Product:** MAJA is a vernacular-first social play platform where every swipe turns passive scrolling into active participation.
 **Core Idea:** "Every swipe is a game."
 **Visual Personality:** Bold, Playful, Social, Fast, Competitive, Youthful, Premium, Indian, Internet-native.
 

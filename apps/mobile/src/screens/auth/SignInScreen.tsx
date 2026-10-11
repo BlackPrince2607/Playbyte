@@ -95,7 +95,7 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
         <Text style={[type.bodyLg, { color: colors.lilac }]}>✕</Text>
       </Pressable>
 
-      <Text style={[type.screenTitle, { color: colors.paper }]}>Save your PLAY</Text>
+      <Text style={[type.screenTitle, { color: colors.paper }]}>Save your progress</Text>
       <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.sm }]}>
         Keep streaks, friends, and recap — your guest progress carries over.
       </Text>

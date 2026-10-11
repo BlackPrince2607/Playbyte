@@ -8,7 +8,7 @@ import psycopg2
 
 
 def main() -> None:
-    url = os.environ.get("DATABASE_URL_SYNC", "postgresql://playbyte:playbyte@localhost:5432/playbyte")
+    url = os.environ.get("DATABASE_URL_SYNC", "postgresql://maja:maja@localhost:5432/maja")
     root = Path(__file__).resolve().parents[1]
     files = [
         root / "supabase/migrations/0001_init.sql",

@@ -255,7 +255,7 @@ async def convert_guest(
     actor: Actor = Depends(require_user),
 ) -> dict:
     if body.dateOfBirth and _age_years(body.dateOfBirth) < 13:
-        raise AppError("forbidden", "Playbyte is not available under the minimum age.", 403)
+        raise AppError("forbidden", "MAJA is not available under the minimum age.", 403)
     settings = get_settings()
     guest = await session.scalar(
         select(GuestSession).where(GuestSession.token_hash == hash_token(body.guestToken, settings.guest_token_secret))

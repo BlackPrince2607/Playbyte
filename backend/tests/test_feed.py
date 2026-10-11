@@ -73,6 +73,7 @@ async def test_build_feed_game_slots_span_distinct_engines() -> None:
         patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=[moment(i) for i in range(14)])),
         patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
+        patch("app.modules.feed.service.engagement_for", AsyncMock(return_value={})),
     ):
         items = await build_feed(session, user_id=None, guest_id=uuid4(), limit=20, rng=random.Random(3))
     games = [i for i in items if i["type"] == "mini_game"]
@@ -112,6 +113,7 @@ async def feed_moment_ids(moments: list[SimpleNamespace], answered: set, seed: i
         patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=moments)),
         patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=answered)) as answered_ids,
         patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
+        patch("app.modules.feed.service.engagement_for", AsyncMock(return_value={})),
     ):
         items = await build_feed(session, user_id=user_id, guest_id=None, limit=20, rng=random.Random(seed))
     if user_id:

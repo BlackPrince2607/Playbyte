@@ -15,7 +15,7 @@ async function authHeaders(): Promise<Record<string, string>> {
     return headers;
   }
   if (!isProductionEnv() && typeof window !== "undefined") {
-    const key = localStorage.getItem("playbyte_admin_key");
+    const key = localStorage.getItem("maja_admin_key");
     if (key) headers["X-Admin-Key"] = key;
   }
   return headers;

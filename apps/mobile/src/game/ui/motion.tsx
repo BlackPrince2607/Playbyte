@@ -6,7 +6,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
 import Animated, {
   Easing,
-  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -97,31 +96,31 @@ export function StreakBadge({ streak }: { streak: number }) {
   );
 }
 
-/** Linear countdown bar driven by a session-clock deadline; freezes while paused. */
-export function TimerBar({ deadline, now, paused }: { deadline?: number; now: () => number; paused: boolean }) {
-  const progress = useSharedValue(1);
-  const total = useRef(1);
-  const lastDeadline = useRef<number | undefined>(undefined);
+const URGENT_SECONDS = 5;
+
+/** Seconds-left countdown driven by a session-clock deadline; freezes while paused. */
+export function TimerCountdown({ deadline, now, paused }: { deadline?: number; now: () => number; paused: boolean }) {
+  const secondsLeft = () => (deadline === undefined ? 0 : Math.max(0, Math.ceil((deadline - now()) / 1000)));
+  const [seconds, setSeconds] = useState(secondsLeft);
   useEffect(() => {
     if (deadline === undefined) return;
-    const remaining = Math.max(0, deadline - now());
-    if (deadline !== lastDeadline.current) {
-      total.current = Math.max(1, remaining);
-      lastDeadline.current = deadline;
-    }
-    cancelAnimation(progress);
-    progress.value = remaining / total.current;
-    if (!paused) progress.value = withTiming(0, { duration: remaining, easing: Easing.linear });
-  }, [deadline, paused, now, progress]);
-  const style = useAnimatedStyle(() => ({
-    transform: [{ scaleX: Math.max(0, progress.value) }],
-    backgroundColor: progress.value < 0.25 ? colors.pink : colors.lime,
-  }));
+    const tick = () => setSeconds(Math.max(0, Math.ceil((deadline - now()) / 1000)));
+    tick();
+    if (paused) return;
+    const id = setInterval(tick, 200);
+    return () => clearInterval(id);
+  }, [deadline, paused, now]);
+  const urgent = seconds <= URGENT_SECONDS;
+  const pop = usePop(urgent ? seconds : 0, 1.25);
   if (deadline === undefined) return null;
   return (
-    <View style={styles.timerTrack} accessibilityRole="progressbar" accessibilityLabel="Time remaining">
-      <Animated.View style={[styles.timerFill, style]} />
-    </View>
+    <Animated.View
+      style={[styles.timer, urgent && styles.timerUrgent, pop]}
+      accessibilityRole="timer"
+      accessibilityLabel={`${seconds} seconds left`}
+    >
+      <Text style={[type.statsSm, { color: urgent ? colors.ink : colors.paper }]}>⏱ {seconds}</Text>
+    </Animated.View>
   );
 }
 
@@ -171,7 +170,16 @@ export function Pop({ trigger, style, children }: { trigger: unknown; style?: Vi
 const styles = StyleSheet.create({
   center: { alignItems: "center", justifyContent: "center" },
   streak: { backgroundColor: colors.lime, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
-  timerTrack: { height: 6, borderRadius: 3, backgroundColor: colors.cardAlt, overflow: "hidden" },
-  timerFill: { width: "100%", height: 6, borderRadius: 3, transformOrigin: "left" },
+  timer: {
+    minWidth: 64,
+    alignItems: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.cardAlt,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  timerUrgent: { backgroundColor: colors.pink, borderColor: colors.pink },
   particle: { position: "absolute", top: "35%", width: 8, height: 12, borderRadius: 2 },
 });

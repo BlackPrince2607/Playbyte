@@ -1,8 +1,8 @@
-# Playbyte implementation plan
+# Maja implementation plan
 
 Living checklist. Status: `[ ]` not started · `[-]` in progress · `[x]` complete · `[!]` blocked.
 
-Product: hybrid swipe feed (live moments + mini-games). Backend: FastAPI. UI: Stitch PLAY. Leaderboards: post-MVP.
+Product: hybrid swipe feed (live moments + mini-games). Backend: FastAPI. UI: Stitch design system (MAJA). Leaderboards: post-MVP.
 
 ## Milestones
 

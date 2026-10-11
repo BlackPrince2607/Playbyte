@@ -30,7 +30,7 @@ async def moment_share_card(session: AsyncSession, actor: Actor, moment_id: UUID
     if existing:
         return {
             "assetUrl": storage.public_url("share-cards", existing.asset_key),
-            "deepLink": f"playbyte://moments/{moment_id}",
+            "deepLink": f"maja://moments/{moment_id}",
         }
 
     moment = await session.get(Moment, moment_id)
@@ -65,14 +65,14 @@ async def moment_share_card(session: AsyncSession, actor: Actor, moment_id: UUID
             asset_key=key,
         )
     )
-    return {"assetUrl": url, "deepLink": f"playbyte://moments/{moment_id}"}
+    return {"assetUrl": url, "deepLink": f"maja://moments/{moment_id}"}
 
 
 def _render(prompt: str, answer: str) -> bytes:
     img = Image.new("RGB", (1080, 1350), "#150E2B")
     draw = ImageDraw.Draw(img)
     draw.rounded_rectangle((60, 80, 1020, 1270), radius=48, fill="#211540")
-    draw.text((100, 140), "PLAY", fill="#FF4D8D")
+    draw.text((100, 140), "MAJA", fill="#FF4D8D")
     draw.text((100, 280), prompt[:80], fill="#F5F0FF")
     draw.text((100, 520), f"I chose {answer}", fill="#C6FF3D")
     draw.text((100, 1100), "Join the crowd", fill="#8F7FC0")

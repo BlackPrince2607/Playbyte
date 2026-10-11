@@ -29,9 +29,22 @@ describe("session store", () => {
     assert.equal(await store.load(s.updatedAt + 5000), null);
     await store.save({ ...s, status: "completed" });
     assert.equal(kv.data.size, 0);
-    await kv.setItem("playbyte.game.session.active", "{not json");
+    await kv.setItem("maja.game.session.active", "{not json");
     assert.equal(await store.load(), null);
     assert.equal(kv.data.size, 0);
+  });
+
+  it("never offers to resume a session the player hasn't acted in", async () => {
+    const kv = memoryStore();
+    const store = createSessionStore(kv);
+    const { runner } = playHeadless({ engine: demoEngine, definition: def, pickAction: () => ({ type: "answer", even: true }), stopAfter: 2 });
+    const s = runner.serialize();
+    await store.save({ ...s, status: "ready" });
+    assert.equal(kv.data.size, 0);
+    await store.save({ ...s, status: "paused", actions: [] });
+    assert.equal(kv.data.size, 0);
+    await kv.setItem("maja.game.session.active", JSON.stringify({ ...s, status: "ready" }));
+    assert.equal(await store.load(s.updatedAt + 1000), null);
   });
 });
 

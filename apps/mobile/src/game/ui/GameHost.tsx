@@ -212,7 +212,7 @@ type ActiveProps = Ready & {
 
 function ActiveSession({ mod, runner, clock, content, definition, gameKey, title, restored, onComplete, onExit }: ActiveProps) {
   const snap = useSyncExternalStore(runner.subscribe, runner.getSnapshot);
-  const [counting, setCounting] = useState(!restored && snap.status === "ready");
+  const [counting, setCounting] = useState(snap.status === "ready");
   const [menuOpen, setMenuOpen] = useState(restored && snap.status === "paused");
   const [levelUp, setLevelUp] = useState(false);
   const finished = useRef(false);
@@ -312,7 +312,10 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
   useEffect(
     () => () => {
       const s = runner.getSnapshot().status;
-      if (s !== "completed" && s !== "abandoned") runner.abandon();
+      if (s !== "completed" && s !== "abandoned") {
+        runner.abandon();
+        void sessionStore.clear().catch(() => {});
+      }
     },
     [runner],
   );

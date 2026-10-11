@@ -12,6 +12,9 @@ from app.infrastructure.postgres.models import (
     DataRequest,
     Friendship,
     GamePlay,
+    MomentComment,
+    MomentLike,
+    MomentShare,
     NotificationPreference,
     Profile,
     PushToken,
@@ -38,6 +41,16 @@ async def build_export_payload(session: AsyncSession, user_id: UUID) -> dict:
         )
     )
     consents = list(await session.scalars(select(Consent).where(Consent.user_id == user_id)))
+    comments = list(
+        await session.scalars(
+            select(MomentComment)
+            .where(MomentComment.user_id == user_id, MomentComment.status != "deleted")
+            .order_by(MomentComment.created_at)
+        )
+    )
+    likes = list(
+        await session.scalars(select(MomentLike).where(MomentLike.user_id == user_id).order_by(MomentLike.created_at))
+    )
     return {
         "exportedAt": datetime.now(UTC).isoformat(),
         "user": {
@@ -79,6 +92,10 @@ async def build_export_payload(session: AsyncSession, user_id: UUID) -> dict:
         "consents": [
             {"kind": c.kind, "granted": c.granted, "createdAt": c.created_at.isoformat()} for c in consents
         ],
+        "comments": [
+            {"momentId": str(c.moment_id), "body": c.body, "createdAt": c.created_at.isoformat()} for c in comments
+        ],
+        "likes": [{"momentId": str(lk.moment_id), "createdAt": lk.created_at.isoformat()} for lk in likes],
     }
 
 
@@ -126,6 +143,9 @@ async def complete_deletion(session: AsyncSession, user_id: UUID, request_id: UU
         delete(Friendship).where((Friendship.user_a == user_id) | (Friendship.user_b == user_id))
     )
     await session.execute(delete(Response).where(Response.user_id == user_id))
+    await session.execute(delete(MomentComment).where(MomentComment.user_id == user_id))
+    await session.execute(delete(MomentLike).where(MomentLike.user_id == user_id))
+    await session.execute(delete(MomentShare).where(MomentShare.user_id == user_id))
     await session.execute(delete(GamePlay).where(GamePlay.user_id == user_id))
     if request_id:
         req = await session.get(DataRequest, request_id)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, LayoutChangeEvent, RefreshControl, View, ViewToken } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FeedGame, FeedItem } from "../../api";
@@ -7,6 +7,7 @@ import { ErrorState } from "../../components/ErrorState";
 import { FeedTopBar } from "../../components/FeedTopBar";
 import { LoadingSkeleton } from "../../components/LoadingSkeleton";
 import { isMoment, useApp } from "../../context/AppContext";
+import { feedKeys } from "../../lib/feedPages";
 import { colors } from "../../theme/colors";
 import { GameIntroPage } from "./GameIntroPage";
 import { MomentFeedPage } from "./MomentFeedPage";
@@ -14,23 +15,29 @@ import { MomentFeedPage } from "./MomentFeedPage";
 type Props = {
   onPlayGame: (game: FeedGame) => void;
   onOpenProfile?: () => void;
+  onOpenStreak?: () => void;
+  onSignIn?: () => void;
 };
 
-const keyOf = (item: FeedItem) => (isMoment(item) ? `m:${item.id}` : `g:${item.key}`);
 const VIEWABILITY = { itemVisiblePercentThreshold: 60 };
+/** Pages from the end at which the next feed page is fetched. */
+const PREFETCH_PAGES = 2;
 
-export function FeedScreen({ onPlayGame, onOpenProfile }: Props) {
+export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }: Props) {
   const {
     items,
     streak,
     feedIndex,
     setFeedIndex,
     feedLoading,
-    feedRefreshing,
     feedError,
     refreshFeed,
+    loadMoreFeed,
     isFeedTabActive,
   } = useApp();
+  const keys = useMemo(() => feedKeys(items), [items]);
+  const nearEnd = useRef({ count: items.length, loadMore: loadMoreFeed });
+  nearEnd.current = { count: items.length, loadMore: loadMoreFeed };
   const insets = useSafeAreaInsets();
   const [pageH, setPageH] = useState(0);
   const [pulling, setPulling] = useState(false);
@@ -49,6 +56,7 @@ export function FeedScreen({ onPlayGame, onOpenProfile }: Props) {
     if (index === null || index === undefined) return;
     shownIndex.current = index;
     setFeedIndex(index);
+    if (index >= nearEnd.current.count - PREFETCH_PAGES) void nearEnd.current.loadMore();
   }).current;
 
   const onPull = useCallback(() => {
@@ -63,12 +71,7 @@ export function FeedScreen({ onPlayGame, onOpenProfile }: Props) {
   if (feedLoading && items.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
-        <FeedTopBar
-          streak={streak}
-          refreshing={feedLoading}
-          onRefresh={() => void refreshFeed(true)}
-          onProfile={onOpenProfile}
-        />
+        <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
         <LoadingSkeleton />
       </View>
     );
@@ -77,7 +80,7 @@ export function FeedScreen({ onPlayGame, onOpenProfile }: Props) {
   if (feedError && items.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
-        <FeedTopBar streak={streak} onRefresh={() => void refreshFeed(true)} onProfile={onOpenProfile} />
+        <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
         <ErrorState message={feedError} onRetry={() => void refreshFeed(true)} />
       </View>
     );
@@ -86,7 +89,7 @@ export function FeedScreen({ onPlayGame, onOpenProfile }: Props) {
   if (!items.length) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
-        <FeedTopBar streak={streak} onRefresh={() => void refreshFeed(true)} onProfile={onOpenProfile} />
+        <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
         <EmptyState
           title="Nothing live right now"
           message="Check back soon — new moments drop throughout the day."
@@ -103,11 +106,16 @@ export function FeedScreen({ onPlayGame, onOpenProfile }: Props) {
         <FlatList
           ref={listRef}
           data={items}
-          keyExtractor={keyOf}
+          keyExtractor={(_, index) => keys[index]}
           extraData={`${feedIndex}:${isFeedTabActive}`}
           renderItem={({ item, index }) =>
             isMoment(item) ? (
-              <MomentFeedPage item={item} height={pageH} isActive={isFeedTabActive && feedIndex === index} />
+              <MomentFeedPage
+                item={item}
+                height={pageH}
+                isActive={isFeedTabActive && feedIndex === index}
+                onSignIn={onSignIn}
+              />
             ) : (
               <GameIntroPage item={item} height={pageH} onStart={() => onPlayGame(item)} />
             )
@@ -122,6 +130,8 @@ export function FeedScreen({ onPlayGame, onOpenProfile }: Props) {
           windowSize={3}
           viewabilityConfig={VIEWABILITY}
           onViewableItemsChanged={onViewableItemsChanged}
+          onEndReached={() => void loadMoreFeed()}
+          onEndReachedThreshold={PREFETCH_PAGES}
           refreshControl={
             <RefreshControl
               refreshing={pulling}
@@ -134,12 +144,7 @@ export function FeedScreen({ onPlayGame, onOpenProfile }: Props) {
           }
         />
       ) : null}
-      <FeedTopBar
-        streak={streak}
-        refreshing={feedRefreshing}
-        onRefresh={() => void refreshFeed(true)}
-        onProfile={onOpenProfile}
-      />
+      <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
     </View>
   );
 }

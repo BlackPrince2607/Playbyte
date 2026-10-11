@@ -23,6 +23,7 @@ from app.infrastructure.postgres.models import (
 from app.infrastructure.storage.objects import get_object_storage
 from app.modules.crowd.volume import volume_state
 from app.modules.feed.ranking import RankedItem, interleave, moment_score, rotate_games
+from app.modules.social.service import EMPTY_ENGAGEMENT, engagement_for
 
 # Random score added per request: reshuffles moments within the same tier (interest match is +100,
 # freshness up to +50) while active-window moments (+1000) still lead.
@@ -143,12 +144,16 @@ async def build_feed(
             for s in await session.scalars(select(CrowdSnapshot).where(CrowdSnapshot.moment_id.in_(moment_ids)))
         }
     tag_map = await tags_for_moments(session, moment_ids)
+    shown_ids = [UUID(i.id) for i in ordered if i.kind == "moment"]
+    engagement = await engagement_for(session, shown_ids, user_id, guest_id)
     game_map = {g.key: g for g in games}
     items: list[dict] = []
     for item in ordered:
         if item.kind == "moment":
             m = by_id[UUID(item.id)]
-            items.append(serialize_moment(m, snapshots.get(m.id), None, tags=tag_map.get(m.id, [])))
+            payload = serialize_moment(m, snapshots.get(m.id), None, tags=tag_map.get(m.id, []))
+            payload["engagement"] = engagement.get(m.id) or dict(EMPTY_ENGAGEMENT)
+            items.append(payload)
         else:
             g = game_map[item.id]
             items.append(serialize_game(g))

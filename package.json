@@ -1,5 +1,5 @@
 {
-  "name": "playbyte",
+  "name": "maja",
   "private": true,
   "packageManager": "pnpm@10.0.0",
   "scripts": {
@@ -7,8 +7,8 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "build": "pnpm -r --if-present build",
-    "admin:dev": "pnpm --filter @playbyte/admin dev",
-    "mobile:start": "pnpm --filter @playbyte/mobile start"
+    "admin:dev": "pnpm --filter @maja/admin dev",
+    "mobile:start": "pnpm --filter @maja/mobile start"
   },
   "engines": {
     "node": ">=20"

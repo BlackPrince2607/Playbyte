@@ -92,7 +92,7 @@ describe("batch analytics sink", () => {
     const second = createBatchSink({ storage, send: async (b) => void sent.push(...b) });
     await second.flush();
     assert.deepEqual(sent.map((e) => e.type), ["GAME_STARTED", "ROUND_STARTED"]);
-    assert.equal(await storage.getItem("playbyte.game.events"), null);
+    assert.equal(await storage.getItem("maja.game.events"), null);
   });
 
   it("gives every queued event a unique id the server accepts", async () => {
@@ -127,11 +127,11 @@ describe("batch analytics sink", () => {
 
   it("keeps event ids across a restart and assigns ids to events saved without one", async () => {
     const storage = memoryStore();
-    await storage.setItem("playbyte.game.events", JSON.stringify([ev("GAME_STARTED")]));
+    await storage.setItem("maja.game.events", JSON.stringify([ev("GAME_STARTED")]));
     const first = createBatchSink({ storage, send: async () => Promise.reject(new Error("offline")) });
     first.sink(ev("ROUND_STARTED"));
     await first.persist();
-    const saved = (JSON.parse((await storage.getItem("playbyte.game.events")) ?? "[]") as GameEvent[]).map((e) => e.eventId);
+    const saved = (JSON.parse((await storage.getItem("maja.game.events")) ?? "[]") as GameEvent[]).map((e) => e.eventId);
     assert.equal(saved.length, 2);
     assert.ok(saved.every(Boolean));
 
@@ -175,11 +175,11 @@ describe("batch analytics sink", () => {
 
   it("keeps event ids across a restart and assigns ids to events saved without one", async () => {
     const storage = memoryStore();
-    await storage.setItem("playbyte.game.events", JSON.stringify([ev("GAME_STARTED")]));
+    await storage.setItem("maja.game.events", JSON.stringify([ev("GAME_STARTED")]));
     const first = createBatchSink({ storage, send: async () => Promise.reject(new Error("offline")) });
     first.sink(ev("ROUND_STARTED"));
     await first.persist();
-    const saved = (JSON.parse((await storage.getItem("playbyte.game.events")) ?? "[]") as GameEvent[]).map((e) => e.eventId);
+    const saved = (JSON.parse((await storage.getItem("maja.game.events")) ?? "[]") as GameEvent[]).map((e) => e.eventId);
     assert.equal(saved.length, 2);
     assert.ok(saved.every(Boolean));
 

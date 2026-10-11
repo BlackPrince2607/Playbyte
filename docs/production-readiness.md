@@ -1,4 +1,4 @@
-# Production Readiness — Playbyte
+# Production Readiness — Maja
 
 **Date:** 2026-09-21  
 **Overall readiness:** **Tester Ready (conditional)** — core guest feed/respond/play/share work on live API; **not Production Ready**.
@@ -66,7 +66,7 @@ Auth (email + Android Google) is implemented in the mobile app; Google still nee
 | `CORS_ORIGINS` | * / local | Hosted | Explicit HTTPS | Prod yes | Config tests |
 | `SENTRY_DSN` | optional | optional | recommended | No | Not wired |
 | `ADMIN_API_KEY` | local only | 32+ chars | 32+ chars (feed-refresh automation) | — | Default and short keys rejected in code |
-| Android package / iOS bundle | `app.playbyte.mobile` | same | same | Yes | In `app.json` |
+| Android package / iOS bundle | `app.maja.mobile` | same | same | Yes | In `app.json` |
 | EAS projectId | set | set | set | Yes | In `app.json` |
 
 ---

@@ -355,6 +355,69 @@ class ChoiceVote(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+def _one_actor_args(table: str) -> tuple:
+    return (
+        CheckConstraint("(user_id IS NULL) <> (guest_session_id IS NULL)", name=f"{table}_one_actor"),
+        Index(f"{table}_user_uidx", "moment_id", "user_id", unique=True, postgresql_where=text("user_id IS NOT NULL")),
+        Index(
+            f"{table}_guest_uidx",
+            "moment_id",
+            "guest_session_id",
+            unique=True,
+            postgresql_where=text("guest_session_id IS NOT NULL"),
+        ),
+    )
+
+
+class MomentLike(Base):
+    __tablename__ = "moment_likes"
+    __table_args__ = _one_actor_args("moment_likes")
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    moment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("moments.id", ondelete="CASCADE"))
+    user_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
+    guest_session_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("guest_sessions.id", ondelete="CASCADE")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class MomentShare(Base):
+    __tablename__ = "moment_shares"
+    __table_args__ = _one_actor_args("moment_shares")
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    moment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("moments.id", ondelete="CASCADE"))
+    user_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
+    guest_session_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("guest_sessions.id", ondelete="CASCADE")
+    )
+    channel: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class MomentComment(Base):
+    __tablename__ = "moment_comments"
+    __table_args__ = (
+        CheckConstraint("char_length(body) BETWEEN 1 AND 280", name="moment_comments_body_len"),
+        CheckConstraint("status IN ('visible', 'hidden', 'deleted')", name="moment_comments_status_check"),
+        Index(
+            "moment_comments_moment_idx",
+            "moment_id",
+            text("created_at DESC"),
+            text("id DESC"),
+            postgresql_where=text("status = 'visible'"),
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    moment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("moments.id", ondelete="CASCADE"))
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
+    body: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, default="visible", server_default="visible")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class ShareCard(Base):
     __tablename__ = "share_cards"
 

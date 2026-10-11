@@ -1,6 +1,6 @@
 # Google Sign-In setup (Android)
 
-Playbyte uses **native** Google Sign-In on Android only (`@react-native-google-signin` → Supabase `signInWithIdToken`).
+Maja uses **native** Google Sign-In on Android only (`@react-native-google-signin` → Supabase `signInWithIdToken`).
 
 ## 1. Google Cloud Console
 
@@ -9,9 +9,9 @@ Playbyte uses **native** Google Sign-In on Android only (`@react-native-google-s
 3. Create an OAuth client → type **Web application**
    - Save **Client ID** and **Client Secret**.
 4. Create an OAuth client → type **Android**
-   - Package name: `app.playbyte.mobile`
+   - Package name: `app.maja.mobile`
    - SHA-1: from EAS (see below).
-5. You do **not** need an iOS client for Playbyte.
+5. You do **not** need an iOS client for Maja.
 
 ### Get Android SHA-1 from EAS
 
@@ -88,6 +88,6 @@ pnpm eas build --profile preview --platform android
 | `Provider (issuer "https://accounts.google.com") is not enabled` | Supabase **Authentication → Providers → Google** is still off — enable it and paste the **Web** client ID + secret, then retry (no rebuild needed) |
 | Audience / id_token / JWT verify errors | Supabase Google provider must use the same **Web** client ID (+ secret) as `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` in the APK; also add Android client ID under Authorized Client IDs if shown |
 | Signed in (email shows) but Vault says session expired / feed won't load | Backend must verify **asymmetric** Supabase JWTs via JWKS (`SUPABASE_URL` → `/.well-known/jwks.json`). Legacy `SUPABASE_JWT_SECRET` (HS256) alone fails once the project uses signing keys. Redeploy the API after this fix; APK rebuild optional for recovery UX |
-| App stuck on PLAY loading spinner | Fixed in auth init (async `onAuthStateChange` deadlock + session restore timeouts). **Must install a new APK.** If still stuck: force-stop → clear app storage → reopen, or tap Retry after 8s |
+| App stuck on MAJA loading spinner | Fixed in auth init (async `onAuthStateChange` deadlock + session restore timeouts). **Must install a new APK.** If still stuck: force-stop → clear app storage → reopen, or tap Retry after 8s |
 | Google sign-in spins then crashes | Often corrupt prior Google/Supabase session or SHA-1 mismatch. New build clears prior Google session before sign-in and times out `signInWithIdToken`. Confirm Android OAuth client SHA-1 matches EAS keystore |
 | Button hidden in app | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` or Supabase URL/key missing in that build |

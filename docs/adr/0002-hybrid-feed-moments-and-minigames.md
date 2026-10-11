@@ -14,7 +14,7 @@ The PRD MVP is Predict / Pulse / Reaction moments only. The owner asked for Scro
 - Games live in `mini_games` / `game_plays`; engines run on the client; server stores plays and crowd aggregates.
 - Seasonal calendars use `content_windows` attached to moments.
 - **No public leaderboards, XP, coins, or shop at MVP** (owner confirmed). Crowd percentile/average only.
-- UI from Stitch PLAY design system, not Scrollinn chrome.
+- UI from Stitch MAJA design system, not Scrollinn chrome.
 
 ## Consequences
 

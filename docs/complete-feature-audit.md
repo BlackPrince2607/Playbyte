@@ -1,4 +1,4 @@
-# Complete Feature Audit — Playbyte
+# Complete Feature Audit — Maja
 
 **Audit date:** 2026-09-21  
 **Method:** Code inspection + live Railway API smoke (`scripts/smoke_api.py`) + backend unit tests.  
@@ -38,7 +38,7 @@ Statuses: ✅ Verified · 🟡 Partial · 🔴 Broken · ⚪ Missing · 🧪 Nee
 | Language | ✅ code | 🧪 | Local storage only; UI stays English |
 | Interests | ✅ code | 🧪 | `PUT /v1/me/interests`; fallback categories if API fails |
 | Guest session | ✅ API | PASS | `POST /v1/guest/sessions` → `token` |
-| Persistence | ✅ code | 🧪 | AsyncStorage `playbyte_guest_token` |
+| Persistence | ✅ code | 🧪 | AsyncStorage `maja_guest_token` |
 | Duplicate submit | ✅ code | — | Interests / respond use loading guards |
 
 ---
@@ -56,7 +56,7 @@ Statuses: ✅ Verified · 🟡 Partial · 🔴 Broken · ⚪ Missing · 🧪 Nee
 | Sign In | ✅ overlay | Hidden CTAs if Supabase env missing |
 | Leaderboard | 🟡 overlay | Friends list; geo scopes “Coming soon” |
 | Games / Post-game | ✅ | Imperative overlay in `MainShell` |
-| Deep links | 🟡 | Scheme `playbyte`; limited handling |
+| Deep links | 🟡 | Scheme `maja`; limited handling |
 
 Custom shell (`MainShell.tsx`) — not React Navigation (packages present but unused).
 

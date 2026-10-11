@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: playbyte
-      POSTGRES_PASSWORD: playbyte
-      POSTGRES_DB: playbyte
+      POSTGRES_USER: maja
+      POSTGRES_PASSWORD: maja
+      POSTGRES_DB: maja
     ports:
       - "5432:5432"
     volumes:
-      - playbyte_pg:/var/lib/postgresql/data
+      - maja_pg:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U playbyte"]
+      test: ["CMD-SHELL", "pg_isready -U maja"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,8 +22,8 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://playbyte:playbyte@postgres:5432/playbyte
-      DATABASE_URL_SYNC: postgresql://playbyte:playbyte@postgres:5432/playbyte
+      DATABASE_URL: postgresql+asyncpg://maja:maja@postgres:5432/maja
+      DATABASE_URL_SYNC: postgresql://maja:maja@postgres:5432/maja
     ports:
       - "8000:8000"
     depends_on:
@@ -39,8 +39,8 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://playbyte:playbyte@postgres:5432/playbyte
-      DATABASE_URL_SYNC: postgresql://playbyte:playbyte@postgres:5432/playbyte
+      DATABASE_URL: postgresql+asyncpg://maja:maja@postgres:5432/maja
+      DATABASE_URL_SYNC: postgresql://maja:maja@postgres:5432/maja
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,4 +48,4 @@ services:
       - ./backend:/app
 
 volumes:
-  playbyte_pg:
+  maja_pg:

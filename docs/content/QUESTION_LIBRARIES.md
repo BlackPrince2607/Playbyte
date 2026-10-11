@@ -1,4 +1,4 @@
-# Question libraries → Playbyte categories
+# Question libraries → Maja categories
 
 Live API categories today: **sports, cricket, news, pop-culture, food, weather, tech, music, movies, social, casual**.
 
@@ -16,7 +16,7 @@ There is **no hard DB cap** on total moments. Practical limits:
 
 ## Best external libraries (for quizzes)
 
-| Source | License | Best for | Maps to Playbyte |
+| Source | License | Best for | Maps to Maja |
 |--------|---------|----------|------------------|
 | [Open Trivia DB](https://opentdb.com/api_config.php) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | Large free quiz API, no key | sports→21, movies→11, music→12, tech→18, food→food & drink (N/A — use General/Entertainment), pop-culture→weak |
 | [node-open-quiz-bank](https://github.com/tamino-martinius/node-open-quiz-bank) | MIT + **CC0 data** | Offline JSON, seedable | sports, film→movies, food, music, technology→tech |
@@ -25,7 +25,7 @@ There is **no hard DB cap** on total moments. Practical limits:
 
 ### OpenTDB category IDs (useful subset)
 
-| OpenTDB | ID | Playbyte slug |
+| OpenTDB | ID | Maja slug |
 |---------|----|---------------|
 | Sports | 21 | `sports` |
 | Entertainment: Film | 11 | `movies` |
@@ -44,7 +44,7 @@ https://opentdb.com/api.php?amount=10&category=21&type=multiple&encode=urlencode
 
 ## Image / meme choice polls
 
-PLAY supports `promptImageKey` and per-option `imageKey` (hosted in Supabase `moment-media`). Mobile already renders option images.
+Maja supports `promptImageKey` and per-option `imageKey` (hosted in Supabase `moment-media`). Mobile already renders option images.
 
 | Source | Use | Notes |
 |--------|-----|--------|
@@ -58,7 +58,7 @@ In-repo meme pack: `docs/content/meme-image-pack.json` (memegen template refs re
 
 ## What libraries do *not* cover well
 
-PLAY is participation-first (**predict / pulse / reaction**), India-vernacular. Open trivia banks are mostly Western fact quizzes — weak for:
+Maja is participation-first (**predict / pulse / reaction**), India-vernacular. Open trivia banks are mostly Western fact quizzes — weak for:
 
 - `cricket` (IPL / match-night predicts)
 - `news` / `weather` (time-sensitive)
@@ -74,8 +74,8 @@ Preview freshness is intentional: GitHub Actions retires live moments and floods
 1. Workflow: [`.github/workflows/refresh-feed-content.yml`](../../.github/workflows/refresh-feed-content.yml)
 2. Script: `python scripts/refresh_feed_content.py --count 40`
 3. Required GitHub secrets:
-   - `PLAYBYTE_API_URL` — e.g. `https://playbyte-production.up.railway.app`
-   - `PLAYBYTE_ADMIN_KEY` — same key the API accepts via `X-Admin-Key` (non-prod) / admin path as deployed
+   - `MAJA_API_URL` — e.g. `https://maja-production.up.railway.app`
+   - `MAJA_ADMIN_KEY` — same key the API accepts via `X-Admin-Key` (non-prod) / admin path as deployed
 4. Manual run: Actions → **Refresh feed content** → **Run workflow**
 5. Local dry-run: `python scripts/refresh_feed_content.py --dry-run --no-images`
 

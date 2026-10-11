@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Directory, File, Paths } from "expo-file-system";
 import { AssetIndex, assetFileName } from "../content/assetIndex";
 
-const INDEX_KEY = "playbyte.game.assetIndex.v1";
+const INDEX_KEY = "maja.game.assetIndex.v1";
 const MAX_BYTES = 100 * 1024 * 1024;
 const TTL_MS = 14 * 24 * 3600_000;
 const CONCURRENCY = 3;

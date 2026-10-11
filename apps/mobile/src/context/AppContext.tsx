@@ -18,9 +18,11 @@ import {
   FriendRequest,
   isApiError,
   loadToken,
+  MomentEngagement,
   RespondResult,
 } from "../api";
 import { isPlayable } from "../game/discovery";
+import { appendFeedPage } from "../lib/feedPages";
 import { useAuth } from "./AuthContext";
 import {
   bumpStreak,
@@ -56,6 +58,7 @@ type AppState = {
   promptSave: boolean;
   respondingIds: ReadonlySet<string>;
   refreshFeed: (force?: boolean) => Promise<void>;
+  loadMoreFeed: () => Promise<void>;
   retryBoot: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
   setOnboardingStep: (step: OnboardingStep) => void;
@@ -76,12 +79,21 @@ type AppState = {
   refreshFriendRequests: (force?: boolean) => Promise<void>;
   friendAvatars: { displayName: string; avatarKey: string | null }[];
   isFeedTabActive: boolean;
+  /** Latest like / share / comment counts per moment; falls back to the feed payload. */
+  engagementFor: (moment: FeedMoment) => MomentEngagement;
+  updateEngagement: (momentId: string, patch: Partial<MomentEngagement>) => void;
 };
+
+const EMPTY_ENGAGEMENT: MomentEngagement = { likes: 0, shares: 0, comments: 0, likedByMe: false };
 
 const Ctx = createContext<AppState | null>(null);
 
 /** Coming back sooner than this (share sheet, Google sign-in) keeps the feed where it was. */
 const REOPEN_REFRESH_AFTER_MS = 30_000;
+
+const FEED_PAGE_PATH = "/v1/feed?limit=20";
+
+const isShowable = (i: FeedItem) => i.type !== "mini_game" || isPlayable(i);
 
 function patchMoment(items: FeedItem[], momentId: string, patch: Partial<FeedMoment>): FeedItem[] {
   return items.map((i) => (i.type === "moment" && i.id === momentId ? { ...i, ...patch } : i));
@@ -92,7 +104,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [bootError, setBootError] = useState("");
   const [onboardingDone, setOnboardingDoneState] = useState(false);
-  const [onboardingStep, setOnboardingStepState] = useState<OnboardingStep>("welcome");
+  const [onboardingStep, setOnboardingStepState] = useState<OnboardingStep>("language");
   const [tab, setTab] = useState<TabKey>("feed");
   const [items, setItems] = useState<FeedItem[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
@@ -102,6 +114,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [promptSave, setPromptSave] = useState(false);
   const [feedIndex, setFeedIndex] = useState(0);
   const [respondingIds, setRespondingIds] = useState<Set<string>>(new Set());
+  const [engagement, setEngagement] = useState<Record<string, MomentEngagement>>({});
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [friendsError, setFriendsError] = useState("");
@@ -110,6 +123,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [friendRequestsError, setFriendRequestsError] = useState("");
 
   const feedInflight = useRef<Promise<void> | null>(null);
+  const moreInflight = useRef<Promise<void> | null>(null);
+  /** Bumped whenever the feed is replaced, so a page fetched for the old feed is dropped. */
+  const feedGeneration = useRef(0);
   const friendsInflight = useRef<Promise<void> | null>(null);
   const friendRequestsInflight = useRef<Promise<void> | null>(null);
   const hasLoadedFeed = useRef(false);
@@ -218,8 +234,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFeedError("");
 
       try {
-        const feed = await api<{ items: FeedItem[] }>("/v1/feed?limit=20");
-        setItems(feed.items.filter((i) => i.type !== "mini_game" || isPlayable(i)));
+        const feed = await api<{ items: FeedItem[] }>(FEED_PAGE_PATH);
+        feedGeneration.current += 1;
+        setItems(feed.items.filter(isShowable));
+        setEngagement({});
         hasLoadedFeed.current = true;
       } catch (e) {
         const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "Could not load feed";
@@ -245,6 +263,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     },
     [loadFeed],
   );
+
+  const loadMoreFeed = useCallback(async () => {
+    if (!hasLoadedFeed.current || feedInflight.current || moreInflight.current) return;
+    const generation = feedGeneration.current;
+    const run = (async () => {
+      try {
+        const feed = await api<{ items: FeedItem[] }>(FEED_PAGE_PATH);
+        if (generation !== feedGeneration.current) return;
+        setItems((prev) => appendFeedPage(prev, feed.items.filter(isShowable)));
+      } catch {
+        /* reaching the end of the feed again retries */
+      }
+    })();
+    moreInflight.current = run;
+    try {
+      await run;
+    } finally {
+      moreInflight.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     if (!authReady) return;
@@ -329,7 +367,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const completeOnboarding = useCallback(async () => {
     await setOnboardingDone();
     setOnboardingDoneState(true);
-    setOnboardingStepState("welcome");
+    setOnboardingStepState("language");
     setBootError("");
     try {
       await refreshFeed(true);
@@ -377,6 +415,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [respondingIds],
   );
 
+  const engagementFor = useCallback(
+    (m: FeedMoment) => engagement[m.id] ?? m.engagement ?? EMPTY_ENGAGEMENT,
+    [engagement],
+  );
+
+  const updateEngagement = useCallback(
+    (momentId: string, patch: Partial<MomentEngagement>) => {
+      setEngagement((prev) => {
+        const base =
+          prev[momentId] ??
+          items.find((i): i is FeedMoment => i.type === "moment" && i.id === momentId)?.engagement ??
+          EMPTY_ENGAGEMENT;
+        return { ...prev, [momentId]: { ...base, ...patch } };
+      });
+    },
+    [items],
+  );
+
   const jumpToMoment = useCallback(
     (id: string) => {
       const idx = items.findIndex((i) => i.type === "moment" && i.id === id);
@@ -403,6 +459,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       promptSave,
       respondingIds,
       refreshFeed,
+      loadMoreFeed,
       retryBoot,
       completeOnboarding,
       setOnboardingStep,
@@ -423,6 +480,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       refreshFriendRequests,
       friendAvatars,
       isFeedTabActive: tab === "feed",
+      engagementFor,
+      updateEngagement,
     }),
     [
       ready,
@@ -438,6 +497,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       promptSave,
       respondingIds,
       refreshFeed,
+      loadMoreFeed,
       retryBoot,
       completeOnboarding,
       setOnboardingStep,
@@ -454,6 +514,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       friendRequestsError,
       refreshFriendRequests,
       friendAvatars,
+      engagementFor,
+      updateEngagement,
     ],
   );
 

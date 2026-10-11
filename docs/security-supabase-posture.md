@@ -1,4 +1,4 @@
-# Security notes — Supabase Data API / RLS (Playbyte)
+# Security notes — Supabase Data API / RLS (Maja)
 
 **Date:** 2026-09-21  
 **Status:** Open concerns documented; not marked complete.
@@ -16,7 +16,7 @@
    Confirm whether the project’s PostgREST / Data API is reachable with the **anon/publishable** key. If tables have RLS disabled and the Data API is enabled, anon clients could read/write tables directly, bypassing FastAPI.
 
 2. **RLS on app tables**  
-   Audit every public-schema table used by Playbyte. Prefer either:
+   Audit every public-schema table used by Maja. Prefer either:
    - RLS enabled with **no** permissive anon policies (deny-by-default), **or**
    - Data API disabled / schema not exposed to anon.
 

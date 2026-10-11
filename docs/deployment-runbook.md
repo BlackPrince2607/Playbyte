@@ -15,7 +15,7 @@ Use this sequence for **staging first**, then production after go/no-go.
 ## 1. Provision infrastructure
 
 1. Create Supabase project for target environment.
-2. Create Fly apps: `playbyte-api-staging`, `playbyte-worker-staging` (rename for prod).
+2. Create Fly apps: `maja-api-staging`, `maja-worker-staging` (rename for prod).
 3. Create Vercel project linked to `apps/admin`.
 4. Create/link EAS project for `apps/mobile`.
 
@@ -26,8 +26,8 @@ Set in Fly (API + worker):
 ```
 APP_ENV=staging
 DATABASE_URL=postgresql+asyncpg://...
-API_PUBLIC_URL=https://api-staging.playbyte.app
-CORS_ORIGINS=https://admin-staging.playbyte.app
+API_PUBLIC_URL=https://api-staging.maja.app
+CORS_ORIGINS=https://admin-staging.maja.app
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=...
 SUPABASE_JWT_SECRET=...
@@ -40,7 +40,7 @@ Set in Vercel:
 
 ```
 NEXT_PUBLIC_APP_ENV=staging
-NEXT_PUBLIC_API_URL=https://api-staging.playbyte.app
+NEXT_PUBLIC_API_URL=https://api-staging.maja.app
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
@@ -49,7 +49,7 @@ Set in EAS (staging profile):
 
 ```
 EXPO_PUBLIC_APP_ENV=staging
-EXPO_PUBLIC_API_URL=https://api-staging.playbyte.app
+EXPO_PUBLIC_API_URL=https://api-staging.maja.app
 EXPO_PUBLIC_SUPABASE_URL=...
 EXPO_PUBLIC_SUPABASE_ANON_KEY=...
 ```
@@ -103,8 +103,8 @@ fly deploy --config fly.toml  # after copying fly.toml.example
 Verify:
 
 ```bash
-curl https://api-staging.playbyte.app/health
-curl https://api-staging.playbyte.app/ready
+curl https://api-staging.maja.app/health
+curl https://api-staging.maja.app/ready
 ```
 
 ## 8. Deploy worker
@@ -122,7 +122,7 @@ Verify worker logs show outbox processing (no crash loop).
 Push to main → Vercel preview/production, or:
 
 ```bash
-pnpm --filter @playbyte/admin build
+pnpm --filter @maja/admin build
 ```
 
 Open CMS URL → Supabase sign-in → create test moment draft.

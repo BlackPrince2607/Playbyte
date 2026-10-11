@@ -1,7 +1,7 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Request
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Header, Query, Request
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -20,12 +20,33 @@ from app.modules.feed.service import (
 )
 from app.modules.responses.service import submit_response
 from app.modules.sharing.service import moment_share_card
+from app.modules.social.service import (
+    add_comment,
+    delete_comment,
+    engagement_for,
+    list_comments,
+    record_share,
+    set_like,
+)
 
 router = APIRouter(prefix="/moments", tags=["moments"])
 
 
 class ResponseIn(BaseModel):
     optionId: UUID
+
+
+class ShareIn(BaseModel):
+    channel: str | None = Field(default=None, max_length=40)
+
+
+class CommentIn(BaseModel):
+    body: str = Field(min_length=1, max_length=2000)
+
+
+def _limit_social(actor: Actor, bucket: str, limit: int) -> None:
+    if not rate_limiter.allow(f"{bucket}:{actor.user_id or actor.guest_id}", limit=limit, window_seconds=60):
+        raise AppError("rate_limited", "Slow down a little.", 429)
 
 
 @router.get("/{moment_id}")
@@ -47,6 +68,7 @@ async def get_moment(
         tags=tags,
         reveal_correct=bool(mine),
     )
+    payload["engagement"] = (await engagement_for(session, [moment_id], actor.user_id, actor.guest_id))[moment_id]
     if actor.user_id:
         payload["friends"] = await friends_on_moment(session, actor.user_id, moment_id)
     return payload
@@ -111,3 +133,66 @@ async def post_share_card(
     actor: Actor = Depends(get_actor),
 ) -> dict:
     return await moment_share_card(session, actor, moment_id)
+
+
+@router.put("/{moment_id}/like")
+async def put_like(
+    moment_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(get_actor),
+) -> dict:
+    _limit_social(actor, "like", get_settings().rate_limit_social_per_minute)
+    return await set_like(session, actor, moment_id, liked=True)
+
+
+@router.delete("/{moment_id}/like")
+async def delete_like(
+    moment_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(get_actor),
+) -> dict:
+    _limit_social(actor, "like", get_settings().rate_limit_social_per_minute)
+    return await set_like(session, actor, moment_id, liked=False)
+
+
+@router.post("/{moment_id}/shares")
+async def post_share(
+    moment_id: UUID,
+    body: ShareIn | None = None,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(get_actor),
+) -> dict:
+    _limit_social(actor, "share", get_settings().rate_limit_social_per_minute)
+    return await record_share(session, actor, moment_id, body.channel if body else None)
+
+
+@router.get("/{moment_id}/comments")
+async def get_comments(
+    moment_id: UUID,
+    cursor: str | None = Query(default=None, max_length=120),
+    limit: int = Query(default=20, ge=1, le=50),
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(get_actor),
+) -> dict:
+    return await list_comments(session, actor, moment_id, cursor=cursor, limit=limit)
+
+
+@router.post("/{moment_id}/comments")
+async def post_comment(
+    moment_id: UUID,
+    body: CommentIn,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(get_actor),
+) -> dict:
+    _limit_social(actor, "comment", get_settings().rate_limit_comments_per_minute)
+    return await add_comment(session, actor, moment_id, body.body)
+
+
+@router.delete("/{moment_id}/comments/{comment_id}")
+async def remove_comment(
+    moment_id: UUID,
+    comment_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(get_actor),
+) -> dict:
+    return await delete_comment(session, actor, moment_id, comment_id)

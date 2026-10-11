@@ -1,4 +1,4 @@
--- Playbyte initial schema (Architecture §7 + hybrid feed additive tables)
+-- Maja initial schema (Architecture §7 + hybrid feed additive tables)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS citext;
 

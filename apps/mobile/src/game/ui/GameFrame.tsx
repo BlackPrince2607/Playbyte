@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 import type { SessionSnapshot } from "../session/runner";
-import { StreakBadge, TimerBar, usePop } from "./motion";
+import { StreakBadge, TimerCountdown, usePop } from "./motion";
 
 type Props = {
   title: string;
@@ -37,11 +37,14 @@ export function GameFrame({ title, subtitle, snapshot, now, onPause, children }:
         </Pressable>
         <View style={{ flex: 1, marginHorizontal: spacing.sm }}>
           <Text style={[type.micro, styles.eyebrow]} numberOfLines={1}>
-            {subtitle ?? "PLAY"}
+            {subtitle ?? "MAJA"}
           </Text>
           <Text style={[type.button, { color: colors.paper }]} numberOfLines={1}>
             {title}
           </Text>
+        </View>
+        <View style={{ marginRight: spacing.sm }}>
+          <TimerCountdown deadline={snapshot.deadline} now={now} paused={snapshot.status !== "playing"} />
         </View>
         <Animated.View style={scorePop} accessibilityLabel={`Score ${snapshot.score}`}>
           <Text style={[type.stats, { color: colors.lime }]}>{snapshot.score}</Text>
@@ -69,9 +72,6 @@ export function GameFrame({ title, subtitle, snapshot, now, onPause, children }:
         <View style={{ marginLeft: spacing.sm }}>
           <StreakBadge streak={snapshot.streak} />
         </View>
-      </View>
-      <View style={{ paddingHorizontal: spacing.margin, marginTop: spacing.xs }}>
-        <TimerBar deadline={snapshot.deadline} now={now} paused={snapshot.status !== "playing"} />
       </View>
 
       <View style={styles.body}>{children}</View>

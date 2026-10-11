@@ -1,4 +1,4 @@
-# Implementation Roadmap — Playbyte
+# Implementation Roadmap — Maja
 
 **Based on:** 2026-09-21 audit + live smoke. Effort: Small / Medium / Large / Complex.
 

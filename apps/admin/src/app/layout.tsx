@@ -21,8 +21,8 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PLAY CMS",
-  description: "Editorial tools for Playbyte moments",
+  title: "MAJA CMS",
+  description: "Editorial tools for Maja moments",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

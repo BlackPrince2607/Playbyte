@@ -3,7 +3,7 @@ import type { KeyValueStore } from "../session/types";
 import type { EventSink } from "./bus";
 import type { GameEvent } from "./events";
 
-const QUEUE_KEY = "playbyte.game.events";
+const QUEUE_KEY = "maja.game.events";
 
 /** Per-interaction events; ANSWER_SUBMITTED and ROUND_COMPLETED carry the same information at a fraction of the volume. */
 const DROPPED: ReadonlySet<GameEvent["type"]> = new Set(["ACTION_PERFORMED", "ANSWER_CORRECT", "ANSWER_WRONG"]);

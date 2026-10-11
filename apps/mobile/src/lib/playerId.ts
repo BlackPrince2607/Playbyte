@@ -11,5 +11,5 @@ export function shortPlayerId(id: string): string {
 }
 
 export function playerIdShareMessage(id: string): string {
-  return `Add me on PLAY! My player ID: ${id}`;
+  return `Add me on MAJA! My player ID: ${id}`;
 }

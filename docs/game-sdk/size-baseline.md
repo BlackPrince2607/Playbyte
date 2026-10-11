@@ -9,7 +9,7 @@ Measured 2026-09-29, before the Game Engine SDK refactor.
 | Preview APK (EAS build `00751705`, Sept 21) | **140.9 MB** (140,881,939 bytes) | `Content-Length` of the EAS artifact URL |
 | Hermes JS bundle, before the font/icon fix | 4.6 MB | `npx expo export --platform android` |
 | Bundled assets, before the font/icon fix | ~13 MB, 58 files | same export |
-| Hermes JS bundle, after the font/icon fix | **4.17 MB** | `pnpm --filter @playbyte/mobile size` |
+| Hermes JS bundle, after the font/icon fix | **4.17 MB** | `pnpm --filter @maja/mobile size` |
 | Bundled assets, after the font/icon fix | **1.58 MB**, 6 fonts, 0 images | same |
 | App icons / splash (native resources) | ~0.5 MB | `apps/mobile/assets` |
 | Hermes JS bundle, all 11 SDK engines + legacy adapter (end of Phase 11) | 4.48 MB (4590 KB) | same |
@@ -39,7 +39,7 @@ Record new numbers in the table above after each EAS build.
 
 ## Budgets
 
-Enforced in CI by `pnpm --filter @playbyte/mobile size:check` against `apps/mobile/size-budget.json`.
+Enforced in CI by `pnpm --filter @maja/mobile size:check` against `apps/mobile/size-budget.json`.
 
 | Metric | Budget | Rationale |
 |---|---|---|
@@ -63,5 +63,5 @@ any engine until it is launched.
 
 Every new dependency must be justified against functionality, bundle impact, runtime impact, and
 whether existing dependencies (Reanimated, Gesture Handler, Skia, expo-haptics, expo-file-system)
-already cover it. Run `pnpm --filter @playbyte/mobile size` before and after, and note the delta in
+already cover it. Run `pnpm --filter @maja/mobile size` before and after, and note the delta in
 the PR.

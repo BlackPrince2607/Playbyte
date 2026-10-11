@@ -40,6 +40,24 @@ export function scoreRows(breakdown?: Record<string, number>): ScoreRow[] {
   });
 }
 
+export type ResultHeadline = { title: string; celebrate: boolean };
+
+/** Headline for the result screen, from the percentile when known, else from accuracy. */
+export function resultHeadline({ percentile, correct, attempts }: { percentile: number | null; correct?: number; attempts?: number }): ResultHeadline {
+  const accuracy = attempts && correct !== undefined ? correct / attempts : null;
+  const perfect = accuracy === 1 && (attempts ?? 0) >= 3;
+  if (percentile !== null) {
+    if (percentile >= 90) return { title: "Legendary run!", celebrate: true };
+    if (percentile >= 70) return { title: "Strong run!", celebrate: true };
+    if (perfect) return { title: "Flawless!", celebrate: true };
+    return { title: percentile >= 40 ? "Solid run." : "Nice try.", celebrate: false };
+  }
+  if (perfect) return { title: "Flawless!", celebrate: true };
+  if (accuracy === null) return { title: "Run complete.", celebrate: false };
+  if (accuracy >= 0.7) return { title: "Strong run!", celebrate: true };
+  return { title: accuracy >= 0.4 ? "Solid run." : "Nice try.", celebrate: false };
+}
+
 export function statRows(breakdown?: Record<string, number>): StatRow[] {
   if (!breakdown) return [];
   return STATS.flatMap(([key, label, format]) => {

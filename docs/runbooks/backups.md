@@ -11,13 +11,13 @@ PostgreSQL is the system of record.
 ## Self-hosted / Docker
 
 ```bash
-pg_dump -Fc postgresql://playbyte:playbyte@localhost:5432/playbyte > backup.dump
+pg_dump -Fc postgresql://maja:maja@localhost:5432/maja > backup.dump
 ```
 
 Restore:
 
 ```bash
-pg_restore --clean --if-exists -d postgresql://playbyte:playbyte@localhost:5432/playbyte backup.dump
+pg_restore --clean --if-exists -d postgresql://maja:maja@localhost:5432/maja backup.dump
 ```
 
 ## What to restore

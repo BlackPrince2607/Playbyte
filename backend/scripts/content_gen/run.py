@@ -1,4 +1,4 @@
-"""High-CTR daily content generation for PLAY moments (drafts for editorial review)."""
+"""High-CTR daily content generation for MAJA moments (drafts for editorial review)."""
 
 from __future__ import annotations
 
@@ -240,7 +240,7 @@ async def insert_drafts(moments: list[GeneratedMoment], database_url: str) -> li
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Generate high-CTR draft quizzes/polls for PLAY")
+    parser = argparse.ArgumentParser(description="Generate high-CTR draft quizzes/polls for MAJA")
     parser.add_argument("--count", type=int, default=50)
     parser.add_argument("--tags", type=str, default="poll,quiz", help="Comma-separated: poll,quiz")
     parser.add_argument("--dry-run", action="store_true", help="Print JSON only; do not insert")
@@ -262,7 +262,7 @@ def main(argv: list[str] | None = None) -> int:
     }
 
     if not args.dry_run:
-        db = os.environ.get("DATABASE_URL", "postgresql+asyncpg://playbyte:playbyte@localhost:5432/playbyte")
+        db = os.environ.get("DATABASE_URL", "postgresql+asyncpg://maja:maja@localhost:5432/maja")
         try:
             import asyncio
 

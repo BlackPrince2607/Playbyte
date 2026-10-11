@@ -2,7 +2,7 @@
 
 Usage:
   python scripts/refresh_feed_content.py --dry-run
-  python scripts/refresh_feed_content.py --api-url https://playbyte-production.up.railway.app --count 40
+  python scripts/refresh_feed_content.py --api-url https://maja-production.up.railway.app --count 40
   python scripts/refresh_feed_content.py --no-images
 """
 
@@ -55,7 +55,7 @@ def req(method: str, url: str, *, headers: dict[str, str], body: dict | None = N
 
 
 def download_bytes(url: str) -> tuple[bytes, str]:
-    request = urllib.request.Request(url, headers={"User-Agent": "playbyte-refresh/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "maja-refresh/1.0"})
     with urllib.request.urlopen(request, timeout=45) as res:
         data = res.read()
         content_type = (res.headers.get("Content-Type") or "image/png").split(";")[0].strip()
@@ -327,7 +327,7 @@ def build_batch(count: int, *, include_images: bool) -> list[dict[str, Any]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Publish a fresh feed batch, then retire the previous live moments")
-    parser.add_argument("--api-url", default="https://playbyte-production.up.railway.app")
+    parser.add_argument("--api-url", default="https://maja-production.up.railway.app")
     parser.add_argument("--admin-key", default="dev-admin-key")
     parser.add_argument("--count", type=int, default=40)
     parser.add_argument("--window-hours", type=float, default=5.0)

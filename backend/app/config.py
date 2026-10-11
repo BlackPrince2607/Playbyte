@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     api_public_url: str = "http://localhost:8000"
     cors_origins: str = "http://localhost:3000,http://localhost:8081"
 
-    database_url: str = "postgresql+asyncpg://playbyte:playbyte@localhost:5432/playbyte"
+    database_url: str = "postgresql+asyncpg://maja:maja@localhost:5432/maja"
 
     guest_token_secret: str = "change-me-guest-token-secret"
     guest_session_ttl_hours: int = 720
@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     rate_limit_response_per_minute: int = 60
     rate_limit_guest_create_per_hour: int = 30
     rate_limit_event_batches_per_minute: int = 30
+    rate_limit_social_per_minute: int = 60
+    rate_limit_comments_per_minute: int = 6
 
     @property
     def cors_origin_list(self) -> list[str]:

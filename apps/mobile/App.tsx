@@ -6,14 +6,20 @@ import { JetBrainsMono_500Medium } from "@expo-google-fonts/jetbrains-mono/500Me
 import { SpaceGrotesk_700Bold } from "@expo-google-fonts/space-grotesk/700Bold";
 import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppProvider } from "./src/context/AppContext";
 import { AuthProvider } from "./src/context/AuthContext";
+import { initMetaSdk } from "./src/lib/metaSdk";
 import MainShell from "./src/MainShell";
 import { colors } from "./src/theme/colors";
 
 export default function App() {
+  useEffect(() => {
+    void initMetaSdk();
+  }, []);
+
   const [loaded, error] = useFonts({
     SpaceGrotesk_700Bold,
     Inter_400Regular,

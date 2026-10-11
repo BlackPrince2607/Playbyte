@@ -26,7 +26,7 @@ Specs below are the minimum contract for a truthful Stitch adaptation later.
       "body": "string",
       "readAt": "iso|null",
       "createdAt": "iso",
-      "deepLink": "playbyte://…",
+      "deepLink": "maja://…",
       "metadata": {}
     }
   ],
