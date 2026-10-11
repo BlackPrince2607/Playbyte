@@ -14,6 +14,7 @@ Measured 2026-09-29, before the Game Engine SDK refactor.
 | App icons / splash (native resources) | ~0.5 MB | `apps/mobile/assets` |
 | Hermes JS bundle, all 11 SDK engines + legacy adapter (end of Phase 11) | 4.48 MB (4590 KB) | same |
 | Hermes JS bundle, legacy games removed (Phase 12) | **4.43 MB** (4533 KB) | same |
+| Hermes JS bundle, Meta SDK + ATT + moment social + new onboarding (2026-10-11) | **4.57 MB** (4680 KB) | same |
 
 The preview APK was a universal build (armeabi-v7a, arm64-v8a, x86, x86_64) with R8 and resource
 shrinking disabled, so native libraries dominated it. `@shopify/react-native-skia` alone ships roughly
@@ -43,10 +44,11 @@ Enforced in CI by `pnpm --filter @maja/mobile size:check` against `apps/mobile/s
 
 | Metric | Budget | Rationale |
 |---|---|---|
-| JS bundle (Hermes) | 4.5 MiB | +10% over today, which must cover all eight green-wave engines |
-| Bundled assets | 1.8 MiB | Today's six fonts; engines must not add bundled images |
+| JS bundle (Hermes) | 4.75 MiB | Raised from 4.5 MiB on 2026-10-11 for `react-native-fbsdk-next`, `expo-tracking-transparency`, moment likes/shares/comments and the new onboarding flow (+147 KB); ~6% headroom |
+| Bundled assets | 2.4 MiB | Six fonts plus music and sound effects; engines must not add bundled images |
 | Font files | 6 | Current set; new weights need a justification |
 | Bundled images | 300 KB | Tiny UI glyphs only; game content images are remote |
+| Bundled audio | 600 KB | Four music loops (~410 KB) and seven sound effects (~40 KB), mono AAC from `scripts/generate-audio.mjs` |
 
 Per engine: aim for at most ~150 KB of JS. Bundled fallback content (all engines together) should stay
 under 300 KB. The on-device game asset cache is capped at 100 MB by default (`AssetCache`).
