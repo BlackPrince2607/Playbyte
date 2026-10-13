@@ -1,13 +1,10 @@
+/* eslint-disable @next/next/no-img-element -- static brand art; next/image adds nothing here */
 export function MajaLogo({ size = "lg" }: { size?: "lg" | "sm" }) {
   return (
-    <div className="flex items-baseline gap-1">
-      <span
-        className={`font-display font-bold tracking-tight text-pink ${size === "lg" ? "text-4xl" : "text-2xl"}`}
-      >
-        MAJA
-      </span>
+    <div className="flex items-end gap-2">
+      <img src="/maja-wordmark.png" alt="Maja" className={size === "lg" ? "h-10 w-auto" : "h-7 w-auto"} />
       {size === "lg" ? (
-        <span className="font-mono text-xs uppercase tracking-widest text-lilac">CMS</span>
+        <span className="pb-1 font-mono text-xs uppercase tracking-widest text-lilac">CMS</span>
       ) : null}
     </div>
   );

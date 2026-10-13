@@ -56,6 +56,7 @@ const assets = files
   .map((f) => ({ ...f, ext: extByPath.get(path.normalize(f.path)) ?? path.extname(f.path).slice(1) }));
 const fonts = assets.filter((f) => /^(ttf|otf)$/i.test(f.ext));
 const images = assets.filter((f) => /^(png|jpe?g|webp|gif)$/i.test(f.ext));
+const audio = assets.filter((f) => /^(m4a|aac|mp3|wav|ogg)$/i.test(f.ext));
 
 const sum = (xs) => xs.reduce((s, f) => s + f.bytes, 0);
 const report = {
@@ -67,6 +68,8 @@ const report = {
   fontBytes: sum(fonts),
   imageCount: images.length,
   imageBytes: sum(images),
+  audioCount: audio.length,
+  audioBytes: sum(audio),
   largestAssets: [...assets]
     .sort((a, b) => b.bytes - a.bytes)
     .slice(0, 10)
@@ -78,7 +81,7 @@ fs.writeFileSync(path.join(outDir, "report.json"), JSON.stringify(report, null, 
 
 console.log("\nMaja mobile size report (android export)");
 console.log(`  JS bundle (Hermes): ${kb(report.jsBundleBytes)}`);
-console.log(`  Assets total:       ${kb(report.assetBytes)}  (${report.fontCount} fonts ${kb(report.fontBytes)}, ${report.imageCount} images ${kb(report.imageBytes)})`);
+console.log(`  Assets total:       ${kb(report.assetBytes)}  (${report.fontCount} fonts ${kb(report.fontBytes)}, ${report.imageCount} images ${kb(report.imageBytes)}, ${report.audioCount} audio ${kb(report.audioBytes)})`);
 for (const a of report.largestAssets) console.log(`    ${kb(a.bytes).padStart(10)}  ${a.file}`);
 
 if (args.has("--check")) {

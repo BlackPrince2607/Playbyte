@@ -1,5 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { AccessibilityInfo, Platform } from "react-native";
+import type { SfxKey } from "../../audio/catalog";
+import { playSfx } from "../../audio/sound";
 
 export type FeedbackKind = "tap" | "select" | "success" | "error" | "warning" | "levelUp" | "complete";
 
@@ -33,8 +35,18 @@ const android: Record<FeedbackKind, Haptics.AndroidHaptics> = {
   complete: Haptics.AndroidHaptics.Confirm,
 };
 
-/** Single haptics entry point for every engine; failures are swallowed (unsupported devices). */
+const sounds: Partial<Record<FeedbackKind, SfxKey>> = {
+  success: "correct",
+  error: "wrong",
+  warning: "wrong",
+  levelUp: "levelUp",
+  complete: "complete",
+};
+
+/** Single haptics and sound-effect entry point for every engine; haptic failures are swallowed (unsupported devices). */
 export function feedback(kind: FeedbackKind) {
+  const sound = sounds[kind];
+  if (sound) playSfx(sound);
   if (!hapticsEnabled) return;
   const run = (): Promise<void> => {
     if (Platform.OS === "android") return Haptics.performAndroidHapticsAsync(android[kind]);

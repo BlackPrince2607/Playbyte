@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvatarImage } from "./AvatarImage";
 import { MajaLogo } from "./MajaLogo";
+import { useApp } from "../context/AppContext";
 import { colors, spacing } from "../theme/colors";
 import { type } from "../theme/typography";
 
@@ -22,10 +23,13 @@ export function FeedTopBar({
   onStreak,
   onMenu,
   onProfile,
-  avatarDisplayName = "You",
+  avatarDisplayName,
   avatarKey,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const { me } = useApp();
+  const name = avatarDisplayName ?? me?.displayName ?? "You";
+  const photo = avatarKey ?? me?.avatarKey ?? null;
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + spacing.sm }]}>
       <View style={styles.inner}>
@@ -35,10 +39,10 @@ export function FeedTopBar({
           </Pressable>
         ) : (
           <Pressable onPress={onProfile} hitSlop={8} accessibilityRole="button" accessibilityLabel="Open profile">
-            <AvatarImage displayName={avatarDisplayName} avatarKey={avatarKey} size={40} />
+            <AvatarImage displayName={name} avatarKey={photo} size={40} />
           </Pressable>
         )}
-        <MajaLogo soft={variant === "compete"} />
+        <MajaLogo />
         {variant === "feed" ? (
           <Pressable
             style={({ pressed }) => [styles.streak, pressed && { opacity: 0.7 }]}
@@ -53,7 +57,7 @@ export function FeedTopBar({
           </Pressable>
         ) : (
           <Pressable onPress={onProfile} hitSlop={8} accessibilityRole="button">
-            <AvatarImage displayName={avatarDisplayName} avatarKey={avatarKey} size={32} />
+            <AvatarImage displayName={name} avatarKey={photo} size={32} />
           </Pressable>
         )}
       </View>

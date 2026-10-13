@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import UTC, datetime
 from uuid import UUID
 
+import httpx
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.infrastructure.postgres.models import (
     Consent,
     DataRequest,
@@ -24,6 +27,21 @@ from app.infrastructure.postgres.models import (
     UserDailyStat,
     UserInterest,
 )
+
+log = logging.getLogger(__name__)
+
+
+async def delete_auth_user(subject: str | None) -> None:
+    """Removes the Supabase Auth login (email, Google identity) behind a deleted account."""
+    settings = get_settings()
+    key = settings.supabase_service_role_key
+    if not subject or subject.startswith("deleted:") or not (settings.supabase_url and key):
+        return
+    url = f"{settings.supabase_url.rstrip('/')}/auth/v1/admin/users/{subject}"
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        res = await client.delete(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+    if res.status_code not in (200, 204, 404):
+        raise RuntimeError(f"Auth user delete failed ({res.status_code})")
 
 
 async def build_export_payload(session: AsyncSession, user_id: UUID) -> dict:
@@ -115,14 +133,31 @@ async def complete_export(session: AsyncSession, request_id: UUID, user_id: UUID
     return download_url
 
 
+async def export_download_url(key: str) -> str | None:
+    """Short-lived link to a finished export; None if storage can't produce one right now."""
+    from app.infrastructure.storage.objects import get_object_storage
+
+    try:
+        storage = get_object_storage()
+        create_signed_url = getattr(storage, "create_signed_url", None)
+        if create_signed_url is not None:
+            return await create_signed_url("exports", key, expires_in=3600)
+        return storage.public_url("exports", key)
+    except Exception:  # noqa: BLE001 — the client shows "try again" rather than a 500
+        log.warning("export_link_failed", extra={"key": key})
+        return None
+
+
 async def complete_deletion(session: AsyncSession, user_id: UUID, request_id: UUID | None = None) -> None:
     user = await session.get(User, user_id)
     if user is None:
         return
+    auth_subject = user.auth_subject
     user.status = "deleted"
     user.auth_subject = f"deleted:{user_id}"
     user.date_of_birth = None
     profile = await session.get(Profile, user_id)
+    avatar_key = profile.avatar_key if profile else None
     if profile:
         profile.display_name = "Deleted user"
         profile.bio = None
@@ -134,7 +169,6 @@ async def complete_deletion(session: AsyncSession, user_id: UUID, request_id: UU
     share_keys = list(
         await session.scalars(select(ShareCard.asset_key).where(ShareCard.user_id == user_id))
     )
-    avatar_key = profile.avatar_key if profile else None
     export_keys = list(
         await session.scalars(select(DataRequest.download_key).where(DataRequest.user_id == user_id))
     )
@@ -167,3 +201,8 @@ async def complete_deletion(session: AsyncSession, user_id: UUID, request_id: UU
                 await storage.delete_object("exports", key)
     except Exception:
         pass  # storage cleanup is best-effort; DB deletion is authoritative
+
+    try:
+        await delete_auth_user(auth_subject)
+    except Exception:  # noqa: BLE001 — the account is already anonymised; ops can retry from the log
+        log.exception("auth_user_delete_failed", extra={"user_id": str(user_id)})

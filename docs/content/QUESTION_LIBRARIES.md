@@ -74,7 +74,7 @@ Preview freshness is intentional: GitHub Actions retires live moments and floods
 1. Workflow: [`.github/workflows/refresh-feed-content.yml`](../../.github/workflows/refresh-feed-content.yml)
 2. Script: `python scripts/refresh_feed_content.py --count 40`
 3. Required GitHub secrets:
-   - `MAJA_API_URL` — e.g. `https://maja-production.up.railway.app`
+   - `MAJA_API_URL` — e.g. `https://majaa-production.up.railway.app`
    - `MAJA_ADMIN_KEY` — same key the API accepts via `X-Admin-Key` (non-prod) / admin path as deployed
 4. Manual run: Actions → **Refresh feed content** → **Run workflow**
 5. Local dry-run: `python scripts/refresh_feed_content.py --dry-run --no-images`

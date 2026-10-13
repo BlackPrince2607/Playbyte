@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import type { FeedGame, FeedItem, FeedMoment } from "../api";
-import { appendFeedPage, feedKeys } from "./feedPages";
+import { MOMENT_REPEAT_GAP, appendFeedPage, feedKeys } from "./feedPages";
 
 const moment = (id: string) => ({ type: "moment", id }) as FeedMoment;
 const game = (key: string) => ({ type: "mini_game", key }) as FeedGame;
@@ -17,6 +17,13 @@ describe("feed pages", () => {
   it("skips moments that are already in the feed", () => {
     const next = appendFeedPage([moment("a"), moment("b")], [moment("b"), moment("c"), moment("a")]);
     assert.deepEqual(ids(next), ["a", "b", "c"]);
+  });
+
+  it("lets a moment come back once it has scrolled far enough away", () => {
+    const filler = Array.from({ length: MOMENT_REPEAT_GAP }, (_, i) => moment(`f${i}`));
+    const next = appendFeedPage([moment("a"), ...filler], [moment("a")]);
+    assert.deepEqual(ids(next).slice(-1), ["a"]);
+    assert.equal(next.length, MOMENT_REPEAT_GAP + 2);
   });
 
   it("never shows the same game twice in a row", () => {

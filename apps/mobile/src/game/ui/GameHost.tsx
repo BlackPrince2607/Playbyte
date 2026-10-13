@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ActivityIndicator, AppState, BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
+import { musicForEngine } from "../../audio/catalog";
+import { setMusicDucked, setMusicScene } from "../../audio/sound";
 import { ErrorState } from "../../components/ErrorState";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { colors, radius, spacing } from "../../theme/colors";
@@ -225,6 +227,16 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
   const persist = useCallback(() => {
     void sessionStore.save({ ...runner.serialize(), title }).catch(() => {});
   }, [runner, title]);
+
+  useEffect(() => {
+    setMusicScene(musicForEngine(definition.engine));
+    return () => setMusicScene("home");
+  }, [definition.engine]);
+
+  useEffect(() => {
+    setMusicDucked(menuOpen);
+    return () => setMusicDucked(false);
+  }, [menuOpen]);
 
   // Single shared ticker: engine tick interval, or a coarse one for deadline-driven engines.
   const tickMs = meta.tickMs ?? (snap.deadline !== undefined ? 250 : 0);

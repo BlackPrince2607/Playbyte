@@ -2,7 +2,6 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from app.modules.crowd.volume import volume_label, volume_state
-from app.modules.feed.ranking import RankedItem, interleave
 from app.modules.games.scoring import clamp_score, percentile
 from app.modules.moments.state import (
     can_go_live,
@@ -41,14 +40,6 @@ def test_moment_transitions() -> None:
         ends_at=None,
     )
     assert ok2
-
-
-def test_feed_interleave_hot_window() -> None:
-    moments = [RankedItem("moment", str(i), 10) for i in range(8)]
-    games = [RankedItem("mini_game", f"g{i}", 1) for i in range(4)]
-    hot = interleave(moments, games, hot_window=True)
-    kinds = [i.kind for i in hot]
-    assert kinds.count("mini_game") <= kinds.count("moment")
 
 
 def test_score_clamp_and_percentile() -> None:

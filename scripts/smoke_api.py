@@ -7,7 +7,7 @@ import uuid
 
 import httpx
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else "https://maja-production.up.railway.app"
+BASE = sys.argv[1] if len(sys.argv) > 1 else "https://majaa-production.up.railway.app"
 
 
 def main() -> int:

@@ -103,7 +103,7 @@ export function WelcomeScreen({
       icon: <Ionicons name="mail-outline" size={20} color={colors.paper} />,
     };
   } else {
-    auth = { label: "Google sign-in coming soon", icon: <GoogleLogo /> };
+    auth = { label: "Sign-in unavailable in this build", icon: <GoogleLogo /> };
   }
 
   return (

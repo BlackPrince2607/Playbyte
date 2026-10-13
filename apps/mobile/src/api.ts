@@ -102,8 +102,9 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
 }
 
 async function fetchApi<T>(path: string, init: RequestInit, authRetries: number): Promise<T> {
+  // FormData needs fetch to set its own multipart boundary header.
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(init.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
     ...(init.headers as Record<string, string>),
   };
   const auth = await authorizationHeader();
@@ -249,6 +250,27 @@ export type MeProfile = {
   avatarKey: string | null;
   defaultVisibility: "public" | "friends" | "private";
   ageVerified: boolean;
+};
+
+export type LeaderboardScope = "friends" | "global";
+export type LeaderboardPeriod = "week" | "all";
+
+export type LeaderboardEntry = {
+  rank: number | null;
+  userId: string;
+  displayName: string;
+  avatarKey: string | null;
+  points: number;
+  isYou: boolean;
+  hidden?: boolean;
+};
+
+export type Leaderboard = {
+  scope: LeaderboardScope;
+  period: LeaderboardPeriod;
+  pointsPerAction: number;
+  entries: LeaderboardEntry[];
+  you: LeaderboardEntry | null;
 };
 
 export type NotificationPreferences = {

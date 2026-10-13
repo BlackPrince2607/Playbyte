@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { APP_LANGUAGES, UPCOMING_LANGUAGES, supportedLanguage } from "../../lib/languages";
+import { MajaLogo } from "../../components/MajaLogo";
 import { getLanguage, setLanguage } from "../../lib/storage";
 import { colors, spacing, surface } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
@@ -97,7 +98,7 @@ export function LanguageScreen({ onNext, onBack }: Props) {
 
         <View style={styles.teaser}>
           <View style={styles.logoTile}>
-            <Text style={styles.logoText}>Maja</Text>
+            <MajaLogo size="sm" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.teaserTitle}>Every swipe is a game</Text>
@@ -216,7 +217,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  logoText: { fontFamily: fonts.display, fontSize: 20, color: "#fff", letterSpacing: -0.5 },
   teaserTitle: { fontFamily: fonts.display, fontSize: 14, lineHeight: 20, color: surface.onSurface },
   footer: { marginTop: "auto", alignItems: "center", gap: spacing.sm },
   note: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },

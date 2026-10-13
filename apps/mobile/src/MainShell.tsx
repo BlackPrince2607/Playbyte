@@ -12,6 +12,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { FeedGame, isApiError } from "./api";
 import { BottomNav, TabKey } from "./components/BottomNav";
 import { ErrorState } from "./components/ErrorState";
+import { MajaLogo } from "./components/MajaLogo";
 import { PrimaryButton } from "./components/PrimaryButton";
 import { useApp } from "./context/AppContext";
 import { nextGame } from "./game/discovery";
@@ -52,7 +53,7 @@ function BootLoading({ onRetry }: { onRetry: () => void }) {
 
   return (
     <View style={styles.center}>
-      <Text style={[type.logo, { color: colors.pink, fontSize: 36 }]}>MAJA</Text>
+      <MajaLogo size="lg" />
       <ActivityIndicator color={colors.lime} style={{ marginTop: 16 }} />
       {showRetry ? (
         <View style={{ marginTop: 24, paddingHorizontal: 32, alignItems: "center", gap: 12 }}>

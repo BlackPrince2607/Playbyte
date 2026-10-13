@@ -8,6 +8,7 @@ const KEYS = {
   language: "maja_language",
   streak: "maja_streak",
   localProfile: "maja_local_profile",
+  sound: "maja_sound",
 } as const;
 
 export type OnboardingStep = "language" | "intro" | "signup" | "profile" | "interests" | "ready";
@@ -106,6 +107,21 @@ export async function getLocalProfile(): Promise<LocalProfile | null> {
 
 export async function setLocalProfile(profile: LocalProfile) {
   await AsyncStorage.setItem(KEYS.localProfile, JSON.stringify(profile));
+}
+
+export type SoundPrefs = { music: boolean; sfx: boolean };
+
+export async function getSoundPrefs(): Promise<SoundPrefs> {
+  try {
+    const p = JSON.parse((await AsyncStorage.getItem(KEYS.sound)) ?? "{}") as Partial<SoundPrefs>;
+    return { music: p.music !== false, sfx: p.sfx !== false };
+  } catch {
+    return { music: true, sfx: true };
+  }
+}
+
+export async function setSoundPrefs(prefs: SoundPrefs) {
+  await AsyncStorage.setItem(KEYS.sound, JSON.stringify(prefs));
 }
 
 export async function getStreak() {

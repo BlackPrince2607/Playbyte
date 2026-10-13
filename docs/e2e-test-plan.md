@@ -1,6 +1,6 @@
 # E2E Test Plan — Maja
 
-**Environment under test:** Railway API `https://maja-production.up.railway.app` + Expo preview profile (`eas.json`).  
+**Environment under test:** Railway API `https://majaa-production.up.railway.app` + Expo preview profile (`eas.json`).  
 **Date:** 2026-09-21  
 **Automation entrypoint:** `python scripts/smoke_api.py [base_url]`
 

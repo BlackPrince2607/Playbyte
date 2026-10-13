@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { setMusicScene, startSound } from "./src/audio/sound";
 import { AppProvider } from "./src/context/AppContext";
 import { AuthProvider } from "./src/context/AuthContext";
 import { initMetaSdk } from "./src/lib/metaSdk";
@@ -18,6 +19,8 @@ import { colors } from "./src/theme/colors";
 export default function App() {
   useEffect(() => {
     void initMetaSdk();
+    setMusicScene("home");
+    void startSound();
   }, []);
 
   const [loaded, error] = useFonts({

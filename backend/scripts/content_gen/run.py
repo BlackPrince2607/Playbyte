@@ -194,7 +194,13 @@ async def insert_drafts(moments: list[GeneratedMoment], database_url: str) -> li
     from sqlalchemy import select
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-    from app.infrastructure.postgres.models import Category, ContentTag, Moment, MomentOption, MomentTag
+    from app.infrastructure.postgres.models import (
+        Category,
+        ContentTag,
+        Moment,
+        MomentOption,
+        MomentTag,
+    )
 
     url = database_url
     if url.startswith("postgresql://") and "+asyncpg" not in url:

@@ -11,13 +11,13 @@
       "supportsTablet": true,
       "bundleIdentifier": "app.maja.mobile",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Share your MAJA moment results."
+        "NSPhotoLibraryUsageDescription": "MAJA uses your photos so you can pick a profile picture and share your results."
       }
     },
     "android": {
       "package": "app.maja.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#150E2B",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -35,6 +35,22 @@
     "plugins": [
       "expo-font",
       "expo-sharing",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "MAJA uses your photos so you can pick a profile picture and share your results.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       [
         "expo-tracking-transparency",
         {

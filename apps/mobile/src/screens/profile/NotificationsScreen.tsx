@@ -141,7 +141,7 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
         </View>
       ))}
       <Text style={[type.metadata, styles.footer]}>
-        Push alerts coming soon — preferences are saved for when notifications launch.
+        Your choices are saved to your account. Push alerts aren’t switched on in this test build yet.
       </Text>
     </View>
   );

@@ -13,7 +13,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api, isApiError } from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
+import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
+import { pickAndUploadAvatar } from "../../lib/avatarUpload";
 import { seededCount } from "../../lib/seededEngagement";
 import { getLocalProfile, setLocalProfile, type Gender } from "../../lib/storage";
 import { colors, spacing, surface } from "../../theme/colors";
@@ -37,6 +39,8 @@ function withCommas(n: number) {
 export function ProfileSetupScreen({ onNext, onBack }: Props) {
   const insets = useSafeAreaInsets();
   const { user, isSignedIn } = useAuth();
+  const { me, updateMe } = useApp();
+  const [uploading, setUploading] = useState(false);
   const lockedEmail = user?.email ?? null;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -67,6 +71,20 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
   const emailOk = EMAIL_RE.test(shownEmail.trim());
   const emailBlocking = !lockedEmail && email.trim().length > 0 && !emailOk;
 
+  async function choosePhoto() {
+    if (!isSignedIn || uploading) return;
+    setUploading(true);
+    setError("");
+    try {
+      const key = await pickAndUploadAvatar();
+      if (key) updateMe({ avatarKey: key });
+    } catch (e) {
+      setError(isApiError(e) ? e.userMessage : "Could not upload that photo. Try another one.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function submit() {
     if (!nameOk) {
       setError("Enter a name between 2 and 40 characters.");
@@ -82,6 +100,7 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
       await setLocalProfile({ name: trimmedName, email: shownEmail.trim(), gender });
       if (isSignedIn) {
         await api("/v1/me/profile", { method: "PATCH", body: JSON.stringify({ displayName: trimmedName }) });
+        updateMe({ displayName: trimmedName });
       }
       onNext(trimmedName);
     } catch (e) {
@@ -116,12 +135,19 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
         </Text>
 
         <View style={styles.badgeCard}>
-          <View>
-            <AvatarImage displayName={trimmedName || "Player"} size={56} />
-            <View style={styles.editBadge}>
-              <Ionicons name="pencil" size={12} color={colors.ink} />
-            </View>
-          </View>
+          <Pressable
+            onPress={() => void choosePhoto()}
+            disabled={!isSignedIn || uploading}
+            accessibilityRole="button"
+            accessibilityLabel={isSignedIn ? "Choose a profile photo" : "Profile photo unlocks after registration"}
+          >
+            <AvatarImage displayName={trimmedName || "Player"} avatarKey={me?.avatarKey} size={56} />
+            {isSignedIn ? (
+              <View style={styles.editBadge}>
+                <Ionicons name={uploading ? "hourglass" : "camera"} size={12} color={colors.ink} />
+              </View>
+            ) : null}
+          </Pressable>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs }}>
               <Text style={styles.badgeTitle}>Gamer Badge Ready</Text>
@@ -130,7 +156,11 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
               </View>
             </View>
             <Text style={[type.metadata, { color: colors.lilac }]} numberOfLines={1}>
-              {isSignedIn ? "Custom avatars are coming soon" : "Custom avatar unlocks after registration"}
+              {isSignedIn
+                ? uploading
+                  ? "Uploading your photo…"
+                  : "Tap your badge to add a photo"
+                : "Custom avatar unlocks after registration"}
             </Text>
           </View>
         </View>

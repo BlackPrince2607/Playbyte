@@ -1,11 +1,19 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  api,
+  isApiError,
+  type Leaderboard,
+  type LeaderboardEntry,
+  type LeaderboardPeriod,
+  type LeaderboardScope,
+} from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
+import { ErrorState } from "../../components/ErrorState";
 import { MajaLogo } from "../../components/MajaLogo";
 import { PrimaryButton } from "../../components/PrimaryButton";
-import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
@@ -15,16 +23,95 @@ type Props = {
   onSignIn?: () => void;
 };
 
-const SCOPES = ["Friends", "Bengaluru", "Karnataka", "India"] as const;
+const SCOPES: { id: LeaderboardScope; label: string }[] = [
+  { id: "friends", label: "Friends" },
+  { id: "global", label: "Global" },
+];
 
-/** Friends-framed board. Public ranks are deferred — no fabricated scores. */
+const PERIODS: { id: LeaderboardPeriod; label: string }[] = [
+  { id: "week", label: "This week" },
+  { id: "all", label: "All time" },
+];
+
+function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: on }}
+      style={[styles.chip, on && styles.chipOn]}
+    >
+      <Text style={[type.metadata, { color: on ? colors.paper : colors.lilac, fontFamily: on ? fonts.bodyBold : fonts.body }]}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function Row({ entry }: { entry: LeaderboardEntry }) {
+  return (
+    <View style={[styles.row, entry.isYou && styles.youRow]}>
+      <Text style={[type.statsSm, styles.rank, { color: entry.isYou ? colors.paper : colors.lilac }]}>
+        {entry.rank ? `#${entry.rank}` : "—"}
+      </Text>
+      <AvatarImage displayName={entry.displayName} avatarKey={entry.avatarKey} size={40} />
+      <Text style={[type.bodyLg, styles.name]} numberOfLines={1}>
+        {entry.isYou ? "You" : entry.displayName}
+      </Text>
+      <Text style={[type.statsSm, { color: entry.isYou ? colors.paper : colors.lime }]}>{entry.points} pts</Text>
+    </View>
+  );
+}
+
+/** Weekly and all-time ranks from real answers and finished games. */
 export function LeaderboardScreen({ onBack, onSignIn }: Props) {
   const insets = useSafeAreaInsets();
   const { isSignedIn } = useAuth();
-  const { friends, streak } = useApp();
-  const [scope, setScope] = useState<(typeof SCOPES)[number]>("Friends");
+  const [scope, setScope] = useState<LeaderboardScope>(isSignedIn ? "friends" : "global");
+  const [period, setPeriod] = useState<LeaderboardPeriod>("week");
+  const [board, setBoard] = useState<Leaderboard | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+  const request = useRef(0);
 
-  const friendsOnly = scope === "Friends";
+  const needsSignIn = scope === "friends" && !isSignedIn;
+
+  const load = useCallback(
+    async (pull = false) => {
+      const id = ++request.current;
+      setError("");
+      if (needsSignIn) {
+        setBoard(null);
+        return;
+      }
+      if (pull) setRefreshing(true);
+      else setLoading(true);
+      try {
+        const res = await api<Leaderboard>(`/v1/leaderboards/${scope}?period=${period}`);
+        if (id === request.current) setBoard(res);
+      } catch (e) {
+        if (id === request.current) {
+          setBoard(null);
+          setError(isApiError(e) ? e.userMessage : "Could not load the leaderboard.");
+        }
+      } finally {
+        if (id === request.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    },
+    [scope, period, needsSignIn],
+  );
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const you = board?.you ?? null;
+  const youListed = Boolean(board?.entries.some((e) => e.isYou));
+  const perAction = board?.pointsPerAction ?? 10;
 
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
@@ -32,110 +119,79 @@ export function LeaderboardScreen({ onBack, onSignIn }: Props) {
         <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back">
           <Ionicons name="arrow-back" size={24} color={colors.paper} />
         </Pressable>
-        <MajaLogo soft />
+        <MajaLogo />
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.lime} />
+        }
       >
-        <Text style={[type.screenTitle, { color: colors.paper, marginTop: spacing.md }]}>
-          Who’s winning?
-        </Text>
+        <Text style={[type.screenTitle, { color: colors.paper, marginTop: spacing.md }]}>Who’s winning?</Text>
         <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.xs }]}>
-          Friends board for now — public ranks come later.
+          {perAction} points for every moment you answer and every game you finish.
         </Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scopes}>
-          {SCOPES.map((s) => {
-            const on = scope === s;
-            return (
-              <Pressable key={s} onPress={() => setScope(s)} style={[styles.scope, on && styles.scopeOn]}>
-                <Text
-                  style={[
-                    type.metadata,
-                    {
-                      color: on ? colors.paper : colors.lilac,
-                      fontFamily: on ? fonts.bodyBold : fonts.body,
-                    },
-                  ]}
-                >
-                  {s}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-
-        <View style={styles.positionCard}>
-          <Text style={[type.metadata, { color: colors.lilac, letterSpacing: 2 }]}>YOUR STREAK</Text>
-          <Text style={[type.largeScore, { color: colors.pinkSoft, fontSize: 56, marginVertical: 8 }]}>
-            {isSignedIn || streak > 0 ? streak : "—"}
-          </Text>
-          <View style={styles.pills}>
-            <View style={styles.pill}>
-              <Text style={[type.bodySm, { color: colors.paper }]}>{scope}</Text>
-            </View>
-            <View style={styles.pill}>
-              <Text style={[type.bodySm, { color: colors.lime }]}>
-                {friendsOnly ? `${friends.length} friends` : "Coming soon"}
-              </Text>
-            </View>
-          </View>
+        <View style={styles.chips} accessibilityRole="tablist">
+          {SCOPES.map((s) => (
+            <Chip key={s.id} label={s.label} on={scope === s.id} onPress={() => setScope(s.id)} />
+          ))}
+          <View style={styles.divider} />
+          {PERIODS.map((p) => (
+            <Chip key={p.id} label={p.label} on={period === p.id} onPress={() => setPeriod(p.id)} />
+          ))}
         </View>
 
-        {!isSignedIn ? (
-          <View style={styles.signInCard}>
-            <Text style={[type.bodyLg, { color: colors.paper }]}>Sign in to see friends on this board.</Text>
+        {needsSignIn ? (
+          <View style={styles.card}>
+            <Text style={[type.bodyLg, { color: colors.paper }]}>Sign in to compete with your friends.</Text>
             {onSignIn ? <PrimaryButton label="Sign in" onPress={onSignIn} /> : null}
           </View>
-        ) : null}
-
-        {!friendsOnly ? (
-          <View style={styles.soonCard}>
-            <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
-              {scope} ranks aren’t live yet
-            </Text>
-            <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.xs }]}>
-              Switch back to Friends to see people you’ve added.
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.list}>
-            {friends.length === 0 ? (
-              <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center", marginTop: spacing.lg }]}>
-                Add friends from the Friends tab — they’ll show up here.
-              </Text>
-            ) : (
-              friends.map((f, i) => (
-                <View key={f.userId ?? f.displayName + i} style={styles.row}>
-                  <Text style={[type.statsSm, { color: colors.lilac, width: 36, textAlign: "right" }]}>
-                    #{i + 1}
-                  </Text>
-                  <AvatarImage displayName={f.displayName} avatarKey={f.avatarKey} size={40} />
-                  <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold, flex: 1 }]}>
-                    {f.displayName}
-                  </Text>
-                  <Text style={[type.micro, { color: colors.lilac }]}>Friend</Text>
-                </View>
-              ))
-            )}
-
-            {isSignedIn ? (
-              <View style={[styles.row, styles.youRow]}>
-                <Text style={[type.statsSm, { color: colors.paper, width: 36, textAlign: "right" }]}>—</Text>
-                <AvatarImage displayName="You" size={40} />
-                <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold, flex: 1 }]}>You</Text>
-                <Text style={[type.statsSm, { color: colors.paper }]}>{streak}🔥</Text>
+        ) : loading && !board ? (
+          <ActivityIndicator color={colors.lime} style={{ marginTop: spacing.xl }} />
+        ) : error ? (
+          <ErrorState message={error} onRetry={() => void load()} />
+        ) : board ? (
+          <>
+            {you ? (
+              <View style={styles.positionCard}>
+                <Text style={[type.metadata, { color: colors.lilac, letterSpacing: 2 }]}>YOUR RANK</Text>
+                <Text style={[type.largeScore, { color: colors.pinkSoft, fontSize: 56, marginVertical: 8 }]}>
+                  {you.rank ? `#${you.rank}` : "—"}
+                </Text>
+                <Text style={[type.bodySm, { color: colors.paper }]}>
+                  {you.hidden
+                    ? "Your profile is private, so you’re hidden from the global board."
+                    : you.points > 0
+                      ? `${you.points} points ${period === "week" ? "this week" : "so far"}`
+                      : "Answer a moment or finish a game to get on the board."}
+                </Text>
               </View>
             ) : null}
-          </View>
-        )}
 
-        <Text style={[type.metadata, { color: colors.lilac, textAlign: "center", marginTop: spacing.lg }]}>
-          Competitive ranks are intentionally deferred for MVP testing.
-        </Text>
+            {board.entries.length === 0 ? (
+              <Text style={[type.bodySm, styles.empty]}>
+                {scope === "friends"
+                  ? "Add friends from the Friends tab and they’ll show up here."
+                  : "No one has scored yet. Be the first!"}
+              </Text>
+            ) : (
+              <View style={styles.list}>
+                {board.entries.map((e) => (
+                  <Row key={e.userId} entry={e} />
+                ))}
+                {you && !youListed && !you.hidden ? <Row entry={you} /> : null}
+              </View>
+            )}
+
+            {scope === "friends" && board.entries.length === 1 ? (
+              <Text style={[type.bodySm, styles.empty]}>Add friends from the Friends tab to fill your board.</Text>
+            ) : null}
+          </>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -144,8 +200,8 @@ export function LeaderboardScreen({ onBack, onSignIn }: Props) {
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.ink, paddingHorizontal: spacing.margin },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  scopes: { gap: spacing.sm, marginTop: spacing.lg, marginBottom: spacing.md },
-  scope: {
+  chips: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing.sm, marginTop: spacing.lg, marginBottom: spacing.md },
+  chip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: radius.pill,
@@ -153,7 +209,8 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.cardAlt,
   },
-  scopeOn: { backgroundColor: colors.pink, borderColor: colors.pink },
+  chipOn: { backgroundColor: colors.pink, borderColor: colors.pink },
+  divider: { width: 1, height: 20, backgroundColor: colors.line },
   positionCard: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
@@ -161,34 +218,16 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-    overflow: "hidden",
   },
-  pills: { flexDirection: "row", gap: spacing.sm },
-  pill: {
-    backgroundColor: colors.cardAlt,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  signInCard: {
+  card: {
     backgroundColor: colors.cardAlt,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.line,
     padding: spacing.md,
     gap: spacing.md,
-    marginBottom: spacing.md,
   },
-  soonCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
+  empty: { color: colors.lilac, textAlign: "center", marginTop: spacing.lg },
   list: { gap: spacing.sm },
   row: {
     backgroundColor: colors.card,
@@ -200,11 +239,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  youRow: {
-    backgroundColor: colors.pink,
-    borderColor: colors.pinkSoft,
-    borderWidth: 2,
-    transform: [{ scale: 1.02 }],
-    marginTop: spacing.sm,
-  },
+  youRow: { backgroundColor: colors.pink, borderColor: colors.pinkSoft, borderWidth: 2 },
+  rank: { width: 40, textAlign: "right" },
+  name: { color: colors.paper, fontFamily: fonts.bodyBold, flex: 1 },
 });

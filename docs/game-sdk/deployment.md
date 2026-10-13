@@ -4,7 +4,7 @@ Scope: what the Game Engine SDK (11 engines, 42 game rows) needs from the backen
 mobile build. General infrastructure lives in `docs/railway.md` and `docs/production-deployment.md`
 (`docs/deployment-runbook.md` still describes Fly.io; Railway is what is live).
 
-Live API: `https://maja-production.up.railway.app` (Railway service, root directory `backend`,
+Live API: `https://majaa-production.up.railway.app` (Railway service, root directory `backend`,
 `backend/railway.toml`). Railway auto-deploys `main`. Both the `preview` and `production` EAS
 profiles point at this API — there is no separate staging backend.
 

@@ -12,9 +12,9 @@ type Props = {
 };
 
 export function AvatarImage({ displayName, avatarKey, size = 44, style }: Props) {
-  const [failed, setFailed] = useState(false);
+  const [failedUri, setFailedUri] = useState<string | null>(null);
   const uri = avatarPublicUrl(avatarKey);
-  const showImage = Boolean(uri) && !failed;
+  const showImage = Boolean(uri) && failedUri !== uri;
 
   return (
     <View
@@ -29,7 +29,7 @@ export function AvatarImage({ displayName, avatarKey, size = 44, style }: Props)
           source={{ uri: uri! }}
           style={{ width: size, height: size, borderRadius: size / 2 }}
           resizeMode="cover"
-          onError={() => setFailed(true)}
+          onError={() => setFailedUri(uri)}
           accessibilityLabel={`${displayName} avatar`}
         />
       ) : (

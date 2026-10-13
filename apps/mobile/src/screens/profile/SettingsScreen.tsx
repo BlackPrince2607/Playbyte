@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Constants from "expo-constants";
 import {
   ActivityIndicator,
+  Alert,
+  Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,12 +14,16 @@ import {
   View,
 } from "react-native";
 import { api, isApiError, MeProfile, NotificationPreferences } from "../../api";
+import { setSoundPref, useSoundPrefs } from "../../audio/sound";
 import { AvatarImage } from "../../components/AvatarImage";
 import { PlayerIdCard } from "../../components/PlayerIdCard";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { SectionCard, SettingsRow } from "../../components/StitchPrimitives";
+import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
+import { pickAndUploadAvatar, removeAvatar } from "../../lib/avatarUpload";
 import { APP_LANGUAGES, supportedLanguage } from "../../lib/languages";
+import { legalLinks, SUPPORT_EMAIL, supportMailto } from "../../lib/links";
 import { getLanguage, setLanguage } from "../../lib/storage";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
@@ -29,9 +37,28 @@ type Props = {
 
 const VISIBILITY_OPTIONS = ["public", "friends", "private"] as const;
 
+const SOUND_ROWS = [
+  { key: "music" as const, label: "Music" },
+  { key: "sfx" as const, label: "Sound effects" },
+];
+
+const APP_VERSION = Constants.expoConfig?.version ?? "dev";
+const LEGAL = legalLinks();
+
+type DataRequestStatus = { id: string; status: "queued" | "processing" | "complete" | "failed"; downloadUrl?: string | null };
+
+function openLink(url: string) {
+  Linking.openURL(url).catch(() => Alert.alert("Couldn't open link", url));
+}
+
 export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: Props) {
   const { isSignedIn, user, signOut } = useAuth();
+  const { updateMe } = useApp();
   const [me, setMe] = useState<MeProfile | null>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
+  const [exportId, setExportId] = useState<string | null>(null);
+  const [dataBusy, setDataBusy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -44,6 +71,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [language, setLanguageState] = useState("en");
+  const sound = useSoundPrefs();
   const loadedUserId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -120,6 +148,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
         body: JSON.stringify({ defaultVisibility: visibility }),
       });
       setSaveSuccess("Saved.");
+      updateMe({ displayName: name });
       setEditingProfile(false);
       await loadMe();
     } catch (e) {
@@ -143,13 +172,107 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
     }
   }
 
-  async function requestData(kind: "export" | "deletion") {
+  function setAvatar(avatarKey: string | null) {
+    setMe((current) => (current ? { ...current, avatarKey } : current));
+    updateMe({ avatarKey });
+  }
+
+  async function changePhoto() {
+    if (avatarBusy) return;
+    setAvatarBusy(true);
+    setAvatarError("");
     try {
-      await api("/v1/me/data-requests", { method: "POST", body: JSON.stringify({ type: kind }) });
-      setDataStatus(`${kind} request queued.`);
+      const key = await pickAndUploadAvatar();
+      if (key) setAvatar(key);
     } catch (e) {
-      setDataStatus(isApiError(e) ? e.userMessage : "Sign in required.");
+      setAvatarError(isApiError(e) ? e.userMessage : "Could not upload that photo. Try another one.");
+    } finally {
+      setAvatarBusy(false);
     }
+  }
+
+  async function clearPhoto() {
+    if (avatarBusy) return;
+    setAvatarBusy(true);
+    setAvatarError("");
+    try {
+      await removeAvatar();
+      setAvatar(null);
+    } catch (e) {
+      setAvatarError(isApiError(e) ? e.userMessage : "Could not remove your photo.");
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
+
+  async function requestExport() {
+    if (dataBusy) return;
+    setDataBusy(true);
+    try {
+      const res = await api<DataRequestStatus>("/v1/me/data-requests", {
+        method: "POST",
+        body: JSON.stringify({ type: "export" }),
+      });
+      setExportId(res.id);
+      setDataStatus("We're preparing a copy of your data. Tap “Download my export” in a minute.");
+    } catch (e) {
+      setDataStatus(isApiError(e) ? e.userMessage : "Could not request your export.");
+    } finally {
+      setDataBusy(false);
+    }
+  }
+
+  async function checkExport() {
+    if (!exportId || dataBusy) return;
+    setDataBusy(true);
+    try {
+      const res = await api<DataRequestStatus>(`/v1/me/data-requests/${exportId}`);
+      if (res.status === "complete" && res.downloadUrl) {
+        openLink(res.downloadUrl);
+        setDataStatus("Your export opened in the browser. The link works for an hour.");
+      } else if (res.status === "failed") {
+        setExportId(null);
+        setDataStatus("That export failed. Request it again.");
+      } else {
+        setDataStatus("Still preparing your export. Check again shortly.");
+      }
+    } catch (e) {
+      setDataStatus(isApiError(e) ? e.userMessage : "Could not check your export.");
+    } finally {
+      setDataBusy(false);
+    }
+  }
+
+  async function deleteAccount() {
+    setDataBusy(true);
+    try {
+      await api("/v1/me/data-requests", { method: "POST", body: JSON.stringify({ type: "deletion" }) });
+      Alert.alert("Deletion requested", "Your account and data will be deleted shortly. You've been signed out.");
+      await signOut();
+    } catch (e) {
+      setDataStatus(isApiError(e) ? e.userMessage : "Could not request deletion. Try again.");
+    } finally {
+      setDataBusy(false);
+    }
+  }
+
+  function confirmDeletion() {
+    Alert.alert(
+      "Delete your account?",
+      "This permanently deletes your profile, photo, answers, scores, friends and comments, and signs you out. It can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => void deleteAccount() },
+      ],
+    );
+  }
+
+  function reportProblem() {
+    const details = [`App version: ${APP_VERSION}`, `Platform: ${Platform.OS} ${Platform.Version}`];
+    if (me?.id) details.push(`Player ID: ${me.id}`);
+    Linking.openURL(supportMailto("MAJA problem report", `\n\n---\n${details.join("\n")}`)).catch(() =>
+      Alert.alert("Email us", `Write to ${SUPPORT_EMAIL} and tell us what went wrong.`),
+    );
   }
 
   const prefRows = useMemo(
@@ -180,6 +303,21 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
             </Pressable>
           ))}
         </View>
+      </SectionCard>
+
+      <SectionCard title="Sound" style={{ marginTop: spacing.md, marginBottom: 0 }}>
+        {SOUND_ROWS.map((r) => (
+          <View key={r.key} style={styles.toggleRow}>
+            <Text style={[type.bodyLg, { color: colors.paper, flex: 1 }]}>{r.label}</Text>
+            <Switch
+              value={sound[r.key]}
+              onValueChange={(v) => setSoundPref(r.key, v)}
+              accessibilityLabel={r.label}
+              trackColor={{ true: colors.pink, false: colors.cardAlt }}
+              thumbColor={colors.paper}
+            />
+          </View>
+        ))}
       </SectionCard>
 
       {!isSignedIn ? (
@@ -231,7 +369,25 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
             <View style={styles.editCard}>
               <View style={styles.identity}>
                 <AvatarImage displayName={me?.displayName ?? "Player"} avatarKey={me?.avatarKey} size={56} />
+                <View style={{ flex: 1, gap: spacing.xs }}>
+                  <PrimaryButton
+                    label={avatarBusy ? "Uploading…" : me?.avatarKey ? "Change photo" : "Add a photo"}
+                    variant="secondary"
+                    onPress={() => void changePhoto()}
+                    disabled={avatarBusy}
+                  />
+                  {me?.avatarKey ? (
+                    <Pressable onPress={() => void clearPhoto()} disabled={avatarBusy} accessibilityRole="button">
+                      <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>Remove photo</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
               </View>
+              {avatarError ? (
+                <Text style={[type.bodySm, { color: colors.pink }]} accessibilityRole="alert">
+                  {avatarError}
+                </Text>
+              ) : null}
               <Text style={[type.metadata, { color: colors.lilac }]}>DISPLAY NAME</Text>
               <TextInput
                 value={displayName}
@@ -295,8 +451,10 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
               ))}
             </View>
             <SettingsRow label="Save privacy" onPress={() => void saveProfile()} />
-            <SettingsRow label="Export my data" onPress={() => void requestData("export")} />
-            <SettingsRow label="Delete my data" onPress={() => void requestData("deletion")} />
+            <SettingsRow label="Export my data" onPress={() => void requestExport()} />
+            {exportId ? <SettingsRow label="Download my export" onPress={() => void checkExport()} /> : null}
+            <SettingsRow label="Delete my data" value="Deletes your account" onPress={confirmDeletion} />
+            {dataBusy ? <ActivityIndicator color={colors.lime} style={{ padding: spacing.sm }} /> : null}
             {dataStatus ? (
               <Text style={[type.bodySm, { color: colors.lime, padding: spacing.md }]}>{dataStatus}</Text>
             ) : null}
@@ -306,14 +464,20 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
             <SettingsRow label="Weekly recap" onPress={onOpenRecap} />
           </SectionCard>
 
-          <SectionCard title="Support">
-            <SettingsRow label="Report a problem" value="Email support@play.app" />
-          </SectionCard>
-
           <PrimaryButton label="Log Out" variant="secondary" onPress={() => void signOut()} />
-          <Text style={[type.micro, styles.version]}>MAJA</Text>
         </>
       )}
+
+      <SectionCard title="Support" style={{ marginTop: spacing.md }}>
+        <SettingsRow label="Report a problem" value={SUPPORT_EMAIL} onPress={reportProblem} />
+        {LEGAL ? (
+          <>
+            <SettingsRow label="Privacy policy" onPress={() => openLink(LEGAL.privacy)} />
+            <SettingsRow label="How to delete your data" onPress={() => openLink(LEGAL.dataDeletion)} />
+          </>
+        ) : null}
+      </SectionCard>
+      <Text style={[type.micro, styles.version]}>MAJA v{APP_VERSION}</Text>
     </ScrollView>
   );
 }
@@ -330,7 +494,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
-  identity: { marginBottom: spacing.sm },
+  identity: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.sm },
   editCard: {
     backgroundColor: colors.cardAlt,
     borderRadius: radius.lg,

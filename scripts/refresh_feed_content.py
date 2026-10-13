@@ -2,7 +2,7 @@
 
 Usage:
   python scripts/refresh_feed_content.py --dry-run
-  python scripts/refresh_feed_content.py --api-url https://maja-production.up.railway.app --count 40
+  python scripts/refresh_feed_content.py --api-url https://majaa-production.up.railway.app --count 40
   python scripts/refresh_feed_content.py --no-images
 """
 
@@ -327,7 +327,7 @@ def build_batch(count: int, *, include_images: bool) -> list[dict[str, Any]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Publish a fresh feed batch, then retire the previous live moments")
-    parser.add_argument("--api-url", default="https://maja-production.up.railway.app")
+    parser.add_argument("--api-url", default="https://majaa-production.up.railway.app")
     parser.add_argument("--admin-key", default="dev-admin-key")
     parser.add_argument("--count", type=int, default=40)
     parser.add_argument("--window-hours", type=float, default=5.0)

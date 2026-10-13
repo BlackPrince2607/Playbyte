@@ -22,7 +22,7 @@ from app.infrastructure.postgres.models import (
 )
 from app.infrastructure.storage.objects import get_object_storage
 from app.modules.crowd.volume import volume_state
-from app.modules.feed.ranking import RankedItem, interleave, moment_score, rotate_games
+from app.modules.feed.ranking import FeedCursor, RankedItem, fill_page, moment_score, rotate_games
 from app.modules.social.service import EMPTY_ENGAGEMENT, engagement_for
 
 # Random score added per request: reshuffles moments within the same tier (interest match is +100,
@@ -102,49 +102,67 @@ async def build_feed(
     user_id: UUID | None,
     guest_id: UUID | None,
     limit: int = 10,
+    cursor: str | None = None,
     rng: random.Random | None = None,
-) -> list[dict]:
-    """Live moments the viewer has not answered yet, reshuffled on every request, with games interleaved."""
+) -> dict:
+    """One page of the endless feed: live moments the viewer has not answered yet, in a shuffled order
+    that the returned cursor continues (and reshuffles once every moment has been shown), with games
+    interleaved."""
     rng = rng or random.Random()
+    new_seed = lambda: rng.getrandbits(31)  # noqa: E731
+    position = (cursor and FeedCursor.decode(cursor)) or FeedCursor(new_seed(), 0, new_seed(), 0)
     interests = await interest_ids(session, user_id, guest_id)
     windows = await active_window_ids(session)
     moments = await load_live_moments(session)
     answered = await answered_moment_ids(session, [m.id for m in moments], user_id, guest_id)
-    moments = [m for m in moments if m.id not in answered]
     now = datetime.now(UTC)
-    ranked_moments: list[RankedItem] = []
     by_id = {m.id: m for m in moments}
-    for m in moments:
-        ranked_moments.append(
-            RankedItem(
-                kind="moment",
-                id=str(m.id),
-                score=moment_score(
-                    now=now,
-                    starts_at=m.starts_at,
-                    in_active_window=m.content_window_id in windows if m.content_window_id else False,
-                    interest_match=m.category_id in interests,
-                )
-                + rng.uniform(0, MOMENT_JITTER),
-            )
+    base_scores = {
+        str(m.id): moment_score(
+            now=now,
+            starts_at=m.starts_at,
+            in_active_window=m.content_window_id in windows if m.content_window_id else False,
+            interest_match=m.category_id in interests,
         )
-    ranked_moments.sort(key=lambda x: x.score, reverse=True)
+        for m in sorted(moments, key=lambda m: str(m.id))
+    }
 
-    games = list(await session.scalars(select(MiniGame).where(MiniGame.status == "enabled").order_by(MiniGame.sort_order)))
-    rotated = rotate_games(games, lambda g: getattr(g, "engine", None), rng)
-    ranked_games = [RankedItem(kind="mini_game", id=g.key, score=float(100 - g.sort_order)) for g in rotated]
-    hot = bool(windows)
-    ordered = interleave(ranked_moments, ranked_games, hot_window=hot)[:limit]
+    def rank_moments(seed: int) -> list[RankedItem]:
+        jitter = random.Random(seed)
+        ranked = [
+            RankedItem(kind="moment", id=mid, score=base + jitter.uniform(0, MOMENT_JITTER))
+            for mid, base in base_scores.items()
+        ]
+        return sorted(ranked, key=lambda x: x.score, reverse=True)
 
+    games = list(
+        await session.scalars(
+            select(MiniGame).where(MiniGame.status == "enabled").order_by(MiniGame.sort_order, MiniGame.key)
+        )
+    )
+
+    def rank_games(seed: int) -> list[RankedItem]:
+        rotated = rotate_games(games, lambda g: getattr(g, "engine", None), random.Random(seed))
+        return [RankedItem(kind="mini_game", id=g.key, score=float(100 - g.sort_order)) for g in rotated]
+
+    ordered, next_cursor = fill_page(
+        rank_moments=rank_moments,
+        rank_games=rank_games,
+        cursor=position,
+        exclude={str(mid) for mid in answered},
+        limit=limit,
+        cadence=4 if windows else 2,
+        new_seed=new_seed,
+    )
+
+    shown_ids = [UUID(i.id) for i in ordered if i.kind == "moment"]
     snapshots = {}
-    moment_ids = [m.id for m in moments]
-    if moment_ids:
+    if shown_ids:
         snapshots = {
             s.moment_id: s
-            for s in await session.scalars(select(CrowdSnapshot).where(CrowdSnapshot.moment_id.in_(moment_ids)))
+            for s in await session.scalars(select(CrowdSnapshot).where(CrowdSnapshot.moment_id.in_(shown_ids)))
         }
-    tag_map = await tags_for_moments(session, moment_ids)
-    shown_ids = [UUID(i.id) for i in ordered if i.kind == "moment"]
+    tag_map = await tags_for_moments(session, shown_ids)
     engagement = await engagement_for(session, shown_ids, user_id, guest_id)
     game_map = {g.key: g for g in games}
     items: list[dict] = []
@@ -157,7 +175,7 @@ async def build_feed(
         else:
             g = game_map[item.id]
             items.append(serialize_game(g))
-    return items
+    return {"items": items, "cursor": next_cursor.encode() if next_cursor else None}
 
 
 def serialize_game(g: MiniGame) -> dict:

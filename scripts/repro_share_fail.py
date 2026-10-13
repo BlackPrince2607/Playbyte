@@ -3,7 +3,7 @@ import uuid
 
 import httpx
 
-BASE = "https://maja-production.up.railway.app"
+BASE = "https://majaa-production.up.railway.app"
 
 
 def main() -> None:

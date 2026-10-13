@@ -1,29 +1,23 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme/colors";
-import { fonts, type } from "../theme/typography";
+import { type } from "../theme/typography";
 
-export function MajaLogo({
-  size = "md",
-  soft = false,
-}: {
-  size?: "sm" | "md" | "lg";
-  soft?: boolean;
-}) {
-  const fontSize = size === "lg" ? 36 : size === "sm" ? 18 : 22;
+const WORDMARK = require("../../assets/maja-wordmark.png");
+/** Width / height of the wordmark artwork. */
+const WORDMARK_RATIO = 480 / 215;
+const HEIGHTS = { sm: 22, md: 30, lg: 48 } as const;
+
+/** The light wordmark, drawn for the app's dark surfaces. */
+export function MajaLogo({ size = "md" }: { size?: keyof typeof HEIGHTS }) {
+  const height = HEIGHTS[size];
   return (
-    <Text
-      style={[
-        type.logo,
-        {
-          fontSize,
-          color: soft ? colors.pinkSoft : colors.pink,
-          fontFamily: fonts.display,
-        },
-      ]}
+    <Image
+      source={WORDMARK}
+      style={{ height, width: height * WORDMARK_RATIO }}
+      resizeMode="contain"
       accessibilityRole="header"
-    >
-      MAJA
-    </Text>
+      accessibilityLabel="Maja"
+    />
   );
 }
 

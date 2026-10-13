@@ -2,9 +2,14 @@ import type { FeedItem } from "../api";
 
 const baseKey = (item: FeedItem) => (item.type === "moment" ? `m:${item.id}` : `g:${item.key}`);
 
-/** Appends the next feed page: moments already listed are skipped, and a game never follows itself. */
+/** How many items back a moment must be before it may show again; the server loops through moments forever. */
+export const MOMENT_REPEAT_GAP = 20;
+
+/** Appends the next feed page: moments shown within the last few items are skipped, and a game never follows itself. */
 export function appendFeedPage(current: FeedItem[], page: FeedItem[]): FeedItem[] {
-  const seenMoments = new Set(current.flatMap((i) => (i.type === "moment" ? [i.id] : [])));
+  const seenMoments = new Set(
+    current.slice(-MOMENT_REPEAT_GAP).flatMap((i) => (i.type === "moment" ? [i.id] : [])),
+  );
   const added: FeedItem[] = [];
   let last = current[current.length - 1];
   for (const item of page) {

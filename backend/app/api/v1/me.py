@@ -1,7 +1,7 @@
 from datetime import date
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +25,13 @@ from app.infrastructure.postgres.models import (
     User,
     UserInterest,
 )
+from app.modules.avatars.service import (
+    MAX_AVATAR_BYTES,
+    owns_avatar_key,
+    remove_avatar,
+    store_avatar,
+)
+from app.modules.privacy.service import export_download_url
 from app.modules.recap.service import weekly_recap
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -102,7 +109,28 @@ async def patch_profile(
     if body.bio is not None:
         profile.bio = body.bio
     if body.avatarKey is not None:
-        profile.avatar_key = body.avatarKey
+        if body.avatarKey and not owns_avatar_key(actor.user_id, body.avatarKey):
+            raise AppError("invalid", "Upload avatars with POST /v1/me/avatar.", 422)
+        profile.avatar_key = body.avatarKey or None
+    return {"ok": True}
+
+
+@router.post("/avatar")
+async def post_avatar(
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(require_user),
+) -> dict:
+    content_type = (file.content_type or "").split(";")[0].strip()
+    data = await file.read(MAX_AVATAR_BYTES + 1)
+    return await store_avatar(session, actor.user_id, data, content_type)
+
+
+@router.delete("/avatar")
+async def delete_avatar(
+    session: AsyncSession = Depends(get_session), actor: Actor = Depends(require_user)
+) -> dict:
+    await remove_avatar(session, actor.user_id)
     return {"ok": True}
 
 
@@ -234,7 +262,16 @@ async def get_data_request(
     row = await session.get(DataRequest, request_id)
     if row is None or row.user_id != actor.user_id:
         raise AppError("not_found", "Request not found.", 404)
-    return {"id": str(row.id), "type": row.type, "status": row.status, "downloadKey": row.download_key}
+    download_url = None
+    if row.type == "export" and row.status == "complete" and row.download_key:
+        download_url = await export_download_url(row.download_key)
+    return {
+        "id": str(row.id),
+        "type": row.type,
+        "status": row.status,
+        "downloadKey": row.download_key,
+        "downloadUrl": download_url,
+    }
 
 
 @router.post("/consents")

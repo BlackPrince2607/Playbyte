@@ -13,6 +13,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { TIMER_WARN_SECONDS, timerCue } from "../../audio/catalog";
+import { playSfx } from "../../audio/sound";
 import { colors, radius } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 import { prefersReducedMotion } from "./feedback";
@@ -96,7 +98,7 @@ export function StreakBadge({ streak }: { streak: number }) {
   );
 }
 
-const URGENT_SECONDS = 5;
+const URGENT_SECONDS = TIMER_WARN_SECONDS;
 
 /** Seconds-left countdown driven by a session-clock deadline; freezes while paused. */
 export function TimerCountdown({ deadline, now, paused }: { deadline?: number; now: () => number; paused: boolean }) {
@@ -110,6 +112,12 @@ export function TimerCountdown({ deadline, now, paused }: { deadline?: number; n
     const id = setInterval(tick, 200);
     return () => clearInterval(id);
   }, [deadline, paused, now]);
+  const lastSeconds = useRef(seconds);
+  useEffect(() => {
+    const cue = timerCue(lastSeconds.current, seconds);
+    lastSeconds.current = seconds;
+    if (cue) playSfx(cue);
+  }, [seconds]);
   const urgent = seconds <= URGENT_SECONDS;
   const pop = usePop(urgent ? seconds : 0, 1.25);
   if (deadline === undefined) return null;

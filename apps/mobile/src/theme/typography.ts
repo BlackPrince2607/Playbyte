@@ -20,11 +20,4 @@ export const type: Record<string, TextStyle> = {
   button: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, fontWeight: "700" },
   metadata: { fontFamily: fonts.body, fontSize: 12, lineHeight: 17 },
   micro: { fontFamily: fonts.bodyMedium, fontSize: 10, lineHeight: 12 },
-  logo: {
-    fontFamily: fonts.display,
-    fontSize: 22,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-    fontStyle: "italic",
-  },
 };

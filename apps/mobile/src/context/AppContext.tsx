@@ -18,6 +18,7 @@ import {
   FriendRequest,
   isApiError,
   loadToken,
+  MeProfile,
   MomentEngagement,
   RespondResult,
 } from "../api";
@@ -39,6 +40,8 @@ import type { TabKey } from "../components/BottomNav";
 export type { OnboardingStep };
 
 export type FriendRequests = { incoming: FriendRequest[]; outgoing: FriendRequest[] };
+
+export type MySummary = { displayName: string; avatarKey: string | null };
 
 export type RespondOutcome =
   | { ok: true; result: CrowdSnapshot | null }
@@ -78,6 +81,9 @@ type AppState = {
   friendRequestsError: string;
   refreshFriendRequests: (force?: boolean) => Promise<void>;
   friendAvatars: { displayName: string; avatarKey: string | null }[];
+  /** Signed-in player's name and photo for the top bars; null for guests. */
+  me: MySummary | null;
+  updateMe: (patch: Partial<MySummary>) => void;
   isFeedTabActive: boolean;
   /** Latest like / share / comment counts per moment; falls back to the feed payload. */
   engagementFor: (moment: FeedMoment) => MomentEngagement;
@@ -92,6 +98,10 @@ const Ctx = createContext<AppState | null>(null);
 const REOPEN_REFRESH_AFTER_MS = 30_000;
 
 const FEED_PAGE_PATH = "/v1/feed?limit=20";
+/** Pages fetched in a row when one adds nothing new, so reaching the end never strands the viewer. */
+const MAX_EMPTY_PAGES = 3;
+
+type FeedPage = { items: FeedItem[]; cursor: string | null };
 
 const isShowable = (i: FeedItem) => i.type !== "mini_game" || isPlayable(i);
 
@@ -107,6 +117,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [onboardingStep, setOnboardingStepState] = useState<OnboardingStep>("language");
   const [tab, setTab] = useState<TabKey>("feed");
   const [items, setItems] = useState<FeedItem[]>([]);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
   const [feedLoading, setFeedLoading] = useState(false);
   const [feedRefreshing, setFeedRefreshing] = useState(false);
   const [feedError, setFeedError] = useState("");
@@ -121,11 +133,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [friendRequests, setFriendRequests] = useState<FriendRequests>({ incoming: [], outgoing: [] });
   const [friendRequestsLoading, setFriendRequestsLoading] = useState(false);
   const [friendRequestsError, setFriendRequestsError] = useState("");
+  const [me, setMe] = useState<MySummary | null>(null);
 
   const feedInflight = useRef<Promise<void> | null>(null);
   const moreInflight = useRef<Promise<void> | null>(null);
   /** Bumped whenever the feed is replaced, so a page fetched for the old feed is dropped. */
   const feedGeneration = useRef(0);
+  /** Where the server resumes the feed; null once it has nothing more to show. */
+  const feedCursor = useRef<string | null>(null);
   const friendsInflight = useRef<Promise<void> | null>(null);
   const friendRequestsInflight = useRef<Promise<void> | null>(null);
   const hasLoadedFeed = useRef(false);
@@ -139,8 +154,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFriendsError("");
     setFriendRequests({ incoming: [], outgoing: [] });
     setFriendRequestsError("");
+    setMe(null);
     friendsFetchedAt.current = null;
     friendRequestsFetchedAt.current = null;
+  }, []);
+
+  const updateMe = useCallback((patch: Partial<MySummary>) => {
+    setMe((current) => (current ? { ...current, ...patch } : current));
+  }, []);
+
+  const loadMe = useCallback(async () => {
+    try {
+      const profile = await api<MeProfile>("/v1/me");
+      setMe({ displayName: profile.displayName, avatarKey: profile.avatarKey });
+    } catch {
+      /* the top bar falls back to initials */
+    }
   }, []);
 
   const refreshFriends = useCallback(async (force = false) => {
@@ -212,10 +241,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (isSignedIn) {
       void refreshFriends();
       void refreshFriendRequests();
+      void loadMe();
     } else {
       clearUserScopedState();
     }
-  }, [authReady, isSignedIn, refreshFriends, refreshFriendRequests, clearUserScopedState]);
+  }, [authReady, isSignedIn, refreshFriends, refreshFriendRequests, loadMe, clearUserScopedState]);
 
   const friendAvatars = useMemo(
     () => friends.map((f) => ({ displayName: f.displayName, avatarKey: f.avatarKey })),
@@ -234,8 +264,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFeedError("");
 
       try {
-        const feed = await api<{ items: FeedItem[] }>(FEED_PAGE_PATH);
+        const feed = await api<FeedPage>(FEED_PAGE_PATH);
         feedGeneration.current += 1;
+        feedCursor.current = feed.cursor;
         setItems(feed.items.filter(isShowable));
         setEngagement({});
         hasLoadedFeed.current = true;
@@ -269,9 +300,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const generation = feedGeneration.current;
     const run = (async () => {
       try {
-        const feed = await api<{ items: FeedItem[] }>(FEED_PAGE_PATH);
-        if (generation !== feedGeneration.current) return;
-        setItems((prev) => appendFeedPage(prev, feed.items.filter(isShowable)));
+        for (let attempt = 0; attempt < MAX_EMPTY_PAGES && feedCursor.current; attempt++) {
+          const feed = await api<FeedPage>(`${FEED_PAGE_PATH}&cursor=${encodeURIComponent(feedCursor.current)}`);
+          if (generation !== feedGeneration.current) return;
+          feedCursor.current = feed.cursor;
+          const page = feed.items.filter(isShowable);
+          setItems((prev) => appendFeedPage(prev, page));
+          if (appendFeedPage(itemsRef.current, page) !== itemsRef.current) return;
+        }
       } catch {
         /* reaching the end of the feed again retries */
       }
@@ -479,6 +515,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       friendRequestsError,
       refreshFriendRequests,
       friendAvatars,
+      me,
+      updateMe,
       isFeedTabActive: tab === "feed",
       engagementFor,
       updateEngagement,
@@ -514,6 +552,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       friendRequestsError,
       refreshFriendRequests,
       friendAvatars,
+      me,
+      updateMe,
       engagementFor,
       updateEngagement,
     ],
