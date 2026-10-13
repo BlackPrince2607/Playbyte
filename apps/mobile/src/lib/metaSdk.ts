@@ -1,14 +1,17 @@
 import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import { Platform } from "react-native";
-import { Settings } from "react-native-fbsdk-next";
 
 /**
  * Starts the Meta SDK so installs and app events are attributed to Meta ad campaigns.
  * On iOS the advertiser-tracking flag must mirror the App Tracking Transparency answer.
+ *
+ * The SDK is required lazily: importing it touches the native FBAccessToken module, which
+ * aborts the app on launch in builds made without a Facebook app ID.
  */
 export async function initMetaSdk(): Promise<void> {
   if (Platform.OS === "web" || !process.env.EXPO_PUBLIC_FACEBOOK_APP_ID) return;
   try {
+    const { Settings } = require("react-native-fbsdk-next") as typeof import("react-native-fbsdk-next");
     Settings.initializeSDK();
     if (Platform.OS === "ios") {
       const { granted } = await requestTrackingPermissionsAsync();
