@@ -75,9 +75,6 @@ export function GameIntroPage({ item, height, onStart }: Props) {
           style={{ marginTop: spacing.xl }}
         />
       </View>
-      <Text style={[type.metadata, { color: colors.lilac, textAlign: "center", marginTop: spacing.lg }]}>
-        Swipe up for next play
-      </Text>
     </View>
   );
 }

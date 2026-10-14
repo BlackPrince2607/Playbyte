@@ -200,7 +200,7 @@ export function PostGameResultScreen({
             <Text style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>
               {saveMessage ??
                 (saveState === "queued"
-                  ? "Couldn't reach the server. Your score is saved on this phone and will sync automatically."
+                  ? "Couldn't save your score yet. It's kept on this phone and will sync automatically."
                   : "This score couldn't be recorded.")}
             </Text>
             {saveState === "queued" && onRetrySave ? (

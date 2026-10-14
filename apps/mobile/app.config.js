@@ -4,9 +4,29 @@
  *
  * The Meta (Facebook) SDK plugin is only applied when EXPO_PUBLIC_FACEBOOK_APP_ID and
  * FACEBOOK_CLIENT_TOKEN are set, because its prebuild step fails without an app ID.
+ *
+ * Friend invite links (https://<api host>/add/<code>) open the app directly. The backend serves the
+ * matching /.well-known/assetlinks.json, which must list the signing key's SHA-256 fingerprint.
  */
 module.exports = ({ config }) => {
   let plugins = config.plugins ?? [];
+  let android = config.android ?? {};
+
+  const inviteHost = hostOf(process.env.EXPO_PUBLIC_API_URL);
+  if (inviteHost) {
+    android = {
+      ...android,
+      intentFilters: [
+        ...(android.intentFilters ?? []),
+        {
+          action: "VIEW",
+          autoVerify: true,
+          data: [{ scheme: "https", host: inviteHost, pathPrefix: "/add/" }],
+          category: ["BROWSABLE", "DEFAULT"],
+        },
+      ],
+    };
+  }
 
   const facebookAppId = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID?.trim();
   const facebookClientToken = process.env.FACEBOOK_CLIENT_TOKEN?.trim();
@@ -38,5 +58,14 @@ module.exports = ({ config }) => {
     });
   }
 
-  return { ...config, plugins };
+  return { ...config, android, plugins };
 };
+
+function hostOf(url) {
+  try {
+    const { protocol, hostname } = new URL(url ?? "");
+    return protocol === "https:" && hostname !== "localhost" ? hostname : null;
+  } catch {
+    return null;
+  }
+}

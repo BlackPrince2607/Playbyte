@@ -1,5 +1,7 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Constants from "expo-constants";
+import * as Clipboard from "expo-clipboard";
 import {
   ActivityIndicator,
   Alert,
@@ -8,22 +10,22 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api, isApiError, MeProfile, NotificationPreferences } from "../../api";
 import { setSoundPref, useSoundPrefs } from "../../audio/sound";
 import { AvatarImage } from "../../components/AvatarImage";
-import { PlayerIdCard } from "../../components/PlayerIdCard";
 import { PrimaryButton } from "../../components/PrimaryButton";
-import { SectionCard, SettingsRow } from "../../components/StitchPrimitives";
+import { SectionCard, SettingsRow, ToggleRow } from "../../components/StitchPrimitives";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { pickAndUploadAvatar, removeAvatar } from "../../lib/avatarUpload";
 import { APP_LANGUAGES, supportedLanguage } from "../../lib/languages";
 import { legalLinks, SUPPORT_EMAIL, supportMailto } from "../../lib/links";
+import { formatFriendCode, friendCodeFor } from "../../lib/friendCode";
 import { getLanguage, setLanguage } from "../../lib/storage";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
@@ -35,12 +37,19 @@ type Props = {
   onSignIn: () => void;
 };
 
-const VISIBILITY_OPTIONS = ["public", "friends", "private"] as const;
+type Visibility = "public" | "friends" | "private";
 
-const SOUND_ROWS = [
-  { key: "music" as const, label: "Music" },
-  { key: "sfx" as const, label: "Sound effects" },
+const VISIBILITY_OPTIONS: { id: Visibility; label: string }[] = [
+  { id: "public", label: "Public" },
+  { id: "friends", label: "Friends" },
+  { id: "private", label: "Private" },
 ];
+
+const VISIBILITY_HINT: Record<Visibility, string> = {
+  public: "Anyone can see your answers on moments.",
+  friends: "Only your friends can see your answers.",
+  private: "Your answers are only visible to you.",
+};
 
 const APP_VERSION = Constants.expoConfig?.version ?? "dev";
 const LEGAL = legalLinks();
@@ -52,6 +61,7 @@ function openLink(url: string) {
 }
 
 export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: Props) {
+  const insets = useSafeAreaInsets();
   const { isSignedIn, user, signOut } = useAuth();
   const { updateMe } = useApp();
   const [me, setMe] = useState<MeProfile | null>(null);
@@ -63,7 +73,8 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   const [loadError, setLoadError] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
-  const [visibility, setVisibility] = useState<(typeof VISIBILITY_OPTIONS)[number]>("friends");
+  const [visibility, setVisibility] = useState<Visibility>("friends");
+  const [visibilityError, setVisibilityError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState("");
@@ -71,11 +82,17 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [language, setLanguageState] = useState("en");
+  const [idCopied, setIdCopied] = useState(false);
   const sound = useSoundPrefs();
   const loadedUserId = useRef<string | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     void getLanguage().then((l) => setLanguageState(supportedLanguage(l)));
+  }, []);
+
+  useEffect(() => () => {
+    if (copyTimer.current) clearTimeout(copyTimer.current);
   }, []);
 
   function chooseLanguage(id: string) {
@@ -121,6 +138,14 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
     void loadMe();
   }, [isSignedIn, user?.id, me, loadMe]);
 
+  function startEditing() {
+    setDisplayName(me?.displayName ?? "");
+    setBio(me?.bio ?? "");
+    setSaveError("");
+    setSaveSuccess("");
+    setEditingProfile(true);
+  }
+
   async function saveProfile() {
     const name = displayName.trim();
     if (!name) {
@@ -143,11 +168,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
         method: "PATCH",
         body: JSON.stringify({ displayName: name, bio: bio.trim() || null }),
       });
-      await api("/v1/me/privacy", {
-        method: "PATCH",
-        body: JSON.stringify({ defaultVisibility: visibility }),
-      });
-      setSaveSuccess("Saved.");
+      setSaveSuccess("Profile saved.");
       updateMe({ displayName: name });
       setEditingProfile(false);
       await loadMe();
@@ -155,6 +176,22 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
       setSaveError(isApiError(e) ? e.userMessage : "Could not save.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function chooseVisibility(next: Visibility) {
+    if (next === visibility) return;
+    const prev = visibility;
+    setVisibility(next);
+    setVisibilityError("");
+    try {
+      await api("/v1/me/privacy", {
+        method: "PATCH",
+        body: JSON.stringify({ defaultVisibility: next }),
+      });
+    } catch (e) {
+      setVisibility(prev);
+      setVisibilityError(isApiError(e) ? e.userMessage : "Could not update your privacy setting.");
     }
   }
 
@@ -203,6 +240,14 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
     } finally {
       setAvatarBusy(false);
     }
+  }
+
+  async function copyPlayerId() {
+    if (!me?.id) return;
+    await Clipboard.setStringAsync(formatFriendCode(friendCodeFor(me.id)));
+    setIdCopied(true);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setIdCopied(false), 2000);
   }
 
   async function requestExport() {
@@ -267,6 +312,13 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
     );
   }
 
+  function confirmSignOut() {
+    Alert.alert("Log out?", "You can sign back in anytime to pick up your streaks and friends.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Log out", style: "destructive", onPress: () => void signOut() },
+    ]);
+  }
+
   function reportProblem() {
     const details = [`App version: ${APP_VERSION}`, `Platform: ${Platform.OS} ${Platform.Version}`];
     if (me?.id) details.push(`Player ID: ${me.id}`);
@@ -278,63 +330,90 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   const prefRows = useMemo(
     () =>
       [
-        { key: "liveNow" as const, label: "Live Now alerts" },
-        { key: "trending" as const, label: "Trending Pulse" },
-        { key: "friendActivity" as const, label: "Friend activity" },
+        { key: "liveNow" as const, label: "Live Now alerts", icon: "radio-outline" as const },
+        { key: "trending" as const, label: "Trending Pulse", icon: "trending-up-outline" as const },
+        { key: "friendActivity" as const, label: "Friend activity", icon: "people-outline" as const },
       ] as const,
     [],
   );
 
-  return (
-    <ScrollView style={styles.wrap} contentContainerStyle={styles.inner}>
-      <Text style={[type.screenTitle, { color: colors.paper }]}>Settings</Text>
-
-      <SectionCard title="Language" style={{ marginTop: spacing.md, marginBottom: 0 }}>
-        <View style={styles.visRow}>
-          {APP_LANGUAGES.map((l) => (
-            <Pressable
-              key={l.id}
-              onPress={() => chooseLanguage(l.id)}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: language === l.id }}
-              style={[styles.visChip, language === l.id && styles.visChipActive]}
-            >
-              <Text style={[type.bodySm, { color: language === l.id ? colors.ink : colors.paper }]}>{l.name}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </SectionCard>
-
-      <SectionCard title="Sound" style={{ marginTop: spacing.md, marginBottom: 0 }}>
-        {SOUND_ROWS.map((r) => (
-          <View key={r.key} style={styles.toggleRow}>
-            <Text style={[type.bodyLg, { color: colors.paper, flex: 1 }]}>{r.label}</Text>
-            <Switch
-              value={sound[r.key]}
-              onValueChange={(v) => setSoundPref(r.key, v)}
-              accessibilityLabel={r.label}
-              trackColor={{ true: colors.pink, false: colors.cardAlt }}
-              thumbColor={colors.paper}
-            />
+  const preferences = (
+    <SectionCard title="Preferences">
+      <View style={styles.blockRow}>
+        <View style={styles.blockHeader}>
+          <View style={styles.blockIcon}>
+            <Ionicons name="language-outline" size={18} color={colors.paper} />
           </View>
-        ))}
-      </SectionCard>
+          <Text style={[type.bodyLg, { color: colors.paper }]}>Language</Text>
+        </View>
+        <Segmented
+          options={APP_LANGUAGES.map((l) => ({ id: l.id, label: l.name }))}
+          value={language}
+          onChange={chooseLanguage}
+        />
+      </View>
+      <ToggleRow
+        label="Music"
+        icon="musical-notes-outline"
+        value={sound.music}
+        onValueChange={(v) => setSoundPref("music", v)}
+      />
+      <ToggleRow
+        label="Sound effects"
+        icon="volume-high-outline"
+        value={sound.sfx}
+        onValueChange={(v) => setSoundPref("sfx", v)}
+      />
+    </SectionCard>
+  );
+
+  const support = (
+    <SectionCard title="Support">
+      <SettingsRow label="Report a problem" value={SUPPORT_EMAIL} icon="bug-outline" onPress={reportProblem} />
+      {LEGAL ? (
+        <SettingsRow label="Privacy policy" icon="document-text-outline" onPress={() => openLink(LEGAL.privacy)} />
+      ) : null}
+      {LEGAL ? (
+        <SettingsRow
+          label="How to delete your data"
+          icon="help-circle-outline"
+          onPress={() => openLink(LEGAL.dataDeletion)}
+        />
+      ) : null}
+    </SectionCard>
+  );
+
+  return (
+    <ScrollView
+      style={styles.wrap}
+      contentContainerStyle={[styles.inner, { paddingTop: insets.top + spacing.md }]}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text style={[type.screenTitle, styles.title]}>Settings</Text>
 
       {!isSignedIn ? (
-        <View style={styles.guestCard}>
-          <Text style={[type.bodyLg, { color: colors.paper }]}>
-            Guest player · sign in to save streaks, friends, and privacy controls.
-          </Text>
-          {isSupabaseConfigured() ? (
-            <PrimaryButton label="Sign in or create account" onPress={onSignIn} />
-          ) : null}
-        </View>
+        <>
+          <View style={[styles.card, styles.guestCard]}>
+            <View style={styles.guestIcon}>
+              <Ionicons name="person-outline" size={26} color={colors.pink} />
+            </View>
+            <Text style={[type.bodyLg, styles.guestTitle]}>You're playing as a guest</Text>
+            <Text style={[type.bodySm, styles.guestBody]}>
+              Sign in to save your streaks, add friends and control your privacy.
+            </Text>
+            {isSupabaseConfigured() ? (
+              <PrimaryButton label="Sign in or create account" onPress={onSignIn} style={{ alignSelf: "stretch" }} />
+            ) : null}
+          </View>
+          {preferences}
+          {support}
+        </>
       ) : loading && !me ? (
-        <ActivityIndicator color={colors.lime} style={{ marginTop: spacing.lg }} />
+        <ActivityIndicator color={colors.lime} style={{ marginVertical: spacing.xl }} />
       ) : (
         <>
           {loadError ? (
-            <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
+            <View style={[styles.card, styles.errorCard]}>
               <Text style={[type.bodySm, { color: colors.pink }]}>{loadError}</Text>
               {loadError.toLowerCase().includes("session") ? (
                 <PrimaryButton label="Sign in again" onPress={onSignIn} />
@@ -345,197 +424,360 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
           ) : null}
 
           {me ? (
-            <View style={{ marginTop: spacing.md }}>
-              <PlayerIdCard
-                id={me.id}
-                displayName={me.displayName}
-                avatarKey={me.avatarKey}
-                bio={me.bio}
-                caption="Share this ID so friends can add you."
-              />
-            </View>
-          ) : null}
-
-          <SectionCard title="Account">
-            <SettingsRow
-              label="Profile"
-              value={me?.displayName ?? "Edit display name"}
-              onPress={() => setEditingProfile((v) => !v)}
-            />
-            <SettingsRow label="Email" value={user?.email ?? "—"} />
-          </SectionCard>
-
-          {editingProfile ? (
-            <View style={styles.editCard}>
-              <View style={styles.identity}>
-                <AvatarImage displayName={me?.displayName ?? "Player"} avatarKey={me?.avatarKey} size={56} />
-                <View style={{ flex: 1, gap: spacing.xs }}>
-                  <PrimaryButton
-                    label={avatarBusy ? "Uploading…" : me?.avatarKey ? "Change photo" : "Add a photo"}
-                    variant="secondary"
-                    onPress={() => void changePhoto()}
-                    disabled={avatarBusy}
-                  />
-                  {me?.avatarKey ? (
-                    <Pressable onPress={() => void clearPhoto()} disabled={avatarBusy} accessibilityRole="button">
-                      <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>Remove photo</Text>
-                    </Pressable>
+            <View style={[styles.card, styles.profileCard]}>
+              <View style={styles.profileHeader}>
+                <AvatarImage
+                  displayName={me.displayName}
+                  avatarKey={me.avatarKey}
+                  size={64}
+                  style={styles.profileAvatar}
+                />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={styles.profileName} numberOfLines={1}>
+                    {me.displayName}
+                  </Text>
+                  {user?.email ? (
+                    <Text style={[type.metadata, { color: colors.lilac }]} numberOfLines={1}>
+                      {user.email}
+                    </Text>
                   ) : null}
+                  <Pressable
+                    onPress={() => void copyPlayerId()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Copy friend code"
+                    hitSlop={6}
+                    style={styles.idChip}
+                  >
+                    <Text style={styles.idText}>{formatFriendCode(friendCodeFor(me.id))}</Text>
+                    <Ionicons
+                      name={idCopied ? "checkmark" : "copy-outline"}
+                      size={12}
+                      color={idCopied ? colors.lime : colors.lilac}
+                    />
+                  </Pressable>
                 </View>
               </View>
-              {avatarError ? (
-                <Text style={[type.bodySm, { color: colors.pink }]} accessibilityRole="alert">
-                  {avatarError}
+              {me.bio && !editingProfile ? (
+                <Text style={[type.bodySm, { color: colors.paper, opacity: 0.85 }]} numberOfLines={3}>
+                  {me.bio}
                 </Text>
               ) : null}
-              <Text style={[type.metadata, { color: colors.lilac }]}>DISPLAY NAME</Text>
-              <TextInput
-                value={displayName}
-                onChangeText={setDisplayName}
-                maxLength={40}
-                style={styles.input}
-                placeholderTextColor={colors.lilac}
-              />
-              <Text style={[type.metadata, { color: colors.lilac, marginTop: spacing.sm }]}>BIO</Text>
-              <TextInput
-                value={bio}
-                onChangeText={setBio}
-                maxLength={160}
-                multiline
-                style={[styles.input, styles.bioInput]}
-                placeholder="Tell the crowd a little about you"
-                placeholderTextColor={colors.lilac}
-              />
-              {saveError ? (
-                <Text style={[type.bodySm, { color: colors.pink }]} accessibilityRole="alert">
-                  {saveError}
-                </Text>
+              {saveSuccess && !editingProfile ? (
+                <Text style={[type.metadata, { color: colors.lime }]}>{saveSuccess}</Text>
               ) : null}
-              {saveSuccess ? <Text style={[type.bodySm, { color: colors.lime }]}>{saveSuccess}</Text> : null}
-              <PrimaryButton
-                label={saving ? "Saving…" : "Save profile"}
-                onPress={() => void saveProfile()}
-                disabled={saving}
-              />
+
+              {editingProfile ? (
+                <View style={styles.editor}>
+                  <View style={styles.photoRow}>
+                    <Pressable
+                      onPress={() => void changePhoto()}
+                      disabled={avatarBusy}
+                      accessibilityRole="button"
+                      style={({ pressed }) => [styles.smallButton, (pressed || avatarBusy) && { opacity: 0.7 }]}
+                    >
+                      {avatarBusy ? (
+                        <ActivityIndicator size="small" color={colors.paper} />
+                      ) : (
+                        <Ionicons name="camera-outline" size={16} color={colors.paper} />
+                      )}
+                      <Text style={styles.smallButtonText}>{me.avatarKey ? "Change photo" : "Add photo"}</Text>
+                    </Pressable>
+                    {me.avatarKey ? (
+                      <Pressable
+                        onPress={() => void clearPhoto()}
+                        disabled={avatarBusy}
+                        accessibilityRole="button"
+                        style={({ pressed }) => [styles.smallButton, styles.smallButtonGhost, pressed && { opacity: 0.7 }]}
+                      >
+                        <Text style={[styles.smallButtonText, { color: colors.lilac }]}>Remove</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  {avatarError ? (
+                    <Text style={[type.bodySm, { color: colors.pink }]} accessibilityRole="alert">
+                      {avatarError}
+                    </Text>
+                  ) : null}
+
+                  <View style={styles.field}>
+                    <View style={styles.fieldLabelRow}>
+                      <Text style={[type.micro, styles.fieldLabel]}>DISPLAY NAME</Text>
+                      <Text style={[type.micro, { color: colors.lilac }]}>{displayName.length}/40</Text>
+                    </View>
+                    <TextInput
+                      value={displayName}
+                      onChangeText={setDisplayName}
+                      maxLength={40}
+                      style={styles.input}
+                      placeholder="Your name"
+                      placeholderTextColor={colors.lilac}
+                    />
+                  </View>
+                  <View style={styles.field}>
+                    <View style={styles.fieldLabelRow}>
+                      <Text style={[type.micro, styles.fieldLabel]}>BIO</Text>
+                      <Text style={[type.micro, { color: colors.lilac }]}>{bio.length}/160</Text>
+                    </View>
+                    <TextInput
+                      value={bio}
+                      onChangeText={setBio}
+                      maxLength={160}
+                      multiline
+                      style={[styles.input, styles.bioInput]}
+                      placeholder="Tell the crowd a little about you"
+                      placeholderTextColor={colors.lilac}
+                    />
+                  </View>
+                  {saveError ? (
+                    <Text style={[type.bodySm, { color: colors.pink }]} accessibilityRole="alert">
+                      {saveError}
+                    </Text>
+                  ) : null}
+                  <View style={styles.editorActions}>
+                    <PrimaryButton
+                      label="Cancel"
+                      variant="secondary"
+                      onPress={() => setEditingProfile(false)}
+                      disabled={saving}
+                      style={{ flex: 1 }}
+                    />
+                    <PrimaryButton
+                      label={saving ? "Saving…" : "Save"}
+                      onPress={() => void saveProfile()}
+                      disabled={saving}
+                      style={{ flex: 1 }}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <PrimaryButton label="Edit profile" variant="secondary" icon="create-outline" onPress={startEditing} />
+              )}
             </View>
           ) : null}
+
+          {preferences}
 
           <SectionCard title="Notifications">
             {prefRows.map((r) => (
-              <View key={r.key} style={styles.toggleRow}>
-                <Text style={[type.bodyLg, { color: colors.paper, flex: 1 }]}>{r.label}</Text>
-                <Switch
-                  value={prefs?.[r.key] ?? true}
-                  onValueChange={(v) => void togglePref(r.key, v)}
-                  trackColor={{ true: colors.pink, false: colors.cardAlt }}
-                  thumbColor={colors.paper}
-                />
-              </View>
+              <ToggleRow
+                key={r.key}
+                label={r.label}
+                icon={r.icon}
+                value={prefs?.[r.key] ?? true}
+                onValueChange={(v) => void togglePref(r.key, v)}
+              />
             ))}
-            <SettingsRow label="All notification settings" onPress={onOpenNotifications} />
+            <SettingsRow
+              label="All notification settings"
+              icon="notifications-outline"
+              onPress={onOpenNotifications}
+            />
           </SectionCard>
 
           <SectionCard title="Privacy">
-            <Text style={[type.metadata, { color: colors.lilac, paddingHorizontal: spacing.md, paddingTop: spacing.sm }]}>
-              DEFAULT VISIBILITY
-            </Text>
-            <View style={styles.visRow}>
-              {VISIBILITY_OPTIONS.map((v) => (
-                <Pressable
-                  key={v}
-                  onPress={() => setVisibility(v)}
-                  style={[styles.visChip, visibility === v && styles.visChipActive]}
-                >
-                  <Text style={[type.bodySm, { color: visibility === v ? colors.ink : colors.paper }]}>{v}</Text>
-                </Pressable>
-              ))}
+            <View style={styles.blockRow}>
+              <View style={styles.blockHeader}>
+                <View style={styles.blockIcon}>
+                  <Ionicons name="eye-outline" size={18} color={colors.paper} />
+                </View>
+                <Text style={[type.bodyLg, { color: colors.paper }]}>Who sees your answers</Text>
+              </View>
+              <Segmented options={VISIBILITY_OPTIONS} value={visibility} onChange={(v) => void chooseVisibility(v)} />
+              <Text style={[type.metadata, { color: visibilityError ? colors.pink : colors.lilac }]}>
+                {visibilityError || VISIBILITY_HINT[visibility]}
+              </Text>
             </View>
-            <SettingsRow label="Save privacy" onPress={() => void saveProfile()} />
-            <SettingsRow label="Export my data" onPress={() => void requestExport()} />
-            {exportId ? <SettingsRow label="Download my export" onPress={() => void checkExport()} /> : null}
-            <SettingsRow label="Delete my data" value="Deletes your account" onPress={confirmDeletion} />
-            {dataBusy ? <ActivityIndicator color={colors.lime} style={{ padding: spacing.sm }} /> : null}
-            {dataStatus ? (
-              <Text style={[type.bodySm, { color: colors.lime, padding: spacing.md }]}>{dataStatus}</Text>
+          </SectionCard>
+
+          <SectionCard title="Activity">
+            <SettingsRow label="Weekly recap" icon="calendar-outline" onPress={onOpenRecap} />
+          </SectionCard>
+
+          <SectionCard title="Your data">
+            <SettingsRow
+              label="Export my data"
+              value="Get a copy of everything we store"
+              icon="download-outline"
+              onPress={() => void requestExport()}
+              disabled={dataBusy}
+            />
+            {exportId ? (
+              <SettingsRow
+                label="Download my export"
+                icon="cloud-download-outline"
+                onPress={() => void checkExport()}
+                disabled={dataBusy}
+              />
             ) : null}
+            <SettingsRow
+              label="Delete account"
+              value="Permanently removes your account and data"
+              icon="trash-outline"
+              destructive
+              onPress={confirmDeletion}
+              disabled={dataBusy}
+              trailing={dataBusy ? <ActivityIndicator size="small" color={colors.lime} /> : undefined}
+            />
           </SectionCard>
+          {dataStatus ? <Text style={[type.bodySm, styles.dataStatus]}>{dataStatus}</Text> : null}
 
-          <SectionCard title="Content">
-            <SettingsRow label="Weekly recap" onPress={onOpenRecap} />
-          </SectionCard>
+          {support}
 
-          <PrimaryButton label="Log Out" variant="secondary" onPress={() => void signOut()} />
+          <Pressable
+            onPress={confirmSignOut}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.signOut, pressed && { opacity: 0.8 }]}
+          >
+            <Ionicons name="log-out-outline" size={18} color={colors.pink} />
+            <Text style={styles.signOutText}>Log out</Text>
+          </Pressable>
         </>
       )}
 
-      <SectionCard title="Support" style={{ marginTop: spacing.md }}>
-        <SettingsRow label="Report a problem" value={SUPPORT_EMAIL} onPress={reportProblem} />
-        {LEGAL ? (
-          <>
-            <SettingsRow label="Privacy policy" onPress={() => openLink(LEGAL.privacy)} />
-            <SettingsRow label="How to delete your data" onPress={() => openLink(LEGAL.dataDeletion)} />
-          </>
-        ) : null}
-      </SectionCard>
       <Text style={[type.micro, styles.version]}>MAJA v{APP_VERSION}</Text>
     </ScrollView>
   );
 }
 
+function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: readonly { id: T; label: string }[];
+  value: T;
+  onChange: (id: T) => void;
+}) {
+  return (
+    <View style={styles.segmented} accessibilityRole="radiogroup">
+      {options.map((o) => {
+        const on = o.id === value;
+        return (
+          <Pressable
+            key={o.id}
+            onPress={() => onChange(o.id)}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: on }}
+            style={[styles.segment, on && styles.segmentOn]}
+          >
+            <Text style={[styles.segmentText, on && styles.segmentTextOn]} numberOfLines={1}>
+              {o.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.ink },
-  inner: { padding: spacing.margin, paddingTop: 60, paddingBottom: 100, gap: spacing.sm },
-  guestCard: {
-    marginTop: spacing.lg,
+  inner: { paddingHorizontal: spacing.margin, paddingBottom: spacing.xl },
+  title: { color: colors.paper, marginBottom: spacing.lg },
+  card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  identity: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.sm },
-  editCard: {
-    backgroundColor: colors.cardAlt,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
     padding: spacing.md,
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
-  input: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: spacing.md,
-    color: colors.paper,
+  guestCard: { alignItems: "center", paddingVertical: spacing.lg, gap: spacing.sm },
+  guestIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.pinkFill,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs,
   },
-  bioInput: { minHeight: 80, textAlignVertical: "top" },
-  toggleRow: {
+  guestTitle: { color: colors.paper, fontFamily: fonts.bodyBold, textAlign: "center" },
+  guestBody: { color: colors.lilac, textAlign: "center", maxWidth: 300, marginBottom: spacing.sm },
+  errorCard: { gap: spacing.sm, borderColor: colors.pinkGlow },
+  profileCard: { gap: spacing.md, borderColor: colors.pinkGlow },
+  profileHeader: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  profileAvatar: { borderWidth: 2, borderColor: colors.pink },
+  profileName: { fontFamily: fonts.display, fontSize: 22, lineHeight: 28, color: colors.paper },
+  idChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.line,
+    alignSelf: "flex-start",
+    gap: 6,
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    backgroundColor: colors.ink,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
-  visRow: {
+  idText: { fontFamily: fonts.mono, fontSize: 12, color: colors.lime },
+  editor: { gap: spacing.md },
+  photoRow: { flexDirection: "row", gap: spacing.sm },
+  smallButton: {
     flexDirection: "row",
-    gap: spacing.sm,
-    flexWrap: "wrap",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  visChip: {
-    paddingHorizontal: 12,
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: radius.pill,
     backgroundColor: colors.cardAlt,
     borderWidth: 1,
     borderColor: colors.line,
   },
-  visChipActive: { backgroundColor: colors.lime },
-  version: { color: colors.lilac, textAlign: "center", marginTop: spacing.md, fontFamily: fonts.body },
+  smallButtonGhost: { backgroundColor: "transparent" },
+  smallButtonText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.paper },
+  field: { gap: 6 },
+  fieldLabelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  fieldLabel: { color: colors.lilac, letterSpacing: 1.2, fontFamily: fonts.bodyBold },
+  input: {
+    backgroundColor: colors.ink,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    color: colors.paper,
+    fontFamily: fonts.body,
+    fontSize: 15,
+  },
+  bioInput: { minHeight: 88, textAlignVertical: "top" },
+  editorActions: { flexDirection: "row", gap: spacing.sm },
+  blockRow: { paddingHorizontal: spacing.md, paddingVertical: 12, gap: spacing.sm },
+  blockHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
+  blockIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: colors.cardAlt,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segmented: {
+    flexDirection: "row",
+    padding: 4,
+    borderRadius: radius.md,
+    backgroundColor: colors.ink,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  segment: { flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: radius.sm },
+  segmentOn: { backgroundColor: colors.lime },
+  segmentText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.lilac },
+  segmentTextOn: { fontFamily: fonts.bodyBold, color: colors.ink },
+  dataStatus: { color: colors.lime, marginTop: -spacing.sm, marginBottom: spacing.lg, paddingHorizontal: 4 },
+  signOut: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    paddingVertical: 14,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.pinkGlow,
+    backgroundColor: colors.pinkFill,
+  },
+  signOutText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.pink },
+  version: { color: colors.lilac, textAlign: "center", marginTop: spacing.lg, fontFamily: fonts.body },
 });

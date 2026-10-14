@@ -9,6 +9,7 @@ const KEYS = {
   streak: "maja_streak",
   localProfile: "maja_local_profile",
   sound: "maja_sound",
+  swipeHint: "maja_swipe_hint",
 } as const;
 
 export type OnboardingStep = "language" | "intro" | "signup" | "profile" | "interests" | "ready";
@@ -77,8 +78,20 @@ export async function clearOnboardingStep() {
 }
 
 export async function setOnboardingDone() {
-  await AsyncStorage.setItem(KEYS.onboarding, "1");
+  await AsyncStorage.multiSet([
+    [KEYS.onboarding, "1"],
+    [KEYS.swipeHint, "pending"],
+  ]);
   await clearOnboardingStep();
+}
+
+/** True only for players who just finished onboarding and haven't swiped the feed yet. */
+export async function isSwipeHintPending() {
+  return (await AsyncStorage.getItem(KEYS.swipeHint)) === "pending";
+}
+
+export async function markSwipeHintSeen() {
+  await AsyncStorage.setItem(KEYS.swipeHint, "seen");
 }
 
 export async function getLanguage() {

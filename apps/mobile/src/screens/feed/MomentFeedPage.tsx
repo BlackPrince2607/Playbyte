@@ -6,12 +6,10 @@ import { api, FeedMoment, formatCount, isShareCancelled, shareErrorMessage, Shar
 import { ActionRail } from "../../components/ActionRail";
 import { AnswerButton } from "../../components/AnswerButton";
 import { CommentsSheet } from "../../components/CommentsSheet";
-import { FriendAvatars } from "../../components/FriendAvatars";
 import { LivePill } from "../../components/MajaLogo";
-import { PrimaryButton } from "../../components/PrimaryButton";
-import { FriendChoiceStrip } from "../../components/StitchPrimitives";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
+import { momentStatus, pairUp } from "../../lib/momentCard";
 import { promptTextStyle } from "../../lib/promptSize";
 import { seededCount, withSeededCrowd } from "../../lib/seededEngagement";
 import { recordShare, setLike } from "../../lib/social";
@@ -31,7 +29,7 @@ type Props = {
 };
 
 export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
-  const { respond, isResponding, friendAvatars, engagementFor, updateEngagement } = useApp();
+  const { respond, isResponding, engagementFor, updateEngagement } = useApp();
   const { isSignedIn } = useAuth();
   const mounted = useMountedRef();
   const engagement = engagementFor(item);
@@ -168,18 +166,63 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
     }
   }
 
-  const momentFriends = local.friends?.map((f) => ({ displayName: f.displayName, avatarKey: f.avatarKey })) ?? [];
-  const friends = momentFriends.length > 0 ? momentFriends : friendAvatars.slice(0, 2);
   const tagLabel = contentTag?.name?.toUpperCase() ?? (answered ? "HOT TAKE" : local.category?.name?.toUpperCase() ?? "LIVE");
   const correctId = local.result?.correctOptionId;
   const disagreeingFriend = answered
     ? local.friends?.find((f) => f.optionId && f.optionId !== local.myOptionId)
     : undefined;
-  const disagreeChoice = disagreeingFriend
-    ? local.options.find((o) => o.id === disagreeingFriend.optionId)?.label ?? "something else"
-    : null;
-  const crowded = Boolean(local.promptImageUrl) || local.options.length > 3;
+  const imageOptions = local.options.some((o) => Boolean(o.imageUrl));
+  const crowded = Boolean(local.promptImageUrl) || imageOptions || local.options.length > 3;
   const promptStyle = promptTextStyle(local.prompt, { crowded });
+  const status = momentStatus({
+    respondError,
+    shareError,
+    answered,
+    isQuiz,
+    gotItRight: Boolean(correctId) && local.myOptionId === correctId,
+    correctKnown: Boolean(correctId),
+    friend: disagreeingFriend
+      ? {
+          name: disagreeingFriend.displayName,
+          choice: local.options.find((o) => o.id === disagreeingFriend.optionId)?.label ?? "something else",
+        }
+      : null,
+    myChoice: myOption ? (myOption.label ?? "Selected") : null,
+  });
+
+  function renderOption(o: FeedMoment["options"][number], tile: boolean) {
+    if (!answered) {
+      return (
+        <AnswerButton
+          key={o.id}
+          label={o.label}
+          imageUrl={o.imageUrl}
+          tile={tile}
+          compact={local.options.length > 4}
+          disabled={submitting}
+          onPress={() => void pick(o.id)}
+        />
+      );
+    }
+    const count = crowd.optionCounts[o.id] ?? 0;
+    const isCorrect = correctId === o.id;
+    const isMine = local.myOptionId === o.id;
+    return (
+      <AnswerButton
+        key={o.id}
+        label={o.label}
+        imageUrl={o.imageUrl}
+        tile={tile}
+        compact={local.options.length > 4}
+        percent={total > 0 ? Math.round((count / total) * 100) : 0}
+        selected={isMine}
+        correct={isQuiz ? isCorrect : false}
+        incorrect={isQuiz && isMine && !isCorrect}
+        disabled
+        showCheck={isMine || (isQuiz && isCorrect)}
+      />
+    );
+  }
 
   return (
     <View style={[styles.page, { height }]}>
@@ -204,133 +247,55 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           <LivePill count={total} label={`${formatCount(total)} playing now`} />
         </View>
 
-        {answered ? (
-          <View style={styles.resultCard}>
-            <View style={styles.cardGlow} />
-            {local.promptImageUrl ? (
-              <Image
-                source={{ uri: local.promptImageUrl }}
-                style={[styles.promptImage, local.options.length > 3 && styles.promptImageCompact]}
-                resizeMode="cover"
-              />
-            ) : null}
-            <Text
-              style={[type.gameQuestion, styles.prompt, promptStyle]}
-              numberOfLines={PROMPT_LINES}
-              adjustsFontSizeToFit
-              minimumFontScale={0.7}
-            >
-              {local.prompt}
-            </Text>
-            {myOption ? (
-              <View style={styles.yourAnswer}>
-                <Text style={[type.metadata, { color: colors.lime }]}>
-                  Your answer: {myOption.label ?? "Selected"}
-                </Text>
-              </View>
-            ) : null}
-            {isQuiz && correctId ? (
-              <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center", marginBottom: spacing.md }]}>
-                {local.myOptionId === correctId ? "Correct!" : "Not this time — see the right answer below."}
+        <View style={[styles.card, !imageOptions && styles.cardCentered]}>
+          {answered ? <View style={styles.cardGlow} /> : null}
+          {local.category ? (
+            <Text style={[type.micro, styles.categoryHint]}>{local.category.name.toUpperCase()}</Text>
+          ) : null}
+          {local.promptImageUrl ? (
+            <Image
+              source={{ uri: local.promptImageUrl }}
+              style={[styles.promptImage, (imageOptions || local.options.length > 3) && styles.promptImageCompact]}
+              resizeMode="contain"
+            />
+          ) : null}
+          <Text
+            style={[type.gameQuestion, styles.prompt, promptStyle]}
+            numberOfLines={PROMPT_LINES}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
+            {local.prompt}
+          </Text>
+          <View style={styles.status}>
+            {status ? (
+              <Text
+                style={[type.bodySm, styles.statusText, { color: STATUS_COLOR[status.tone] }]}
+                numberOfLines={2}
+                accessibilityRole={status.tone === "error" ? "alert" : undefined}
+              >
+                {status.text}
               </Text>
-            ) : null}
-            {respondError ? (
-              <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]} accessibilityRole="alert">
-                {respondError}
-              </Text>
-            ) : null}
-            <View style={styles.options}>
-              {local.options.map((o) => {
-                const count = crowd.optionCounts[o.id] ?? 0;
-                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                const isCorrect = correctId === o.id;
-                const isMine = local.myOptionId === o.id;
-                return (
-                  <AnswerButton
-                    key={o.id}
-                    label={o.label}
-                    imageUrl={o.imageUrl}
-                    percent={pct}
-                    selected={isMine}
-                    correct={isQuiz ? isCorrect : false}
-                    incorrect={isQuiz && isMine && !isCorrect}
-                    disabled
-                    showCheck={isMine || (isQuiz && isCorrect)}
-                  />
-                );
-              })}
-            </View>
-            {disagreeingFriend && disagreeChoice ? (
-              <View style={{ marginTop: spacing.md }}>
-                <FriendChoiceStrip
-                  name={disagreeingFriend.displayName}
-                  choice={disagreeChoice}
-                  onShare={() => void handleShare()}
-                />
-              </View>
             ) : null}
           </View>
-        ) : (
-          <View style={styles.playCard}>
-            {local.category ? (
-              <Text style={[type.micro, styles.categoryHint]}>{local.category.name.toUpperCase()}</Text>
-            ) : null}
-            {local.promptImageUrl ? (
-              <Image
-                source={{ uri: local.promptImageUrl }}
-                style={[styles.promptImage, local.options.length > 3 && styles.promptImageCompact]}
-                resizeMode="cover"
-              />
-            ) : null}
-            <Text
-              style={[type.gameQuestion, styles.prompt, promptStyle]}
-              numberOfLines={PROMPT_LINES}
-              adjustsFontSizeToFit
-              minimumFontScale={0.7}
-            >
-              {local.prompt}
-            </Text>
-            {respondError ? (
-              <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]} accessibilityRole="alert">
-                {respondError}
-              </Text>
-            ) : null}
-            <View style={styles.options}>
-              {local.options.map((o) => (
-                <AnswerButton
-                  key={o.id}
-                  label={o.label}
-                  imageUrl={o.imageUrl}
-                  disabled={submitting}
-                  onPress={() => void pick(o.id)}
-                />
+          {imageOptions ? (
+            <View style={styles.grid}>
+              {pairUp(local.options).map((row) => (
+                <View key={row[0].id} style={styles.gridRow}>
+                  {row.map((o) => renderOption(o, true))}
+                  {row.length === 1 ? <View style={styles.gridSpacer} /> : null}
+                </View>
               ))}
             </View>
-            {submitting ? (
-              <View style={styles.submitOverlay} accessibilityLabel="Submitting">
-                <ActivityIndicator color={colors.lime} size="large" />
-              </View>
-            ) : null}
-          </View>
-        )}
-
-        {shareError ? (
-          <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]} accessibilityRole="alert">
-            {shareError}
-          </Text>
-        ) : null}
-
-        {friends.length > 0 ? <FriendAvatars friends={friends} /> : null}
-
-        {shareError ? (
-          <PrimaryButton
-            label="Retry share card"
-            variant="secondary"
-            onPress={() => void handleShare()}
-            disabled={sharing}
-            style={{ marginTop: spacing.xs }}
-          />
-        ) : null}
+          ) : (
+            <View style={styles.list}>{local.options.map((o) => renderOption(o, false))}</View>
+          )}
+          {submitting && !answered ? (
+            <View style={styles.submitOverlay} accessibilityLabel="Submitting">
+              <ActivityIndicator color={colors.lime} size="large" />
+            </View>
+          ) : null}
+        </View>
 
         <ActionRail
           likes={seededCount(item.id, "likes") + engagement.likes}
@@ -351,12 +316,12 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           onSignIn={onSignIn}
           onTotalChange={onCommentTotal}
         />
-
-        <Text style={[type.metadata, styles.swipeHint]}>Swipe up for next play</Text>
       </View>
     </View>
   );
 }
+
+const STATUS_COLOR = { error: colors.pink, good: colors.lime, muted: colors.lilac } as const;
 
 const styles = StyleSheet.create({
   page: {
@@ -366,7 +331,7 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     paddingBottom: spacing.lg,
   },
-  content: { flex: 1, justifyContent: "space-between", gap: spacing.md },
+  content: { flex: 1, gap: spacing.md },
   metaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -382,27 +347,18 @@ const styles = StyleSheet.create({
   },
   quizTag: { backgroundColor: colors.cardAlt, borderWidth: 1, borderColor: colors.lime },
   hotTagText: { color: colors.paper, letterSpacing: 1 },
-  categoryHint: { color: colors.lilac, textAlign: "center", letterSpacing: 1.5 },
-  resultCard: {
+  categoryHint: { color: colors.lilac, textAlign: "center", letterSpacing: 1.5, marginBottom: spacing.sm },
+  card: {
+    flex: 1,
+    minHeight: 0,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: spacing.lg,
-    flexGrow: 1,
-    flexShrink: 1,
+    padding: spacing.md,
     overflow: "hidden",
   },
-  playCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: spacing.lg,
-    flexGrow: 1,
-    flexShrink: 1,
-    overflow: "hidden",
-  },
+  cardCentered: { justifyContent: "center" },
   submitOverlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(21,14,43,0.55)",
@@ -421,21 +377,18 @@ const styles = StyleSheet.create({
   promptImage: {
     width: "100%",
     height: 160,
+    minHeight: 64,
+    flexShrink: 1,
     borderRadius: radius.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.ink,
   },
   promptImageCompact: { height: 110 },
-  prompt: { color: colors.paper, textAlign: "center", marginVertical: spacing.md },
-  yourAnswer: {
-    alignSelf: "center",
-    backgroundColor: "rgba(198,255,61,0.1)",
-    borderColor: "rgba(198,255,61,0.2)",
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    marginBottom: spacing.md,
-  },
-  options: { width: "100%" },
-  swipeHint: { color: colors.lilac, textAlign: "center", marginTop: spacing.sm },
+  prompt: { color: colors.paper, textAlign: "center" },
+  status: { height: 44, justifyContent: "center" },
+  statusText: { textAlign: "center" },
+  grid: { flex: 1, minHeight: 0, gap: spacing.sm },
+  gridRow: { flex: 1, minHeight: 0, flexDirection: "row", gap: spacing.sm },
+  gridSpacer: { flex: 1 },
+  list: { flexShrink: 1, minHeight: 0 },
 });

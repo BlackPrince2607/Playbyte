@@ -23,7 +23,7 @@ import {
   RespondResult,
 } from "../api";
 import { isPlayable } from "../game/discovery";
-import { appendFeedPage } from "../lib/feedPages";
+import { appendFeedPage, FEED_PREFETCH_AHEAD } from "../lib/feedPages";
 import { useAuth } from "./AuthContext";
 import {
   bumpStreak,
@@ -61,7 +61,7 @@ type AppState = {
   promptSave: boolean;
   respondingIds: ReadonlySet<string>;
   refreshFeed: (force?: boolean) => Promise<void>;
-  loadMoreFeed: () => Promise<void>;
+  loadMoreFeed: (viewerIndex?: number) => Promise<void>;
   retryBoot: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
   setOnboardingStep: (step: OnboardingStep) => void;
@@ -98,8 +98,11 @@ const Ctx = createContext<AppState | null>(null);
 const REOPEN_REFRESH_AFTER_MS = 30_000;
 
 const FEED_PAGE_PATH = "/v1/feed?limit=20";
-/** Pages fetched in a row when one adds nothing new, so reaching the end never strands the viewer. */
-const MAX_EMPTY_PAGES = 3;
+/** Pages fetched in one go while the viewer is short of cards ahead (pages can add few once repeats are dropped). */
+const MAX_PAGES_PER_LOAD = 4;
+/** Failed page fetches retried with doubling backoff, so a viewer parked on the last card is not stranded. */
+const MAX_FEED_RETRIES = 4;
+const FEED_RETRY_MS = 1000;
 
 type FeedPage = { items: FeedItem[]; cursor: string | null };
 
@@ -125,6 +128,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [streak, setStreak] = useState(0);
   const [promptSave, setPromptSave] = useState(false);
   const [feedIndex, setFeedIndex] = useState(0);
+  const feedIndexRef = useRef(feedIndex);
+  feedIndexRef.current = feedIndex;
   const [respondingIds, setRespondingIds] = useState<Set<string>>(new Set());
   const [engagement, setEngagement] = useState<Record<string, MomentEngagement>>({});
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -295,21 +300,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [loadFeed],
   );
 
-  const loadMoreFeed = useCallback(async () => {
+  const loadMoreFeed = useCallback(async (viewerIndex?: number) => {
     if (!hasLoadedFeed.current || feedInflight.current || moreInflight.current) return;
     const generation = feedGeneration.current;
     const run = (async () => {
-      try {
-        for (let attempt = 0; attempt < MAX_EMPTY_PAGES && feedCursor.current; attempt++) {
+      let list = itemsRef.current;
+      const shortOfCards = () =>
+        list.length - 1 - Math.max(feedIndexRef.current, viewerIndex ?? 0) <= FEED_PREFETCH_AHEAD;
+      let pages = 0;
+      let failures = 0;
+      while (feedCursor.current && pages < MAX_PAGES_PER_LOAD && shortOfCards()) {
+        try {
           const feed = await api<FeedPage>(`${FEED_PAGE_PATH}&cursor=${encodeURIComponent(feedCursor.current)}`);
           if (generation !== feedGeneration.current) return;
+          pages += 1;
+          failures = 0;
           feedCursor.current = feed.cursor;
           const page = feed.items.filter(isShowable);
+          list = appendFeedPage(list, page);
           setItems((prev) => appendFeedPage(prev, page));
-          if (appendFeedPage(itemsRef.current, page) !== itemsRef.current) return;
+        } catch {
+          if (++failures > MAX_FEED_RETRIES) return;
+          await new Promise((resolve) => setTimeout(resolve, FEED_RETRY_MS * 2 ** (failures - 1)));
+          if (generation !== feedGeneration.current) return;
         }
-      } catch {
-        /* reaching the end of the feed again retries */
       }
     })();
     moreInflight.current = run;

@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Clipboard from "expo-clipboard";
-import { type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,15 +12,15 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api, FeedMoment, formatCount, isApiError, MeProfile } from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
 import { ErrorState } from "../../components/ErrorState";
-import { PlayerIdCard } from "../../components/PlayerIdCard";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { isMoment, useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
-import { extractPlayerId, shortPlayerId } from "../../lib/playerId";
+import { formatFriendCode, friendCodeFor, parseFriendCode } from "../../lib/friendCode";
 import { withSeededCrowd } from "../../lib/seededEngagement";
 import { shareAppInvite } from "../../lib/shareInvite";
 import { colors, radius, spacing } from "../../theme/colors";
@@ -34,6 +34,7 @@ type Props = {
 type Notice = { kind: "success" | "error"; text: string } | null;
 
 export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
+  const insets = useSafeAreaInsets();
   const { isSignedIn, user } = useAuth();
   const {
     friends,
@@ -54,8 +55,10 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
   const [addInput, setAddInput] = useState("");
   const [sending, setSending] = useState(false);
 
-  const parsedId = extractPlayerId(addInput);
-  const inputInvalid = addInput.trim().length > 0 && !parsedId;
+  const parsedCode = parseFriendCode(addInput);
+  const inputInvalid = addInput.trim().length >= 8 && !parsedCode;
+  const myCode = me ? friendCodeFor(me.id) : null;
+  const topPad = { paddingTop: insets.top + spacing.md };
 
   const friendLiveMoments = useMemo(
     () =>
@@ -70,7 +73,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
     try {
       setMe(await api<MeProfile>("/v1/me"));
     } catch {
-      /* the ID card stays hidden until the profile loads */
+      /* the ID row stays hidden until the profile loads */
     }
   }, []);
 
@@ -137,7 +140,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
   }
 
   function confirmRemove(userId: string, name: string) {
-    Alert.alert(`Remove ${name}?`, "They won't be notified. You can add them again with their player ID.", [
+    Alert.alert(`Remove ${name}?`, "They won't be notified. You can add them again with their friend code.", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Remove",
@@ -153,55 +156,49 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
     ]);
   }
 
-  async function pasteId() {
-    const text = await Clipboard.getStringAsync();
-    const id = extractPlayerId(text);
-    if (id) {
-      setAddInput(id);
+  async function pasteCode() {
+    const code = parseFriendCode(await Clipboard.getStringAsync());
+    if (code) {
+      setAddInput(formatFriendCode(code));
       setNotice(null);
     } else {
-      setNotice({ kind: "error", text: "There's no player ID on your clipboard." });
+      setNotice({ kind: "error", text: "There's no friend code on your clipboard." });
     }
   }
 
-  async function sendRequest() {
-    if (!parsedId) {
-      setNotice({ kind: "error", text: "Enter a full player ID, like 3f2a9c1b-0d4e-4b7a-9c2d-81e5f6a7b8c9." });
+  async function addFriend() {
+    if (!parsedCode) {
+      setNotice({ kind: "error", text: "Enter your friend's 8-character code, like 7WN9-R6RD." });
       return;
     }
-    if (parsedId === me?.id) {
-      setNotice({ kind: "error", text: "That's your own player ID. Share it with friends instead." });
+    if (parsedCode === myCode) {
+      setNotice({ kind: "error", text: "That's your own friend code. Share it with friends instead." });
       return;
     }
-    const friend = friends.find((f) => f.userId === parsedId);
+    const friend = friends.find((f) => friendCodeFor(f.userId) === parsedCode);
     if (friend) {
       setNotice({ kind: "success", text: `You're already friends with ${friend.displayName}.` });
-      return;
-    }
-    const sent = friendRequests.outgoing.find((r) => r.userId === parsedId);
-    if (sent) {
-      setNotice({ kind: "success", text: `You already sent ${sent.displayName} a request.` });
       return;
     }
 
     setSending(true);
     setNotice(null);
     try {
-      const res = await api<{ id: string; status: string }>("/v1/friends/requests", {
+      const res = await api<{ status: "added" | "already"; friend: { displayName: string } }>("/v1/friends/add", {
         method: "POST",
-        body: JSON.stringify({ userId: parsedId }),
+        body: JSON.stringify({ code: parsedCode }),
       });
       setAddInput("");
       setNotice({
         kind: "success",
         text:
-          res.status === "accepted"
-            ? "You're now friends!"
-            : "Request sent. They'll appear in your friends once they accept.",
+          res.status === "already"
+            ? `You're already friends with ${res.friend.displayName}.`
+            : `You're now friends with ${res.friend.displayName}!`,
       });
       await reloadAll();
     } catch (e) {
-      setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : "Could not send the request." });
+      setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : "Could not add this friend." });
     } finally {
       setSending(false);
     }
@@ -213,26 +210,22 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
 
   if (!isSignedIn) {
     return (
-      <ScrollView style={styles.wrap} contentContainerStyle={styles.inner}>
-        <Text style={[type.screenTitle, { color: colors.paper }]}>Friends</Text>
-        <Text style={[type.bodyLg, { color: colors.lilac, marginTop: spacing.sm }]}>
-          Play with people you know and see who's on the same moments as you.
-        </Text>
-        <View style={[styles.card, { marginTop: spacing.lg }]}>
-          <View style={styles.signedOutIcon}>
-            <Ionicons name="people" size={28} color={colors.pink} />
+      <ScrollView style={styles.wrap} contentContainerStyle={[styles.inner, topPad]}>
+        <Header subtitle="Play with people you know" onInvite={() => void inviteFriends()} />
+        <View style={[styles.card, styles.hero]}>
+          <View style={styles.heroIcon}>
+            <Ionicons name="people" size={30} color={colors.pink} />
           </View>
-          <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
-            Sign in to get your player ID
+          <Text style={[type.bodyLg, styles.heroTitle]}>Sign in to add friends</Text>
+          <Text style={[type.bodySm, styles.heroBody]}>
+            You'll get a friend code to share, and see which moments your friends are playing.
           </Text>
-          <Text style={[type.bodySm, { color: colors.lilac }]}>
-            Your ID is how friends find you. Once you're signed in you can add friends and accept requests.
-          </Text>
-          {isSupabaseConfigured() ? <PrimaryButton label="Sign in" onPress={onSignIn} /> : null}
-          {onOpenLeaderboard ? (
-            <PrimaryButton label="View leaderboard" variant="secondary" onPress={onOpenLeaderboard} />
-          ) : null}
-          <PrimaryButton label="Invite friends" variant="secondary" onPress={() => void inviteFriends()} />
+          <View style={styles.heroActions}>
+            {isSupabaseConfigured() ? <PrimaryButton label="Sign in" onPress={onSignIn} /> : null}
+            {onOpenLeaderboard ? (
+              <PrimaryButton label="View leaderboard" variant="secondary" icon="trophy-outline" onPress={onOpenLeaderboard} />
+            ) : null}
+          </View>
         </View>
       </ScrollView>
     );
@@ -257,28 +250,22 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
     );
   }
 
-  const requestCount = friendRequests.incoming.length + friendRequests.outgoing.length;
-
   return (
     <ScrollView
       style={styles.wrap}
-      contentContainerStyle={styles.inner}
+      contentContainerStyle={[styles.inner, topPad]}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.lime} />
       }
     >
-      <View style={styles.titleRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={[type.screenTitle, { color: colors.paper }]}>Friends</Text>
-          <Text style={[type.bodySm, { color: colors.lilac }]}>
-            {friends.length
-              ? `${friends.length} friend${friends.length === 1 ? "" : "s"} · see what they're playing`
-              : "Add friends with their player ID"}
-          </Text>
-        </View>
-        <IconButton icon="share-outline" label="Invite friends" onPress={() => void inviteFriends()} />
-      </View>
+      <Header
+        subtitle={
+          friends.length ? `${friends.length} friend${friends.length === 1 ? "" : "s"}` : "Add friends with their code"
+        }
+        onInvite={() => void inviteFriends()}
+        onLeaderboard={onOpenLeaderboard}
+      />
 
       {notice ? (
         <View style={[styles.notice, notice.kind === "error" ? styles.noticeError : styles.noticeSuccess]}>
@@ -296,107 +283,65 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
         </View>
       ) : null}
 
-      {me ? (
-        <View style={styles.section}>
-          <PlayerIdCard
-            id={me.id}
-            displayName={me.displayName}
-            avatarKey={me.avatarKey}
-            caption="Friends add you with this ID. Copy it or share it with them."
-          />
-        </View>
-      ) : null}
-
       <View style={styles.section}>
-        <SectionTitle title="Add a friend" />
         <View style={styles.card}>
-          <Text style={[type.bodySm, { color: colors.lilac }]}>
-            Ask your friend for their player ID (it's on their Friends tab and profile), then paste it here.
-          </Text>
-          <View
-            style={[
-              styles.inputRow,
-              parsedId ? styles.inputValid : null,
-              inputInvalid ? styles.inputInvalid : null,
-            ]}
-          >
-            <Ionicons name="person-add-outline" size={18} color={colors.lilac} />
-            <TextInput
-              value={addInput}
-              onChangeText={(t) => {
-                setAddInput(t);
-                if (notice?.kind === "error") setNotice(null);
-              }}
-              placeholder="Player ID"
-              placeholderTextColor={colors.lilac}
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="send"
-              onSubmitEditing={() => void sendRequest()}
-              style={styles.input}
-            />
-            {addInput ? (
-              <Pressable onPress={() => setAddInput("")} hitSlop={8} accessibilityLabel="Clear">
-                <Ionicons name="close-circle" size={18} color={colors.lilac} />
-              </Pressable>
-            ) : (
-              <Pressable onPress={() => void pasteId()} style={styles.pasteChip} accessibilityLabel="Paste player ID">
-                <Ionicons name="clipboard-outline" size={14} color={colors.paper} />
-                <Text style={styles.pasteText}>Paste</Text>
-              </Pressable>
-            )}
+          {me ? <MyCodeRow playerId={me.id} /> : null}
+          <View style={styles.addRow}>
+            <View
+              style={[styles.inputRow, parsedCode ? styles.inputValid : null, inputInvalid ? styles.inputInvalid : null]}
+            >
+              <TextInput
+                value={addInput}
+                onChangeText={(t) => {
+                  setAddInput(t);
+                  if (notice?.kind === "error") setNotice(null);
+                }}
+                placeholder="Friend's code"
+                placeholderTextColor={colors.lilac}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                returnKeyType="done"
+                onSubmitEditing={() => void addFriend()}
+                style={styles.input}
+                accessibilityLabel="Friend's code"
+              />
+              {addInput ? (
+                <Pressable onPress={() => setAddInput("")} hitSlop={8} accessibilityLabel="Clear">
+                  <Ionicons name="close-circle" size={18} color={colors.lilac} />
+                </Pressable>
+              ) : (
+                <Pressable onPress={() => void pasteCode()} style={styles.pasteChip} accessibilityLabel="Paste friend code">
+                  <Text style={styles.pasteText}>Paste</Text>
+                </Pressable>
+              )}
+            </View>
+            <Pressable
+              onPress={() => void addFriend()}
+              disabled={sending || !parsedCode}
+              accessibilityRole="button"
+              accessibilityLabel="Add friend"
+              style={({ pressed }) => [
+                styles.sendButton,
+                parsedCode ? styles.sendButtonReady : null,
+                pressed && { opacity: 0.8 },
+              ]}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color={colors.ink} />
+              ) : (
+                <Text style={[styles.addText, { color: parsedCode ? colors.ink : colors.lilac }]}>Add</Text>
+              )}
+            </Pressable>
           </View>
-          {parsedId ? (
-            <Text style={[type.metadata, { color: colors.lime }]}>Player {shortPlayerId(parsedId)} · ready to send</Text>
-          ) : inputInvalid ? (
-            <Text style={[type.metadata, { color: colors.pink }]}>That doesn't look like a full player ID.</Text>
+          {inputInvalid ? (
+            <Text style={[type.metadata, { color: colors.pink }]}>Codes have 8 letters and numbers, like 7WN9-R6RD.</Text>
           ) : null}
-          <PrimaryButton
-            label={sending ? "Sending…" : "Send friend request"}
-            icon="paper-plane-outline"
-            onPress={() => void sendRequest()}
-            disabled={sending || !parsedId}
-          />
         </View>
       </View>
 
-      {friendLiveMoments.length > 0 ? (
+      {friendRequests.incoming.length > 0 ? (
         <View style={styles.section}>
-          <SectionTitle title="Live now" />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveRow}>
-            {friendLiveMoments.map((m) => {
-              const friendName = m.friends?.[0]?.displayName ?? "Friend";
-              const total = withSeededCrowd(m).totalResponses;
-              return (
-                <Pressable key={m.id} style={styles.liveCard} onPress={() => jumpToMoment(m.id)}>
-                  <View style={styles.liveTop}>
-                    <View style={styles.liveDot} />
-                    <Text style={[type.micro, { color: colors.lime, fontFamily: fonts.bodyBold }]}>PLAYING</Text>
-                  </View>
-                  <Text style={[type.bodySm, { color: colors.paper, fontFamily: fonts.bodyBold }]} numberOfLines={1}>
-                    {friendName}
-                  </Text>
-                  <Text style={[type.metadata, { color: colors.lilac }]} numberOfLines={2}>
-                    {m.prompt}
-                  </Text>
-                  <Text style={[type.statsSm, { color: colors.pink, fontSize: 12, marginTop: 6 }]}>
-                    {formatCount(total)} in
-                  </Text>
-                  <PrimaryButton
-                    label="Join"
-                    onPress={() => jumpToMoment(m.id)}
-                    style={{ marginTop: 8, paddingVertical: 8 }}
-                  />
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-      ) : null}
-
-      {requestCount > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title="Requests" count={friendRequests.incoming.length || undefined} />
+          <SectionTitle title="Friend requests" count={friendRequests.incoming.length} />
           <View style={styles.list}>
             {friendRequests.incoming.map((r, i) => (
               <PersonRow
@@ -404,7 +349,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
                 first={i === 0}
                 name={r.displayName}
                 avatarKey={r.avatarKey}
-                subtitle={`${shortPlayerId(r.userId)} · wants to be friends`}
+                subtitle="Wants to be friends"
               >
                 <IconButton
                   icon="close"
@@ -422,28 +367,6 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
                 />
               </PersonRow>
             ))}
-            {friendRequests.outgoing.map((r, i) => (
-              <PersonRow
-                key={r.id}
-                first={i === 0 && !friendRequests.incoming.length}
-                name={r.displayName}
-                avatarKey={r.avatarKey}
-                subtitle={`${shortPlayerId(r.userId)} · waiting for reply`}
-              >
-                <Pressable
-                  onPress={() => cancelRequest(r.id, r.displayName)}
-                  disabled={busy !== null}
-                  style={({ pressed }) => [styles.textButton, pressed && { opacity: 0.7 }]}
-                  accessibilityRole="button"
-                >
-                  {busy === `cancel:${r.id}` ? (
-                    <ActivityIndicator size="small" color={colors.lilac} />
-                  ) : (
-                    <Text style={[type.bodySm, { color: colors.lilac, fontFamily: fonts.bodyBold }]}>Cancel</Text>
-                  )}
-                </Pressable>
-              </PersonRow>
-            ))}
           </View>
         </View>
       ) : null}
@@ -452,12 +375,47 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
         <Text style={[type.bodySm, { color: colors.pink, marginTop: spacing.md }]}>{friendRequestsError}</Text>
       ) : null}
 
+      {friendLiveMoments.length > 0 ? (
+        <View style={styles.section}>
+          <SectionTitle title="Playing now" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveRow}>
+            {friendLiveMoments.map((m) => {
+              const friend = m.friends?.[0];
+              const friendName = friend?.displayName ?? "Friend";
+              const total = withSeededCrowd(m).totalResponses;
+              return (
+                <Pressable
+                  key={m.id}
+                  style={({ pressed }) => [styles.liveCard, pressed && { opacity: 0.85 }]}
+                  onPress={() => jumpToMoment(m.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Join ${friendName} on ${m.prompt}`}
+                >
+                  <View style={styles.liveTop}>
+                    <AvatarImage displayName={friendName} avatarKey={friend?.avatarKey} size={28} />
+                    <Text style={[type.bodySm, styles.liveName]} numberOfLines={1}>
+                      {friendName}
+                    </Text>
+                    <View style={styles.liveDot} />
+                  </View>
+                  <Text style={[type.bodySm, { color: colors.paper }]} numberOfLines={2}>
+                    {m.prompt}
+                  </Text>
+                  <View style={styles.liveFooter}>
+                    <Text style={[type.metadata, { color: colors.lilac }]}>{formatCount(total)} playing</Text>
+                    <View style={styles.joinChip}>
+                      <Text style={styles.joinText}>Join</Text>
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : null}
+
       <View style={styles.section}>
-        <SectionTitle
-          title="Your friends"
-          count={friends.length || undefined}
-          action={onOpenLeaderboard ? { label: "Leaderboard", onPress: onOpenLeaderboard } : undefined}
-        />
+        <SectionTitle title="Your friends" count={friends.length || undefined} />
         {friendsError ? (
           <Text style={[type.bodySm, { color: colors.pink }]} accessibilityRole="alert">
             {friendsError}
@@ -471,7 +429,8 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
                 first={i === 0}
                 name={f.displayName}
                 avatarKey={f.avatarKey}
-                subtitle={shortPlayerId(f.userId)}
+                subtitle={formatFriendCode(friendCodeFor(f.userId))}
+                mono
               >
                 <IconButton
                   icon="person-remove-outline"
@@ -479,55 +438,140 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
                   busy={busy === `remove:${f.userId}`}
                   onPress={() => confirmRemove(f.userId, f.displayName)}
                   disabled={busy !== null}
+                  subtle
                 />
               </PersonRow>
             ))}
           </View>
         ) : (
           <View style={[styles.card, styles.empty]}>
-            <Ionicons name="people-outline" size={32} color={colors.lilac} />
+            <View style={styles.emptyIcon}>
+              <Ionicons name="people-outline" size={26} color={colors.lilac} />
+            </View>
             <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]}>No friends yet</Text>
             <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>
-              Share your player ID or paste a friend's ID above to get started.
+              Send your invite link. Friends who open it are added straight away.
             </Text>
+            <PrimaryButton
+              label="Invite friends"
+              icon="share-outline"
+              onPress={() => void inviteFriends()}
+              style={{ alignSelf: "stretch", marginTop: spacing.xs }}
+            />
           </View>
         )}
       </View>
 
-      <PrimaryButton
-        label="Invite friends to MAJA"
-        variant="secondary"
-        onPress={() => void inviteFriends()}
-        style={{ marginTop: spacing.xl }}
-        trailingIcon="share-outline"
-      />
+      {friendRequests.outgoing.length > 0 ? (
+        <View style={styles.section}>
+          <SectionTitle title="Sent requests" />
+          <View style={styles.list}>
+            {friendRequests.outgoing.map((r, i) => (
+              <PersonRow
+                key={r.id}
+                first={i === 0}
+                name={r.displayName}
+                avatarKey={r.avatarKey}
+                subtitle="Waiting for reply"
+              >
+                <Pressable
+                  onPress={() => cancelRequest(r.id, r.displayName)}
+                  disabled={busy !== null}
+                  style={({ pressed }) => [styles.textButton, pressed && { opacity: 0.7 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Cancel request to ${r.displayName}`}
+                >
+                  {busy === `cancel:${r.id}` ? (
+                    <ActivityIndicator size="small" color={colors.lilac} />
+                  ) : (
+                    <Text style={styles.textButtonLabel}>Cancel</Text>
+                  )}
+                </Pressable>
+              </PersonRow>
+            ))}
+          </View>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
 
-function SectionTitle({
-  title,
-  count,
-  action,
+function Header({
+  subtitle,
+  onInvite,
+  onLeaderboard,
 }: {
-  title: string;
-  count?: number;
-  action?: { label: string; onPress: () => void };
+  subtitle: string;
+  onInvite: () => void;
+  onLeaderboard?: () => void;
 }) {
   return (
-    <View style={styles.sectionHeader}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
-        <Text style={[type.micro, styles.sectionLabel]}>{title.toUpperCase()}</Text>
-        {count ? (
-          <View style={styles.countBadge}>
-            <Text style={styles.countText}>{count}</Text>
-          </View>
-        ) : null}
+    <View style={styles.header}>
+      <View style={{ flex: 1 }}>
+        <Text style={[type.screenTitle, { color: colors.paper }]}>Friends</Text>
+        <Text style={[type.bodySm, { color: colors.lilac }]}>{subtitle}</Text>
       </View>
-      {action ? (
-        <Pressable onPress={action.onPress} hitSlop={8}>
-          <Text style={[type.bodySm, { color: colors.pinkSoft }]}>{action.label} ›</Text>
-        </Pressable>
+      {onLeaderboard ? <IconButton icon="trophy-outline" label="Leaderboard" onPress={onLeaderboard} /> : null}
+      <Pressable
+        onPress={onInvite}
+        accessibilityRole="button"
+        accessibilityLabel="Invite friends"
+        style={({ pressed }) => [styles.invitePill, pressed && { opacity: 0.8 }]}
+      >
+        <Ionicons name="person-add-outline" size={16} color={colors.ink} />
+        <Text style={styles.invitePillText}>Invite</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function MyCodeRow({ playerId }: { playerId: string }) {
+  const code = formatFriendCode(friendCodeFor(playerId));
+  const [copied, setCopied] = useState(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+  }, []);
+
+  async function copy() {
+    await Clipboard.setStringAsync(code);
+    setCopied(true);
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <View style={styles.myIdRow}>
+      <Text style={[type.bodySm, { color: colors.lilac }]}>Your code</Text>
+      <Text style={styles.myId} numberOfLines={1} selectable>
+        {code}
+      </Text>
+      <IconButton
+        icon={copied ? "checkmark" : "copy-outline"}
+        label={copied ? "Copied" : "Copy friend code"}
+        tone={copied ? "lime" : "neutral"}
+        onPress={() => void copy()}
+        small
+      />
+      <IconButton
+        icon="share-social-outline"
+        label="Share invite link"
+        onPress={() => void shareAppInvite(playerId)}
+        small
+      />
+    </View>
+  );
+}
+
+function SectionTitle({ title, count }: { title: string; count?: number }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <Text style={[type.micro, styles.sectionLabel]}>{title.toUpperCase()}</Text>
+      {count ? (
+        <View style={styles.countBadge}>
+          <Text style={styles.countText}>{count}</Text>
+        </View>
       ) : null}
     </View>
   );
@@ -538,12 +582,14 @@ function PersonRow({
   avatarKey,
   subtitle,
   first,
+  mono,
   children,
 }: {
   name: string;
   avatarKey: string | null;
   subtitle: string;
   first: boolean;
+  mono?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -553,7 +599,7 @@ function PersonRow({
         <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]} numberOfLines={1}>
           {name}
         </Text>
-        <Text style={[type.metadata, { color: colors.lilac, fontFamily: fonts.mono }]} numberOfLines={1}>
+        <Text style={[type.metadata, { color: colors.lilac }, mono && { fontFamily: fonts.mono }]} numberOfLines={1}>
           {subtitle}
         </Text>
       </View>
@@ -569,6 +615,8 @@ function IconButton({
   tone = "neutral",
   busy,
   disabled,
+  subtle,
+  small,
 }: {
   icon: ComponentProps<typeof Ionicons>["name"];
   label: string;
@@ -576,8 +624,10 @@ function IconButton({
   tone?: "neutral" | "lime";
   busy?: boolean;
   disabled?: boolean;
+  subtle?: boolean;
+  small?: boolean;
 }) {
-  const fg = tone === "lime" ? colors.ink : colors.paper;
+  const fg = tone === "lime" ? colors.ink : subtle ? colors.lilac : colors.paper;
   return (
     <Pressable
       accessibilityRole="button"
@@ -587,42 +637,58 @@ function IconButton({
       hitSlop={4}
       style={({ pressed }) => [
         styles.iconButton,
+        small && styles.iconButtonSmall,
+        subtle && styles.iconButtonSubtle,
         tone === "lime" && styles.iconButtonLime,
         (pressed || (disabled && !busy)) && { opacity: 0.6 },
       ]}
     >
-      {busy ? <ActivityIndicator size="small" color={fg} /> : <Ionicons name={icon} size={18} color={fg} />}
+      {busy ? <ActivityIndicator size="small" color={fg} /> : <Ionicons name={icon} size={small ? 16 : 18} color={fg} />}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.ink },
-  inner: { padding: spacing.margin, paddingTop: 60, paddingBottom: 100 },
+  inner: { paddingHorizontal: spacing.margin, paddingBottom: spacing.xl },
   center: {
     flex: 1,
     backgroundColor: colors.ink,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 80,
   },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  header: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  invitePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    height: 38,
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
+    backgroundColor: colors.lime,
+  },
+  invitePillText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.line,
     padding: spacing.md,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-  signedOutIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  hero: { marginTop: spacing.lg, alignItems: "center", paddingVertical: spacing.xl, gap: spacing.sm },
+  heroIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.pinkFill,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: spacing.xs,
   },
+  heroTitle: { color: colors.paper, fontFamily: fonts.bodyBold, fontSize: 18, textAlign: "center" },
+  heroBody: { color: colors.lilac, textAlign: "center", maxWidth: 300 },
+  heroActions: { alignSelf: "stretch", gap: spacing.sm, marginTop: spacing.md },
   notice: {
     flexDirection: "row",
     alignItems: "center",
@@ -635,7 +701,7 @@ const styles = StyleSheet.create({
   noticeSuccess: { backgroundColor: colors.limeFill, borderColor: "rgba(198, 255, 61, 0.4)" },
   noticeError: { backgroundColor: colors.pinkFill, borderColor: colors.pinkGlow },
   section: { marginTop: spacing.lg, gap: spacing.sm },
-  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  sectionHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: 4 },
   sectionLabel: { color: colors.lilac, letterSpacing: 1.2, fontFamily: fonts.bodyBold },
   countBadge: {
     minWidth: 20,
@@ -647,46 +713,72 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   countText: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.paper },
+  myIdRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  myId: { flex: 1, fontFamily: fonts.mono, fontSize: 16, lineHeight: 22, color: colors.lime, letterSpacing: 1 },
+  addRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   inputRow: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
+    height: 42,
     backgroundColor: colors.ink,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.line,
-    paddingHorizontal: 12,
+    paddingLeft: 12,
+    paddingRight: 6,
   },
   inputValid: { borderColor: colors.lime },
   inputInvalid: { borderColor: colors.pink },
   input: {
     flex: 1,
-    paddingVertical: 12,
+    height: "100%",
     color: colors.paper,
     fontFamily: fonts.mono,
-    fontSize: 13,
+    fontSize: 15,
+    letterSpacing: 1,
   },
   pasteChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radius.pill,
     backgroundColor: colors.cardAlt,
   },
   pasteText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.paper },
+  sendButton: {
+    paddingHorizontal: 16,
+    height: 42,
+    borderRadius: radius.md,
+    backgroundColor: colors.cardAlt,
+    borderWidth: 1,
+    borderColor: colors.line,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sendButtonReady: { backgroundColor: colors.lime, borderColor: colors.lime },
+  addText: { fontFamily: fonts.bodyBold, fontSize: 14 },
   liveRow: { gap: spacing.sm, paddingRight: spacing.margin },
   liveCard: {
-    width: 180,
+    width: 200,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.line,
     padding: spacing.md,
+    gap: spacing.sm,
   },
-  liveTop: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 },
-  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.lime },
+  liveTop: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  liveName: { flex: 1, color: colors.paper, fontFamily: fonts.bodyBold },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.limeLive },
+  liveFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: "auto" },
+  joinChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.pink,
+  },
+  joinText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.paper },
   list: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
@@ -707,7 +799,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  iconButtonSmall: { width: 32, height: 32, borderRadius: 16 },
+  iconButtonSubtle: { backgroundColor: "transparent", borderColor: "transparent" },
   iconButtonLime: { backgroundColor: colors.lime, borderColor: colors.lime },
-  textButton: { paddingHorizontal: 12, paddingVertical: 8, minWidth: 64, alignItems: "center" },
+  textButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minWidth: 72,
+    alignItems: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  textButtonLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.lilac },
   empty: { alignItems: "center", paddingVertical: spacing.lg, gap: spacing.sm },
+  emptyIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.cardAlt,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs,
+  },
 });

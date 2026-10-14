@@ -6,8 +6,10 @@ import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
 import { FeedTopBar } from "../../components/FeedTopBar";
 import { LoadingSkeleton } from "../../components/LoadingSkeleton";
+import { SwipeHintOverlay } from "../../components/SwipeHintOverlay";
 import { isMoment, useApp } from "../../context/AppContext";
-import { feedKeys } from "../../lib/feedPages";
+import { FEED_PREFETCH_AHEAD, feedKeys } from "../../lib/feedPages";
+import { isSwipeHintPending, markSwipeHintSeen } from "../../lib/storage";
 import { colors } from "../../theme/colors";
 import { GameIntroPage } from "./GameIntroPage";
 import { MomentFeedPage } from "./MomentFeedPage";
@@ -20,8 +22,6 @@ type Props = {
 };
 
 const VIEWABILITY = { itemVisiblePercentThreshold: 60 };
-/** Pages from the end at which the next feed page is fetched. */
-const PREFETCH_PAGES = 2;
 
 export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }: Props) {
   const {
@@ -44,6 +44,27 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
   const listRef = useRef<FlatList<FeedItem>>(null);
   /** Page the list is showing, so programmatic jumps (Live tab, refresh) only scroll when needed. */
   const shownIndex = useRef(feedIndex);
+  /** Feed page the swipe tip appeared on; moving off it counts as having learned the gesture. */
+  const [swipeHintFrom, setSwipeHintFrom] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void isSwipeHintPending().then((pending) => {
+      if (pending && !cancelled) setSwipeHintFrom(shownIndex.current);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const dismissSwipeHint = useCallback(() => {
+    setSwipeHintFrom(null);
+    void markSwipeHintSeen();
+  }, []);
+
+  useEffect(() => {
+    if (swipeHintFrom !== null && feedIndex !== swipeHintFrom) dismissSwipeHint();
+  }, [feedIndex, swipeHintFrom, dismissSwipeHint]);
 
   useEffect(() => {
     if (!pageH || feedIndex === shownIndex.current || feedIndex < 0 || feedIndex >= items.length) return;
@@ -56,8 +77,15 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
     if (index === null || index === undefined) return;
     shownIndex.current = index;
     setFeedIndex(index);
-    if (index >= nearEnd.current.count - PREFETCH_PAGES) void nearEnd.current.loadMore();
+    if (index >= nearEnd.current.count - 1 - FEED_PREFETCH_AHEAD) void nearEnd.current.loadMore(index);
   }).current;
+
+  /** Dragging against the last cards retries a page fetch that gave up, since no new page comes into view. */
+  const onScrollEndDrag = useCallback(() => {
+    if (shownIndex.current >= nearEnd.current.count - 1 - FEED_PREFETCH_AHEAD) {
+      void nearEnd.current.loadMore(shownIndex.current);
+    }
+  }, []);
 
   const onPull = useCallback(() => {
     setPulling(true);
@@ -130,8 +158,9 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
           windowSize={3}
           viewabilityConfig={VIEWABILITY}
           onViewableItemsChanged={onViewableItemsChanged}
+          onScrollEndDrag={onScrollEndDrag}
           onEndReached={() => void loadMoreFeed()}
-          onEndReachedThreshold={PREFETCH_PAGES}
+          onEndReachedThreshold={FEED_PREFETCH_AHEAD}
           refreshControl={
             <RefreshControl
               refreshing={pulling}
@@ -143,6 +172,9 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
             />
           }
         />
+      ) : null}
+      {pageH > 0 && swipeHintFrom !== null && isFeedTabActive ? (
+        <SwipeHintOverlay onDismiss={dismissSwipeHint} />
       ) : null}
       <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
     </View>

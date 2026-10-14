@@ -5,6 +5,9 @@ const baseKey = (item: FeedItem) => (item.type === "moment" ? `m:${item.id}` : `
 /** How many items back a moment must be before it may show again; the server loops through moments forever. */
 export const MOMENT_REPEAT_GAP = 20;
 
+/** Cards kept loaded ahead of the viewer; a feed page takes a few swipes to arrive, so fetching starts this early. */
+export const FEED_PREFETCH_AHEAD = 8;
+
 /** Appends the next feed page: moments shown within the last few items are skipped, and a game never follows itself. */
 export function appendFeedPage(current: FeedItem[], page: FeedItem[]): FeedItem[] {
   const seenMoments = new Set(

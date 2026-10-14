@@ -39,6 +39,7 @@ import { WeeklyRecapScreen } from "./screens/profile/WeeklyRecapScreen";
 import { SignInScreen } from "./screens/auth/SignInScreen";
 import { useAuth } from "./context/AuthContext";
 import { clearLocalSupabaseSession, isSupabaseConfigured } from "./lib/supabase";
+import { useFriendInvite } from "./lib/useFriendInvite";
 import { colors, spacing } from "./theme/colors";
 import { type } from "./theme/typography";
 
@@ -83,6 +84,8 @@ export function MainShell() {
     retryBoot,
     items,
     streak,
+    refreshFriends,
+    refreshFriendRequests,
   } = useApp();
   const { googleAvailable, signInWithGoogle, isSignedIn, user } = useAuth();
   const [playing, setPlaying] = useState<FeedGame | null>(null);
@@ -102,6 +105,13 @@ export function MainShell() {
   const [pickedInterests, setPickedInterests] = useState<string[]>([]);
   const [finishingOnboarding, setFinishingOnboarding] = useState(false);
   const wasSignedIn = useRef<boolean | null>(null);
+
+  const showNewFriend = useCallback(() => {
+    void refreshFriends(true);
+    void refreshFriendRequests(true);
+    setTab("friends");
+  }, [refreshFriends, refreshFriendRequests, setTab]);
+  const invite = useFriendInvite({ active: ready && onboardingDone, isSignedIn, onAdded: showNewFriend });
 
   // Once the app is up: start analytics, retry plays that failed to submit and offer to resume an interrupted game.
   useEffect(() => {
@@ -543,6 +553,27 @@ export function MainShell() {
           </Pressable>
         </View>
       ) : null}
+      {invite.notice ? (
+        <View
+          style={[
+            styles.banner,
+            styles.inviteBanner,
+            { borderColor: invite.notice.kind === "error" ? colors.pink : colors.lime },
+          ]}
+        >
+          <Pressable
+            style={{ flex: 1 }}
+            disabled={invite.notice.kind !== "signin"}
+            onPress={() => setShowSignIn(true)}
+            accessibilityRole={invite.notice.kind === "signin" ? "button" : "alert"}
+          >
+            <Text style={[type.bodySm, { color: colors.paper }]}>{invite.notice.text}</Text>
+          </Pressable>
+          <Pressable onPress={invite.dismiss} accessibilityRole="button" accessibilityLabel="Dismiss" hitSlop={10}>
+            <Text style={[type.bodySm, { color: colors.lilac }]}>✕</Text>
+          </Pressable>
+        </View>
+      ) : null}
       {promptSave ? (
         <Pressable style={styles.banner} onPress={() => setShowSignIn(true)}>
           <Text style={[type.bodySm, { color: colors.paper }]}>
@@ -580,6 +611,7 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   resumeBanner: { flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1, borderColor: colors.lime },
+  inviteBanner: { flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1 },
   submitOverlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(21,14,43,0.85)",
