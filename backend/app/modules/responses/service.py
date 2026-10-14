@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -160,10 +161,21 @@ async def rebuild_snapshot(session: AsyncSession, moment_id: UUID) -> CrowdSnaps
 
 
 async def _bump_daily(session: AsyncSession, user_id: UUID, moments: int = 0, games: int = 0) -> None:
+    """Atomic upsert: column defaults only apply on INSERT, and concurrent first plays of the day must not collide."""
     today = datetime.now(UTC).date()
-    row = await session.get(UserDailyStat, (user_id, today))
-    if row is None:
-        row = UserDailyStat(user_id=user_id, date=today)
-        session.add(row)
-    row.moments_joined += moments
-    row.games_played += games
+    stmt = pg_insert(UserDailyStat).values(
+        user_id=user_id,
+        date=today,
+        moments_joined=moments,
+        games_played=games,
+        majority_matches=0,
+        unique_people=0,
+    )
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[UserDailyStat.user_id, UserDailyStat.date],
+        set_={
+            "moments_joined": func.coalesce(UserDailyStat.moments_joined, 0) + moments,
+            "games_played": func.coalesce(UserDailyStat.games_played, 0) + games,
+        },
+    )
+    await session.execute(stmt)

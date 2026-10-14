@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.infrastructure.postgres.models import Friendship, Profile, User, UserDailyStat
 from app.modules.leaderboard.service import leaderboard
+from app.modules.responses.service import _bump_daily
 
 DB_URL = os.environ.get("TEST_DATABASE_URL", "")
 pytestmark = [
@@ -148,6 +149,23 @@ async def test_friends_board_lists_accepted_friends_and_you(db) -> None:
     assert rows == [("Pal", 1, 40, False), ("Me", 2, 20, True), ("Quiet", 3, 0, False)]
     assert board["you"]["rank"] == 2
     assert str(stranger) not in {e["userId"] for e in board["entries"]}
+
+
+async def test_first_and_later_actions_of_the_day_both_count(db) -> None:
+    async with db() as s:
+        me = await _player(s, "Me")
+        await s.commit()
+
+        await _bump_daily(s, me, moments=1)
+        await _bump_daily(s, me, games=1)
+        await _bump_daily(s, me, moments=1)
+        await s.commit()
+
+        row = await s.get(UserDailyStat, (me, datetime.now(UTC).date()), populate_existing=True)
+        board = await leaderboard(s, scope="global", period="week", viewer=me)
+
+    assert (row.moments_joined, row.games_played) == (2, 1)
+    assert board["entries"][0]["points"] == 30
 
 
 async def test_friends_board_with_no_friends_is_just_you(db) -> None:
