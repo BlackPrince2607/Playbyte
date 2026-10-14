@@ -1,4 +1,20 @@
-import uuidfrom contextlib import asynccontextmanagerfrom pathlib import Pathfrom fastapi import FastAPI, Requestfrom fastapi.middleware.cors import CORSMiddlewarefrom sqlalchemy import textfrom app.api.v1 import api_routerfrom app.common.errors import AppError, app_error_handler, unhandled_error_handlerfrom app.common.security import validate_production_settingsfrom app.config import get_settingsfrom app.infrastructure.postgres.db import SessionLocal@asynccontextmanager
+import uuid
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+
+from app.api.invite import router as invite_router
+from app.api.v1 import api_router
+from app.common.errors import AppError, app_error_handler, unhandled_error_handler
+from app.common.security import validate_production_settings
+from app.config import get_settings
+from app.infrastructure.postgres.db import SessionLocal
+
+
+@asynccontextmanager
 async def lifespan(_app: FastAPI):
     settings = get_settings()
     errors = validate_production_settings(settings)
@@ -46,6 +62,7 @@ def create_app() -> FastAPI:
             raise AppError("unavailable", "Database not ready.", 503) from exc
 
     app.include_router(api_router)
+    app.include_router(invite_router)
 
     if settings.app_env != "production":
         from fastapi.staticfiles import StaticFiles
@@ -58,4 +75,4 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
+

@@ -1,13 +1,14 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.auth import Actor, require_user
 from app.infrastructure.postgres.db import get_session
 from app.modules.friends.service import (
     accept_friend,
+    add_friend_by_code,
     delete_friend_request,
     list_friend_requests,
     list_friends,
@@ -20,6 +21,19 @@ router = APIRouter(prefix="/friends", tags=["friends"])
 
 class FriendRequestIn(BaseModel):
     userId: UUID
+
+
+class FriendCodeIn(BaseModel):
+    code: str = Field(min_length=1, max_length=200)
+
+
+@router.post("/add")
+async def post_add_by_code(
+    body: FriendCodeIn,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(require_user),
+) -> dict:
+    return await add_friend_by_code(session, actor.user_id, body.code)
 
 
 @router.get("")

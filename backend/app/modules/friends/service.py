@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.errors import AppError
 from app.infrastructure.postgres.models import Friendship, Profile, User
+from app.modules.friends.codes import code_range, parse_code
 
 
 def _pair(a: UUID, b: UUID) -> tuple[UUID, UUID]:
@@ -77,6 +78,50 @@ async def request_friend(session: AsyncSession, from_id: UUID, to_id: UUID) -> F
     session.add(row)
     await session.flush()
     return row
+
+
+async def find_by_code(session: AsyncSession, code: str) -> User | None:
+    """Active player owning a friend code; None when unknown or, rarely, shared by two players."""
+    lo, hi = code_range(code)
+    rows = (
+        await session.scalars(
+            select(User).where(User.id >= lo, User.id <= hi, User.status == "active").limit(2)
+        )
+    ).all()
+    return rows[0] if len(rows) == 1 else None
+
+
+async def add_friend_by_code(session: AsyncSession, user_id: UUID, raw_code: str) -> dict:
+    """Invite links and typed codes make friends straight away: sharing your code is the consent."""
+    code = parse_code(raw_code)
+    if code is None:
+        raise AppError("invalid_code", "That friend code doesn't look right. It has 8 letters and numbers.", 422)
+    other = await find_by_code(session, code)
+    if other is None:
+        raise AppError("user_not_found", "No player has that friend code.", 404)
+    if other.id == user_id:
+        raise AppError("invalid", "That's your own friend code. Share it with friends instead.", 422)
+    a, b = _pair(user_id, other.id)
+    row = await session.scalar(select(Friendship).where(Friendship.user_a == a, Friendship.user_b == b))
+    status = "added"
+    if row is None:
+        session.add(Friendship(user_a=a, user_b=b, status="accepted", requested_by=user_id))
+    elif row.status == "blocked":
+        raise AppError("forbidden", "Cannot create this connection.", 403)
+    elif row.status == "accepted":
+        status = "already"
+    else:
+        row.status = "accepted"
+    await session.flush()
+    profile = await session.get(Profile, other.id)
+    return {
+        "status": status,
+        "friend": {
+            "userId": str(other.id),
+            "displayName": profile.display_name if profile else "Player",
+            "avatarKey": profile.avatar_key if profile else None,
+        },
+    }
 
 
 async def accept_friend(session: AsyncSession, user_id: UUID, request_id: UUID) -> Friendship:

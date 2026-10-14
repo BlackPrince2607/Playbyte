@@ -32,6 +32,14 @@ class Settings(BaseSettings):
 
     admin_api_key: str = "dev-admin-key"
 
+    # Invite links: /add/{code} opens the app through Android App Links, verified against these
+    # signing-certificate fingerprints (comma-separated; add Play's app-signing key when publishing).
+    android_package: str = "app.maja.mobile"
+    android_cert_sha256: str = (
+        "57:CA:F6:15:82:38:8C:A9:8F:01:D4:BA:76:E0:79:A3:58:88:D2:6B:DD:B1:90:79:6E:1E:62:F9:35:11:75:26"
+    )
+    app_download_url: str = ""
+
     sentry_dsn: str = ""
     rate_limit_response_per_minute: int = 60
     rate_limit_guest_create_per_hour: int = 30
