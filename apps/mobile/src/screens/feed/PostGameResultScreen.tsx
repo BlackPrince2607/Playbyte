@@ -8,6 +8,9 @@ import { Confetti } from "../../game/ui/motion";
 import { resultHeadline, scoreRows, statRows } from "../../game/ui/resultSummary";
 import type { SaveState } from "../../game/session/submitQueue";
 import type { RoundRecord } from "../../game/session/types";
+import { useLanguage } from "../../context/LanguageContext";
+import { localizeChrome } from "../../i18n/chrome";
+import { fill } from "../../i18n/strings";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
@@ -86,15 +89,16 @@ function RoundBars({ rounds }: { rounds: RoundRecord[] }) {
 }
 
 function ScoreComposition({ breakdown }: { breakdown?: Record<string, number> }) {
+  const { language, fonts: ui } = useLanguage();
   const points = scoreRows(breakdown);
   const stats = statRows(breakdown);
   if (!points.length && !stats.length) return null;
   return (
     <View style={styles.panel}>
-      <Text style={styles.panelTitle}>HOW YOU SCORED</Text>
+      <Text style={[styles.panelTitle, { fontFamily: ui.bodyBold }]}>{localizeChrome("HOW YOU SCORED", language)}</Text>
       {points.map((row) => (
         <View key={row.label} style={styles.row} accessible accessibilityLabel={`${row.label}: ${row.value} points`}>
-          <Text style={[type.bodySm, { color: colors.lilac }]}>{row.label}</Text>
+          <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.body }]}>{localizeChrome(row.label, language)}</Text>
           <Text style={[type.bodySm, { color: row.value < 0 ? colors.pinkSoft : colors.paper, fontFamily: fonts.bodyBold }]}>
             {row.value > 0 ? `+${row.value}` : `−${Math.abs(row.value)}`}
           </Text>
@@ -105,7 +109,9 @@ function ScoreComposition({ breakdown }: { breakdown?: Record<string, number> })
           {stats.map((s) => (
             <View key={s.label} style={styles.stat} accessible accessibilityLabel={`${s.label}: ${s.value}`}>
               <Text style={[type.bodySm, { color: colors.paper, fontFamily: fonts.bodyBold }]}>{s.value}</Text>
-              <Text style={[type.micro, { color: colors.lilac }]}>{s.label.toUpperCase()}</Text>
+              <Text style={[type.micro, { color: colors.lilac, fontFamily: ui.bodyMedium }]}>
+                {localizeChrome(s.label, language)}
+              </Text>
             </View>
           ))}
         </View>
@@ -149,19 +155,20 @@ export function PostGameResultScreen({
   const [shareError, setShareError] = useState("");
   const showAccuracy = attempts !== undefined && attempts > 0 && correct !== undefined;
   const accuracyPct = showAccuracy ? Math.round((correct / attempts) * 100) : 0;
+  const { t, language, fonts: ui } = useLanguage();
 
   async function shareScore() {
     setSharing(true);
     setShareError("");
     const brag =
       betterThan === null
-        ? `I scored ${score} on ${gameTitle} on MAJA. Can you beat it?`
-        : `I scored ${score} on ${gameTitle} — better than ${betterThan}% of players today on MAJA. Can you beat it?`;
+        ? fill(t("sharePlain"), { score, title: gameTitle })
+        : fill(t("shareBeat"), { score, title: gameTitle, pct: betterThan });
     const link = process.env.EXPO_PUBLIC_APP_SHARE_URL?.trim();
     try {
       await Share.share({ message: link ? `${brag}\n${link}` : brag });
     } catch {
-      setShareError("Could not open share sheet. Try again.");
+      setShareError(t("shareFailed"));
     } finally {
       setSharing(false);
     }
@@ -176,9 +183,11 @@ export function PostGameResultScreen({
         ]}
       >
         <Text style={[type.metadata, styles.eyebrow]} numberOfLines={1}>
-          {gameTitle.toUpperCase()} · RESULT
+          {gameTitle.toUpperCase()} · {t("resultWord")}
         </Text>
-        <Text style={[type.hero, { color: colors.paper, textAlign: "center" }]}>{headline}</Text>
+        <Text style={[type.hero, { color: colors.paper, textAlign: "center", fontFamily: ui.display }]}>
+          {localizeChrome(headline, language)}
+        </Text>
 
         <View style={styles.hero} accessible accessibilityLabel={`Score ${score}`}>
           <Text style={[type.largeScore, { color: colors.lime }]}>{shownScore}</Text>
@@ -200,7 +209,7 @@ export function PostGameResultScreen({
             <Text style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>
               {saveMessage ??
                 (saveState === "queued"
-                  ? "Couldn't save your score yet. It's kept on this phone and will sync automatically."
+                  ? t("couldntSaveScore")
                   : "This score couldn't be recorded.")}
             </Text>
             {saveState === "queued" && onRetrySave ? (
@@ -225,7 +234,7 @@ export function PostGameResultScreen({
         ) : null}
 
         <View style={styles.actions}>
-          {onPlayAgain ? <PrimaryButton label="Play again" onPress={onPlayAgain} icon="refresh" /> : null}
+          {onPlayAgain ? <PrimaryButton label={t("playAgain")} onPress={onPlayAgain} icon="refresh" /> : null}
           <View style={styles.actionRow}>
             {onNextGame ? (
               <PrimaryButton
@@ -252,7 +261,7 @@ export function PostGameResultScreen({
             <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{shareError}</Text>
           ) : null}
           <Pressable onPress={onBackToFeed} accessibilityRole="button" hitSlop={8} style={styles.feedLink}>
-            <Text style={[type.bodySm, { color: colors.lilac, fontFamily: fonts.bodyBold }]}>Back to feed</Text>
+            <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.bodyBold }]}>{t("backToFeed")}</Text>
           </Pressable>
         </View>
 

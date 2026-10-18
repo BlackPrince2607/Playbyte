@@ -15,6 +15,9 @@ import { seededCount, withSeededCrowd } from "../../lib/seededEngagement";
 import { recordShare, setLike } from "../../lib/social";
 import { ensureLocalShareUri } from "../../lib/shareLocalFile";
 import { useMountedRef } from "../../lib/useMounted";
+import { useLanguage } from "../../context/LanguageContext";
+import { categoryName } from "../../i18n/categories";
+import { fill } from "../../i18n/strings";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
@@ -29,6 +32,7 @@ type Props = {
 };
 
 export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
+  const { t, language, fonts: ui } = useLanguage();
   const { respond, isResponding, engagementFor, updateEngagement } = useApp();
   const { isSignedIn } = useAuth();
   const mounted = useMountedRef();
@@ -148,7 +152,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
     try {
       const card = await api<ShareCardResponse>(`/v1/moments/${item.id}/share-card`, { method: "POST" });
       if (!(await Sharing.isAvailableAsync())) {
-        if (mounted.current) setShareError("Sharing is not available on this device.");
+        if (mounted.current) setShareError(t("sharingUnavailable"));
         return;
       }
       const localUri = await ensureLocalShareUri(card.assetUrl, `moment-${item.id}.png`);
@@ -166,7 +170,11 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
     }
   }
 
-  const tagLabel = contentTag?.name?.toUpperCase() ?? (answered ? "HOT TAKE" : local.category?.name?.toUpperCase() ?? "LIVE");
+  const tagLabel = contentTag?.name
+    ? categoryName(contentTag.slug, contentTag.name, language)
+    : answered
+      ? t("hotTake")
+      : categoryName(local.category?.slug, local.category?.name ?? "", language) || t("liveTag");
   const correctId = local.result?.correctOptionId;
   const disagreeingFriend = answered
     ? local.friends?.find((f) => f.optionId && f.optionId !== local.myOptionId)
@@ -187,7 +195,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           choice: local.options.find((o) => o.id === disagreeingFriend.optionId)?.label ?? "something else",
         }
       : null,
-    myChoice: myOption ? (myOption.label ?? "Selected") : null,
+    myChoice: myOption ? (myOption.label ?? t("selected")) : null,
   });
 
   function renderOption(o: FeedMoment["options"][number], tile: boolean) {
@@ -240,11 +248,11 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
       <View style={styles.content}>
         <View style={styles.metaRow}>
           <View style={[styles.hotTag, contentTag?.slug === "quiz" && styles.quizTag]}>
-            <Text style={[type.metadata, styles.hotTagText, { fontFamily: fonts.bodyBold }]}>
-              {contentTag?.slug === "quiz" ? "📝 QUIZ" : contentTag?.slug === "poll" ? "📊 POLL" : `🔥 ${tagLabel}`}
+            <Text style={[type.metadata, styles.hotTagText, { fontFamily: ui.bodyBold }]}>
+              {contentTag?.slug === "quiz" ? `📝 ${t("quizTag")}` : contentTag?.slug === "poll" ? `📊 ${t("pollTag")}` : `🔥 ${tagLabel}`}
             </Text>
           </View>
-          <LivePill count={total} label={`${formatCount(total)} playing now`} />
+          <LivePill count={total} label={fill(t("playingNow"), { count: formatCount(total) })} />
         </View>
 
         <View style={[styles.card, !imageOptions && styles.cardCentered]}>
@@ -260,7 +268,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
             />
           ) : null}
           <Text
-            style={[type.gameQuestion, styles.prompt, promptStyle]}
+            style={[type.gameQuestion, styles.prompt, promptStyle, { fontFamily: ui.display }]}
             numberOfLines={PROMPT_LINES}
             adjustsFontSizeToFit
             minimumFontScale={0.7}

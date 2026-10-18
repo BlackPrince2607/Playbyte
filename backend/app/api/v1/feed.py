@@ -13,7 +13,10 @@ router = APIRouter(tags=["feed"])
 async def get_feed(
     limit: int = Query(default=10, ge=1, le=20),
     cursor: str | None = Query(default=None, max_length=64),
+    lang: str | None = Query(default=None, max_length=16),
     session: AsyncSession = Depends(get_session),
     actor: Actor = Depends(get_actor),
 ) -> dict:
-    return await build_feed(session, user_id=actor.user_id, guest_id=actor.guest_id, limit=limit, cursor=cursor)
+    return await build_feed(
+        session, user_id=actor.user_id, guest_id=actor.guest_id, limit=limit, cursor=cursor, lang=lang
+    )

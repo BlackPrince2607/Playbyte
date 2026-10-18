@@ -3,8 +3,12 @@ import { StyleSheet, Text, View } from "react-native";
 import { FeedGame } from "../../api";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { LivePill } from "../../components/MajaLogo";
+import { useLanguage } from "../../context/LanguageContext";
+import { localizeGame } from "../../i18n/games";
+import { fill } from "../../i18n/strings";
+import { lineHeightFor } from "../../lib/promptSize";
 import { colors, radius, spacing } from "../../theme/colors";
-import { fonts, type } from "../../theme/typography";
+import { type } from "../../theme/typography";
 
 type Props = {
   item: FeedGame;
@@ -18,23 +22,45 @@ function tagFrom(item: FeedGame): string {
   return "GAME";
 }
 
-function modeLabel(item: FeedGame): string {
-  return item.config?.mode === "endless" ? "Endless" : "Finite";
+function modeLabel(item: FeedGame, t: (key: "endless" | "finite") => string): string {
+  return item.config?.mode === "endless" ? t("endless") : t("finite");
 }
 
-function modeHint(item: FeedGame): string {
-  if (item.config?.mode === "endless") return "End anytime";
+function modeHint(item: FeedGame, t: (key: "endAnytime" | "rounds" | "puzzles" | "wordsCount" | "oneLevel") => string): string {
+  if (item.config?.mode === "endless") return t("endAnytime");
   const q = item.config?.questions;
   const levels = item.config?.levels;
   const words = item.config?.wordsToFind;
-  if (typeof q === "number") return `${q} rounds`;
-  if (typeof levels === "number") return `${levels} puzzles`;
-  if (typeof words === "number") return `${words} words`;
-  return "One level";
+  if (typeof q === "number") return fill(t("rounds"), { count: q });
+  if (typeof levels === "number") return fill(t("puzzles"), { count: levels });
+  if (typeof words === "number") return fill(t("wordsCount"), { count: words });
+  return t("oneLevel");
 }
 
-export function GameIntroPage({ item, height, onStart }: Props) {
-  const tag = tagFrom(item);
+function Stat({ value, label, color }: { value: string; label: string; color: string }) {
+  const { fonts: ui } = useLanguage();
+  return (
+    <View style={styles.stat}>
+      <Text
+        style={[type.statsSm, styles.statValue, { color, fontFamily: ui.bodyBold }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.65}
+      >
+        {value}
+      </Text>
+      <Text style={[type.micro, styles.statLabel, { fontFamily: ui.bodyMedium }]} numberOfLines={1}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+export function GameIntroPage({ item: raw, height, onStart }: Props) {
+  const { language, t, fonts: ui } = useLanguage();
+  const item = localizeGame(raw, language);
+  const tag = tagFrom(item) === "GAME" ? t("gameTag") : tagFrom(item);
+  const titleSize = 28;
   return (
     <View style={[styles.page, { height }]}>
       <LinearGradient colors={["rgba(198,255,61,0.18)", "transparent", colors.ink]} style={StyleSheet.absoluteFill} />
@@ -47,28 +73,42 @@ export function GameIntroPage({ item, height, onStart }: Props) {
         </View>
         <View style={styles.tagRow}>
           <View style={styles.tag}>
-            <Text style={[type.micro, { color: colors.lime, fontFamily: fonts.bodyBold }]}>{tag}</Text>
+            <Text style={[type.micro, styles.tagText, { color: colors.lime, fontFamily: ui.bodyBold }]} numberOfLines={1}>
+              {tag}
+            </Text>
           </View>
-          <LivePill label="IN FEED" />
+          <LivePill label={t("inFeed")} />
         </View>
-        <Text style={[type.gameQuestion, { color: colors.paper, marginTop: spacing.md }]}>{item.title}</Text>
-        <Text style={[type.bodyLg, { color: colors.lilac, marginTop: spacing.sm }]}>{item.blurb}</Text>
+        <Text
+          style={[
+            type.gameQuestion,
+            {
+              color: colors.paper,
+              marginTop: spacing.md,
+              fontFamily: ui.display,
+              fontSize: titleSize,
+              lineHeight: lineHeightFor(item.title, titleSize),
+            },
+          ]}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {item.title}
+        </Text>
+        <Text
+          style={[type.bodyLg, { color: colors.lilac, marginTop: spacing.sm, fontFamily: ui.body }]}
+          numberOfLines={2}
+        >
+          {item.blurb}
+        </Text>
         <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Text style={[type.statsSm, { color: colors.lime }]}>{modeHint(item)}</Text>
-            <Text style={[type.micro, { color: colors.lilac }]}>PLAY</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={[type.statsSm, { color: colors.pink }]}>{modeLabel(item)}</Text>
-            <Text style={[type.micro, { color: colors.lilac }]}>MODE</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={[type.statsSm, { color: colors.paper }]}>Percentile</Text>
-            <Text style={[type.micro, { color: colors.lilac }]}>SCORE</Text>
-          </View>
+          <Stat value={modeHint(item, t)} label={t("statPlay")} color={colors.lime} />
+          <Stat value={modeLabel(item, t)} label={t("statMode")} color={colors.pink} />
+          <Stat value={t("percentile")} label={t("statScore")} color={colors.paper} />
         </View>
         <PrimaryButton
-          label="Join Game"
+          label={t("joinGame")}
           onPress={onStart}
           trailingIcon="arrow-forward"
           variant="success"
@@ -103,6 +143,8 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.sm,
     overflow: "hidden",
+    flexShrink: 1,
+    maxHeight: "100%",
   },
   artBand: {
     height: 88,
@@ -115,23 +157,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  tagRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  tagRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: spacing.sm },
   tag: {
     borderWidth: 1,
     borderColor: colors.lime,
     borderRadius: radius.pill,
     paddingHorizontal: 10,
     paddingVertical: 4,
+    flexShrink: 1,
+    maxWidth: "70%",
   },
+  tagText: { flexShrink: 1 },
   statsRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
   stat: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: colors.cardAlt,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.line,
     paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
     alignItems: "center",
     gap: 2,
+    overflow: "hidden",
   },
+  statValue: { textAlign: "center", width: "100%", lineHeight: 20 },
+  statLabel: { color: colors.lilac, textAlign: "center", width: "100%" },
 });

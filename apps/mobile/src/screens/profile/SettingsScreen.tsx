@@ -23,10 +23,10 @@ import { SectionCard, SettingsRow, ToggleRow } from "../../components/StitchPrim
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { pickAndUploadAvatar, removeAvatar } from "../../lib/avatarUpload";
-import { APP_LANGUAGES, supportedLanguage } from "../../lib/languages";
+import { useLanguage } from "../../context/LanguageContext";
+import { APP_LANGUAGES } from "../../lib/languages";
 import { legalLinks, SUPPORT_EMAIL, supportMailto } from "../../lib/links";
 import { formatFriendCode, friendCodeFor } from "../../lib/friendCode";
-import { getLanguage, setLanguage } from "../../lib/storage";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
@@ -63,6 +63,7 @@ function openLink(url: string) {
 export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: Props) {
   const insets = useSafeAreaInsets();
   const { isSignedIn, user, signOut } = useAuth();
+  const { language, setAppLanguage, t, fonts: ui } = useLanguage();
   const { updateMe } = useApp();
   const [me, setMe] = useState<MeProfile | null>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
@@ -81,23 +82,17 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   const [dataStatus, setDataStatus] = useState("");
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
-  const [language, setLanguageState] = useState("en");
   const [idCopied, setIdCopied] = useState(false);
   const sound = useSoundPrefs();
   const loadedUserId = useRef<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    void getLanguage().then((l) => setLanguageState(supportedLanguage(l)));
-  }, []);
 
   useEffect(() => () => {
     if (copyTimer.current) clearTimeout(copyTimer.current);
   }, []);
 
   function chooseLanguage(id: string) {
-    setLanguageState(id);
-    void setLanguage(id);
+    setAppLanguage(id);
   }
 
   const loadMe = useCallback(async () => {
@@ -122,7 +117,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
         /* prefs optional on vault */
       }
     } catch (e) {
-      setLoadError(isApiError(e) ? e.userMessage : "Could not load profile.");
+      setLoadError(isApiError(e) ? e.userMessage : t("couldNotLoadProfile"));
     } finally {
       setLoading(false);
     }
@@ -306,16 +301,16 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
       "Delete your account?",
       "This permanently deletes your profile, photo, answers, scores, friends and comments, and signs you out. It can't be undone.",
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         { text: "Delete", style: "destructive", onPress: () => void deleteAccount() },
       ],
     );
   }
 
   function confirmSignOut() {
-    Alert.alert("Log out?", "You can sign back in anytime to pick up your streaks and friends.", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Log out", style: "destructive", onPress: () => void signOut() },
+    Alert.alert(t("logOutTitle"), t("logOutBody"), [
+      { text: t("cancel"), style: "cancel" },
+      { text: t("logOut"), style: "destructive", onPress: () => void signOut() },
     ]);
   }
 
@@ -330,21 +325,21 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   const prefRows = useMemo(
     () =>
       [
-        { key: "liveNow" as const, label: "Live Now alerts", icon: "radio-outline" as const },
-        { key: "trending" as const, label: "Trending Pulse", icon: "trending-up-outline" as const },
-        { key: "friendActivity" as const, label: "Friend activity", icon: "people-outline" as const },
+        { key: "liveNow" as const, label: t("liveNowAlerts"), icon: "radio-outline" as const },
+        { key: "trending" as const, label: t("trendingPulse"), icon: "trending-up-outline" as const },
+        { key: "friendActivity" as const, label: t("friendActivity"), icon: "people-outline" as const },
       ] as const,
-    [],
+    [t],
   );
 
   const preferences = (
-    <SectionCard title="Preferences">
+    <SectionCard title={t("preferences")}>
       <View style={styles.blockRow}>
         <View style={styles.blockHeader}>
           <View style={styles.blockIcon}>
             <Ionicons name="language-outline" size={18} color={colors.paper} />
           </View>
-          <Text style={[type.bodyLg, { color: colors.paper }]}>Language</Text>
+          <Text style={[type.bodyLg, { color: colors.paper, fontFamily: ui.body }]}>{t("language")}</Text>
         </View>
         <Segmented
           options={APP_LANGUAGES.map((l) => ({ id: l.id, label: l.name }))}
@@ -353,13 +348,13 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
         />
       </View>
       <ToggleRow
-        label="Music"
+        label={t("music")}
         icon="musical-notes-outline"
         value={sound.music}
         onValueChange={(v) => setSoundPref("music", v)}
       />
       <ToggleRow
-        label="Sound effects"
+        label={t("soundEffects")}
         icon="volume-high-outline"
         value={sound.sfx}
         onValueChange={(v) => setSoundPref("sfx", v)}
@@ -368,14 +363,14 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   );
 
   const support = (
-    <SectionCard title="Support">
-      <SettingsRow label="Report a problem" value={SUPPORT_EMAIL} icon="bug-outline" onPress={reportProblem} />
+    <SectionCard title={t("support")}>
+      <SettingsRow label={t("reportProblem")} value={SUPPORT_EMAIL} icon="bug-outline" onPress={reportProblem} />
       {LEGAL ? (
-        <SettingsRow label="Privacy policy" icon="document-text-outline" onPress={() => openLink(LEGAL.privacy)} />
+        <SettingsRow label={t("privacyPolicy")} icon="document-text-outline" onPress={() => openLink(LEGAL.privacy)} />
       ) : null}
       {LEGAL ? (
         <SettingsRow
-          label="How to delete your data"
+          label={t("howToDelete")}
           icon="help-circle-outline"
           onPress={() => openLink(LEGAL.dataDeletion)}
         />
@@ -389,7 +384,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
       contentContainerStyle={[styles.inner, { paddingTop: insets.top + spacing.md }]}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={[type.screenTitle, styles.title]}>Settings</Text>
+      <Text style={[type.screenTitle, styles.title, { fontFamily: ui.display }]}>{t("settings")}</Text>
 
       {!isSignedIn ? (
         <>
@@ -397,7 +392,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
             <View style={styles.guestIcon}>
               <Ionicons name="person-outline" size={26} color={colors.pink} />
             </View>
-            <Text style={[type.bodyLg, styles.guestTitle]}>You're playing as a guest</Text>
+            <Text style={[type.bodyLg, styles.guestTitle, { fontFamily: ui.body }]}>{t("guestTitle")}</Text>
             <Text style={[type.bodySm, styles.guestBody]}>
               Sign in to save your streaks, add friends and control your privacy.
             </Text>
@@ -535,7 +530,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
                   ) : null}
                   <View style={styles.editorActions}>
                     <PrimaryButton
-                      label="Cancel"
+                      label={t("cancel")}
                       variant="secondary"
                       onPress={() => setEditingProfile(false)}
                       disabled={saving}
@@ -557,7 +552,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
 
           {preferences}
 
-          <SectionCard title="Notifications">
+          <SectionCard title={t("notifications")}>
             {prefRows.map((r) => (
               <ToggleRow
                 key={r.key}
@@ -574,26 +569,33 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
             />
           </SectionCard>
 
-          <SectionCard title="Privacy">
+          <SectionCard title={t("privacy")}>
             <View style={styles.blockRow}>
               <View style={styles.blockHeader}>
                 <View style={styles.blockIcon}>
                   <Ionicons name="eye-outline" size={18} color={colors.paper} />
                 </View>
-                <Text style={[type.bodyLg, { color: colors.paper }]}>Who sees your answers</Text>
+                <Text style={[type.bodyLg, { color: colors.paper, fontFamily: ui.body }]}>{t("whoSeesAnswers")}</Text>
               </View>
-              <Segmented options={VISIBILITY_OPTIONS} value={visibility} onChange={(v) => void chooseVisibility(v)} />
+              <Segmented
+                options={VISIBILITY_OPTIONS.map((o) => ({
+                  id: o.id,
+                  label: t(o.id === "public" ? "public" : o.id === "friends" ? "friendsVis" : "private"),
+                }))}
+                value={visibility}
+                onChange={(v) => void chooseVisibility(v)}
+              />
               <Text style={[type.metadata, { color: visibilityError ? colors.pink : colors.lilac }]}>
-                {visibilityError || VISIBILITY_HINT[visibility]}
+                {visibilityError || t(visibility === "public" ? "visPublic" : visibility === "friends" ? "visFriends" : "visPrivate")}
               </Text>
             </View>
           </SectionCard>
 
-          <SectionCard title="Activity">
-            <SettingsRow label="Weekly recap" icon="calendar-outline" onPress={onOpenRecap} />
+          <SectionCard title={t("activity")}>
+            <SettingsRow label={t("weeklyRecap")} icon="calendar-outline" onPress={onOpenRecap} />
           </SectionCard>
 
-          <SectionCard title="Your data">
+          <SectionCard title={t("yourData")}>
             <SettingsRow
               label="Export my data"
               value="Get a copy of everything we store"
@@ -629,7 +631,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
             style={({ pressed }) => [styles.signOut, pressed && { opacity: 0.8 }]}
           >
             <Ionicons name="log-out-outline" size={18} color={colors.pink} />
-            <Text style={styles.signOutText}>Log out</Text>
+            <Text style={[styles.signOutText, { fontFamily: ui.bodyBold }]}>{t("logOut")}</Text>
           </Pressable>
         </>
       )}

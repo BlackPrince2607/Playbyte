@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { promptTextStyle } from "../../../../lib/promptSize";
 import { seededCount } from "../../../../lib/seededEngagement";
+import { useLanguage } from "../../../../context/LanguageContext";
+import { fill } from "../../../../i18n/strings";
 import { colors, radius, spacing } from "../../../../theme/colors";
 import { fonts, type } from "../../../../theme/typography";
 import { feedback, prefersReducedMotion } from "../../../ui/feedback";
@@ -55,6 +57,7 @@ function SideCard({ option, pct, revealed, picked, majority, disabled, onPress }
 }
 
 export function ChoiceView({ state, dispatch, snapshot }: EngineViewProps<ChoiceState, ChoiceAction>) {
+  const { t, fonts: ui } = useLanguage();
   const q = state.q;
   const pick = state.pick;
   useEffect(() => {
@@ -75,17 +78,17 @@ export function ChoiceView({ state, dispatch, snapshot }: EngineViewProps<Choice
 
   let verdict = "";
   if (pick) {
-    if (pick.side === null) verdict = "Time's up!";
-    else if (predict) verdict = pick.withCrowd ? "You read the crowd!" : "The crowd went the other way.";
-    else if (pick.agreePct === 50) verdict = "Perfect split. The crowd can't decide either!";
-    else verdict = pick.withCrowd ? `You're with the ${pick.agreePct}%!` : `Bold pick! Only ${pick.agreePct}% agree.`;
+    if (pick.side === null) verdict = t("timesUp");
+    else if (predict) verdict = pick.withCrowd ? t("readCrowd") : t("crowdOther");
+    else if (pick.agreePct === 50) verdict = t("perfectSplit");
+    else verdict = pick.withCrowd ? fill(t("withPct"), { pct: pick.agreePct }) : fill(t("boldPick"), { pct: pick.agreePct });
   }
 
   return (
     <View style={styles.root}>
       <Animated.View key={q.id} entering={prefersReducedMotion() ? undefined : FadeInDown.duration(240)} style={{ gap: spacing.md }}>
-        <Text style={[type.metadata, { color: colors.lilac, textAlign: "center", letterSpacing: 1 }]}>
-          {predict ? "WHAT DID MOST PEOPLE PICK?" : "PICK YOUR SIDE"}
+        <Text style={[type.metadata, { color: colors.lilac, textAlign: "center", letterSpacing: 1, fontFamily: ui.bodyMedium }]}>
+          {predict ? t("whatDidMost") : t("pickSide")}
         </Text>
         <Text
           style={[styles.prompt, promptTextStyle(q.prompt, { max: 26 })]}

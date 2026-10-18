@@ -34,31 +34,42 @@ def item_to_json(i: ContentItem) -> dict:
     }
 
 
-def _pack_filter(pack_id: str, pack: ContentPack | None):
-    """WHERE clause for a pack; a pack id with no row means 'approved items of that type'."""
+def _pack_filter(pack_id: str, pack: ContentPack | None, locale: str | None = None):
+    """WHERE clause for a pack; a pack id with no row means 'approved items of that type'.
+
+    A requested locale replaces the pack's own locale so Hindi can be asked for explicitly.
+    """
     clauses = [ContentItem.status == "approved"]
     if pack is None:
         clauses.append(ContentItem.type == pack_id)
-        return clauses
-    clauses.append(ContentItem.type.in_(list(pack.types)))
-    if pack.categories:
-        clauses.append(ContentItem.categories.overlap(list(pack.categories)))
-    if pack.locale:
-        clauses.append(ContentItem.locale == pack.locale)
+    else:
+        clauses.append(ContentItem.type.in_(list(pack.types)))
+        if pack.categories:
+            clauses.append(ContentItem.categories.overlap(list(pack.categories)))
+    chosen = locale or (pack.locale if pack else None)
+    if chosen:
+        clauses.append(ContentItem.locale == chosen)
     return clauses
 
 
-def compute_etag(pack_id: str, count: int, max_updated: datetime | None, version_sum: int, pack_updated: datetime | None) -> str:
-    raw = f"{pack_id}|{count}|{max_updated.isoformat() if max_updated else '-'}|{version_sum}|{pack_updated.isoformat() if pack_updated else '-'}"
+def compute_etag(
+    pack_id: str,
+    count: int,
+    max_updated: datetime | None,
+    version_sum: int,
+    pack_updated: datetime | None,
+    locale: str | None = None,
+) -> str:
+    raw = f"{pack_id}|{locale or '-'}|{count}|{max_updated.isoformat() if max_updated else '-'}|{version_sum}|{pack_updated.isoformat() if pack_updated else '-'}"
     return '"' + hashlib.sha256(raw.encode()).hexdigest()[:32] + '"'
 
 
-async def pack_etag(session: AsyncSession, pack_id: str) -> tuple[str, ContentPack | None] | None:
+async def pack_etag(session: AsyncSession, pack_id: str, locale: str | None = None) -> tuple[str, ContentPack | None] | None:
     """Cheap aggregate ETag so revalidation (If-None-Match) never loads the items."""
     pack = await session.get(ContentPack, pack_id)
     if pack is not None and pack.status != "enabled":
         return None
-    where = _pack_filter(pack_id, pack)
+    where = _pack_filter(pack_id, pack, locale)
     row = (
         await session.execute(
             select(func.count(), func.max(ContentItem.updated_at), func.coalesce(func.sum(ContentItem.version), 0)).where(*where)
@@ -67,13 +78,13 @@ async def pack_etag(session: AsyncSession, pack_id: str) -> tuple[str, ContentPa
     count, max_updated, version_sum = int(row[0] or 0), row[1], int(row[2] or 0)
     if count == 0:
         return None
-    return compute_etag(pack_id, count, max_updated, version_sum, pack.updated_at if pack else None), pack
+    return compute_etag(pack_id, count, max_updated, version_sum, pack.updated_at if pack else None, locale), pack
 
 
-async def load_pack(session: AsyncSession, pack_id: str, pack: ContentPack | None) -> list[dict]:
+async def load_pack(session: AsyncSession, pack_id: str, pack: ContentPack | None, locale: str | None = None) -> list[dict]:
     limit = pack.max_items if pack else 2000
     rows = await session.scalars(
-        select(ContentItem).where(*_pack_filter(pack_id, pack)).order_by(ContentItem.id).limit(limit)
+        select(ContentItem).where(*_pack_filter(pack_id, pack, locale)).order_by(ContentItem.id).limit(limit)
     )
     return [item_to_json(i) for i in rows]
 

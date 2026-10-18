@@ -10,16 +10,18 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { useLanguage } from "../../context/LanguageContext";
 import { colors, surface } from "../../theme/colors";
-import { fonts } from "../../theme/typography";
+import { fonts, type } from "../../theme/typography";
 
 export function BackButton({ onPress, plain = false }: { onPress: () => void; plain?: boolean }) {
+  const { t } = useLanguage();
   return (
     <Pressable
       onPress={onPress}
       hitSlop={10}
       accessibilityRole="button"
-      accessibilityLabel="Go back"
+      accessibilityLabel={t("goBack")}
       style={({ pressed }) => [plain ? styles.backPlain : styles.backCircle, pressed && { transform: [{ scale: 0.95 }] }]}
     >
       <Ionicons name="arrow-back" size={plain ? 24 : 20} color={colors.paper} />
@@ -40,6 +42,7 @@ export function CtaButton({
   icon?: keyof typeof Ionicons.glyphMap | null;
   style?: ViewStyle;
 }) {
+  const { fonts: ui } = useLanguage();
   return (
     <Pressable
       onPress={onPress}
@@ -53,7 +56,7 @@ export function CtaButton({
         style,
       ]}
     >
-      <Text style={styles.ctaLabel}>{label}</Text>
+      <Text style={[styles.ctaLabel, { fontFamily: ui.bodyBold }]}>{label}</Text>
       {icon ? <Ionicons name={icon} size={20} color={colors.paper} /> : null}
     </Pressable>
   );
@@ -181,6 +184,19 @@ export const onboardingStyles = StyleSheet.create({
     color: colors.lilac,
     textTransform: "uppercase",
     textAlign: "center",
+  },
+  /** One title size for every onboarding screen. */
+  title: {
+    fontFamily: fonts.display,
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -0.4,
+    color: colors.paper,
+  },
+  lede: {
+    ...type.bodySm,
+    color: surface.onSurfaceVariant,
+    marginTop: 6,
   },
 });
 

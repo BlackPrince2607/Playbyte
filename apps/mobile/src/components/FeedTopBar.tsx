@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvatarImage } from "./AvatarImage";
 import { MajaLogo } from "./MajaLogo";
 import { useApp } from "../context/AppContext";
+import { shareAppInvite } from "../lib/shareInvite";
 import { colors, spacing } from "../theme/colors";
 import { type } from "../theme/typography";
 
@@ -11,7 +12,6 @@ type Props = {
   streak?: number;
   variant?: "feed" | "compete";
   onStreak?: () => void;
-  onMenu?: () => void;
   onProfile?: () => void;
   avatarDisplayName?: string;
   avatarKey?: string | null;
@@ -21,7 +21,6 @@ export function FeedTopBar({
   streak = 0,
   variant = "feed",
   onStreak,
-  onMenu,
   onProfile,
   avatarDisplayName,
   avatarKey,
@@ -30,18 +29,13 @@ export function FeedTopBar({
   const { me } = useApp();
   const name = avatarDisplayName ?? me?.displayName ?? "You";
   const photo = avatarKey ?? me?.avatarKey ?? null;
+  const avatarSize = variant === "compete" ? 32 : 40;
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + spacing.sm }]}>
       <View style={styles.inner}>
-        {variant === "compete" ? (
-          <Pressable onPress={onMenu} hitSlop={12} accessibilityRole="button">
-            <Ionicons name="menu" size={24} color={colors.pinkSoft} />
-          </Pressable>
-        ) : (
-          <Pressable onPress={onProfile} hitSlop={8} accessibilityRole="button" accessibilityLabel="Open profile">
-            <AvatarImage displayName={name} avatarKey={photo} size={40} />
-          </Pressable>
-        )}
+        <Pressable onPress={onProfile} hitSlop={8} accessibilityRole="button" accessibilityLabel="Open profile">
+          <AvatarImage displayName={name} avatarKey={photo} size={avatarSize} />
+        </Pressable>
         <MajaLogo />
         {variant === "feed" ? (
           <Pressable
@@ -56,8 +50,14 @@ export function FeedTopBar({
             <Text style={{ fontSize: 14 }}>🔥</Text>
           </Pressable>
         ) : (
-          <Pressable onPress={onProfile} hitSlop={8} accessibilityRole="button">
-            <AvatarImage displayName={name} avatarKey={photo} size={32} />
+          <Pressable
+            style={({ pressed }) => [styles.share, pressed && { opacity: 0.7 }]}
+            onPress={() => void shareAppInvite()}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Share Maja"
+          >
+            <Ionicons name="share-outline" size={18} color={colors.pinkSoft} />
           </Pressable>
         )}
       </View>
@@ -94,5 +94,13 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     paddingHorizontal: 10,
     paddingVertical: 4,
+  },
+  share: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.cardAlt,
   },
 });

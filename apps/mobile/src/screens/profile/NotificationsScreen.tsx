@@ -4,6 +4,7 @@ import { api, isApiError, NotificationPreferences } from "../../api";
 import { ErrorState } from "../../components/ErrorState";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
@@ -14,6 +15,7 @@ type PrefKey = keyof NotificationPreferences;
 
 export function NotificationsScreen({ onBack, onSignIn }: Props) {
   const { isSignedIn } = useAuth();
+  const { t, fonts: ui } = useLanguage();
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -68,7 +70,7 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
         <Pressable onPress={onBack} style={styles.back}>
           <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
         </Pressable>
-        <Text style={[type.screenTitle, { color: colors.paper }]}>Notifications</Text>
+        <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("notifications")}</Text>
         <Text style={[type.bodySm, { color: colors.lilac, marginVertical: spacing.md }]}>
           Sign in to manage notification preferences.
         </Text>
@@ -113,7 +115,7 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
       <Pressable onPress={onBack} style={styles.back}>
         <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
       </Pressable>
-      <Text style={[type.screenTitle, { color: colors.paper }]}>Notifications</Text>
+      <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("notifications")}</Text>
       <Text style={[type.hero, { color: colors.paper, fontSize: 28, marginTop: spacing.sm }]}>
         Your game is getting social.
       </Text>

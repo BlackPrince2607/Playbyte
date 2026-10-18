@@ -316,7 +316,7 @@ export function WordSearchPreview() {
 }
 
 const styles = StyleSheet.create({
-  panel: { flex: 1, backgroundColor: colors.ink, borderRadius: 24, padding: 14, gap: 12, overflow: "hidden" },
+  panel: { backgroundColor: colors.ink, borderRadius: 24, padding: 10, gap: 8, overflow: "hidden" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 4 },
   icons: { flexDirection: "row", alignItems: "center", gap: 8 },
   tag: {
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   timer: { flexDirection: "row", alignItems: "center", gap: 4 },
   timerPill: { backgroundColor: "rgba(42,27,78,0.9)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
   question: { fontFamily: fonts.display, color: colors.paper },
-  still: { height: 144, borderRadius: 16, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  still: { height: 72, borderRadius: 16, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   stillEmoji: { fontSize: 44, opacity: 0.85 },
   timerFloat: {
     position: "absolute",
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 10,
+    paddingVertical: 6,
     paddingHorizontal: 16,
     borderRadius: 12,
     backgroundColor: colors.cardAlt,
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   pollMeta: { flexDirection: "row", alignItems: "center", gap: 6, paddingBottom: 4 },
   metaText: { fontFamily: fonts.bodyMedium, fontSize: 10, color: "rgba(143,127,192,0.8)" },
   pollRow: {
-    height: 56,
+    height: 40,
     borderRadius: 12,
     paddingHorizontal: 14,
     flexDirection: "row",
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   gridRow: { flexDirection: "row", gap: 6 },
   capsule: { position: "absolute", left: -3, top: -3, bottom: -3, right: "19%", borderRadius: 999, borderWidth: 2 },
-  cell: { flex: 1, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  cell: { flex: 1, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   cellText: { fontFamily: fonts.mono, fontSize: 15 },
   cellPing: { position: "absolute", top: -4, right: -4 },
   swipeHint: { position: "absolute", right: 20, bottom: 10, flexDirection: "row", alignItems: "center", gap: 6 },

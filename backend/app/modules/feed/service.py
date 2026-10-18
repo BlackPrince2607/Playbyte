@@ -96,6 +96,10 @@ async def answered_moment_ids(
     return set(rows)
 
 
+def _wants_hindi(lang: str | None) -> bool:
+    return bool(lang) and lang.lower().startswith("hi")
+
+
 async def build_feed(
     session: AsyncSession,
     *,
@@ -104,6 +108,7 @@ async def build_feed(
     limit: int = 10,
     cursor: str | None = None,
     rng: random.Random | None = None,
+    lang: str | None = None,
 ) -> dict:
     """One page of the endless feed: live moments the viewer has not answered yet, in a shuffled order
     that the returned cursor continues (and reshuffles once every moment has been shown), with games
@@ -169,7 +174,7 @@ async def build_feed(
     for item in ordered:
         if item.kind == "moment":
             m = by_id[UUID(item.id)]
-            payload = serialize_moment(m, snapshots.get(m.id), None, tags=tag_map.get(m.id, []))
+            payload = serialize_moment(m, snapshots.get(m.id), None, tags=tag_map.get(m.id, []), lang=lang)
             payload["engagement"] = engagement.get(m.id) or dict(EMPTY_ENGAGEMENT)
             items.append(payload)
         else:
@@ -199,6 +204,7 @@ def serialize_moment(
     *,
     tags: list[dict] | None = None,
     reveal_correct: bool = False,
+    lang: str | None = None,
 ) -> dict:
     options = sorted(m.options, key=lambda o: o.sort_order)
     correct_id = None
@@ -207,11 +213,14 @@ def serialize_moment(
             if o.is_correct:
                 correct_id = str(o.id)
                 break
+    hindi = _wants_hindi(lang)
+    prompt_hi = getattr(m, "prompt_hi", None)
+    prompt = prompt_hi if hindi and prompt_hi else m.prompt
     return {
         "type": "moment",
         "id": str(m.id),
         "cardType": m.type,
-        "prompt": m.prompt,
+        "prompt": prompt,
         "promptImageUrl": media_url(m.prompt_image_key),
         "scoringMode": m.scoring_mode,
         "tags": tags or [],
@@ -222,7 +231,7 @@ def serialize_moment(
         "options": [
             {
                 "id": str(o.id),
-                "label": o.label,
+                "label": (getattr(o, "label_hi", None) or o.label) if hindi else o.label,
                 "imageUrl": media_url(o.image_key),
                 "sortOrder": o.sort_order,
             }

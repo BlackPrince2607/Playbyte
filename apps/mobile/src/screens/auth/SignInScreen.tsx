@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
 
@@ -14,6 +15,7 @@ type Props = {
 
 export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
   const { signIn, signUp, signInWithGoogle, googleAvailable } = useAuth();
+  const { t } = useLanguage();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +42,7 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
       } else {
         const result = await signUp(email, password);
         if (result === "confirm_email") {
-          setInfo("Check your email to confirm your account, then sign in.");
+          setInfo(t("checkEmail"));
           setMode("signin");
           setPassword("");
           return;
@@ -49,7 +51,7 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
         onClose();
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not authenticate");
+      setError(e instanceof Error ? e.message : t("couldNotAuth"));
     } finally {
       setBusy(false);
     }
@@ -65,7 +67,7 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
       onSuccess?.();
       onClose();
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Google Sign-In failed";
+      const message = e instanceof Error ? e.message : t("googleFailed");
       if (!message.toLowerCase().includes("cancelled")) {
         setError(message);
       }
@@ -77,21 +79,21 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
   if (!isSupabaseConfigured()) {
     return (
       <View style={styles.wrap}>
-        <Pressable onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel="Close">
+        <Pressable onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel={t("close")}>
           <Text style={[type.bodyLg, { color: colors.lilac }]}>✕</Text>
         </Pressable>
         <Text style={[type.screenTitle, { color: colors.paper }]}>Sign-in unavailable</Text>
         <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.sm }]}>
           This build is missing Supabase configuration. You can keep playing as a guest.
         </Text>
-        <PrimaryButton label="Continue as guest" onPress={onClose} style={{ marginTop: spacing.lg }} />
+        <PrimaryButton label={t("continueGuest")} onPress={onClose} style={{ marginTop: spacing.lg }} />
       </View>
     );
   }
 
   return (
     <View style={styles.wrap}>
-      <Pressable onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel="Close">
+      <Pressable onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel={t("close")}>
         <Text style={[type.bodyLg, { color: colors.lilac }]}>✕</Text>
       </Pressable>
 
@@ -102,7 +104,7 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
 
       {googleAvailable ? (
         <PrimaryButton
-          label={busy ? "…" : "Continue with Google"}
+          label={busy ? "…" : t("continueGoogle")}
           variant="secondary"
           onPress={() => void onGoogle()}
           disabled={busy}
@@ -117,7 +119,7 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder={t("emailPlaceholder")}
         placeholderTextColor={colors.lilac}
         autoCapitalize="none"
         autoCorrect={false}
@@ -129,7 +131,7 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
       />
       <TextInput
         style={styles.input}
-        placeholder="Password (min 8 characters)"
+        placeholder={t("passwordPlaceholder")}
         placeholderTextColor={colors.lilac}
         secureTextEntry
         textContentType={mode === "signup" ? "newPassword" : "password"}
@@ -146,7 +148,7 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
       {info ? <Text style={[type.bodySm, { color: colors.lime, marginTop: spacing.sm }]}>{info}</Text> : null}
 
       <PrimaryButton
-        label={busy ? "…" : mode === "signin" ? "Sign in" : "Create account"}
+        label={busy ? "…" : mode === "signin" ? t("signIn") : t("createAccount")}
         onPress={() => void submit()}
         disabled={busy}
         style={{ marginTop: spacing.md }}
@@ -156,7 +158,7 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
 
       <Pressable onPress={switchMode} style={styles.switch} disabled={busy}>
         <Text style={[type.bodySm, { color: colors.lilac }]}>
-          {mode === "signin" ? "New here? Create an account" : "Already have an account? Sign in"}
+          {mode === "signin" ? t("newHere") : t("alreadyHave")}
         </Text>
       </Pressable>
     </View>

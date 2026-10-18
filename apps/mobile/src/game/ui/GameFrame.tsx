@@ -2,6 +2,8 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLanguage } from "../../context/LanguageContext";
+import { fill } from "../../i18n/strings";
 import { colors, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 import type { SessionSnapshot } from "../session/runner";
@@ -19,6 +21,7 @@ type Props = {
 /** Shared HUD: identity, progress, score, streak, lives and timer around any engine's playfield. */
 export function GameFrame({ title, subtitle, snapshot, now, onPause, children }: Props) {
   const insets = useSafeAreaInsets();
+  const { t, fonts: ui } = useLanguage();
   const scorePop = usePop(snapshot.score);
   const { round, totalRounds, lives } = snapshot;
   const pct = totalRounds ? Math.min(1, Math.max(0, (round - (snapshot.status === "playing" ? 1 : 0)) / totalRounds)) : 0;
@@ -29,7 +32,7 @@ export function GameFrame({ title, subtitle, snapshot, now, onPause, children }:
         <Pressable
           onPress={onPause}
           accessibilityRole="button"
-          accessibilityLabel="Pause game"
+          accessibilityLabel={t("pauseGame")}
           hitSlop={12}
           style={styles.pauseBtn}
         >
@@ -39,7 +42,7 @@ export function GameFrame({ title, subtitle, snapshot, now, onPause, children }:
           <Text style={[type.micro, styles.eyebrow]} numberOfLines={1}>
             {subtitle ?? "MAJA"}
           </Text>
-          <Text style={[type.button, { color: colors.paper }]} numberOfLines={1}>
+          <Text style={[type.button, { color: colors.paper, fontFamily: ui.bodyBold }]} numberOfLines={1}>
             {title}
           </Text>
         </View>
@@ -57,7 +60,9 @@ export function GameFrame({ title, subtitle, snapshot, now, onPause, children }:
             <View style={[styles.progressFill, { width: `${pct * 100}%` }]} />
           </View>
         ) : (
-          <Text style={[type.micro, { color: colors.lilac, flex: 1 }]}>ROUND {round}</Text>
+          <Text style={[type.micro, { color: colors.lilac, flex: 1, fontFamily: ui.bodyMedium }]}>
+            {fill(t("roundOnly"), { round })}
+          </Text>
         )}
         {totalRounds ? (
           <Text style={[type.micro, { color: colors.lilac, marginLeft: spacing.sm }]}>

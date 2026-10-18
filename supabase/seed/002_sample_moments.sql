@@ -43,3 +43,19 @@ CROSS JOIN (VALUES ('Yes', 0), ('No', 1)) AS x(label, sort_order);
 INSERT INTO crowd_snapshots (moment_id, version, total_responses, option_counts, joined_last_minute, volume_state)
 SELECT id, 1, 0, '{}'::jsonb, 0, 'nascent' FROM moments
 ON CONFLICT (moment_id) DO NOTHING;
+
+UPDATE moments SET prompt_hi = 'आज रात कौन जीतेगा?' WHERE prompt = 'Who wins tonight?' AND prompt_hi IS NULL;
+UPDATE moments SET prompt_hi = 'देर रात का सबसे अच्छा खाना?' WHERE prompt = 'Best late-night food?' AND prompt_hi IS NULL;
+UPDATE moments SET prompt_hi = 'क्या यह ओवर खत्म हो गया?' WHERE prompt = 'Is this over already?' AND prompt_hi IS NULL;
+
+UPDATE moment_options SET label_hi = v.hi
+FROM (VALUES
+  ('India', 'भारत'),
+  ('Australia', 'ऑस्ट्रेलिया'),
+  ('Maggi', 'मैगी'),
+  ('Pizza', 'पिज़्ज़ा'),
+  ('Paratha', 'पराठा'),
+  ('Yes', 'हाँ'),
+  ('No', 'नहीं')
+) AS v(en, hi)
+WHERE moment_options.label = v.en AND moment_options.label_hi IS NULL;

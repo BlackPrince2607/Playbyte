@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { localDateString, nextDailyStreak } from "./dailyStreak";
 
 const KEYS = {
   guestToken: "maja_guest_token",
@@ -7,6 +8,7 @@ const KEYS = {
   onboardingStep: "maja_onboarding_step",
   language: "maja_language",
   streak: "maja_streak",
+  streakDate: "maja_streak_date",
   localProfile: "maja_local_profile",
   sound: "maja_sound",
   swipeHint: "maja_swipe_hint",
@@ -142,8 +144,15 @@ export async function getStreak() {
   return v ? Number(v) : 0;
 }
 
-export async function bumpStreak() {
-  const next = (await getStreak()) + 1;
-  await AsyncStorage.setItem(KEYS.streak, String(next));
+export async function recordDailyVisit(now = new Date()): Promise<number> {
+  const today = localDateString(now);
+  const storedDate = await AsyncStorage.getItem(KEYS.streakDate);
+  const current = await getStreak();
+  const next = nextDailyStreak(current, storedDate, today);
+  if (storedDate === today && next === current) return current;
+  await AsyncStorage.multiSet([
+    [KEYS.streak, String(next)],
+    [KEYS.streakDate, today],
+  ]);
   return next;
 }

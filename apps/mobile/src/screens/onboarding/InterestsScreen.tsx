@@ -1,14 +1,24 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api, isApiError } from "../../api";
+import { useLanguage } from "../../context/LanguageContext";
+import { categoryName } from "../../i18n/categories";
+import { fill } from "../../i18n/strings";
+import { lineHeightFor } from "../../lib/promptSize";
 import { colors, spacing, surface } from "../../theme/colors";
-import { fonts, type } from "../../theme/typography";
+import { type } from "../../theme/typography";
 import { BackButton, CtaButton, onboardingStyles } from "./ui";
 
-export type Category = { id: string; name: string };
+export type Category = { id: string; name: string; slug?: string };
+
+function rowsOf<T>(items: T[], size: number): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += size) rows.push(items.slice(i, i + size));
+  return rows;
+}
 
 type Props = { onDone: (picked: Category[]) => void; onBack?: () => void };
 
@@ -60,6 +70,7 @@ function iconFor(c: Category): string {
 
 export function InterestsScreen({ onDone, onBack }: Props) {
   const insets = useSafeAreaInsets();
+  const { t, fonts: ui, language } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
   const [picked, setPicked] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,12 +90,12 @@ export function InterestsScreen({ onDone, onBack }: Props) {
       } else {
         setCategories(FALLBACK);
         setUsingFallback(true);
-        setLoadError("Couldn't load interests from the server — showing defaults.");
+        setLoadError(t("interestsFallback"));
       }
     } catch (e) {
       setCategories(FALLBACK);
       setUsingFallback(true);
-      setLoadError(isApiError(e) ? e.userMessage : "Couldn't load interests — showing defaults.");
+      setLoadError(isApiError(e) ? e.userMessage : t("interestsLoadFailed"));
     } finally {
       setLoading(false);
     }
@@ -104,7 +115,7 @@ export function InterestsScreen({ onDone, onBack }: Props) {
           body: JSON.stringify({ categoryIds: picked }),
         });
       } catch (e) {
-        setSaveError(isApiError(e) ? e.userMessage : "Could not save interests.");
+        setSaveError(isApiError(e) ? e.userMessage : t("couldNotSaveInterests"));
         return;
       } finally {
         setSaving(false);
@@ -119,58 +130,71 @@ export function InterestsScreen({ onDone, onBack }: Props) {
         <View style={onboardingStyles.header}>{onBack ? <BackButton onPress={onBack} plain /> : null}</View>
       </View>
 
-      <ScrollView contentContainerStyle={[styles.pad, { paddingBottom: 170 + insets.bottom }]} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>
-          What do you <Text style={{ color: colors.pink }}>love?</Text>
+      <View style={[styles.pad, { flex: 1, minHeight: 0, paddingBottom: 108 + insets.bottom }]}>
+        <Text
+          style={[
+            onboardingStyles.title,
+            {
+              fontFamily: ui.display,
+              lineHeight: lineHeightFor(`${t("interestsTitleBefore")}${t("interestsTitleAccent")}`, 32),
+              marginTop: spacing.xs,
+            },
+          ]}
+        >
+          {t("interestsTitleBefore")}
+          <Text style={{ color: colors.pink }}>{t("interestsTitleAccent")}</Text>
         </Text>
-        <Text style={[type.bodySm, { color: colors.lilac, marginTop: 6 }]}>Pick a few — we'll personalize your game feed.</Text>
+        <Text style={[onboardingStyles.lede, { fontFamily: ui.body, color: colors.lilac }]}>{t("interestsLede")}</Text>
 
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator color={surface.lime} size="large" />
-            <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md }]}>Loading interests…</Text>
+            <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md, fontFamily: ui.body }]}>
+              {t("loadingInterests")}
+            </Text>
           </View>
         ) : (
           <>
             {loadError ? (
-              <Pressable onPress={() => void loadCategories()} accessibilityRole="button" style={{ marginTop: spacing.sm }}>
-                <Text style={[type.metadata, { color: colors.pinkSoft }]}>
-                  {loadError} <Text style={{ fontFamily: fonts.bodyBold, textDecorationLine: "underline" }}>Retry</Text>
+              <Pressable onPress={() => void loadCategories()} accessibilityRole="button" style={{ marginTop: spacing.xs }}>
+                <Text style={[type.metadata, { color: colors.pinkSoft, fontFamily: ui.body }]}>
+                  {loadError}{" "}
+                  <Text style={{ fontFamily: ui.bodyBold, textDecorationLine: "underline" }}>{t("retry")}</Text>
                 </Text>
               </Pressable>
             ) : null}
             <View style={styles.grid}>
-              {categories.map((c) => {
-                const on = picked.includes(c.id);
-                return (
-                  <Pressable
-                    key={c.id}
-                    onPress={() => setPicked((p) => (on ? p.filter((x) => x !== c.id) : [...p, c.id]))}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: on }}
-                    style={({ pressed }) => [styles.tile, on && styles.tileOn, pressed && { transform: [{ scale: 0.95 }] }]}
-                  >
-                    {on ? (
-                      <View style={styles.check}>
-                        <Ionicons name="checkmark" size={14} color={colors.ink} />
-                      </View>
-                    ) : null}
-                    <View style={styles.iconBox}>
-                      <Text style={styles.emoji}>{iconFor(c)}</Text>
-                    </View>
-                    <Text
-                      style={[styles.tileLabel, on && { color: surface.lime, fontFamily: fonts.bodyBold }]}
-                      numberOfLines={2}
-                    >
-                      {c.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              {rowsOf(categories, 2).map((row, rowIndex) => (
+                <View key={rowIndex} style={styles.row}>
+                  {row.map((c) => {
+                    const on = picked.includes(c.id);
+                    const name = categoryName(c.slug ?? c.id, c.name, language);
+                    return (
+                      <Pressable
+                        key={c.id}
+                        onPress={() => setPicked((p) => (on ? p.filter((x) => x !== c.id) : [...p, c.id]))}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: on }}
+                        style={({ pressed }) => [styles.tile, on && styles.tileOn, pressed && { transform: [{ scale: 0.98 }] }]}
+                      >
+                        <Text style={styles.emoji}>{iconFor(c)}</Text>
+                        <Text
+                          style={[styles.tileLabel, { fontFamily: on ? ui.bodyBold : ui.bodyMedium }, on && { color: surface.lime }]}
+                          numberOfLines={2}
+                        >
+                          {name}
+                        </Text>
+                        {on ? <Ionicons name="checkmark-circle" size={16} color={surface.lime} /> : null}
+                      </Pressable>
+                    );
+                  })}
+                  {row.length === 1 ? <View style={styles.tileSpacer} /> : null}
+                </View>
+              ))}
             </View>
           </>
         )}
-      </ScrollView>
+      </View>
 
       <LinearGradient
         colors={["transparent", "rgba(29,16,19,0.95)", surface.base]}
@@ -183,13 +207,13 @@ export function InterestsScreen({ onDone, onBack }: Props) {
           </Text>
         ) : null}
         <CtaButton
-          label={saving ? "Saving…" : "Continue"}
+          label={saving ? t("saving") : t("continue")}
           icon={saving ? null : "arrow-forward"}
           disabled={loading || saving}
           onPress={() => void finish()}
           style={{ alignSelf: "stretch" }}
         />
-        <Text style={onboardingStyles.stepLabel}>Step 5 of 5</Text>
+        <Text style={[onboardingStyles.stepLabel, { fontFamily: ui.bodyBold }]}>{fill(t("stepOf"), { step: 5, total: 5 })}</Text>
       </LinearGradient>
     </View>
   );
@@ -197,49 +221,30 @@ export function InterestsScreen({ onDone, onBack }: Props) {
 
 const styles = StyleSheet.create({
   pad: { paddingHorizontal: spacing.margin },
-  title: { fontFamily: fonts.display, fontSize: 40, lineHeight: 44, letterSpacing: -0.6, color: colors.paper, marginTop: spacing.md },
-  center: { paddingVertical: 80, alignItems: "center" },
-  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 12, marginTop: spacing.lg },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  grid: { flex: 1, marginTop: spacing.sm, gap: 8 },
+  row: { flex: 1, flexDirection: "row", gap: 8 },
   tile: {
-    width: "48.2%",
-    aspectRatio: 1 / 0.95,
+    flex: 1,
     borderRadius: 12,
     backgroundColor: colors.card,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.md,
-    boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
+    gap: 8,
+    paddingHorizontal: 10,
+    minHeight: 0,
   },
-  tileOn: { backgroundColor: colors.cardAlt, boxShadow: "0 10px 20px rgba(189,245,50,0.1)" },
-  check: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: surface.lime,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconBox: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: surface.container,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  emoji: { fontSize: 32 },
-  tileLabel: { ...type.bodySm, fontFamily: fonts.bodyMedium, color: colors.paper, textAlign: "center", letterSpacing: 0.3 },
+  tileSpacer: { flex: 1 },
+  tileOn: { backgroundColor: colors.cardAlt },
+  emoji: { fontSize: 18 },
+  tileLabel: { ...type.bodySm, flex: 1, color: colors.paper },
   dock: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
     paddingHorizontal: spacing.margin,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.md,
     alignItems: "center",
     gap: spacing.sm,
   },

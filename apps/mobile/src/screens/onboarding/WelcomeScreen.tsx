@@ -4,6 +4,9 @@ import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type TextStyle, type ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLanguage } from "../../context/LanguageContext";
+import { fill } from "../../i18n/strings";
+import { lineHeightFor } from "../../lib/promptSize";
 import { colors, spacing } from "../../theme/colors";
 import { fonts } from "../../theme/typography";
 import { BackButton, BrandDiamond, Glow, GoogleLogo, PulseDot, onboardingStyles, useFloat } from "./ui";
@@ -44,6 +47,7 @@ function Tile({
   border?: string;
 }) {
   const bob = useFloat(float, 7);
+  const { fonts: ui } = useLanguage();
   return (
     <Animated.View style={[styles.tileWrap, style, bob]}>
       <View
@@ -60,7 +64,9 @@ function Tile({
           style={[styles.tile, { borderColor: border }]}
         >
           <Text style={{ fontSize: emojiSize }}>{emoji}</Text>
-          <Text style={[styles.tileLabel, { color: labelColor }]}>{label}</Text>
+          <Text style={[styles.tileLabel, { color: labelColor, fontFamily: ui.bodyMedium }]} numberOfLines={1}>
+            {label}
+          </Text>
         </LinearGradient>
       </View>
     </Animated.View>
@@ -86,25 +92,28 @@ export function WelcomeScreen({
   onContinueSignedIn,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const { t, fonts: ui } = useLanguage();
 
   let auth: { label: string; onPress?: () => void; icon: ReactNode };
   if (signedInAs && onContinueSignedIn) {
     auth = {
-      label: `Continue as ${signedInAs}`,
+      label: fill(t("continueAs"), { name: signedInAs }),
       onPress: onContinueSignedIn,
       icon: <Ionicons name="person-circle-outline" size={20} color={colors.paper} />,
     };
   } else if (googleAvailable && onGoogleSignIn) {
-    auth = { label: "Continue with Google", onPress: onGoogleSignIn, icon: <GoogleLogo /> };
+    auth = { label: t("continueGoogle"), onPress: onGoogleSignIn, icon: <GoogleLogo /> };
   } else if (onEmailSignIn) {
     auth = {
-      label: "Continue with email",
+      label: t("continueEmail"),
       onPress: onEmailSignIn,
       icon: <Ionicons name="mail-outline" size={20} color={colors.paper} />,
     };
   } else {
-    auth = { label: "Sign-in unavailable in this build", icon: <GoogleLogo /> };
+    auth = { label: t("signInUnavailable"), icon: <GoogleLogo /> };
   }
+
+  const title = `${t("welcomeTitleBefore")}${t("welcomeTitleAccent")}`;
 
   return (
     <View style={[onboardingStyles.root, { backgroundColor: "#140a0e" }]}>
@@ -119,11 +128,11 @@ export function WelcomeScreen({
 
         <View style={styles.cluster}>
           <View style={styles.orb} />
-          <Tile emoji="⚽" label="Sports" labelColor="rgba(255,255,255,0.5)" size={72} emojiSize={24} rotate="-12deg" float={3200} style={{ top: 8, left: 16 }} border="rgba(255,255,255,0.15)" />
-          <Tile emoji="🍿" label="Cinema" labelColor={colors.pink} size={80} emojiSize={30} rotate="12deg" float={3800} style={{ top: 72, right: 12 }} glow="rgba(255,77,141,0.45)" border="rgba(255,77,141,0.2)" />
-          <Tile emoji="💡" label="Quiz" labelColor="#fde047" size={88} emojiSize={36} rotate="-6deg" float={3400} style={{ top: 92, left: 40, zIndex: 2 }} glow="rgba(250,204,21,0.25)" border="rgba(250,204,21,0.3)" />
-          <Tile emoji="🎵" label="Music" labelColor="#e9d5ff" size={80} emojiSize={30} rotate="6deg" float={4000} style={{ bottom: 12, right: 32, zIndex: 2 }} glow="rgba(124,58,237,0.35)" border="rgba(192,132,252,0.3)" />
-          <Tile emoji="😄" label="Emoji" labelColor="rgba(255,255,255,0.6)" size={72} emojiSize={30} rotate="-6deg" float={3600} style={{ bottom: 8, left: 28 }} />
+          <Tile emoji="⚽" label={t("sports")} labelColor="rgba(255,255,255,0.5)" size={64} emojiSize={22} rotate="-12deg" float={3200} style={{ top: 8, left: 16 }} border="rgba(255,255,255,0.15)" />
+          <Tile emoji="🍿" label={t("cinema")} labelColor={colors.pink} size={72} emojiSize={26} rotate="12deg" float={3800} style={{ top: 56, right: 12 }} glow="rgba(255,77,141,0.45)" border="rgba(255,77,141,0.2)" />
+          <Tile emoji="💡" label={t("quiz")} labelColor="#fde047" size={76} emojiSize={30} rotate="-6deg" float={3400} style={{ top: 72, left: 40, zIndex: 2 }} glow="rgba(250,204,21,0.25)" border="rgba(250,204,21,0.3)" />
+          <Tile emoji="🎵" label={t("musicTile")} labelColor="#e9d5ff" size={72} emojiSize={26} rotate="6deg" float={4000} style={{ bottom: 8, right: 32, zIndex: 2 }} glow="rgba(124,58,237,0.35)" border="rgba(192,132,252,0.3)" />
+          <Tile emoji="😄" label={t("emoji")} labelColor="rgba(255,255,255,0.6)" size={64} emojiSize={26} rotate="-6deg" float={3600} style={{ bottom: 4, left: 28 }} />
           <View style={styles.center}>
             <BrandDiamond />
           </View>
@@ -133,12 +142,18 @@ export function WelcomeScreen({
           <Sparkle style={{ top: 56, left: 4, color: "rgba(255,255,255,0.4)", fontSize: 12 }}>✦</Sparkle>
         </View>
 
-        <Text style={styles.title}>
-          Every swipe is{"\n"}a <Text style={[onboardingStyles.accent, { textShadowRadius: 16, textShadowColor: "rgba(255,77,141,0.6)" }]}>game.</Text>
+        <Text
+          style={[
+            onboardingStyles.title,
+            { fontFamily: ui.display, lineHeight: lineHeightFor(title, 32) },
+          ]}
+        >
+          {t("welcomeTitleBefore")}
+          <Text style={[onboardingStyles.accent, { textShadowRadius: 16, textShadowColor: "rgba(255,77,141,0.6)" }]}>
+            {t("welcomeTitleAccent")}
+          </Text>
         </Text>
-        <Text style={styles.lede}>
-          Quizzes, puzzles, polls, and instant trivia. Bite-sized multiplayer fun refreshed daily.
-        </Text>
+        <Text style={[onboardingStyles.lede, { fontFamily: ui.body, marginBottom: spacing.md }]}>{t("welcomeLede")}</Text>
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
@@ -153,12 +168,12 @@ export function WelcomeScreen({
           ]}
         >
           {busy ? <ActivityIndicator color={colors.paper} /> : auth.icon}
-          <Text style={styles.authLabel} numberOfLines={1}>
+          <Text style={[styles.authLabel, { fontFamily: ui.bodyBold }]} numberOfLines={1}>
             {auth.label}
           </Text>
         </Pressable>
         <Pressable onPress={onGuest} disabled={busy} hitSlop={8} accessibilityRole="button" style={{ marginTop: 14 }}>
-          <Text style={styles.guest}>Continue as guest</Text>
+          <Text style={[styles.guest, { fontFamily: ui.bodyMedium }]}>{t("continueGuest")}</Text>
         </Pressable>
       </View>
     </View>
@@ -167,7 +182,7 @@ export function WelcomeScreen({
 
 const styles = StyleSheet.create({
   body: { flex: 1, paddingHorizontal: 28 },
-  cluster: { height: 310, marginVertical: "auto", justifyContent: "center", alignItems: "center" },
+  cluster: { height: 240, marginVertical: "auto", justifyContent: "center", alignItems: "center" },
   orb: {
     position: "absolute",
     width: 220,
@@ -188,16 +203,6 @@ const styles = StyleSheet.create({
   },
   tileLabel: { fontFamily: fonts.bodyMedium, fontSize: 9, marginTop: 4 },
   sparkle: { position: "absolute" },
-  title: { fontFamily: fonts.display, fontSize: 34, lineHeight: 38, letterSpacing: -0.5, color: "#fff" },
-  lede: {
-    fontFamily: fonts.body,
-    fontSize: 13.5,
-    lineHeight: 22,
-    color: "rgba(252,231,243,0.7)",
-    marginTop: 10,
-    maxWidth: 290,
-    marginBottom: spacing.lg,
-  },
   footer: { paddingHorizontal: 28, paddingTop: spacing.sm },
   authBtn: {
     flexDirection: "row",
@@ -212,6 +217,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.1)",
     boxShadow: "0 10px 20px rgba(0,0,0,0.35)",
   },
-  authLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#fff", letterSpacing: 0.2, flexShrink: 1 },
+  authLabel: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 22, color: "#fff", letterSpacing: 0.2, flexShrink: 1 },
   guest: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "rgba(251,207,232,0.6)", textAlign: "center" },
 });

@@ -23,6 +23,8 @@ import { isSupabaseConfigured } from "../../lib/supabase";
 import { formatFriendCode, friendCodeFor, parseFriendCode } from "../../lib/friendCode";
 import { withSeededCrowd } from "../../lib/seededEngagement";
 import { shareAppInvite } from "../../lib/shareInvite";
+import { useLanguage } from "../../context/LanguageContext";
+import { fill } from "../../i18n/strings";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
@@ -34,6 +36,7 @@ type Props = {
 type Notice = { kind: "success" | "error"; text: string } | null;
 
 export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
+  const { t, fonts: ui } = useLanguage();
   const insets = useSafeAreaInsets();
   const { isSignedIn, user } = useAuth();
   const {
@@ -198,7 +201,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
       });
       await reloadAll();
     } catch (e) {
-      setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : "Could not add this friend." });
+      setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : t("couldNotAddFriend") });
     } finally {
       setSending(false);
     }
@@ -211,19 +214,19 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
   if (!isSignedIn) {
     return (
       <ScrollView style={styles.wrap} contentContainerStyle={[styles.inner, topPad]}>
-        <Header subtitle="Play with people you know" onInvite={() => void inviteFriends()} />
+        <Header subtitle={t("playWithPeople")} onInvite={() => void inviteFriends()} />
         <View style={[styles.card, styles.hero]}>
           <View style={styles.heroIcon}>
             <Ionicons name="people" size={30} color={colors.pink} />
           </View>
-          <Text style={[type.bodyLg, styles.heroTitle]}>Sign in to add friends</Text>
-          <Text style={[type.bodySm, styles.heroBody]}>
-            You'll get a friend code to share, and see which moments your friends are playing.
+          <Text style={[type.bodyLg, styles.heroTitle, { fontFamily: ui.bodyBold }]}>{t("signInToAdd")}</Text>
+          <Text style={[type.bodySm, styles.heroBody, { fontFamily: ui.body }]}>
+            {t("signInFriendsBody")}
           </Text>
           <View style={styles.heroActions}>
-            {isSupabaseConfigured() ? <PrimaryButton label="Sign in" onPress={onSignIn} /> : null}
+            {isSupabaseConfigured() ? <PrimaryButton label={t("signIn")} onPress={onSignIn} /> : null}
             {onOpenLeaderboard ? (
-              <PrimaryButton label="View leaderboard" variant="secondary" icon="trophy-outline" onPress={onOpenLeaderboard} />
+              <PrimaryButton label={t("viewLeaderboard")} variant="secondary" icon="trophy-outline" onPress={onOpenLeaderboard} />
             ) : null}
           </View>
         </View>
@@ -237,7 +240,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={colors.lime} size="large" />
-        <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md }]}>Loading friends…</Text>
+        <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md, fontFamily: ui.body }]}>{t("loadingFriends")}</Text>
       </View>
     );
   }
@@ -261,7 +264,9 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
     >
       <Header
         subtitle={
-          friends.length ? `${friends.length} friend${friends.length === 1 ? "" : "s"}` : "Add friends with their code"
+          friends.length
+            ? fill(t(friends.length === 1 ? "friendCount" : "friendsCount"), { count: friends.length })
+            : t("addWithCode")
         }
         onInvite={() => void inviteFriends()}
         onLeaderboard={onOpenLeaderboard}
@@ -311,7 +316,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
                 </Pressable>
               ) : (
                 <Pressable onPress={() => void pasteCode()} style={styles.pasteChip} accessibilityLabel="Paste friend code">
-                  <Text style={styles.pasteText}>Paste</Text>
+                  <Text style={[styles.pasteText, { fontFamily: ui.bodyBold }]}>{t("paste")}</Text>
                 </Pressable>
               )}
             </View>
@@ -329,12 +334,12 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
               {sending ? (
                 <ActivityIndicator size="small" color={colors.ink} />
               ) : (
-                <Text style={[styles.addText, { color: parsedCode ? colors.ink : colors.lilac }]}>Add</Text>
+                <Text style={[styles.addText, { color: parsedCode ? colors.ink : colors.lilac, fontFamily: ui.bodyBold }]}>{t("add")}</Text>
               )}
             </Pressable>
           </View>
           {inputInvalid ? (
-            <Text style={[type.metadata, { color: colors.pink }]}>Codes have 8 letters and numbers, like 7WN9-R6RD.</Text>
+            <Text style={[type.metadata, { color: colors.pink, fontFamily: ui.body }]}>{t("codeHint")}</Text>
           ) : null}
         </View>
       </View>
@@ -404,7 +409,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
                   <View style={styles.liveFooter}>
                     <Text style={[type.metadata, { color: colors.lilac }]}>{formatCount(total)} playing</Text>
                     <View style={styles.joinChip}>
-                      <Text style={styles.joinText}>Join</Text>
+                      <Text style={[styles.joinText, { fontFamily: ui.bodyBold }]}>{t("join")}</Text>
                     </View>
                   </View>
                 </Pressable>
@@ -448,7 +453,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
             <View style={styles.emptyIcon}>
               <Ionicons name="people-outline" size={26} color={colors.lilac} />
             </View>
-            <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]}>No friends yet</Text>
+            <Text style={[type.bodyLg, { color: colors.paper, fontFamily: ui.bodyBold }]}>{t("noFriends")}</Text>
             <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>
               Send your invite link. Friends who open it are added straight away.
             </Text>
@@ -484,7 +489,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
                   {busy === `cancel:${r.id}` ? (
                     <ActivityIndicator size="small" color={colors.lilac} />
                   ) : (
-                    <Text style={styles.textButtonLabel}>Cancel</Text>
+                    <Text style={[styles.textButtonLabel, { fontFamily: ui.bodyBold }]}>{t("cancel")}</Text>
                   )}
                 </Pressable>
               </PersonRow>
@@ -505,27 +510,29 @@ function Header({
   onInvite: () => void;
   onLeaderboard?: () => void;
 }) {
+  const { t, fonts: ui } = useLanguage();
   return (
     <View style={styles.header}>
       <View style={{ flex: 1 }}>
-        <Text style={[type.screenTitle, { color: colors.paper }]}>Friends</Text>
+        <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("friendsTitle")}</Text>
         <Text style={[type.bodySm, { color: colors.lilac }]}>{subtitle}</Text>
       </View>
-      {onLeaderboard ? <IconButton icon="trophy-outline" label="Leaderboard" onPress={onLeaderboard} /> : null}
+      {onLeaderboard ? <IconButton icon="trophy-outline" label={t("leaderboard")} onPress={onLeaderboard} /> : null}
       <Pressable
         onPress={onInvite}
         accessibilityRole="button"
-        accessibilityLabel="Invite friends"
+        accessibilityLabel={t("inviteFriends")}
         style={({ pressed }) => [styles.invitePill, pressed && { opacity: 0.8 }]}
       >
         <Ionicons name="person-add-outline" size={16} color={colors.ink} />
-        <Text style={styles.invitePillText}>Invite</Text>
+        <Text style={[styles.invitePillText, { fontFamily: ui.bodyBold }]}>{t("invite")}</Text>
       </Pressable>
     </View>
   );
 }
 
 function MyCodeRow({ playerId }: { playerId: string }) {
+  const { t, fonts: ui } = useLanguage();
   const code = formatFriendCode(friendCodeFor(playerId));
   const [copied, setCopied] = useState(false);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -543,7 +550,7 @@ function MyCodeRow({ playerId }: { playerId: string }) {
 
   return (
     <View style={styles.myIdRow}>
-      <Text style={[type.bodySm, { color: colors.lilac }]}>Your code</Text>
+      <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.body }]}>{t("yourCode")}</Text>
       <Text style={styles.myId} numberOfLines={1} selectable>
         {code}
       </Text>

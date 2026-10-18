@@ -54,6 +54,7 @@ async def get_moment(
     moment_id: UUID,
     session: AsyncSession = Depends(get_session),
     actor: Actor = Depends(get_actor),
+    lang: str | None = Query(default=None, max_length=16),
 ) -> dict:
     m = await session.get(Moment, moment_id, options=[selectinload(Moment.options), selectinload(Moment.category)])
     if m is None:
@@ -67,6 +68,7 @@ async def get_moment(
         mine.option_id if mine else None,
         tags=tags,
         reveal_correct=bool(mine),
+        lang=lang,
     )
     payload["engagement"] = (await engagement_for(session, [moment_id], actor.user_id, actor.guest_id))[moment_id]
     if actor.user_id:

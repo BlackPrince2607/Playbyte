@@ -5,6 +5,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
@@ -21,6 +22,7 @@ function badgeLabel(badge: string): string {
 }
 
 export function WeeklyRecapScreen({ onBack, onSignIn }: Props) {
+  const { t, fonts: ui } = useLanguage();
   const { isSignedIn } = useAuth();
   const [recap, setRecap] = useState<WeeklyRecap | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,7 +53,7 @@ export function WeeklyRecapScreen({ onBack, onSignIn }: Props) {
         <Pressable onPress={onBack} style={styles.back}>
           <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
         </Pressable>
-        <Text style={[type.screenTitle, { color: colors.paper }]}>Weekly recap</Text>
+        <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("weeklyRecap")}</Text>
         <Text style={[type.bodySm, { color: colors.lilac, marginVertical: spacing.md }]}>
           Sign in to see your week in the crowd.
         </Text>
@@ -94,7 +96,7 @@ export function WeeklyRecapScreen({ onBack, onSignIn }: Props) {
       <Pressable onPress={onBack} style={styles.back}>
         <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
       </Pressable>
-      <Text style={[type.screenTitle, { color: colors.paper }]}>Weekly recap</Text>
+      <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("weeklyRecap")}</Text>
       {recap ? (
         <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.sm }]}>
           {recap.periodStart} — {recap.periodEnd}

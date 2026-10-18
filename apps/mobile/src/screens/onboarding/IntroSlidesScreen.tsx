@@ -4,8 +4,10 @@ import { ScrollView, StyleSheet, Text, View, type ColorValue } from "react-nativ
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, { SlideInLeft, SlideInRight } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLanguage } from "../../context/LanguageContext";
+import { lineHeightFor } from "../../lib/promptSize";
 import { colors, spacing, surface } from "../../theme/colors";
-import { fonts, type } from "../../theme/typography";
+import { fonts } from "../../theme/typography";
 import { MazePreview, PREVIEW_XP, PollPreview, QuizPreview, WordSearchPreview } from "./GamePreviewCards";
 import { BackButton, CtaButton, Glow, PageDots, onboardingStyles, useFloat } from "./ui";
 
@@ -21,8 +23,11 @@ const CARDS: ComponentType[] = [QuizPreview, MazePreview, PollPreview, WordSearc
 const AUTO_ADVANCE_MS = 3500;
 const PAUSE_AFTER_TOUCH_MS = 6000;
 
+const TITLE_SIZE = 32;
+
 export function IntroSlidesScreen({ page, onPageChange, onNext, onBack }: Props) {
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
   const lastPage = useRef(page);
   const forward = page >= lastPage.current;
   useEffect(() => {
@@ -43,7 +48,7 @@ export function IntroSlidesScreen({ page, onPageChange, onNext, onBack }: Props)
       </Animated.View>
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         <PageDots count={SLIDES} active={page} />
-        <CtaButton label="Continue" onPress={next} />
+        <CtaButton label={t("continue")} onPress={next} />
       </View>
     </View>
   );
@@ -51,26 +56,34 @@ export function IntroSlidesScreen({ page, onPageChange, onNext, onBack }: Props)
 
 function GamesSlide({ onBack }: { onBack: () => void }) {
   const [card, setCard] = useState(0);
+  const { t, fonts: ui } = useLanguage();
+  const title = `${t("gamesTitleBefore")}${t("gamesTitleAccent")}`;
   return (
-    <>
+    <View style={styles.slide}>
       <Glow color="rgba(255,77,141,0.18)" size={320} style={{ top: -60, alignSelf: "center" }} />
       <Glow color="rgba(189,245,50,0.10)" size={260} style={{ top: 280, right: -90 }} />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={onboardingStyles.header}>
-          <BackButton onPress={onBack} />
-          <View style={styles.cardDots}>
-            {CARDS.map((_, i) => (
-              <View key={i} style={[styles.cardDot, i === card && { backgroundColor: surface.lime }]} />
-            ))}
-          </View>
+      <View style={onboardingStyles.header}>
+        <BackButton onPress={onBack} />
+        <View style={styles.cardDots}>
+          {CARDS.map((_, i) => (
+            <View key={i} style={[styles.cardDot, i === card && { backgroundColor: surface.lime }]} />
+          ))}
         </View>
-        <Text style={[styles.hero, { marginTop: spacing.sm }]}>
-          Play{"\n"}bite-sized <Text style={onboardingStyles.accent}>games.</Text>
-        </Text>
-        <Text style={[type.bodyLg, styles.lede]}>Quizzes, puzzles, polls, trivia and more. New games every day.</Text>
+      </View>
+      <Text
+        style={[
+          onboardingStyles.title,
+          { fontFamily: ui.display, lineHeight: lineHeightFor(title, TITLE_SIZE), marginTop: spacing.xs },
+        ]}
+      >
+        {t("gamesTitleBefore")}
+        <Text style={onboardingStyles.accent}>{t("gamesTitleAccent")}</Text>
+      </Text>
+      <Text style={[onboardingStyles.lede, { fontFamily: ui.body }]}>{t("gamesLede")}</Text>
+      <View style={styles.previewFit}>
         <GameCarousel index={card} onIndex={setCard} />
-      </ScrollView>
-    </>
+      </View>
+    </View>
   );
 }
 
@@ -165,21 +178,29 @@ function Podium({ player, rank }: { player: Player; rank: number }) {
 
 function CompeteSlide({ onBack }: { onBack: () => void }) {
   const crown = useFloat(700, -6);
+  const { t, fonts: ui } = useLanguage();
+  const title = `${t("competeTitleBefore")}${t("competeTitleAccent")}`;
   return (
-    <>
+    <View style={styles.slide}>
       <Glow color="rgba(255,77,141,0.2)" size={360} style={{ top: -160, alignSelf: "center" }} />
       <Glow color="rgba(124,58,237,0.14)" size={280} style={{ top: 320, right: -110 }} />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={onboardingStyles.header}>
-          <BackButton onPress={onBack} />
-        </View>
-        <Text style={[styles.competeTitle, { marginTop: spacing.md }]}>
-          Play. Compete.{"\n"}
-          <Text style={onboardingStyles.accent}>Together.</Text>
-        </Text>
-        <Text style={styles.competeLede}>
-          Instant results, <Text style={styles.live}>live</Text> rankings and friendly competition.
-        </Text>
+      <View style={onboardingStyles.header}>
+        <BackButton onPress={onBack} />
+      </View>
+      <Text
+        style={[
+          onboardingStyles.title,
+          { fontFamily: ui.display, lineHeight: lineHeightFor(title, TITLE_SIZE), marginTop: spacing.xs },
+        ]}
+      >
+        {t("competeTitleBefore")}
+        <Text style={onboardingStyles.accent}>{t("competeTitleAccent")}</Text>
+      </Text>
+      <Text style={[onboardingStyles.lede, { fontFamily: ui.bodyMedium }]}>
+        {t("competeLedeBefore")}
+        <Text style={styles.live}>{t("competeLive")}</Text>
+        {t("competeLedeAfter")}
+      </Text>
 
         <View style={styles.board}>
           <Glow color="rgba(255,184,0,0.2)" size={220} style={{ top: -110, alignSelf: "center" }} />
@@ -207,13 +228,13 @@ function CompeteSlide({ onBack }: { onBack: () => void }) {
                   </View>
                 </LinearGradient>
                 <View style={styles.youPill}>
-                  <Text style={styles.youPillText}>YOU</Text>
+                  <Text style={[styles.youPillText, { fontFamily: ui.bodyBold }]}>{t("you")}</Text>
                 </View>
                 <View style={[styles.rank, styles.rankGold]}>
                   <Text style={[styles.rankText, { color: "#000", fontSize: 11 }]}>1</Text>
                 </View>
               </View>
-              <Text style={styles.youName}>You</Text>
+              <Text style={[styles.youName, { fontFamily: ui.bodyBold }]}>{t("youName")}</Text>
               <Text style={styles.youScore}>860</Text>
             </View>
             <Podium player={PODIUM_RIGHT} rank={3} />
@@ -234,26 +255,24 @@ function CompeteSlide({ onBack }: { onBack: () => void }) {
             ))}
           </View>
         </View>
-      </ScrollView>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flexGrow: 1, paddingHorizontal: spacing.margin, paddingBottom: spacing.lg },
-  footer: { paddingHorizontal: spacing.margin, paddingTop: spacing.sm, gap: 20 },
+  slide: { flex: 1, minHeight: 0, paddingHorizontal: spacing.margin },
+  previewFit: { flex: 1, minHeight: 0, justifyContent: "center", overflow: "hidden" },
+  footer: { paddingHorizontal: spacing.margin, paddingTop: spacing.sm, gap: 12 },
   cardDots: { flexDirection: "row", gap: 8 },
   cardDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: surface.highest },
-  hero: { fontFamily: fonts.display, fontSize: 40, lineHeight: 44, letterSpacing: -0.6, color: surface.onSurface },
-  lede: { color: surface.onSurfaceVariant, maxWidth: 290, marginTop: spacing.sm },
-  stage: { alignItems: "center", justifyContent: "center", paddingVertical: spacing.md, marginTop: spacing.md },
+  stage: { alignItems: "center", justifyContent: "center", paddingVertical: spacing.xs },
   stageGlow: { ...StyleSheet.absoluteFill, borderRadius: 24, transform: [{ scale: 0.95 }] },
   frame: {
     width: "100%",
-    maxWidth: 325,
+    maxWidth: 300,
     backgroundColor: colors.card,
-    borderRadius: 32,
-    padding: 16,
+    borderRadius: 24,
+    padding: 10,
     transform: [{ rotate: "-2deg" }],
     boxShadow: "0 25px 50px -12px rgba(0,0,0,0.6)",
   },
@@ -272,8 +291,6 @@ const styles = StyleSheet.create({
     boxShadow: "0 10px 20px rgba(0,0,0,0.4)",
   },
   xpText: { fontFamily: fonts.mono, fontSize: 10, color: surface.lime },
-  competeTitle: { fontFamily: fonts.display, fontSize: 30, lineHeight: 36, letterSpacing: -0.4, color: "#fff" },
-  competeLede: { fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 20, color: "rgba(255,255,255,0.6)", marginTop: 4 },
   live: {
     color: "#ccff00",
     fontFamily: fonts.bodyBold,
@@ -282,7 +299,8 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
   },
   board: {
-    marginTop: spacing.xl,
+    marginTop: spacing.sm,
+    flexShrink: 1,
     backgroundColor: "rgba(21,21,34,0.9)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
@@ -295,7 +313,7 @@ const styles = StyleSheet.create({
   crownWrap: { alignItems: "center", marginBottom: 8 },
   rays: { position: "absolute", top: -6, width: 128, flexDirection: "row", justifyContent: "space-around" },
   ray: { width: 5, height: 12, borderRadius: 3 },
-  crown: { fontSize: 30, textShadowColor: "rgba(255,184,0,0.6)", textShadowRadius: 12 },
+  crown: { fontSize: 22, textShadowColor: "rgba(255,184,0,0.6)", textShadowRadius: 12 },
   podiumRow: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -305,8 +323,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255,255,255,0.05)",
   },
   podium: { flex: 1, alignItems: "center" },
-  ring56: { width: 56, height: 56, borderRadius: 28, padding: 2 },
-  ring72: { width: 72, height: 72, borderRadius: 36, padding: 2.5, boxShadow: "0 0 25px rgba(204,255,0,0.25)" },
+  ring56: { width: 44, height: 44, borderRadius: 22, padding: 2 },
+  ring72: { width: 56, height: 56, borderRadius: 28, padding: 2.5, boxShadow: "0 0 25px rgba(204,255,0,0.25)" },
   avatarInner: {
     flex: 1,
     borderRadius: 999,
@@ -357,7 +375,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 4,
     borderRadius: 12,
     backgroundColor: "rgba(255,255,255,0.03)",
     borderWidth: 1,

@@ -4,6 +4,9 @@ import { musicForEngine } from "../../audio/catalog";
 import { setMusicDucked, setMusicScene } from "../../audio/sound";
 import { ErrorState } from "../../components/ErrorState";
 import { PrimaryButton } from "../../components/PrimaryButton";
+import { useLanguage } from "../../context/LanguageContext";
+import { localizeGame } from "../../i18n/games";
+import { fill } from "../../i18n/strings";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
 import { ContentBundle } from "../content/types";
@@ -48,6 +51,8 @@ function useBackToExit(onExit: () => void, enabled = true) {
 /** Plays any game card through the session runner of its engine. */
 export function GameHost({ card, onComplete, onExit, restore }: Props) {
   registerEngines();
+  const { language } = useLanguage();
+  const title = localizeGame(card, language).title;
   const resolved = useMemo(
     () =>
       resolveGame(card, {
@@ -66,7 +71,7 @@ export function GameHost({ card, onComplete, onExit, restore }: Props) {
     <GameErrorBoundary key={`${card.key}:${restore?.sessionId ?? "new"}`} gameKey={card.key} onExit={onExit}>
       <SdkSession
         gameKey={card.key}
-        title={card.title}
+        title={title}
         definition={resolved.definition}
         restore={restore}
         onComplete={onComplete}
@@ -98,20 +103,22 @@ class GameErrorBoundary extends React.Component<{ gameKey: string; onExit: () =>
 
 function Crashed({ onExit }: { onExit: () => void }) {
   useBackToExit(onExit);
+  const { t } = useLanguage();
   return (
     <View style={styles.center}>
-      <ErrorState title="Something went wrong" message="This game hit a problem and had to stop." />
-      <PrimaryButton label="Back to feed" onPress={onExit} />
+      <ErrorState title={t("somethingWrong")} message={t("gameStopped")} />
+      <PrimaryButton label={t("backToFeed")} onPress={onExit} />
     </View>
   );
 }
 
 function Unavailable({ onExit }: { onExit: () => void }) {
   useBackToExit(onExit);
+  const { t } = useLanguage();
   return (
     <View style={styles.center}>
-      <ErrorState title="Game unavailable" message="This game needs a newer version of the app, or isn't available right now." />
-      <PrimaryButton label="Back to feed" onPress={onExit} />
+      <ErrorState title={t("gameUnavailable")} message={t("gameNeedsNewer")} />
+      <PrimaryButton label={t("backToFeed")} onPress={onExit} />
     </View>
   );
 }
@@ -137,6 +144,7 @@ type SessionProps = {
 };
 
 function SdkSession({ gameKey, title, definition, restore, onComplete, onExit }: SessionProps) {
+  const { t } = useLanguage();
   const [boot, setBoot] = useState<Boot>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
   useBackToExit(onExit, boot.phase !== "ready");
@@ -175,10 +183,7 @@ function SdkSession({ gameKey, title, definition, restore, onComplete, onExit }:
       if (restore) void sessionStore.clear();
       setBoot({
         phase: "error",
-        message:
-          msg === "content_unavailable"
-            ? "This game's content couldn't be loaded. Check your connection and try again."
-            : "This game couldn't start. Try again in a moment.",
+        message: msg === "content_unavailable" ? "content" : "start",
       });
     });
     return () => {
@@ -188,7 +193,7 @@ function SdkSession({ gameKey, title, definition, restore, onComplete, onExit }:
 
   if (boot.phase === "loading") {
     return (
-      <View style={styles.center} accessibilityLabel="Loading game">
+      <View style={styles.center} accessibilityLabel={t("loadingGame")}>
         <ActivityIndicator color={colors.lime} size="large" />
       </View>
     );
@@ -196,8 +201,12 @@ function SdkSession({ gameKey, title, definition, restore, onComplete, onExit }:
   if (boot.phase === "error") {
     return (
       <View style={styles.center}>
-        <ErrorState title="Couldn't start the game" message={boot.message} onRetry={() => setAttempt((n) => n + 1)} />
-        <PrimaryButton label="Back to feed" variant="secondary" onPress={onExit} />
+        <ErrorState
+          title={t("couldntStart")}
+          message={boot.message === "content" ? t("contentUnavailable") : t("couldntStartBody")}
+          onRetry={() => setAttempt((n) => n + 1)}
+        />
+        <PrimaryButton label={t("backToFeed")} variant="secondary" onPress={onExit} />
       </View>
     );
   }
@@ -213,6 +222,7 @@ type ActiveProps = Ready & {
 };
 
 function ActiveSession({ mod, runner, clock, content, definition, gameKey, title, restored, onComplete, onExit }: ActiveProps) {
+  const { t, fonts: ui } = useLanguage();
   const snap = useSyncExternalStore(runner.subscribe, runner.getSnapshot);
   const [counting, setCounting] = useState(snap.status === "ready");
   const [menuOpen, setMenuOpen] = useState(restored && snap.status === "paused");
@@ -396,7 +406,7 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
       <Confetti active={snap.status === "completed"} />
       {levelUp ? (
         <View pointerEvents="none" style={styles.toast} accessibilityLiveRegion="polite">
-          <Text style={[type.button, { color: colors.ink }]}>Level up!</Text>
+          <Text style={[type.button, { color: colors.ink, fontFamily: ui.bodyBold }]}>{t("levelUp")}</Text>
         </View>
       ) : null}
       {counting ? (
@@ -410,15 +420,15 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
       {menuOpen ? (
         <View style={styles.menuBackdrop}>
           <View style={styles.menu} accessibilityViewIsModal>
-            <Text style={[type.gameQuestion, { color: colors.paper, textAlign: "center" }]}>Paused</Text>
-            <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center", marginBottom: spacing.md }]}>
-              Score {snap.score}
-              {snap.totalRounds ? ` · Round ${snap.round}/${snap.totalRounds}` : ""}
+            <Text style={[type.gameQuestion, { color: colors.paper, textAlign: "center", fontFamily: ui.display }]}>{t("paused")}</Text>
+            <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center", marginBottom: spacing.md, fontFamily: ui.body }]}>
+              {fill(t("scoreLine"), { score: snap.score })}
+              {snap.totalRounds ? ` · ${fill(t("roundBit"), { round: snap.round, total: snap.totalRounds })}` : ""}
             </Text>
-            <PrimaryButton label="Resume" onPress={resume} />
-            <PrimaryButton label="End & save score" variant="secondary" onPress={endNow} />
+            <PrimaryButton label={t("resume")} onPress={resume} />
+            <PrimaryButton label={t("endAndSave")} variant="secondary" onPress={endNow} />
             <Pressable onPress={quit} accessibilityRole="button" style={{ padding: spacing.sm, minHeight: 44, justifyContent: "center" }}>
-              <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>Quit without saving</Text>
+              <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center", fontFamily: ui.body }]}>{t("quitWithout")}</Text>
             </Pressable>
           </View>
         </View>

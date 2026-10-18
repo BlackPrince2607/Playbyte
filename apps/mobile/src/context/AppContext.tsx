@@ -26,14 +26,14 @@ import { isPlayable } from "../game/discovery";
 import { appendFeedPage, FEED_PREFETCH_AHEAD } from "../lib/feedPages";
 import { useAuth } from "./AuthContext";
 import {
-  bumpStreak,
   getOnboardingStep,
-  getStreak,
   isOnboardingDone,
+  recordDailyVisit,
   setOnboardingDone,
   setOnboardingStep as persistOnboardingStep,
   type OnboardingStep,
 } from "../lib/storage";
+import { useLanguage } from "./LanguageContext";
 import { isCacheFresh } from "../lib/cache";
 import type { TabKey } from "../components/BottomNav";
 
@@ -97,7 +97,10 @@ const Ctx = createContext<AppState | null>(null);
 /** Coming back sooner than this (share sheet, Google sign-in) keeps the feed where it was. */
 const REOPEN_REFRESH_AFTER_MS = 30_000;
 
-const FEED_PAGE_PATH = "/v1/feed?limit=20";
+function feedPath(lang: string, cursor?: string | null) {
+  const base = `/v1/feed?limit=20&lang=${encodeURIComponent(lang)}`;
+  return cursor ? `${base}&cursor=${encodeURIComponent(cursor)}` : base;
+}
 /** Pages fetched in one go while the viewer is short of cards ahead (pages can add few once repeats are dropped). */
 const MAX_PAGES_PER_LOAD = 4;
 /** Failed page fetches retried with doubling backoff, so a viewer parked on the last card is not stranded. */
@@ -113,6 +116,11 @@ function patchMoment(items: FeedItem[], momentId: string, patch: Partial<FeedMom
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const { language, ready: languageReady, t } = useLanguage();
+  const languageRef = useRef(language);
+  languageRef.current = language;
+  const tRef = useRef(t);
+  tRef.current = t;
   const { ready: authReady, isSignedIn } = useAuth();
   const [ready, setReady] = useState(false);
   const [bootError, setBootError] = useState("");
@@ -269,14 +277,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFeedError("");
 
       try {
-        const feed = await api<FeedPage>(FEED_PAGE_PATH);
+        const feed = await api<FeedPage>(feedPath(languageRef.current));
         feedGeneration.current += 1;
         feedCursor.current = feed.cursor;
         setItems(feed.items.filter(isShowable));
         setEngagement({});
         hasLoadedFeed.current = true;
       } catch (e) {
-        const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "Could not load feed";
+        const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : tRef.current("couldNotLoadFeed");
         setFeedError(message);
         throw e;
       } finally {
@@ -311,7 +319,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       let failures = 0;
       while (feedCursor.current && pages < MAX_PAGES_PER_LOAD && shortOfCards()) {
         try {
-          const feed = await api<FeedPage>(`${FEED_PAGE_PATH}&cursor=${encodeURIComponent(feedCursor.current)}`);
+          const feed = await api<FeedPage>(feedPath(languageRef.current, feedCursor.current));
           if (generation !== feedGeneration.current) return;
           pages += 1;
           failures = 0;
@@ -361,7 +369,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!done) {
         setOnboardingStepState(await getOnboardingStep());
       }
-      setStreak(await getStreak());
+      setStreak(await recordDailyVisit());
       // Feed failure must not set bootError — FeedScreen already shows feedError;
       // other tabs (Compete / Friends / Vault) stay reachable.
       try {
@@ -371,16 +379,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       setReady(true);
     } catch (e) {
-      const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "Could not start";
+      const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : tRef.current("couldNotStart");
       setBootError(message);
       setReady(true);
     }
   }, [loadFeed]);
 
   useEffect(() => {
-    if (!authReady) return;
+    if (!authReady || !languageReady) return;
     void boot();
-  }, [authReady, boot]);
+  }, [authReady, languageReady, boot]);
+
+  const seenLang = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || !languageReady) return;
+    if (seenLang.current === null) {
+      seenLang.current = language;
+      return;
+    }
+    if (seenLang.current === language) return;
+    seenLang.current = language;
+    void refreshFeed(true);
+  }, [language, ready, languageReady, refreshFeed]);
 
   // Reopening the app shows a fresh feed from the first post.
   useEffect(() => {
@@ -392,6 +412,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       if (s !== "active" || backgroundedAt === null) return;
+      void recordDailyVisit().then(setStreak);
       const away = Date.now() - backgroundedAt;
       backgroundedAt = null;
       if (away < REOPEN_REFRESH_AFTER_MS) return;
@@ -429,7 +450,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const respond = useCallback(
     async (momentId: string, optionId: string): Promise<RespondOutcome> => {
       if (respondingRef.current.has(momentId)) {
-        return { ok: false, message: "Already submitting…" };
+        return { ok: false, message: tRef.current("alreadySubmitting") };
       }
       respondingRef.current.add(momentId);
       setRespondingIds(new Set(respondingRef.current));
@@ -440,8 +461,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ optionId }),
         });
         setPromptSave(Boolean(res.promptAccountCreation));
-        const s = await bumpStreak();
-        setStreak(s);
         setItems((prev) =>
           patchMoment(prev, momentId, {
             myOptionId: res.optionId,
@@ -450,7 +469,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         );
         return { ok: true, result: res.result };
       } catch (e) {
-        const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "Could not submit";
+        const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : tRef.current("couldNotSubmit");
         return { ok: false, message };
       } finally {
         respondingRef.current.delete(momentId);

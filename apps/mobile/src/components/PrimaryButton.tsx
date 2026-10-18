@@ -1,7 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, Text, ViewStyle } from "react-native";
+import { useLanguage } from "../context/LanguageContext";
 import { colors, radius, spacing } from "../theme/colors";
-import { fonts, type } from "../theme/typography";
+import { type } from "../theme/typography";
 
 type Props = {
   label: string;
@@ -22,6 +23,7 @@ export function PrimaryButton({
   icon,
   trailingIcon,
 }: Props) {
+  const { fonts: ui } = useLanguage();
   const bg =
     variant === "primary" ? colors.pink : variant === "success" ? colors.lime : colors.cardAlt;
   const fg = variant === "success" ? colors.ink : colors.paper;
@@ -43,7 +45,9 @@ export function PrimaryButton({
       ]}
     >
       {icon ? <Ionicons name={icon} size={18} color={fg} style={{ marginRight: 8 }} /> : null}
-      <Text style={[type.button, { color: fg, fontFamily: fonts.bodyBold }]}>{label}</Text>
+      <Text style={[type.button, { color: fg, fontFamily: ui.bodyBold }]} numberOfLines={1}>
+        {label}
+      </Text>
       {trailingIcon ? (
         <Ionicons name={trailingIcon} size={20} color={fg} style={{ marginLeft: 8 }} />
       ) : null}

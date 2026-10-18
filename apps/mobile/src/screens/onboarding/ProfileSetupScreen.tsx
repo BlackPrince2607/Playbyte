@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useMemo, useState } from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,19 +16,22 @@ import { api, isApiError } from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
+import { fill } from "../../i18n/strings";
 import { pickAndUploadAvatar } from "../../lib/avatarUpload";
 import { seededCount } from "../../lib/seededEngagement";
 import { getLocalProfile, setLocalProfile, type Gender } from "../../lib/storage";
+import { lineHeightFor } from "../../lib/promptSize";
 import { colors, spacing, surface } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 import { BackButton, CtaButton, PulseDot, onboardingStyles } from "./ui";
 
 type Props = { onNext: (name: string) => void; onBack: () => void };
 
-const GENDERS: { id: Gender; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { id: "male", label: "Male", icon: "male" },
-  { id: "female", label: "Female", icon: "female" },
-  { id: "other", label: "Other", icon: "person-outline" },
+const GENDERS: { id: Gender; labelKey: "male" | "female" | "other"; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: "male", labelKey: "male", icon: "male" },
+  { id: "female", labelKey: "female", icon: "female" },
+  { id: "other", labelKey: "other", icon: "person-outline" },
 ];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,6 +44,8 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
   const insets = useSafeAreaInsets();
   const { user, isSignedIn } = useAuth();
   const { me, updateMe } = useApp();
+  const { t, fonts: ui } = useLanguage();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const lockedEmail = user?.email ?? null;
   const [name, setName] = useState("");
@@ -47,6 +53,17 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
   const [gender, setGender] = useState<Gender | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const show = Keyboard.addListener(showEvent, () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -79,7 +96,7 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
       const key = await pickAndUploadAvatar();
       if (key) updateMe({ avatarKey: key });
     } catch (e) {
-      setError(isApiError(e) ? e.userMessage : "Could not upload that photo. Try another one.");
+      setError(isApiError(e) ? e.userMessage : t("photoError"));
     } finally {
       setUploading(false);
     }
@@ -87,11 +104,11 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
 
   async function submit() {
     if (!nameOk) {
-      setError("Enter a name between 2 and 40 characters.");
+      setError(t("nameError"));
       return;
     }
     if (emailBlocking) {
-      setError("That email doesn't look right.");
+      setError(t("emailError"));
       return;
     }
     setError("");
@@ -104,15 +121,17 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
       }
       onNext(trimmedName);
     } catch (e) {
-      setError(isApiError(e) ? e.userMessage : "Could not save your details. Try again.");
+      setError(isApiError(e) ? e.userMessage : t("saveError"));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <KeyboardAvoidingView style={onboardingStyles.root} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView style={onboardingStyles.root} behavior="padding">
       <ScrollView
+        scrollEnabled={keyboardOpen}
+        bounces={keyboardOpen}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.inner, { paddingTop: insets.top + 4, paddingBottom: insets.bottom + 16 }]}
@@ -121,17 +140,26 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
           <BackButton onPress={onBack} plain />
         </View>
 
-        <View style={styles.progress} accessibilityLabel="Step 4 of 5">
+        <View style={styles.progress} accessibilityLabel={fill(t("stepOf"), { step: 4, total: 5 })}>
           {[0, 1, 2, 3].map((i) => (
             <View key={i} style={[styles.segment, i < 3 && { backgroundColor: colors.pink }]} />
           ))}
         </View>
 
-        <Text style={styles.title}>
-          Create{"\n"}your <Text style={{ color: colors.pink }}>account</Text>
+        <Text
+          style={[
+            onboardingStyles.title,
+            {
+              fontFamily: ui.display,
+              lineHeight: lineHeightFor(`${t("profileTitleBefore")}${t("profileTitleAccent")}`, 32),
+            },
+          ]}
+        >
+          {t("profileTitleBefore")}
+          <Text style={{ color: colors.pink }}>{t("profileTitleAccent")}</Text>
         </Text>
-        <Text style={[type.bodySm, { color: colors.lilac, marginTop: 4, marginBottom: spacing.xl }]}>
-          Just a few details to get started on Maja.
+        <Text style={[onboardingStyles.lede, { fontFamily: ui.body, color: colors.lilac, marginBottom: spacing.md }]}>
+          {t("profileLede")}
         </Text>
 
         <View style={styles.badgeCard}>
@@ -139,9 +167,9 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
             onPress={() => void choosePhoto()}
             disabled={!isSignedIn || uploading}
             accessibilityRole="button"
-            accessibilityLabel={isSignedIn ? "Choose a profile photo" : "Profile photo unlocks after registration"}
+            accessibilityLabel={isSignedIn ? t("choosePhoto") : t("photoUnlocks")}
           >
-            <AvatarImage displayName={trimmedName || "Player"} avatarKey={me?.avatarKey} size={56} />
+            <AvatarImage displayName={trimmedName || t("player")} avatarKey={me?.avatarKey} size={56} />
             {isSignedIn ? (
               <View style={styles.editBadge}>
                 <Ionicons name={uploading ? "hourglass" : "camera"} size={12} color={colors.ink} />
@@ -149,37 +177,28 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
             ) : null}
           </Pressable>
           <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs }}>
-              <Text style={styles.badgeTitle}>Gamer Badge Ready</Text>
-              <View style={styles.lvl}>
-                <Text style={styles.lvlText}>LVL 1</Text>
-              </View>
-            </View>
-            <Text style={[type.metadata, { color: colors.lilac }]} numberOfLines={1}>
-              {isSignedIn
-                ? uploading
-                  ? "Uploading your photo…"
-                  : "Tap your badge to add a photo"
-                : "Custom avatar unlocks after registration"}
+            <Text style={[styles.badgeTitle, { fontFamily: ui.bodyBold }]}>{t("gamerBadge")}</Text>
+            <Text style={[type.metadata, { color: colors.lilac, fontFamily: ui.body }]} numberOfLines={1}>
+              {isSignedIn ? (uploading ? t("uploadingPhoto") : t("tapBadge")) : t("avatarUnlocks")}
             </Text>
           </View>
         </View>
 
-        <View style={{ gap: 20 }}>
+        <View style={{ gap: 12 }}>
           <View style={styles.field}>
-            <Text style={styles.label}>Name</Text>
+            <Text style={[styles.label, { fontFamily: ui.bodyMedium }]}>{t("nameLabel")}</Text>
             <View>
               <TextInput
                 value={name}
                 onChangeText={setName}
-                placeholder="Enter your name"
+                placeholder={t("enterName")}
                 placeholderTextColor="rgba(143,127,192,0.4)"
                 autoCapitalize="words"
                 autoComplete="name"
                 textContentType="name"
                 maxLength={40}
                 returnKeyType="next"
-                style={styles.input}
+                style={[styles.input, { fontFamily: ui.body }]}
               />
               {nameOk ? <Ionicons name="checkmark-circle" size={20} color={surface.success} style={styles.inputIcon} /> : null}
             </View>
@@ -187,8 +206,8 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
 
           <View style={styles.field}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>Email</Text>
-              {!lockedEmail ? <Text style={styles.hint}>Optional</Text> : null}
+              <Text style={[styles.label, { fontFamily: ui.bodyMedium }]}>{t("emailLabel")}</Text>
+              {!lockedEmail ? <Text style={[styles.hint, { fontFamily: ui.bodyMedium }]}>{t("optional")}</Text> : null}
             </View>
             <View>
               <TextInput
@@ -201,7 +220,7 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
                 autoCapitalize="none"
                 autoComplete="email"
                 textContentType="emailAddress"
-                style={[styles.input, lockedEmail ? { color: "rgba(245,240,255,0.75)" } : null]}
+                style={[styles.input, { fontFamily: ui.body }, lockedEmail ? { color: "rgba(245,240,255,0.75)" } : null]}
               />
               {emailOk ? <Ionicons name="checkmark-circle" size={20} color={surface.success} style={styles.inputIcon} /> : null}
             </View>
@@ -209,10 +228,10 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
 
           <View style={{ gap: spacing.sm, marginTop: 4 }}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>Gender</Text>
-              <Text style={styles.hint}>Optional for matchmaking</Text>
+              <Text style={[styles.label, { fontFamily: ui.bodyMedium }]}>{t("genderLabel")}</Text>
+              <Text style={[styles.hint, { fontFamily: ui.bodyMedium }]}>{t("optionalMatch")}</Text>
             </View>
-            <View accessibilityRole="radiogroup" accessibilityLabel="Gender selection" style={styles.genders}>
+            <View accessibilityRole="radiogroup" accessibilityLabel={t("genderSelection")} style={styles.genders}>
               {GENDERS.map((g) => {
                 const on = gender === g.id;
                 return (
@@ -224,7 +243,9 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
                     style={({ pressed }) => [styles.gender, on && styles.genderOn, pressed && { transform: [{ scale: 0.97 }] }]}
                   >
                     <Ionicons name={g.icon} size={24} color={on ? colors.paper : colors.lilac} />
-                    <Text style={[styles.genderLabel, { color: on ? colors.paper : colors.lilac }]}>{g.label}</Text>
+                    <Text style={[styles.genderLabel, { color: on ? colors.paper : colors.lilac, fontFamily: ui.bodyBold }]}>
+                      {t(g.labelKey)}
+                    </Text>
                   </Pressable>
                 );
               })}
@@ -234,9 +255,11 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
           <View style={styles.online}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
               <PulseDot size={10} color={surface.lime} />
-              <Text style={[type.metadata, { fontFamily: fonts.mono, color: colors.paper }]}>{withCommas(online)} online</Text>
+              <Text style={[type.metadata, { fontFamily: fonts.mono, color: colors.paper }]}>
+                {fill(t("online"), { count: withCommas(online) })}
+              </Text>
             </View>
-            <Text style={[type.micro, { color: colors.lilac }]}>Instant game queue</Text>
+            <Text style={[type.micro, { color: colors.lilac, fontFamily: ui.bodyMedium }]}>{t("instantQueue")}</Text>
           </View>
         </View>
 
@@ -246,7 +269,7 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
               {error}
             </Text>
           ) : null}
-          <CtaButton label={saving ? "Saving…" : "Continue"} icon={saving ? null : "arrow-forward"} onPress={() => void submit()} disabled={saving || !nameOk} />
+          <CtaButton label={saving ? t("saving") : t("continue")} icon={saving ? null : "arrow-forward"} onPress={() => void submit()} disabled={saving || !nameOk} />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -255,9 +278,8 @@ export function ProfileSetupScreen({ onNext, onBack }: Props) {
 
 const styles = StyleSheet.create({
   inner: { flexGrow: 1, paddingHorizontal: spacing.margin },
-  progress: { flexDirection: "row", justifyContent: "center", gap: 6, paddingTop: 8, paddingBottom: spacing.lg },
+  progress: { flexDirection: "row", justifyContent: "center", gap: 6, paddingTop: 4, paddingBottom: spacing.sm },
   segment: { width: 24, height: 6, borderRadius: 3, backgroundColor: surface.high },
-  title: { fontFamily: fonts.display, fontSize: 34, lineHeight: 38, letterSpacing: -0.5, color: colors.paper },
   badgeCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -265,7 +287,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: 12,
     backgroundColor: colors.card,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
   },
   editBadge: {
     position: "absolute",
@@ -279,8 +301,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   badgeTitle: { ...type.metadata, fontFamily: fonts.bodyBold, color: colors.paper },
-  lvl: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999, backgroundColor: "rgba(162,216,1,0.2)" },
-  lvlText: { fontFamily: fonts.mono, fontSize: 10, color: surface.lime },
   field: { gap: 6 },
   labelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   label: { ...type.metadata, fontFamily: fonts.bodyMedium, color: colors.lilac, letterSpacing: 0.3 },

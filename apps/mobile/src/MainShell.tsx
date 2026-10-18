@@ -15,6 +15,8 @@ import { ErrorState } from "./components/ErrorState";
 import { MajaLogo } from "./components/MajaLogo";
 import { PrimaryButton } from "./components/PrimaryButton";
 import { useApp } from "./context/AppContext";
+import { useLanguage } from "./context/LanguageContext";
+import { localizeGame } from "./i18n/games";
 import { nextGame } from "./game/discovery";
 import { startGameAnalytics } from "./game/platform/analytics";
 import { sessionStore, submitQueue } from "./game/platform/services";
@@ -31,7 +33,6 @@ import { InterestsScreen } from "./screens/onboarding/InterestsScreen";
 import { IntroSlidesScreen } from "./screens/onboarding/IntroSlidesScreen";
 import { LanguageScreen } from "./screens/onboarding/LanguageScreen";
 import { ProfileSetupScreen } from "./screens/onboarding/ProfileSetupScreen";
-import { ReadyScreen } from "./screens/onboarding/ReadyScreen";
 import { WelcomeScreen } from "./screens/onboarding/WelcomeScreen";
 import { NotificationsScreen } from "./screens/profile/NotificationsScreen";
 import { SettingsScreen } from "./screens/profile/SettingsScreen";
@@ -88,6 +89,7 @@ export function MainShell() {
     refreshFriendRequests,
   } = useApp();
   const { googleAvailable, signInWithGoogle, isSignedIn, user } = useAuth();
+  const { t, language, fonts: ui } = useLanguage();
   const [playing, setPlaying] = useState<FeedGame | null>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [retryingSave, setRetryingSave] = useState(false);
@@ -102,7 +104,6 @@ export function MainShell() {
   const [welcomeAuthBusy, setWelcomeAuthBusy] = useState(false);
   const [signInError, setSignInError] = useState("");
   const [introPage, setIntroPage] = useState(0);
-  const [pickedInterests, setPickedInterests] = useState<string[]>([]);
   const [finishingOnboarding, setFinishingOnboarding] = useState(false);
   const wasSignedIn = useRef<boolean | null>(null);
 
@@ -242,8 +243,8 @@ export function MainShell() {
   }, [gameResult, retryingSave, savePlay]);
 
   const goBackOnboarding = useCallback(() => {
-    if (onboardingStep === "ready") setOnboardingStep("interests");
-    else if (onboardingStep === "interests") setOnboardingStep("profile");
+    if (onboardingStep === "ready") return;
+    if (onboardingStep === "interests") setOnboardingStep("profile");
     else if (onboardingStep === "profile") setOnboardingStep("signup");
     else if (onboardingStep === "signup") {
       setIntroPage(1);
@@ -263,6 +264,10 @@ export function MainShell() {
       setFinishingOnboarding(false);
     }
   }, [completeOnboarding, finishingOnboarding]);
+
+  useEffect(() => {
+    if (!onboardingDone && onboardingStep === "ready") void finishOnboarding();
+  }, [onboardingDone, onboardingStep, finishOnboarding]);
 
   // Android system back — unwind overlays / onboarding; exit only from root.
   useEffect(() => {
@@ -384,7 +389,7 @@ export function MainShell() {
           onGoogleSignIn={() => void welcomeGoogle()}
           onEmailSignIn={isSupabaseConfigured() ? openSignIn : undefined}
           busy={welcomeAuthBusy}
-          signedInAs={isSignedIn ? (user?.email ?? "your account") : null}
+          signedInAs={isSignedIn ? (user?.email ?? t("yourAccount")) : null}
           onContinueSignedIn={() => setOnboardingStep("profile")}
         />
       );
@@ -394,21 +399,11 @@ export function MainShell() {
       screen = (
         <InterestsScreen
           onBack={goBackOnboarding}
-          onDone={(picked) => {
-            setPickedInterests(picked.map((c) => c.name));
-            setOnboardingStep("ready");
-          }}
+          onDone={() => void finishOnboarding()}
         />
       );
     } else {
-      screen = (
-        <ReadyScreen
-          interests={pickedInterests}
-          onBack={goBackOnboarding}
-          onDone={() => void finishOnboarding()}
-          busy={finishingOnboarding}
-        />
-      );
+      screen = null;
     }
     return (
       <Animated.View key={onboardingStep} entering={FadeIn.duration(220)} style={styles.root}>
@@ -420,7 +415,7 @@ export function MainShell() {
   if (bootError) {
     return (
       <ErrorState
-        title="Couldn't reach the feed"
+        title={t("couldntReachFeed")}
         message={bootError}
         onRetry={() => void retryBoot()}
       />
@@ -439,7 +434,7 @@ export function MainShell() {
         {gameSubmitting ? (
           <View style={styles.submitOverlay} accessibilityLabel="Saving score">
             <ActivityIndicator color={colors.lime} size="large" />
-            <Text style={[type.bodySm, { color: colors.lilac, marginTop: 12 }]}>Saving score…</Text>
+            <Text style={[type.bodySm, { color: colors.lilac, marginTop: 12, fontFamily: ui.body }]}>{t("savingScore")}</Text>
           </View>
         ) : null}
       </View>
@@ -453,7 +448,7 @@ export function MainShell() {
     );
     return (
       <PostGameResultScreen
-        gameTitle={gameResult.game.title}
+        gameTitle={localizeGame(gameResult.game, language).title}
         score={gameResult.score}
         percentile={gameResult.percentile}
         correct={gameResult.play.correct}

@@ -8,6 +8,7 @@ import { FeedTopBar } from "../../components/FeedTopBar";
 import { LoadingSkeleton } from "../../components/LoadingSkeleton";
 import { SwipeHintOverlay } from "../../components/SwipeHintOverlay";
 import { isMoment, useApp } from "../../context/AppContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { FEED_PREFETCH_AHEAD, feedKeys } from "../../lib/feedPages";
 import { isSwipeHintPending, markSwipeHintSeen } from "../../lib/storage";
 import { colors } from "../../theme/colors";
@@ -35,6 +36,7 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
     loadMoreFeed,
     isFeedTabActive,
   } = useApp();
+  const { t } = useLanguage();
   const keys = useMemo(() => feedKeys(items), [items]);
   const nearEnd = useRef({ count: items.length, loadMore: loadMoreFeed });
   nearEnd.current = { count: items.length, loadMore: loadMoreFeed };
@@ -119,9 +121,9 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
         <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
         <EmptyState
-          title="Nothing live right now"
-          message="Check back soon — new moments drop throughout the day."
-          actionLabel="Refresh"
+          title={t("nothingLive")}
+          message={t("checkBack")}
+          actionLabel={t("refresh")}
           onAction={() => void refreshFeed(true)}
         />
       </View>

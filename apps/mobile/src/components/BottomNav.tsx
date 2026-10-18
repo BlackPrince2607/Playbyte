@@ -1,22 +1,24 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLanguage } from "../context/LanguageContext";
+import type { StringKey } from "../i18n/strings";
 import { colors, radius, spacing } from "../theme/colors";
-import { fonts, type } from "../theme/typography";
+import { type } from "../theme/typography";
 
 /** Stitch bottom nav: Feed · Compete · Friends · Vault */
 export type TabKey = "feed" | "compete" | "friends" | "vault";
 
 const TABS: {
   key: TabKey;
-  label: string;
+  label: StringKey;
   icon: keyof typeof Ionicons.glyphMap;
   iconOn: keyof typeof Ionicons.glyphMap;
 }[] = [
-  { key: "feed", label: "Feed", icon: "play-circle-outline", iconOn: "play-circle" },
-  { key: "compete", label: "Compete", icon: "trophy-outline", iconOn: "trophy" },
-  { key: "friends", label: "Friends", icon: "people-outline", iconOn: "people" },
-  { key: "vault", label: "Vault", icon: "person-circle-outline", iconOn: "person-circle" },
+  { key: "feed", label: "tabFeed", icon: "play-circle-outline", iconOn: "play-circle" },
+  { key: "compete", label: "tabCompete", icon: "trophy-outline", iconOn: "trophy" },
+  { key: "friends", label: "tabFriends", icon: "people-outline", iconOn: "people" },
+  { key: "vault", label: "tabVault", icon: "person-circle-outline", iconOn: "person-circle" },
 ];
 
 type Props = {
@@ -26,29 +28,30 @@ type Props = {
 
 export function BottomNav({ active, onChange }: Props) {
   const insets = useSafeAreaInsets();
+  const { t, fonts: ui } = useLanguage();
   return (
     <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      {TABS.map((t) => {
-        const on = active === t.key;
+      {TABS.map((tab) => {
+        const on = active === tab.key;
         return (
           <Pressable
-            key={t.key}
+            key={tab.key}
             accessibilityRole="button"
             accessibilityState={{ selected: on }}
-            onPress={() => onChange(t.key)}
+            onPress={() => onChange(tab.key)}
             style={[styles.tab, on && styles.tabOn]}
           >
-            <Ionicons name={on ? t.iconOn : t.icon} size={22} color={on ? colors.lime : colors.lilac} />
+            <Ionicons name={on ? tab.iconOn : tab.icon} size={22} color={on ? colors.lime : colors.lilac} />
             <Text
               style={[
                 type.micro,
                 {
                   color: on ? colors.lime : colors.lilac,
-                  fontFamily: on ? fonts.bodyBold : fonts.body,
+                  fontFamily: on ? ui.bodyBold : ui.body,
                 },
               ]}
             >
-              {t.label}
+              {t(tab.label)}
             </Text>
           </Pressable>
         );

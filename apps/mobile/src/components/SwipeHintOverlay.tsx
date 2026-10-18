@@ -13,6 +13,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { prefersReducedMotion } from "../game/ui/feedback";
+import { useLanguage } from "../context/LanguageContext";
 import { colors, radius, spacing } from "../theme/colors";
 import { fonts, type } from "../theme/typography";
 
@@ -25,6 +26,7 @@ type Props = {
  * so the player can learn by actually swiping.
  */
 export function SwipeHintOverlay({ onDismiss }: Props) {
+  const { t, fonts: ui } = useLanguage();
   const lift = useSharedValue(0);
 
   useEffect(() => {
@@ -64,17 +66,17 @@ export function SwipeHintOverlay({ onDismiss }: Props) {
               <Ionicons name="chevron-up" size={22} color={colors.ink} />
             </Animated.View>
           </View>
-          <Text style={[type.gameQuestion, styles.title]}>Swipe up to play</Text>
-          <Text style={[type.bodySm, styles.body]}>Every card is a new game. Swipe up anytime for the next one.</Text>
+          <Text style={[type.gameQuestion, styles.title, { fontFamily: ui.display }]}>{t("swipeUp")}</Text>
+          <Text style={[type.bodySm, styles.body, { fontFamily: ui.body }]}>{t("swipeBody")}</Text>
         </View>
         <Pressable
           onPress={onDismiss}
           accessibilityRole="button"
-          accessibilityLabel="Got it, hide the swipe tip"
+          accessibilityLabel={t("gotItA11y")}
           hitSlop={8}
           style={({ pressed }) => [styles.button, pressed && { opacity: 0.8 }]}
         >
-          <Text style={styles.buttonText}>Got it</Text>
+          <Text style={[styles.buttonText, { fontFamily: ui.bodyBold }]}>{t("gotIt")}</Text>
         </Pressable>
       </View>
     </Animated.View>
