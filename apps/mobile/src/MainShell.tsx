@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  ActivityIndicator,
   BackHandler,
   Pressable,
   StyleSheet,
@@ -9,11 +8,15 @@ import {
 } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { FeedGame, isApiError } from "./api";
+import { api, FeedGame, isApiError } from "./api";
 import { BottomNav, TabKey } from "./components/BottomNav";
+import { CloseButton } from "./components/CloseButton";
+import { CoinToast } from "./components/CoinToast";
 import { ErrorState } from "./components/ErrorState";
 import { MajaLogo } from "./components/MajaLogo";
 import { PrimaryButton } from "./components/PrimaryButton";
+import { ScreenLoading } from "./components/ScreenLoading";
+import { WalletSheet } from "./components/WalletSheet";
 import { useApp } from "./context/AppContext";
 import { useLanguage } from "./context/LanguageContext";
 import { localizeGame } from "./i18n/games";
@@ -40,6 +43,7 @@ import { WeeklyRecapScreen } from "./screens/profile/WeeklyRecapScreen";
 import { SignInScreen } from "./screens/auth/SignInScreen";
 import { useAuth } from "./context/AuthContext";
 import { clearLocalSupabaseSession, isSupabaseConfigured } from "./lib/supabase";
+import { capture, markOnboardingStart, trackScreen } from "./lib/analytics";
 import { useFriendInvite } from "./lib/useFriendInvite";
 import { colors, spacing } from "./theme/colors";
 import { type } from "./theme/typography";
@@ -56,7 +60,7 @@ function BootLoading({ onRetry }: { onRetry: () => void }) {
   return (
     <View style={styles.center}>
       <MajaLogo size="lg" />
-      <ActivityIndicator color={colors.lime} style={{ marginTop: 16 }} />
+      <ScreenLoading style={{ flex: 0, paddingTop: spacing.md }} />
       {showRetry ? (
         <View style={{ marginTop: 24, paddingHorizontal: 32, alignItems: "center", gap: 12 }}>
           <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>
@@ -81,10 +85,12 @@ export function MainShell() {
     promptSave,
     setPromptSave,
     completeOnboarding,
+    resumeOnboarding,
     refreshFeed,
     retryBoot,
     items,
-    streak,
+    noteEarn,
+    refreshWallet,
     refreshFriends,
     refreshFriendRequests,
   } = useApp();
@@ -96,6 +102,7 @@ export function MainShell() {
   const [showNotif, setShowNotif] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
   const [showStreak, setShowStreak] = useState(false);
+  const [showWallet, setShowWallet] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [gameSubmitting, setGameSubmitting] = useState(false);
@@ -151,11 +158,6 @@ export function MainShell() {
     wasSignedIn.current = isSignedIn;
   }, [isSignedIn, dismissOverlays, setTab, setPromptSave]);
 
-  const openSignIn = useCallback(() => {
-    setSignInError("");
-    setShowSignIn(true);
-  }, []);
-
   const welcomeGoogle = useCallback(async () => {
     if (welcomeAuthBusy) return;
     setWelcomeAuthBusy(true);
@@ -173,11 +175,27 @@ export function MainShell() {
     }
   }, [signInWithGoogle, welcomeAuthBusy, setOnboardingStep]);
 
-  const startGame = useCallback((game: FeedGame) => {
+  /** After guest → feed → login, finish profile + categories if the account has none yet. */
+  const maybeResumeSetupAfterSignIn = useCallback(async () => {
+    try {
+      const r = await api<{ categories: unknown[] }>("/v1/me/interests");
+      if (r.categories?.length) return;
+    } catch {
+      // Still send them through setup — missing interests is worse than a redundant prompt.
+    }
+    await resumeOnboarding("profile");
+  }, [resumeOnboarding]);
+
+  const startGame = useCallback((game: FeedGame, source: "feed" | "replay" | "next" | "resume" = "feed") => {
     setGameResult(null);
     setRestoring(undefined);
     setResumable(null);
     void sessionStore.clear().catch(() => {});
+    capture("game_started", {
+      game_id: game.key,
+      game_type: game.engine ?? game.key,
+      source,
+    });
     setPlaying(game);
   }, []);
 
@@ -185,6 +203,11 @@ export function MainShell() {
     const def = session.definition;
     setResumable(null);
     setRestoring(session);
+    capture("game_started", {
+      game_id: session.gameKey,
+      game_type: def.engine,
+      source: "resume",
+    });
     setPlaying({
       type: "mini_game",
       key: session.gameKey,
@@ -228,9 +251,16 @@ export function MainShell() {
       setPlaying(null);
       setRestoring(undefined);
       setGameSubmitting(false);
+      capture("game_completed", {
+        game_id: game.key,
+        score: play.score,
+        duration_seconds: Math.round(play.durationMs / 1000),
+      });
+      // Credit after the result screen mounts so the toast is visible over it.
       setGameResult({ ...outcome, game, play });
+      noteEarn(outcome.balance, outcome.coinsEarned ?? 0, "game", { gameId: game.key });
     },
-    [playing, savePlay],
+    [playing, savePlay, noteEarn],
   );
 
   const retrySave = useCallback(async () => {
@@ -239,8 +269,9 @@ export function MainShell() {
     setRetryingSave(true);
     const outcome = await savePlay(gameResult.play);
     setGameResult((r) => (r && r.play.sessionId === sessionId ? { ...r, ...outcome } : r));
+    noteEarn(outcome.balance, outcome.coinsEarned ?? 0, "game", { gameId: gameResult.game.key });
     setRetryingSave(false);
-  }, [gameResult, retryingSave, savePlay]);
+  }, [gameResult, retryingSave, savePlay, noteEarn]);
 
   const goBackOnboarding = useCallback(() => {
     if (onboardingStep === "ready") return;
@@ -325,6 +356,64 @@ export function MainShell() {
     showStreak,
   ]);
 
+  useEffect(() => {
+    if (!ready) {
+      trackScreen("boot");
+      return;
+    }
+    if (showSignIn) {
+      trackScreen("sign_in");
+      return;
+    }
+    if (!onboardingDone) {
+      markOnboardingStart();
+      trackScreen(`onboarding_${onboardingStep}`);
+      return;
+    }
+    if (playing) {
+      trackScreen("game");
+      return;
+    }
+    if (gameResult) {
+      trackScreen("game_result");
+      return;
+    }
+    if (showLeaderboard) {
+      trackScreen("leaderboard");
+      return;
+    }
+    if (showNotif) {
+      trackScreen("notifications");
+      return;
+    }
+    if (showRecap) {
+      trackScreen("weekly_recap");
+      return;
+    }
+    if (showStreak) {
+      trackScreen("streak");
+      return;
+    }
+    if (showWallet) {
+      trackScreen("wallet");
+      return;
+    }
+    trackScreen(tab);
+  }, [
+    ready,
+    showSignIn,
+    onboardingDone,
+    onboardingStep,
+    playing,
+    gameResult,
+    showLeaderboard,
+    showNotif,
+    showRecap,
+    showStreak,
+    showWallet,
+    tab,
+  ]);
+
   if (!ready) {
     return (
       <BootLoading
@@ -350,9 +439,16 @@ export function MainShell() {
         onSuccess={() => {
           setPromptSave(false);
           setSignInError("");
-          void refreshFeed();
           if (!onboardingDone && onboardingStep === "signup") {
             setOnboardingStep("profile");
+            void refreshFeed();
+          } else if (onboardingDone) {
+            void (async () => {
+              await maybeResumeSetupAfterSignIn();
+              void refreshFeed();
+            })();
+          } else {
+            void refreshFeed();
           }
         }}
       />
@@ -384,10 +480,9 @@ export function MainShell() {
       screen = (
         <WelcomeScreen
           onBack={goBackOnboarding}
-          onGuest={() => setOnboardingStep("profile")}
+          onGuest={() => setOnboardingStep("interests")}
           googleAvailable={googleAvailable}
           onGoogleSignIn={() => void welcomeGoogle()}
-          onEmailSignIn={isSupabaseConfigured() ? openSignIn : undefined}
           busy={welcomeAuthBusy}
           signedInAs={isSignedIn ? (user?.email ?? t("yourAccount")) : null}
           onContinueSignedIn={() => setOnboardingStep("profile")}
@@ -432,9 +527,8 @@ export function MainShell() {
           onExit={cancelGame}
         />
         {gameSubmitting ? (
-          <View style={styles.submitOverlay} accessibilityLabel="Saving score">
-            <ActivityIndicator color={colors.lime} size="large" />
-            <Text style={[type.bodySm, { color: colors.lilac, marginTop: 12, fontFamily: ui.body }]}>{t("savingScore")}</Text>
+          <View style={styles.submitOverlay}>
+            <ScreenLoading label={t("savingScore")} style={{ flex: 0, backgroundColor: "transparent" }} />
           </View>
         ) : null}
       </View>
@@ -447,23 +541,30 @@ export function MainShell() {
       gameResult.game.key,
     );
     return (
-      <PostGameResultScreen
-        gameTitle={localizeGame(gameResult.game, language).title}
-        score={gameResult.score}
-        percentile={gameResult.percentile}
-        correct={gameResult.play.correct}
-        attempts={gameResult.play.attempts}
-        rounds={gameResult.play.rounds}
-        scoreBreakdown={gameResult.play.breakdown}
-        saveState={gameResult.saveState}
-        saveMessage={gameResult.saveMessage}
-        onRetrySave={() => void retrySave()}
-        retryingSave={retryingSave}
-        onPlayAgain={() => startGame(gameResult.game)}
-        onNextGame={upNext ? () => startGame(upNext) : undefined}
-        onBackToFeed={() => setGameResult(null)}
-        enableShare
-      />
+      <View style={{ flex: 1 }}>
+        <PostGameResultScreen
+          gameKey={gameResult.game.key}
+          gameTitle={localizeGame(gameResult.game, language).title}
+          score={gameResult.score}
+          percentile={gameResult.percentile}
+          correct={gameResult.play.correct}
+          attempts={gameResult.play.attempts}
+          rounds={gameResult.play.rounds}
+          scoreBreakdown={gameResult.play.breakdown}
+          coinsEarned={gameResult.coinsEarned}
+          saveState={gameResult.saveState}
+          saveMessage={gameResult.saveMessage}
+          onRetrySave={() => void retrySave()}
+          retryingSave={retryingSave}
+          onPlayAgain={() => startGame(gameResult.game, "replay")}
+          onNextGame={upNext ? () => startGame(upNext, "next") : undefined}
+          onBackToFeed={() => {
+            setGameResult(null);
+            void refreshWallet();
+          }}
+          enableShare
+        />
+      </View>
     );
   }
 
@@ -504,7 +605,7 @@ export function MainShell() {
   }
 
   if (showStreak) {
-    return <StreakScreen streak={streak} onBack={() => setShowStreak(false)} />;
+    return <StreakScreen onBack={() => setShowStreak(false)} />;
   }
 
   return (
@@ -515,6 +616,7 @@ export function MainShell() {
             onPlayGame={startGame}
             onOpenProfile={() => setTab("vault")}
             onOpenStreak={() => setShowStreak(true)}
+            onOpenWallet={() => setShowWallet(true)}
             onSignIn={isSupabaseConfigured() ? () => setShowSignIn(true) : undefined}
           />
         </View>
@@ -543,9 +645,7 @@ export function MainShell() {
               Resume {resumable.title ?? "your game"}? Score {resumable.score}
             </Text>
           </Pressable>
-          <Pressable onPress={dismissResume} accessibilityRole="button" accessibilityLabel="Dismiss" hitSlop={10}>
-            <Text style={[type.bodySm, { color: colors.lilac }]}>✕</Text>
-          </Pressable>
+          <CloseButton onPress={dismissResume} />
         </View>
       ) : null}
       {invite.notice ? (
@@ -564,9 +664,7 @@ export function MainShell() {
           >
             <Text style={[type.bodySm, { color: colors.paper }]}>{invite.notice.text}</Text>
           </Pressable>
-          <Pressable onPress={invite.dismiss} accessibilityRole="button" accessibilityLabel="Dismiss" hitSlop={10}>
-            <Text style={[type.bodySm, { color: colors.lilac }]}>✕</Text>
-          </Pressable>
+          <CloseButton onPress={invite.dismiss} />
         </View>
       ) : null}
       {promptSave ? (
@@ -578,14 +676,34 @@ export function MainShell() {
       ) : null}
 
       <BottomNav active={tab} onChange={(t: TabKey) => setTab(t)} />
+      <WalletSheet
+        visible={showWallet}
+        onClose={() => setShowWallet(false)}
+        onSignIn={
+          isSupabaseConfigured()
+            ? () => {
+                setShowWallet(false);
+                setShowSignIn(true);
+              }
+            : undefined
+        }
+      />
     </View>
   );
+}
+
+function GlobalCoinCredit() {
+  const { coinCredit } = useApp();
+  return <CoinToast credit={coinCredit} />;
 }
 
 export default function AppRoot() {
   return (
     <SafeAreaProvider>
-      <MainShell />
+      <View style={{ flex: 1 }}>
+        <MainShell />
+        <GlobalCoinCredit />
+      </View>
     </SafeAreaProvider>
   );
 }

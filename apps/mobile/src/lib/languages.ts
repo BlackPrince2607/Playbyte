@@ -8,7 +8,7 @@ export type AppLanguage = {
 
 export const APP_LANGUAGES: readonly AppLanguage[] = [
   { id: "en", name: "English", glyph: "Aa", greeting: "Hello & Welcome", tag: "Global" },
-  { id: "hi", name: "हिंदी", glyph: "अ", greeting: "नमस्ते और स्वागत है", tag: "Popular" },
+  { id: "hi", name: "हिंदी", glyph: "अ", greeting: "नमस्ते! स्वागत है", tag: "Popular" },
 ];
 
 export const UPCOMING_LANGUAGES = ["Hinglish", "தமிழ்", "తెలుగు", "ಕನ್ನಡ", "मराठी"];

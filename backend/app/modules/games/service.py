@@ -8,6 +8,7 @@ from app.common.auth import Actor
 from app.common.errors import AppError
 from app.config import get_settings
 from app.infrastructure.postgres.models import GamePlay, GuestSession, MiniGame
+from app.modules.economy.service import grant_game, lookup_game_reward
 from app.modules.games.scoring import clamp_score, min_plausible_duration_ms, percentile
 from app.modules.responses.service import _bump_daily
 
@@ -48,6 +49,18 @@ async def _existing_play(
     return await session.scalar(stmt)
 
 
+def _no_coins() -> dict:
+    return {"coinsEarned": 0, "balance": None}
+
+
+async def _play_coins(session: AsyncSession, actor: Actor, play_id, *, created: bool, local_day) -> dict:
+    if not actor.user_id or play_id is None:
+        return _no_coins()
+    if created:
+        return await grant_game(session, actor.user_id, play_id, local_day)
+    return await lookup_game_reward(session, actor.user_id, play_id)
+
+
 async def submit_play(
     session: AsyncSession,
     actor: Actor,
@@ -56,6 +69,7 @@ async def submit_play(
     duration_ms: int,
     idempotency_key: str | None,
     meta: dict | None = None,
+    local_day=None,
 ) -> dict:
     game = await session.get(MiniGame, game_key)
     if game is None or game.status != "enabled":
@@ -74,12 +88,14 @@ async def submit_play(
         existing = await _existing_play(session, actor, game_key, idempotency_key)
         if existing:
             stats = await game_stats(session, game_key, existing.score, direction)
+            coins = await _play_coins(session, actor, existing.id, created=False, local_day=local_day)
             return {
                 "playId": str(existing.id),
                 "score": existing.score,
                 "created": False,
                 **stats,
                 "promptAccountCreation": _prompt(actor),
+                **coins,
             }
 
     if await _recent_play_count(session, actor) >= PLAYS_PER_MINUTE_LIMIT:
@@ -110,12 +126,14 @@ async def submit_play(
         if existing is None:
             raise AppError("conflict", "Could not record play.", 409) from None
         stats = await game_stats(session, game_key, existing.score, direction)
+        coins = await _play_coins(session, actor, existing.id, created=False, local_day=local_day)
         return {
             "playId": str(existing.id),
             "score": existing.score,
             "created": False,
             **stats,
             "promptAccountCreation": _prompt(actor),
+            **coins,
         }
 
     if actor.guest_id:
@@ -126,6 +144,7 @@ async def submit_play(
     if actor.user_id:
         await _bump_daily(session, actor.user_id, games=1)
     await session.flush()
+    coins = await _play_coins(session, actor, play.id, created=True, local_day=local_day)
     stats = await game_stats(session, game_key, score, direction)
     return {
         "playId": str(play.id),
@@ -133,6 +152,7 @@ async def submit_play(
         "created": True,
         **stats,
         "promptAccountCreation": _prompt(actor),
+        **coins,
     }
 
 

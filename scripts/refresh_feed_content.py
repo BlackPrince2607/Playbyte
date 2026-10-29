@@ -1,8 +1,11 @@
-"""Publish a fresh text + image/meme batch via admin API, then retire the previous live moments.
+"""Publish a fresh agent batch via the admin API, then retire the previous live feed.
+
+Every successful run fills the feed with India-trend polls/quizzes (engagement-aware),
+gives them a short endsAt window, and retires all prior live moments so nothing repeats.
 
 Usage:
   python scripts/refresh_feed_content.py --dry-run
-  python scripts/refresh_feed_content.py --api-url https://majaa-production.up.railway.app --count 40
+  python scripts/refresh_feed_content.py --api-url https://majaa-production.up.railway.app --per-category 20
   python scripts/refresh_feed_content.py --no-images
 """
 
@@ -11,6 +14,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import os
 import random
 import sys
 import urllib.error
@@ -24,22 +28,15 @@ ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT / "backend"
 sys.path.insert(0, str(BACKEND))
 
-TEXT_PACK = ROOT / "docs" / "content" / "category-question-pack.json"
 MEME_PACK = ROOT / "docs" / "content" / "meme-image-pack.json"
 
-LIVE_CATEGORIES = {
-    "sports",
-    "cricket",
-    "news",
-    "pop-culture",
-    "food",
-    "weather",
-    "tech",
-    "music",
-    "movies",
-    "social",
-    "casual",
-}
+def _onboarding_slugs() -> tuple[str, ...]:
+    from scripts.content_gen.catalog import ONBOARDING_SLUGS
+
+    return ONBOARDING_SLUGS
+
+
+LIVE_CATEGORIES = set(_onboarding_slugs())
 
 
 def req(method: str, url: str, *, headers: dict[str, str], body: dict | None = None) -> dict:
@@ -72,50 +69,20 @@ def memegen_url(template: str, lines: list[str]) -> str:
 
 
 def normalize_options_for_api(options: list[Any]) -> list[Any]:
-    """Admin create accepts strings or {label,imageKey,isCorrect} objects."""
+    """Admin create accepts strings or {label,labelHi,imageKey,isCorrect} objects."""
     out: list[Any] = []
     for opt in options:
         if isinstance(opt, str):
             out.append(opt)
         else:
             row: dict[str, Any] = {"label": opt.get("label") or opt.get("text") or ""}
+            if opt.get("labelHi") or opt.get("label_hi"):
+                row["labelHi"] = opt.get("labelHi") or opt.get("label_hi")
             if opt.get("imageKey"):
                 row["imageKey"] = opt["imageKey"]
             if opt.get("isCorrect"):
                 row["isCorrect"] = True
             out.append(row)
-    return out
-
-
-def load_packs(*, include_images: bool) -> list[dict[str, Any]]:
-    moments: list[dict[str, Any]] = []
-    text = json.loads(TEXT_PACK.read_text(encoding="utf-8"))
-    moments.extend(text.get("moments") or [])
-    if include_images and MEME_PACK.exists():
-        meme = json.loads(MEME_PACK.read_text(encoding="utf-8"))
-        moments.extend(meme.get("moments") or [])
-    return [m for m in moments if m.get("categorySlug") in LIVE_CATEGORIES]
-
-
-def generate_variants(count: int) -> list[dict[str, Any]]:
-    from scripts.content_gen.run import generate_batch
-
-    batch = generate_batch(count, ["poll", "poll", "poll", "quiz"])
-    out: list[dict[str, Any]] = []
-    for m in batch:
-        if m.categorySlug not in LIVE_CATEGORIES:
-            continue
-        out.append(
-            {
-                "categorySlug": m.categorySlug,
-                "type": m.type,
-                "tags": m.tags,
-                "scoringMode": m.scoringMode,
-                "prompt": m.prompt,
-                "options": m.options,
-                "restrictedTopic": "none",
-            }
-        )
     return out
 
 
@@ -226,6 +193,15 @@ def list_live(*, api_url: str, headers: dict[str, str]) -> list[dict[str, Any]]:
     return [m for m in existing.get("moments", []) if m.get("status") == "live"]
 
 
+def fetch_insights(*, api_url: str, headers: dict[str, str]) -> dict[str, Any]:
+    """Pull engagement rollups so the agent can lean into hits and drop duds."""
+    try:
+        return req("GET", f"{api_url}/v1/admin/moments/insights?limit=300", headers=headers)
+    except Exception as exc:  # noqa: BLE001 — refresh still works without learning signals
+        print(f"WARN insights unavailable: {exc}")
+        return {}
+
+
 def retire_moments(live: list[dict[str, Any]], *, api_url: str, headers: dict[str, str], dry_run: bool) -> int:
     retired = 0
     for m in live:
@@ -272,10 +248,16 @@ def publish_moment(
         "options": normalize_options_for_api(moment.get("options") or []),
         "restrictedTopic": "none",
         "startsAt": starts.isoformat().replace("+00:00", "Z"),
-        "endsAt": ends.isoformat().replace("+00:00", "Z"),
         "scoringMode": moment.get("scoringMode") or "none",
         "tags": list(moment.get("tags") or ["poll"]),
     }
+    prompt_hi = moment.get("promptHi") or moment.get("prompt_hi")
+    if prompt_hi:
+        body["promptHi"] = str(prompt_hi).strip()
+    if "endsAt" in moment:
+        body["endsAt"] = moment["endsAt"]
+    else:
+        body["endsAt"] = ends.isoformat().replace("+00:00", "Z")
     if moment.get("promptImageKey"):
         body["promptImageKey"] = moment["promptImageKey"]
 
@@ -306,11 +288,12 @@ def publish_moment(
 
 
 def build_batch(count: int, *, include_images: bool) -> list[dict[str, Any]]:
-    pack = load_packs(include_images=include_images)
+    pack: list[dict[str, Any]] = []
+    if include_images and MEME_PACK.exists():
+        meme = json.loads(MEME_PACK.read_text(encoding="utf-8"))
+        pack = [m for m in (meme.get("moments") or []) if m.get("categorySlug") in LIVE_CATEGORIES]
     random.shuffle(pack)
-    variants = generate_variants(max(count, 20))
-    random.shuffle(variants)
-    combined = pack + variants
+    combined = pack
     # Prefer unique prompts; keep order after shuffle.
     seen: set[str] = set()
     unique: list[dict[str, Any]] = []
@@ -325,17 +308,95 @@ def build_batch(count: int, *, include_images: bool) -> list[dict[str, Any]]:
     return unique
 
 
+def plan_agent_batch(
+    previous: list[dict[str, Any]],
+    *,
+    per_category: int,
+    window_ends: datetime,
+    window_hours: float,
+    insights: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Fresh agent cards for every category (plus event briefs). Avoids all prior live prompts."""
+    from scripts.content_gen.agent import agent_candidates, fill_evergreen, localize_hi
+    from scripts.content_gen.catalog import MIN_LIVE, ONBOARDING_SLUGS, event_cards
+
+    need = max(per_category, MIN_LIVE)
+    freshness_hours = max(1, int(round(window_hours)))
+    by_category = (insights or {}).get("byCategory") or {}
+    # Never re-show anything currently live, plus recent prompts from insights.
+    seen: set[str] = {str(moment.get("prompt") or "").strip() for moment in previous}
+    for row in (insights or {}).get("moments") or []:
+        prompt = str(row.get("prompt") or "").strip()
+        if prompt:
+            seen.add(prompt)
+    seen.discard("")
+    avoid = list(seen)
+
+    now = datetime.now(UTC)
+    planned: list[dict[str, Any]] = []
+    for slug in ONBOARDING_SLUGS:
+        cat_insights = by_category.get(slug) or {}
+        for extra in cat_insights.get("avoidPrompts") or []:
+            text = str(extra).strip()
+            if text and text not in seen:
+                seen.add(text)
+                avoid.append(text)
+        print(f"AGENT {slug}: requesting {need} cards…")
+        proposed = agent_candidates(
+            slug,
+            need,
+            avoid_prompts=avoid,
+            insights=cat_insights,
+            freshness_hours=freshness_hours,
+        )
+        # Prefer model cards; evergreen is a last-resort top-up only.
+        proposed = fill_evergreen(slug, proposed, need)
+        proposed.extend(event_cards(slug, now=now))
+        proposed = localize_hi(proposed)
+        added = 0
+        for card in proposed:
+            if card.prompt in seen:
+                continue
+            is_event = bool(card.brief_id)
+            if not is_event and added >= need:
+                continue
+            ends = card.ends_at or window_ends
+            row: dict[str, Any] = {
+                "categorySlug": card.category_slug,
+                "type": card.type,
+                "tags": list(card.tags),
+                "scoringMode": card.scoring_mode,
+                "prompt": card.prompt,
+                "options": card.options,
+                "endsAt": ends.isoformat().replace("+00:00", "Z"),
+            }
+            if card.prompt_hi:
+                row["promptHi"] = card.prompt_hi
+            planned.append(row)
+            seen.add(card.prompt)
+            avoid.append(card.prompt)
+            if not is_event:
+                added += 1
+        print(f"AGENT {slug}: kept {added} (+events) of {len(proposed)} proposed")
+    return planned
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Publish a fresh feed batch, then retire the previous live moments")
+    parser = argparse.ArgumentParser(description="Publish a fresh feed batch, then retire the previous live feed")
     parser.add_argument("--api-url", default="https://majaa-production.up.railway.app")
     parser.add_argument("--admin-key", default="dev-admin-key")
-    parser.add_argument("--count", type=int, default=40)
-    parser.add_argument("--window-hours", type=float, default=5.0)
+    parser.add_argument("--count", type=int, default=12, help="Optional meme/image moments (agent fills the feed)")
+    parser.add_argument("--per-category", type=int, default=20, help="Fresh agent cards per category (fills the live feed)")
+    parser.add_argument("--window-hours", type=float, default=4.0, help="Card TTL; match refresh cadence so the feed expires")
     parser.add_argument("--include-images", dest="include_images", action="store_true", default=True)
     parser.add_argument("--no-images", dest="include_images", action="store_false")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--skip-retire", action="store_true")
     args = parser.parse_args()
+
+    if not os.environ.get("OPENAI_API_KEY", "").strip():
+        print("OPENAI_API_KEY is not set. Add it to the environment before generating.")
+        return 1
 
     api_url = args.api_url.rstrip("/")
     headers = {
@@ -351,13 +412,35 @@ def main() -> int:
         raise SystemExit(f"Missing categories on API: {', '.join(sorted(missing))}")
 
     # Snapshot the old batch now but retire it only after the new one is live, so a cancelled
-    # or failed run never leaves the feed without moments.
+    # or failed run never leaves the feed empty.
     previous = [] if args.skip_retire else list_live(api_url=api_url, headers=headers)
+    insights = fetch_insights(api_url=api_url, headers=headers)
+    print(
+        f"Insights: {insights.get('count', 0)} recent moments, "
+        f"{len(insights.get('byCategory') or {})} categories with signal"
+    )
 
-    batch = build_batch(args.count, include_images=args.include_images)
     starts = datetime.now(UTC)
     ends = starts + timedelta(hours=args.window_hours)
     stamp = starts.strftime("%Y%m%d%H%M")
+
+    try:
+        agent_batch = plan_agent_batch(
+            previous,
+            per_category=args.per_category,
+            window_ends=ends,
+            window_hours=args.window_hours,
+            insights=insights,
+        )
+    except Exception as exc:  # noqa: BLE001 — missing key or a failed model call must not retire the feed
+        print(f"Agent generation failed: {exc}")
+        return 1
+
+    from scripts.content_gen.agent import localize_hi_dicts
+
+    # Agent batch is the feed; memes are light spice only.
+    meme_batch = localize_hi_dicts(build_batch(args.count, include_images=args.include_images))
+    batch = agent_batch + meme_batch
 
     created = 0
     failed = 0
@@ -382,6 +465,10 @@ def main() -> int:
                 continue
             moment = hydrated
 
+        # Every published card expires with the refresh window so the next run can replace it.
+        if not moment.get("endsAt"):
+            moment = {**moment, "endsAt": ends.isoformat().replace("+00:00", "Z")}
+
         cat_id = by_slug[moment["categorySlug"]]
         ok = publish_moment(
             api_url=api_url,
@@ -405,7 +492,8 @@ def main() -> int:
 
     print(
         f"\nRefresh done: retired={retired} created={created} failed={failed} "
-        f"count_target={args.count} images={args.include_images} dry_run={args.dry_run}"
+        f"per_category={args.per_category} count_target={args.count} "
+        f"images={args.include_images} dry_run={args.dry_run}"
     )
     return 0 if failed == 0 or created > 0 else 1
 

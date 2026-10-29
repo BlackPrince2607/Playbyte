@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   api,
@@ -11,10 +10,14 @@ import {
   type LeaderboardScope,
 } from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
+import { BackLink } from "../../components/BackLink";
+import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
+import { GuestGate } from "../../components/GuestGate";
 import { MajaLogo } from "../../components/MajaLogo";
-import { PrimaryButton } from "../../components/PrimaryButton";
+import { ScreenLoading } from "../../components/ScreenLoading";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
@@ -66,6 +69,7 @@ function Row({ entry }: { entry: LeaderboardEntry }) {
 /** Weekly and all-time ranks from real answers and finished games. */
 export function LeaderboardScreen({ onBack, onSignIn }: Props) {
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
   const { isSignedIn } = useAuth();
   const [scope, setScope] = useState<LeaderboardScope>(isSignedIn ? "friends" : "global");
   const [period, setPeriod] = useState<LeaderboardPeriod>("week");
@@ -116,9 +120,7 @@ export function LeaderboardScreen({ onBack, onSignIn }: Props) {
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
       <View style={styles.top}>
-        <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back">
-          <Ionicons name="arrow-back" size={24} color={colors.paper} />
-        </Pressable>
+        <BackLink onPress={onBack} withLabel={false} />
         <MajaLogo />
         <View style={{ width: 24 }} />
       </View>
@@ -147,13 +149,12 @@ export function LeaderboardScreen({ onBack, onSignIn }: Props) {
 
         {needsSignIn ? (
           <View style={styles.card}>
-            <Text style={[type.bodyLg, { color: colors.paper }]}>Sign in to compete with your friends.</Text>
-            {onSignIn ? <PrimaryButton label="Sign in" onPress={onSignIn} /> : null}
+            <GuestGate title={t("signInToCompete")} actionLabel={t("signIn")} onSignIn={onSignIn} />
           </View>
         ) : loading && !board ? (
-          <ActivityIndicator color={colors.lime} style={{ marginTop: spacing.xl }} />
+          <ScreenLoading label={t("loadingLeaderboard")} style={{ flex: 0, minHeight: 160 }} />
         ) : error ? (
-          <ErrorState message={error} onRetry={() => void load()} />
+          <ErrorState message={error} onRetry={() => void load()} compact />
         ) : board ? (
           <>
             {you ? (
@@ -173,11 +174,15 @@ export function LeaderboardScreen({ onBack, onSignIn }: Props) {
             ) : null}
 
             {board.entries.length === 0 ? (
-              <Text style={[type.bodySm, styles.empty]}>
-                {scope === "friends"
-                  ? "Add friends from the Friends tab and they’ll show up here."
-                  : "No one has scored yet. Be the first!"}
-              </Text>
+              <EmptyState
+                title={scope === "friends" ? "No friends on the board" : "Empty board"}
+                message={
+                  scope === "friends"
+                    ? "Add friends from the Friends tab and they’ll show up here."
+                    : "No one has scored yet. Be the first!"
+                }
+                style={{ flex: 0, paddingTop: spacing.lg }}
+              />
             ) : (
               <View style={styles.list}>
                 {board.entries.map((e) => (

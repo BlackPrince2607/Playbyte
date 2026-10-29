@@ -31,15 +31,18 @@ async def create_moment(
     prompt_image_key: str | None = None,
     scoring_mode: str = "none",
     tag_slugs: list[str] | None = None,
+    prompt_hi: str | None = None,
 ) -> Moment:
     normalized: list[dict] = []
     for i, opt in enumerate(options):
         if isinstance(opt, str):
-            normalized.append({"label": opt, "imageKey": None, "isCorrect": False, "sortOrder": i})
+            normalized.append({"label": opt, "labelHi": None, "imageKey": None, "isCorrect": False, "sortOrder": i})
         else:
+            label_hi = opt.get("labelHi") or opt.get("label_hi")
             normalized.append(
                 {
                     "label": opt.get("label") or opt.get("text"),
+                    "labelHi": str(label_hi).strip() if label_hi else None,
                     "imageKey": opt.get("imageKey") or opt.get("image_key"),
                     "isCorrect": bool(opt.get("isCorrect") or opt.get("is_correct")),
                     "sortOrder": opt.get("sortOrder", i),
@@ -80,10 +83,12 @@ async def create_moment(
     if any(w in lowered for w in ("odds", "payout", "bet", "stake", "wager")):
         raise AppError("invalid", "Prediction copy cannot use gambling language.", 422)
 
+    hi = (prompt_hi or "").strip() or None
     m = Moment(
         type=moment_type,
         category_id=category_id,
         prompt=prompt,
+        prompt_hi=hi,
         prompt_image_key=prompt_image_key,
         scoring_mode=scoring_mode,
         restricted_topic=restricted_topic,
@@ -100,6 +105,7 @@ async def create_moment(
             MomentOption(
                 moment_id=m.id,
                 label=opt["label"],
+                label_hi=opt.get("labelHi"),
                 image_key=opt.get("imageKey"),
                 is_correct=bool(opt.get("isCorrect")),
                 sort_order=int(opt["sortOrder"]),

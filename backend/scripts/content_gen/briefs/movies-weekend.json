@@ -1,0 +1,29 @@
+{
+  "id": "movies-weekend-window",
+  "category": "movies",
+  "title": "Weekend theatre release",
+  "eventDate": "2026-10-24",
+  "context": "This weekend's theatre release",
+  "freshnessHours": 72,
+  "allowPrediction": true,
+  "angles": ["relatable consequence"],
+  "facts": ["opening weekend", "interval twist", "bookings opened Thursday"],
+  "opinion": {
+    "prompt": "Opening weekend. Book now or wait?",
+    "options": ["book opening day", "wait for reviews", "stream later"]
+  },
+  "debate": {
+    "prompt": "What matters more on opening weekend?",
+    "options": ["the interval twist", "the bookings rush"]
+  },
+  "prediction": {
+    "prompt": "Prediction: will you watch during opening weekend?",
+    "options": ["yes, in a theatre", "no, later at home"]
+  },
+  "quiz": {
+    "questionType": "which",
+    "prompt": "Bookings opened on which day?",
+    "options": ["Thursday", "Monday", "Sunday"],
+    "correct": "Thursday"
+  }
+}

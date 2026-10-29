@@ -24,15 +24,27 @@ import {
 } from "../api";
 import { isPlayable } from "../game/discovery";
 import { appendFeedPage, FEED_PREFETCH_AHEAD } from "../lib/feedPages";
-import { useAuth } from "./AuthContext";
+import type { CoinCredit, CoinCreditReason, WalletSnapshot } from "../lib/economy";
+import { initPurchases } from "../lib/purchases";
 import {
+  clearOnboardingDone,
   getOnboardingStep,
+  getStreak,
+  getStreakDate,
   isOnboardingDone,
   recordDailyVisit,
   setOnboardingDone,
   setOnboardingStep as persistOnboardingStep,
   type OnboardingStep,
 } from "../lib/storage";
+import {
+  capture,
+  markOnboardingStart,
+  onboardingDurationSeconds,
+  trackAppOpened,
+} from "../lib/analytics";
+import { claimStreak, fetchWallet } from "../lib/walletApi";
+import { useAuth } from "./AuthContext";
 import { useLanguage } from "./LanguageContext";
 import { isCacheFresh } from "../lib/cache";
 import type { TabKey } from "../components/BottomNav";
@@ -64,6 +76,8 @@ type AppState = {
   loadMoreFeed: (viewerIndex?: number) => Promise<void>;
   retryBoot: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  /** Re-open profile/interests after a guest later signs in without having set them up. */
+  resumeOnboarding: (step?: OnboardingStep) => Promise<void>;
   setOnboardingStep: (step: OnboardingStep) => void;
   setTab: (t: TabKey) => void;
   setPromptSave: (v: boolean) => void;
@@ -88,6 +102,19 @@ type AppState = {
   /** Latest like / share / comment counts per moment; falls back to the feed payload. */
   engagementFor: (moment: FeedMoment) => MomentEngagement;
   updateEngagement: (momentId: string, patch: Partial<MomentEngagement>) => void;
+  wallet: WalletSnapshot | null;
+  /** Latest coin credit for toast / wallet pulse; null when idle. */
+  coinCredit: CoinCredit | null;
+  applyWallet: (next: WalletSnapshot, earned?: number, reason?: CoinCreditReason) => void;
+  refreshWallet: () => Promise<void>;
+  noteBalance: (balance: number) => void;
+  /** Apply a server earn (game / poll / streak / purchase) to the on-screen balance and toast. */
+  noteEarn: (
+    balance: number | null | undefined,
+    earned?: number,
+    kind?: CoinCreditReason,
+    meta?: { gameId?: string; itemId?: string },
+  ) => void;
 };
 
 const EMPTY_ENGAGEMENT: MomentEngagement = { likes: 0, shares: 0, comments: 0, likedByMe: false };
@@ -121,7 +148,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   languageRef.current = language;
   const tRef = useRef(t);
   tRef.current = t;
-  const { ready: authReady, isSignedIn } = useAuth();
+  const { ready: authReady, isSignedIn, user } = useAuth();
   const [ready, setReady] = useState(false);
   const [bootError, setBootError] = useState("");
   const [onboardingDone, setOnboardingDoneState] = useState(false);
@@ -134,6 +161,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [feedRefreshing, setFeedRefreshing] = useState(false);
   const [feedError, setFeedError] = useState("");
   const [streak, setStreak] = useState(0);
+  const [wallet, setWallet] = useState<WalletSnapshot | null>(null);
+  const [coinCredit, setCoinCredit] = useState<CoinCredit | null>(null);
+  const creditSeq = useRef(0);
   const [promptSave, setPromptSave] = useState(false);
   const [feedIndex, setFeedIndex] = useState(0);
   const feedIndexRef = useRef(feedIndex);
@@ -168,6 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFriendRequests({ incoming: [], outgoing: [] });
     setFriendRequestsError("");
     setMe(null);
+    setWallet(null);
     friendsFetchedAt.current = null;
     friendRequestsFetchedAt.current = null;
   }, []);
@@ -175,6 +206,119 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateMe = useCallback((patch: Partial<MySummary>) => {
     setMe((current) => (current ? { ...current, ...patch } : current));
   }, []);
+
+  const showCoinCredit = useCallback((amount: number, reason: CoinCreditReason) => {
+    if (amount <= 0) return;
+    creditSeq.current += 1;
+    setCoinCredit({ amount, reason, id: creditSeq.current });
+  }, []);
+
+  const applyWallet = useCallback(
+    (next: WalletSnapshot, earned = 0, reason: CoinCreditReason = "reward") => {
+      setWallet(next);
+      setStreak(next.streak);
+      if (earned > 0) {
+        showCoinCredit(earned, reason);
+        capture("coin_earned", { amount: earned, reason, game_id: null });
+      }
+    },
+    [showCoinCredit],
+  );
+
+  const noteBalance = useCallback((balance: number) => {
+    setWallet((current) => (current ? { ...current, balance } : current));
+  }, []);
+
+  const noteEarn = useCallback(
+    (
+      balance: number | null | undefined,
+      earned = 0,
+      kind?: CoinCreditReason,
+      meta?: { gameId?: string; itemId?: string },
+    ) => {
+      if (typeof balance === "number" || earned > 0) {
+        setWallet((current) => {
+          if (!current) {
+            if (typeof balance !== "number") return current;
+            return {
+              balance,
+              streak: 0,
+              bestStreak: 0,
+              freezes: 0,
+              freeHintsLeft: 0,
+              freeHintsPerDay: 3,
+              freezeCost: 40,
+              todayReward: 0,
+              streakClaimed: false,
+              nextMilestone: null,
+              gamesRewarded: kind === "game" && earned > 0 ? 1 : 0,
+              gamesRewardCap: 8,
+              momentsRewarded: kind === "moment" && earned > 0 ? 1 : 0,
+              momentsRewardCap: 10,
+              packs: [],
+            };
+          }
+          const next = { ...current };
+          if (typeof balance === "number") next.balance = balance;
+          if (earned > 0 && kind === "game") {
+            next.gamesRewarded = Math.min(current.gamesRewardCap, current.gamesRewarded + 1);
+          }
+          if (earned > 0 && kind === "moment") {
+            next.momentsRewarded = Math.min(current.momentsRewardCap, current.momentsRewarded + 1);
+          }
+          return next;
+        });
+      }
+      if (earned > 0) {
+        const reason = kind ?? "reward";
+        showCoinCredit(earned, reason);
+        capture("coin_earned", {
+          amount: earned,
+          reason,
+          game_id: meta?.gameId ?? null,
+          item_id: meta?.itemId ?? null,
+        });
+      }
+    },
+    [showCoinCredit],
+  );
+
+  const refreshWallet = useCallback(async () => {
+    if (!isSignedIn) return;
+    try {
+      const next = await fetchWallet();
+      setWallet(next);
+      setStreak(next.streak);
+    } catch {
+      /* keep the last balance on screen */
+    }
+  }, [isSignedIn]);
+
+  const syncEconomy = useCallback(async () => {
+    if (!isSignedIn) return;
+    try {
+      const [profile, count, storedDate] = await Promise.all([
+        api<MeProfile>("/v1/me"),
+        getStreak(),
+        getStreakDate(),
+      ]);
+      setMe({ displayName: profile.displayName, avatarKey: profile.avatarKey });
+      void initPurchases(profile.id);
+      const next = await claimStreak({
+        migrateCount: count > 0 ? count : undefined,
+        migrateDate: storedDate ?? undefined,
+      });
+      applyWallet(next, next.coinsEarned ?? 0, "streak");
+    } catch {
+      setStreak(await recordDailyVisit());
+    }
+  }, [isSignedIn, applyWallet]);
+
+  useEffect(() => {
+    if (!coinCredit) return;
+    const id = setTimeout(() => setCoinCredit(null), 2200);
+    return () => clearTimeout(id);
+  }, [coinCredit]);
 
   const loadMe = useCallback(async () => {
     try {
@@ -369,9 +513,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!done) {
         setOnboardingStepState(await getOnboardingStep());
       }
-      setStreak(await recordDailyVisit());
-      // Feed failure must not set bootError — FeedScreen already shows feedError;
-      // other tabs (Compete / Friends / Vault) stay reachable.
       try {
         await loadFeed();
       } catch {
@@ -389,6 +530,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!authReady || !languageReady) return;
     void boot();
   }, [authReady, languageReady, boot]);
+
+  useEffect(() => {
+    if (!ready || !authReady) return;
+    if (isSignedIn) void syncEconomy();
+    else {
+      setWallet(null);
+      void recordDailyVisit().then(setStreak);
+    }
+  }, [ready, authReady, isSignedIn, syncEconomy]);
+
+  useEffect(() => {
+    if (!ready) return;
+    trackAppOpened("cold", user?.id ?? null);
+    if (!onboardingDone) markOnboardingStart();
+  }, [ready, user?.id, onboardingDone]);
 
   const seenLang = useRef<string | null>(null);
   useEffect(() => {
@@ -412,7 +568,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       if (s !== "active" || backgroundedAt === null) return;
-      void recordDailyVisit().then(setStreak);
+      trackAppOpened("warm", user?.id ?? null);
+      if (isSignedIn) void syncEconomy();
+      else void recordDailyVisit().then(setStreak);
       const away = Date.now() - backgroundedAt;
       backgroundedAt = null;
       if (away < REOPEN_REFRESH_AFTER_MS) return;
@@ -422,7 +580,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       );
     });
     return () => sub.remove();
-  }, [ready, onboardingDone, refreshFeed]);
+  }, [ready, onboardingDone, refreshFeed, isSignedIn, syncEconomy, user?.id]);
 
   const retryBoot = useCallback(async () => {
     setReady(false);
@@ -436,6 +594,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const completeOnboarding = useCallback(async () => {
+    capture("onboarding_completed", {
+      duration_seconds: onboardingDurationSeconds(),
+      language,
+    });
     await setOnboardingDone();
     setOnboardingDoneState(true);
     setOnboardingStepState("language");
@@ -445,7 +607,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // feedError already set — main app can retry; do not leave onboarding incomplete
     }
-  }, [refreshFeed]);
+  }, [refreshFeed, language]);
+
+  const resumeOnboarding = useCallback(async (step: OnboardingStep = "profile") => {
+    await clearOnboardingDone();
+    await persistOnboardingStep(step);
+    setOnboardingDoneState(false);
+    setOnboardingStepState(step);
+  }, []);
 
   const respond = useCallback(
     async (momentId: string, optionId: string): Promise<RespondOutcome> => {
@@ -461,6 +630,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ optionId }),
         });
         setPromptSave(Boolean(res.promptAccountCreation));
+        noteEarn(res.balance, res.coinsEarned ?? 0, "moment", { itemId: momentId });
         setItems((prev) =>
           patchMoment(prev, momentId, {
             myOptionId: res.optionId,
@@ -476,7 +646,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setRespondingIds(new Set(respondingRef.current));
       }
     },
-    [],
+    [noteEarn],
   );
 
   const isResponding = useCallback(
@@ -531,6 +701,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadMoreFeed,
       retryBoot,
       completeOnboarding,
+      resumeOnboarding,
       setOnboardingStep,
       setTab,
       setPromptSave,
@@ -553,6 +724,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isFeedTabActive: tab === "feed",
       engagementFor,
       updateEngagement,
+      wallet,
+      coinCredit,
+      applyWallet,
+      refreshWallet,
+      noteBalance,
+      noteEarn,
     }),
     [
       ready,
@@ -571,6 +748,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadMoreFeed,
       retryBoot,
       completeOnboarding,
+      resumeOnboarding,
       setOnboardingStep,
       respond,
       isResponding,
@@ -589,6 +767,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateMe,
       engagementFor,
       updateEngagement,
+      wallet,
+      coinCredit,
+      applyWallet,
+      refreshWallet,
+      noteBalance,
+      noteEarn,
     ],
   );
 

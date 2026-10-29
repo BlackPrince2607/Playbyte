@@ -26,6 +26,9 @@ const STATS: [key: string, label: string, format?: (v: number) => string][] = [
   ["misses", "Misses"],
   ["escaped", "Got away"],
   ["bestStreak", "Best streak"],
+  ["cleared", "Arrows cleared"],
+  ["blocked", "Blocked taps"],
+  ["boards", "Boards cleared"],
   ["bestReactionMs", "Best reaction", (v) => `${Math.round(v)} ms`],
 ];
 
@@ -41,6 +44,20 @@ export function scoreRows(breakdown?: Record<string, number>): ScoreRow[] {
 }
 
 export type ResultHeadline = { title: string; celebrate: boolean };
+
+/**
+ * Fake "players beaten today" for social proof. Stable for a given score + percentile so the
+ * pill does not flicker on re-render. When percentile is unknown, invents one from the score.
+ */
+export function fakeBeatenCount(percentile: number | null, score: number): { pct: number; count: number } {
+  const pct =
+    percentile === null
+      ? Math.min(92, Math.max(22, 28 + (Math.abs(score) % 61)))
+      : Math.max(0, Math.min(100, Math.round(percentile)));
+  const pool = 2_400 + ((Math.abs(score) * 37 + pct * 91) % 3_600);
+  const count = Math.max(12, Math.round((pct / 100) * pool));
+  return { pct, count };
+}
 
 /** Headline for the result screen, from the percentile when known, else from accuracy. */
 export function resultHeadline({ percentile, correct, attempts }: { percentile: number | null; correct?: number; attempts?: number }): ResultHeadline {

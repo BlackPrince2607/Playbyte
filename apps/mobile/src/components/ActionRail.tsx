@@ -74,7 +74,7 @@ export function ActionRail({
       icon: "person-add-outline",
       label: "Invite",
       a11y: "Invite friends",
-      onPress: () => void shareAppInvite(),
+      onPress: () => void shareAppInvite(undefined, "action_rail"),
     },
   ];
 

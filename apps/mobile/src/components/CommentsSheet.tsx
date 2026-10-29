@@ -5,7 +5,6 @@ import {
   Alert,
   FlatList,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -13,7 +12,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isApiError, type MomentComment } from "../api";
 import { COMMENT_MAX, deleteComment, fetchComments, postComment, reportComment } from "../lib/social";
 import { timeAgo } from "../lib/timeAgo";
@@ -21,7 +19,10 @@ import { useMountedRef } from "../lib/useMounted";
 import { colors, radius, spacing } from "../theme/colors";
 import { fonts, type } from "../theme/typography";
 import { AvatarImage } from "./AvatarImage";
+import { BottomSheetShell } from "./BottomSheetShell";
+import { ErrorState } from "./ErrorState";
 import { PrimaryButton } from "./PrimaryButton";
+import { ScreenLoading } from "./ScreenLoading";
 
 type Props = {
   momentId: string;
@@ -36,7 +37,6 @@ const errorText = (e: unknown, fallback: string) =>
   isApiError(e) ? e.userMessage : e instanceof Error ? e.message : fallback;
 
 export function CommentsSheet({ momentId, visible, onClose, isSignedIn, onSignIn, onTotalChange }: Props) {
-  const insets = useSafeAreaInsets();
   const mounted = useMountedRef();
   const [comments, setComments] = useState<MomentComment[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -182,13 +182,15 @@ export function CommentsSheet({ momentId, visible, onClose, isSignedIn, onSignIn
 
   let body: ReactNode;
   if (loading && comments.length === 0) {
-    body = <ActivityIndicator color={colors.lime} style={styles.center} />;
+    body = <ScreenLoading style={styles.center} />;
   } else if (loadError && comments.length === 0) {
     body = (
-      <View style={styles.center}>
-        <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]}>{loadError}</Text>
-        <PrimaryButton label="Retry" variant="secondary" onPress={() => void loadFirst()} />
-      </View>
+      <ErrorState
+        message={loadError}
+        onRetry={() => void loadFirst()}
+        compact
+        style={styles.center}
+      />
     );
   } else {
     body = (
@@ -205,104 +207,85 @@ export function CommentsSheet({ momentId, visible, onClose, isSignedIn, onSignIn
             No comments yet. Start the conversation.
           </Text>
         }
-        ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.lilac} /> : null}
+        ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.lime} size="small" /> : null}
       />
     );
   }
 
+  const title = total > 0 ? `${total} ${total === 1 ? "comment" : "comments"}` : "Comments";
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close comments" />
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.sheetWrap}>
-        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-          <View style={styles.header}>
-            <Text style={[type.button, { color: colors.paper }]}>
-              {total > 0 ? `${total} ${total === 1 ? "comment" : "comments"}` : "Comments"}
-            </Text>
-            <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close">
-              <Ionicons name="close" size={22} color={colors.lilac} />
-            </Pressable>
-          </View>
+    <BottomSheetShell
+      visible={visible}
+      onClose={onClose}
+      title={title}
+      sheetStyle={styles.sheet}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
+        <View style={{ flex: 1 }}>{body}</View>
 
-          <View style={{ flex: 1 }}>{body}</View>
-
-          {isSignedIn ? (
-            <View style={{ gap: spacing.xs }}>
-              {postError ? (
-                <Text style={[type.metadata, { color: colors.pink }]} accessibilityRole="alert">
-                  {postError}
-                </Text>
-              ) : null}
-              <View style={styles.composer}>
-                <TextInput
-                  value={draft}
-                  onChangeText={setDraft}
-                  placeholder="Add a comment…"
-                  placeholderTextColor={colors.lilac}
-                  style={[type.bodySm, styles.input]}
-                  maxLength={COMMENT_MAX}
-                  multiline
-                  editable={!posting}
-                  accessibilityLabel="Comment"
-                />
-                <Pressable
-                  onPress={() => void send()}
-                  disabled={!draft.trim() || posting}
-                  style={[styles.send, (!draft.trim() || posting) && { opacity: 0.4 }]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Post comment"
-                >
-                  {posting ? (
-                    <ActivityIndicator color={colors.ink} size="small" />
-                  ) : (
-                    <Ionicons name="arrow-up" size={18} color={colors.ink} />
-                  )}
-                </Pressable>
-              </View>
-              {draft.length > COMMENT_MAX - 40 ? (
-                <Text style={[type.micro, { color: colors.lilac, textAlign: "right" }]}>
-                  {COMMENT_MAX - draft.length} left
-                </Text>
-              ) : null}
+        {isSignedIn ? (
+          <View style={{ gap: spacing.xs }}>
+            {postError ? (
+              <Text style={[type.metadata, { color: colors.pink }]} accessibilityRole="alert">
+                {postError}
+              </Text>
+            ) : null}
+            <View style={styles.composer}>
+              <TextInput
+                value={draft}
+                onChangeText={setDraft}
+                placeholder="Add a comment…"
+                placeholderTextColor={colors.lilac}
+                style={[type.bodySm, styles.input]}
+                maxLength={COMMENT_MAX}
+                multiline
+                editable={!posting}
+                accessibilityLabel="Comment"
+              />
+              <Pressable
+                onPress={() => void send()}
+                disabled={!draft.trim() || posting}
+                style={[styles.send, (!draft.trim() || posting) && { opacity: 0.55 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Post comment"
+              >
+                {posting ? (
+                  <ActivityIndicator color={colors.ink} size="small" />
+                ) : (
+                  <Ionicons name="arrow-up" size={18} color={colors.ink} />
+                )}
+              </Pressable>
             </View>
-          ) : onSignIn ? (
-            <PrimaryButton
-              label="Sign in to comment"
-              onPress={() => {
-                onClose();
-                onSignIn();
-              }}
-            />
-          ) : (
-            <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>Sign in to comment.</Text>
-          )}
-        </View>
+            {draft.length > COMMENT_MAX - 40 ? (
+              <Text style={[type.micro, { color: colors.lilac, textAlign: "right" }]}>
+                {COMMENT_MAX - draft.length} left
+              </Text>
+            ) : null}
+          </View>
+        ) : onSignIn ? (
+          <PrimaryButton
+            label="Sign in to comment"
+            onPress={() => {
+              onClose();
+              onSignIn();
+            }}
+          />
+        ) : (
+          <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>Sign in to comment.</Text>
+        )}
       </KeyboardAvoidingView>
-    </Modal>
+    </BottomSheetShell>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.55)" },
-  sheetWrap: { flex: 1, justifyContent: "flex-end" },
   sheet: {
     height: "70%",
-    backgroundColor: colors.card,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
-    paddingHorizontal: spacing.margin,
-    paddingTop: spacing.md,
-    gap: spacing.sm,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
+    maxHeight: "88%",
   },
   list: { paddingVertical: spacing.sm, gap: spacing.md },
   center: { flexGrow: 1, alignItems: "center", justifyContent: "center", gap: spacing.md },

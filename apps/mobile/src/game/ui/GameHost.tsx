@@ -1,12 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ActivityIndicator, AppState, BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
+import { isApiError } from "../../api";
 import { musicForEngine } from "../../audio/catalog";
 import { setMusicDucked, setMusicScene } from "../../audio/sound";
 import { ErrorState } from "../../components/ErrorState";
 import { PrimaryButton } from "../../components/PrimaryButton";
+import { ScreenLoading } from "../../components/ScreenLoading";
+import { WalletSheet } from "../../components/WalletSheet";
+import { useAuth } from "../../context/AuthContext";
+import { useApp } from "../../context/AppContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { localizeGame } from "../../i18n/games";
 import { fill } from "../../i18n/strings";
+import { capture } from "../../lib/analytics";
+import { FREE_HINTS_PER_DAY, hintCoinCost } from "../../lib/economy";
+import { guestFreeHintsLeft, takeGuestFreeHint } from "../../lib/storage";
+import { spendHint } from "../../lib/walletApi";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
 import { ContentBundle } from "../content/types";
@@ -24,6 +33,7 @@ import { SessionRunner } from "../session/runner";
 import { CompletedPlay, GameSession } from "../session/types";
 import { feedback } from "./feedback";
 import { GameFrame } from "./GameFrame";
+import { HintPriceContext } from "./kit";
 import { Confetti, Countdown, FlashOverlay } from "./motion";
 import { EngineModule } from "./types";
 
@@ -192,22 +202,17 @@ function SdkSession({ gameKey, title, definition, restore, onComplete, onExit }:
   }, [attempt, definition, gameKey, restore]);
 
   if (boot.phase === "loading") {
-    return (
-      <View style={styles.center} accessibilityLabel={t("loadingGame")}>
-        <ActivityIndicator color={colors.lime} size="large" />
-      </View>
-    );
+    return <ScreenLoading label={t("loadingGame")} />;
   }
   if (boot.phase === "error") {
     return (
-      <View style={styles.center}>
-        <ErrorState
-          title={t("couldntStart")}
-          message={boot.message === "content" ? t("contentUnavailable") : t("couldntStartBody")}
-          onRetry={() => setAttempt((n) => n + 1)}
-        />
-        <PrimaryButton label={t("backToFeed")} variant="secondary" onPress={onExit} />
-      </View>
+      <ErrorState
+        title={t("couldntStart")}
+        message={boot.message === "content" ? t("contentUnavailable") : t("couldntStartBody")}
+        onRetry={() => setAttempt((n) => n + 1)}
+        secondaryLabel={t("backToFeed")}
+        onSecondary={onExit}
+      />
     );
   }
   return <ActiveSession {...boot} gameKey={gameKey} title={title} restored={!!restore} onComplete={onComplete} onExit={onExit} />;
@@ -223,16 +228,28 @@ type ActiveProps = Ready & {
 
 function ActiveSession({ mod, runner, clock, content, definition, gameKey, title, restored, onComplete, onExit }: ActiveProps) {
   const { t, fonts: ui } = useLanguage();
+  const { isSignedIn } = useAuth();
+  const { wallet, applyWallet } = useApp();
   const snap = useSyncExternalStore(runner.subscribe, runner.getSnapshot);
   const [counting, setCounting] = useState(snap.status === "ready");
   const [menuOpen, setMenuOpen] = useState(restored && snap.status === "paused");
   const [levelUp, setLevelUp] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [guestLeft, setGuestLeft] = useState(FREE_HINTS_PER_DAY);
+  const pendingHint = useRef<{ id: string; key: string } | null>(null);
   const finished = useRef(false);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
   const { meta } = mod.engine;
   const View_ = mod.View;
   const now = useCallback(() => clock.now(), [clock]);
+
+  useEffect(() => {
+    if (isSignedIn) return;
+    void guestFreeHintsLeft().then(setGuestLeft);
+  }, [isSignedIn]);
+
+  const freeLeft = isSignedIn ? (wallet?.freeHintsLeft ?? FREE_HINTS_PER_DAY) : guestLeft;
 
   const persist = useCallback(() => {
     void sessionStore.save({ ...runner.serialize(), title }).catch(() => {});
@@ -335,11 +352,15 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
     () => () => {
       const s = runner.getSnapshot().status;
       if (s !== "completed" && s !== "abandoned") {
+        capture("game_abandoned", {
+          game_id: gameKey,
+          elapsed_seconds: Math.round(runner.durationMs / 1000),
+        });
         runner.abandon();
         void sessionStore.clear().catch(() => {});
       }
     },
-    [runner],
+    [runner, gameKey],
   );
 
   const openMenu = useCallback(() => {
@@ -354,10 +375,14 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
   }, [runner]);
 
   const quit = useCallback(() => {
+    capture("game_abandoned", {
+      game_id: gameKey,
+      elapsed_seconds: Math.round(runner.durationMs / 1000),
+    });
     runner.abandon();
     void sessionStore.clear().catch(() => {});
     onExit();
-  }, [runner, onExit]);
+  }, [runner, onExit, gameKey]);
 
   const endNow = useCallback(() => {
     setMenuOpen(false);
@@ -375,7 +400,65 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
   }, [menuOpen, openMenu, resume, runner]);
 
   const dispatch = useCallback((a: unknown) => runner.dispatch(a), [runner]);
-  const requestHint = useCallback((id: string) => void runner.useHint(id), [runner]);
+  const requestHint = useCallback(
+    (id: string) => {
+      void (async () => {
+        const cost = hintCoinCost(definition.engine, id);
+        const hintNumber = Math.max(1, snap.hints.findIndex((h) => h.id === id) + 1);
+        const isFree = cost == null || freeLeft > 0 || !isSignedIn;
+        capture("hint_viewed", {
+          game_id: gameKey,
+          hint_number: hintNumber,
+          is_free: isFree,
+        });
+
+        if (!isSignedIn) {
+          if (cost == null) {
+            runner.useHint(id);
+            capture("hint_unlocked", { game_id: gameKey, coin_cost: 0, balance_after: null });
+            return;
+          }
+          const ok = await takeGuestFreeHint();
+          if (!ok) {
+            setShopOpen(true);
+            return;
+          }
+          setGuestLeft((left) => Math.max(0, left - 1));
+          runner.useHint(id);
+          capture("hint_unlocked", { game_id: gameKey, coin_cost: 0, balance_after: null });
+          return;
+        }
+        const key =
+          pendingHint.current?.id === id
+            ? pendingHint.current.key
+            : `${runner.sessionId}:${id}:${Date.now()}`;
+        pendingHint.current = { id, key };
+        try {
+          const res = await spendHint(definition.engine, id, key);
+          pendingHint.current = null;
+          applyWallet(res);
+          runner.useHint(id);
+          capture("hint_unlocked", {
+            game_id: gameKey,
+            coin_cost: res.coinsSpent,
+            balance_after: res.balance,
+          });
+          if (res.coinsSpent > 0) {
+            capture("coin_spent", {
+              amount: res.coinsSpent,
+              reason: "hint",
+              item_id: id,
+            });
+          }
+        } catch (e) {
+          const refused = isApiError(e) && (e.code === "insufficient_coins" || e.status === 422);
+          if (refused) pendingHint.current = null;
+          if (isApiError(e) && e.code === "insufficient_coins") setShopOpen(true);
+        }
+      })();
+    },
+    [applyWallet, definition.engine, freeLeft, gameKey, isSignedIn, runner, snap.hints],
+  );
 
   if (snap.error) {
     return (
@@ -391,16 +474,25 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
   return (
     <View style={{ flex: 1, backgroundColor: colors.ink }}>
       <GameFrame title={title} subtitle={variationTitle?.toUpperCase()} snapshot={snap} now={now} onPause={openMenu}>
-        <View_
-          snapshot={snap}
-          state={snap.state}
-          dispatch={dispatch}
-          requestHint={requestHint}
-          now={now}
-          definition={definition}
-          content={content}
-          resolveAsset={resolveAsset}
-        />
+        <HintPriceContext.Provider
+          value={{
+            engine: definition.engine,
+            freeLeft,
+            freeText: t("hintFree"),
+            coinText: (cost) => fill(t("hintCoinPrice"), { cost }),
+          }}
+        >
+          <View_
+            snapshot={snap}
+            state={snap.state}
+            dispatch={dispatch}
+            requestHint={requestHint}
+            now={now}
+            definition={definition}
+            content={content}
+            resolveAsset={resolveAsset}
+          />
+        </HintPriceContext.Provider>
       </GameFrame>
       {quiet ? null : <FlashOverlay seq={snap.lastOutcome?.seq} color={snap.lastOutcome?.correct ? colors.lime : colors.pink} />}
       <Confetti active={snap.status === "completed"} />
@@ -433,6 +525,7 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
           </View>
         </View>
       ) : null}
+      <WalletSheet visible={shopOpen} onClose={() => setShopOpen(false)} />
     </View>
   );
 }

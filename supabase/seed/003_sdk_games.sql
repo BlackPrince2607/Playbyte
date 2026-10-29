@@ -86,7 +86,11 @@ INSERT INTO mini_games (key, title, blurb, status, sort_order, config, engine, v
   ('connect_blitz', 'Connect Blitz', 'Five small boards, short clock.', 'enabled', 60,
    '{"engine": "connect_dots", "variation": "blitz", "maxScore": 850, "genre": "puzzle", "tag": "PUZZLE"}', 'connect_dots', 'blitz', 1, 'higher_is_better'),
   ('connect_xl', 'Connect XL', 'Two big boards for patient minds.', 'enabled', 61,
-   '{"engine": "connect_dots", "variation": "big", "maxScore": 340, "genre": "puzzle", "tag": "PUZZLE"}', 'connect_dots', 'big', 1, 'higher_is_better')
+   '{"engine": "connect_dots", "variation": "big", "maxScore": 340, "genre": "puzzle", "tag": "PUZZLE"}', 'connect_dots', 'big', 1, 'higher_is_better'),
+  ('arrow_rush', 'Arrow Rush', 'Tap every arrow with a clear path. 20 seconds — a blocked arrow costs one.', 'enabled', 62,
+   '{"engine": "arrow_puzzle", "variation": "s20", "maxScore": 4492, "genre": "puzzle", "tag": "PUZZLE"}', 'arrow_puzzle', 's20', 1, 'higher_is_better'),
+  ('arrow_rush_25', 'Arrow Rush 25', 'The same arrow puzzle with 25 seconds on the clock.', 'enabled', 63,
+   '{"engine": "arrow_puzzle", "variation": "s25", "maxScore": 5616, "genre": "puzzle", "tag": "PUZZLE"}', 'arrow_puzzle', 's25', 1, 'higher_is_better')
 ON CONFLICT (key) DO UPDATE SET
   title = EXCLUDED.title,
   blurb = EXCLUDED.blurb,

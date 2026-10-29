@@ -1,15 +1,21 @@
+import { useRef, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { isApiError } from "../../api";
+import { BackLink } from "../../components/BackLink";
 import { PrimaryButton } from "../../components/PrimaryButton";
-import { shareAppInvite } from "../../lib/shareInvite";
+import { useAuth } from "../../context/AuthContext";
+import { useApp } from "../../context/AppContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { fill } from "../../i18n/strings";
+import { capture } from "../../lib/analytics";
+import { shareAppInvite } from "../../lib/shareInvite";
+import { buyFreeze } from "../../lib/walletApi";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
 
 type Props = {
-  streak: number;
   onBack: () => void;
 };
 
@@ -25,20 +31,44 @@ const STEPS: { icon: keyof typeof Ionicons.glyphMap; title: "streakStep1Title" |
   { icon: "trophy-outline", title: "streakStep3Title", body: "streakStep3Body" },
 ];
 
-export function StreakScreen({ streak, onBack }: Props) {
+export function StreakScreen({ onBack }: Props) {
   const insets = useSafeAreaInsets();
   const { t, fonts: ui } = useLanguage();
+  const { isSignedIn } = useAuth();
+  const { streak, wallet, applyWallet } = useApp();
   const target = nextMilestone(streak);
   const progress = Math.min(1, streak / target);
+  const [freezeError, setFreezeError] = useState("");
+  const [buyingFreeze, setBuyingFreeze] = useState(false);
+  const freezeKey = useRef(`freeze-${Date.now()}`);
+
+  async function onBuyFreeze() {
+    if (buyingFreeze || !wallet) return;
+    setBuyingFreeze(true);
+    setFreezeError("");
+    const cost = wallet.freezeCost;
+    try {
+      const next = await buyFreeze(freezeKey.current);
+      applyWallet(next);
+      capture("coin_spent", {
+        amount: cost,
+        reason: "streak_freeze",
+        item_id: "streak_freeze",
+      });
+      freezeKey.current = `freeze-${Date.now()}`;
+    } catch (e) {
+      setFreezeError(isApiError(e) ? e.userMessage : t("couldNotBuyFreeze"));
+    } finally {
+      setBuyingFreeze(false);
+    }
+  }
 
   return (
     <ScrollView
       style={styles.wrap}
       contentContainerStyle={[styles.inner, { paddingTop: insets.top + spacing.md }]}
     >
-      <Pressable onPress={onBack} style={styles.back} hitSlop={12} accessibilityRole="button">
-        <Text style={{ color: colors.pinkSoft, fontFamily: ui.body }}>{t("back")}</Text>
-      </Pressable>
+      <BackLink onPress={onBack} style={styles.back} />
 
       <View style={styles.hero}>
         <Text style={styles.flame}>🔥</Text>
@@ -68,6 +98,40 @@ export function StreakScreen({ streak, onBack }: Props) {
         </Text>
       </View>
 
+      {isSignedIn && wallet ? (
+        <View style={styles.card}>
+          <Text style={[type.bodySm, { color: colors.paper, fontFamily: ui.body }]}>
+            {wallet.streakClaimed
+              ? t("streakClaimedToday")
+              : fill(t("streakRewardToday"), { count: wallet.todayReward })}
+          </Text>
+          {wallet.nextMilestone ? (
+            <Text style={[type.metadata, { color: colors.lilac, fontFamily: ui.body, marginTop: spacing.xs }]}>
+              {fill(t("milestoneLine"), { day: wallet.nextMilestone.day, count: wallet.nextMilestone.bonus })}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
+      {isSignedIn && wallet ? (
+        <View style={styles.card}>
+          <Text style={[type.button, { color: colors.paper, fontFamily: ui.bodyBold }]}>{t("freezeTitle")}</Text>
+          <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.body }]}>{t("freezeBody")}</Text>
+          {wallet.freezes > 0 ? (
+            <Text style={[type.bodySm, { color: colors.lime, fontFamily: ui.body }]}>{t("freezeReady")}</Text>
+          ) : (
+            <PrimaryButton
+              label={fill(t("buyFreeze"), { count: wallet.freezeCost })}
+              onPress={() => void onBuyFreeze()}
+              disabled={buyingFreeze || wallet.balance < wallet.freezeCost}
+            />
+          )}
+          {freezeError ? (
+            <Text style={[type.metadata, { color: colors.pinkSoft, fontFamily: ui.body }]}>{freezeError}</Text>
+          ) : null}
+        </View>
+      ) : null}
+
       <Text style={[type.metadata, styles.section, { fontFamily: ui.bodyMedium }]}>{t("howItWorks")}</Text>
       {STEPS.map((s) => (
         <View key={s.title} style={styles.step}>
@@ -82,7 +146,7 @@ export function StreakScreen({ streak, onBack }: Props) {
       ))}
 
       <Text style={[type.metadata, { color: colors.lilac, marginTop: spacing.md, fontFamily: ui.body }]}>
-        {t("streakSaved")}
+        {isSignedIn ? t("streakSavedAccount") : t("streakSaved")}
       </Text>
 
       <PrimaryButton label={t("backToFeed")} onPress={onBack} style={{ marginTop: spacing.lg }} />
@@ -90,7 +154,7 @@ export function StreakScreen({ streak, onBack }: Props) {
         label={t("inviteFriends")}
         variant="secondary"
         icon="person-add-outline"
-        onPress={() => void shareAppInvite()}
+        onPress={() => void shareAppInvite(undefined, "streak")}
         style={{ marginTop: spacing.sm }}
       />
     </ScrollView>
@@ -110,6 +174,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     padding: spacing.md,
     gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   progressHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   track: { height: 10, borderRadius: radius.pill, backgroundColor: colors.cardAlt, overflow: "hidden" },

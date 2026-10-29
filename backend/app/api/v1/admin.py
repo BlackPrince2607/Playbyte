@@ -27,6 +27,7 @@ from app.infrastructure.storage.validation import StorageValidationError
 from app.modules.cms.service import approve_moment, create_moment, transition_moment
 from app.modules.content.service import upsert_items, upsert_pack
 from app.modules.content.validation import validate_items
+from app.modules.feed.insights import moment_performance, summarize_for_agent
 from app.modules.feed.service import media_url, tags_for_moments
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -41,6 +42,7 @@ _SAFE_KEY_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9/_\-.]{0,512}$")
 
 class OptionIn(BaseModel):
     label: str | None = None
+    labelHi: str | None = None
     imageKey: str | None = None
     isCorrect: bool = False
 
@@ -49,6 +51,7 @@ class MomentCreateIn(BaseModel):
     type: str
     categoryId: UUID
     prompt: str
+    promptHi: str | None = None
     options: list[Any]
     restrictedTopic: str = "none"
     contentWindowId: UUID | None = None
@@ -143,7 +146,11 @@ async def list_moments(
     _: Actor = Depends(require_admin),
 ) -> dict:
     rows = list(
-        await session.scalars(select(Moment).options(selectinload(Moment.options)).order_by(Moment.created_at.desc()))
+        await session.scalars(
+            select(Moment)
+            .options(selectinload(Moment.options), selectinload(Moment.category))
+            .order_by(Moment.created_at.desc())
+        )
     )
     tag_map = await tags_for_moments(session, [m.id for m in rows])
     return {
@@ -152,6 +159,7 @@ async def list_moments(
                 "id": str(m.id),
                 "type": m.type,
                 "status": m.status,
+                "categorySlug": m.category.slug if m.category else None,
                 "prompt": m.prompt,
                 "promptImageUrl": media_url(m.prompt_image_key),
                 "scoringMode": m.scoring_mode,
@@ -171,6 +179,22 @@ async def list_moments(
             for m in rows
         ]
     }
+
+
+@router.get("/moments/insights")
+async def get_moment_insights(
+    session: AsyncSession = Depends(get_session),
+    _: Actor = Depends(require_admin),
+    limit: int = 200,
+) -> dict:
+    """Engagement rollup for the refresh agent: what Indian viewers answered, liked, and shared."""
+    capped = max(1, min(limit, 500))
+    rows = await moment_performance(session, limit=capped)
+    by_category = {
+        slug: summarize_for_agent(rows, slug)
+        for slug in sorted({r["categorySlug"] for r in rows if r.get("categorySlug")})
+    }
+    return {"moments": rows, "byCategory": by_category, "count": len(rows)}
 
 
 @router.post("/moments")
@@ -193,6 +217,7 @@ async def post_moment(
         prompt_image_key=body.promptImageKey,
         scoring_mode=body.scoringMode,
         tag_slugs=body.tags,
+        prompt_hi=body.promptHi,
     )
     return {"id": str(m.id), "status": m.status}
 

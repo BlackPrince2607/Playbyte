@@ -5,6 +5,7 @@ import {
   clearGuestToken,
   ensureGuest,
   getGuestToken,
+  getUserAccessToken,
   isApiError,
   loadToken,
   setUnauthorizedHandler,
@@ -16,6 +17,8 @@ import {
   isGoogleSignInConfigured,
   mapGoogleSignInError,
 } from "../lib/googleAuth";
+import { identify, resetAnalytics } from "../lib/analytics";
+import { logOutPurchases } from "../lib/purchases";
 import {
   clearLocalSupabaseSession,
   getSupabase,
@@ -28,8 +31,6 @@ type AuthState = {
   user: User | null;
   isSignedIn: boolean;
   googleAvailable: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<"session" | "confirm_email">;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -44,10 +45,8 @@ export function mapAuthError(error: unknown): string {
   if (error && typeof error === "object" && "message" in error) {
     const msg = String((error as AuthError).message || "");
     const lower = msg.toLowerCase();
-    if (lower.includes("invalid login credentials")) return "Incorrect email or password.";
-    if (lower.includes("user already registered")) return "An account with this email already exists. Sign in instead.";
     if (lower.includes("provider") && lower.includes("not enabled")) {
-      return "Google Sign-In is not enabled on the server yet. Use email, or ask the team to enable Google in Supabase.";
+      return "Google Sign-In is not enabled on the server yet. Ask the team to enable Google in Supabase.";
     }
     if (lower.includes("unacceptable audience") || (lower.includes("audience") && lower.includes("token"))) {
       return "Google client ID mismatch. The Web client ID in the app must match Supabase Google provider settings.";
@@ -58,22 +57,10 @@ export function mapAuthError(error: unknown): string {
     if (lower.includes("timed out") || lower.includes("timeout")) {
       return "Sign-in timed out. Check your connection and try again.";
     }
-    if (lower.includes("password")) return msg;
-    if (lower.includes("email")) return msg;
     if (msg) return msg;
   }
   if (error instanceof Error && error.message) return error.message;
   return "Could not authenticate.";
-}
-
-function validateCredentials(email: string, password: string) {
-  const trimmed = email.trim();
-  if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-    throw new Error("Enter a valid email address.");
-  }
-  if (password.length < 8) {
-    throw new Error("Password must be at least 8 characters.");
-  }
 }
 
 async function convertGuestIfNeeded() {
@@ -234,6 +221,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         deferAuthSideEffect(async () => {
           try {
             await ensureGuest();
+            const guest = getGuestToken();
+            // Prefer the auth-state identify effect for signed-in users.
+            if (guest && !getUserAccessToken()) identify(`guest:${guest}`);
           } catch (e) {
             console.warn("[auth] ensureGuest after ready failed", e);
           }
@@ -248,31 +238,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [markReady]);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    validateCredentials(email, password);
-    const sb = getSupabase();
-    const { data, error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) throw new Error(mapAuthError(error));
-    setUserAccessToken(data.session?.access_token ?? null);
-    setUser(data.user);
-    recoverTriedRefresh.current = false;
-    deferAuthSideEffect(convertGuestIfNeeded);
-  }, []);
-
-  const signUp = useCallback(async (email: string, password: string) => {
-    validateCredentials(email, password);
-    const sb = getSupabase();
-    const { data, error } = await sb.auth.signUp({ email: email.trim(), password });
-    if (error) throw new Error(mapAuthError(error));
-    if (data.session) {
-      setUserAccessToken(data.session.access_token);
-      setUser(data.user);
-      recoverTriedRefresh.current = false;
-      deferAuthSideEffect(convertGuestIfNeeded);
-      return "session" as const;
+  // Keep PostHog distinct_id aligned with the signed-in user or guest token.
+  useEffect(() => {
+    if (!ready) return;
+    if (user?.id) {
+      identify(user.id, { email: user.email ?? null });
+      return;
     }
-    return "confirm_email" as const;
-  }, []);
+    const guest = getGuestToken();
+    if (guest) identify(`guest:${guest}`);
+  }, [ready, user]);
 
   const signInWithGoogle = useCallback(async () => {
     if (!isSupabaseConfigured()) {
@@ -293,7 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserAccessToken(data.session?.access_token ?? null);
       setUser(data.user);
       recoverTriedRefresh.current = false;
-      deferAuthSideEffect(convertGuestIfNeeded);
+      await convertGuestIfNeeded();
     } catch (e) {
       if (isGoogleNativeError(e)) throw new Error(mapGoogleSignInError(e));
       throw new Error(mapAuthError(e));
@@ -301,6 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    await logOutPurchases();
     if (isSupabaseConfigured()) {
       try {
         await withTimeout(getSupabase().auth.signOut(), 8_000, "signOut");
@@ -311,7 +287,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserAccessToken(null);
     setUser(null);
     recoverTriedRefresh.current = false;
+    resetAnalytics();
     await ensureGuest({ forceNew: true });
+    const guest = getGuestToken();
+    if (guest) identify(`guest:${guest}`);
   }, []);
 
   const value = useMemo(
@@ -320,12 +299,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       isSignedIn: Boolean(user),
       googleAvailable: isSupabaseConfigured() && isGoogleSignInConfigured(),
-      signIn,
-      signUp,
       signInWithGoogle,
       signOut,
     }),
-    [ready, user, signIn, signUp, signInWithGoogle, signOut],
+    [ready, user, signInWithGoogle, signOut],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

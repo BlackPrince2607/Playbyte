@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, StyleSheet, Text, ViewStyle } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, ViewStyle } from "react-native";
 import { useLanguage } from "../context/LanguageContext";
 import { colors, radius, spacing } from "../theme/colors";
 import { type } from "../theme/typography";
@@ -10,6 +10,8 @@ type Props = {
   variant?: "primary" | "secondary" | "success";
   style?: ViewStyle;
   disabled?: boolean;
+  busy?: boolean;
+  busyLabel?: string;
   icon?: keyof typeof Ionicons.glyphMap;
   trailingIcon?: keyof typeof Ionicons.glyphMap;
 };
@@ -20,6 +22,8 @@ export function PrimaryButton({
   variant = "primary",
   style,
   disabled,
+  busy,
+  busyLabel,
   icon,
   trailingIcon,
 }: Props) {
@@ -27,28 +31,35 @@ export function PrimaryButton({
   const bg =
     variant === "primary" ? colors.pink : variant === "success" ? colors.lime : colors.cardAlt;
   const fg = variant === "success" ? colors.ink : colors.paper;
+  const inactive = Boolean(disabled || busy);
+  const shown = busy && busyLabel ? busyLabel : label;
   return (
     <Pressable
       accessibilityRole="button"
-      disabled={disabled}
+      accessibilityState={{ disabled: inactive, busy: Boolean(busy) }}
+      disabled={inactive}
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
         {
           backgroundColor: bg,
-          opacity: pressed || disabled ? 0.85 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          opacity: inactive ? 0.55 : pressed ? 0.85 : 1,
+          transform: [{ scale: pressed && !inactive ? 0.98 : 1 }],
         },
         variant === "secondary" && styles.secondary,
         variant === "primary" && styles.primaryGlow,
         style,
       ]}
     >
-      {icon ? <Ionicons name={icon} size={18} color={fg} style={{ marginRight: 8 }} /> : null}
+      {busy ? (
+        <ActivityIndicator color={fg} size="small" style={{ marginRight: 8 }} />
+      ) : icon ? (
+        <Ionicons name={icon} size={18} color={fg} style={{ marginRight: 8 }} />
+      ) : null}
       <Text style={[type.button, { color: fg, fontFamily: ui.bodyBold }]} numberOfLines={1}>
-        {label}
+        {shown}
       </Text>
-      {trailingIcon ? (
+      {!busy && trailingIcon ? (
         <Ionicons name={trailingIcon} size={20} color={fg} style={{ marginLeft: 8 }} />
       ) : null}
     </Pressable>

@@ -11,6 +11,7 @@ from app.common.security import rate_limiter
 from app.config import get_settings
 from app.infrastructure.postgres.db import get_session
 from app.infrastructure.postgres.models import CrowdSnapshot, Moment
+from app.modules.economy.rules import parse_local_date
 from app.modules.feed.service import (
     friends_on_moment,
     my_response,
@@ -116,6 +117,7 @@ async def post_response(
     session: AsyncSession = Depends(get_session),
     actor: Actor = Depends(get_actor),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    x_local_date: str | None = Header(default=None, alias="X-Local-Date"),
 ) -> dict:
     settings = get_settings()
     actor_key = str(actor.user_id or actor.guest_id)
@@ -125,7 +127,14 @@ async def post_response(
         window_seconds=60,
     ):
         raise AppError("rate_limited", "Too many responses. Slow down.", 429)
-    return await submit_response(session, actor, moment_id, body.optionId, idempotency_key)
+    return await submit_response(
+        session,
+        actor,
+        moment_id,
+        body.optionId,
+        idempotency_key,
+        local_day=parse_local_date(x_local_date),
+    )
 
 
 @router.post("/{moment_id}/share-card")

@@ -1,16 +1,21 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CoinIcon } from "../../components/CoinIcon";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { ResultBar } from "../../components/StitchPrimitives";
 import { prefersReducedMotion } from "../../game/ui/feedback";
 import { Confetti } from "../../game/ui/motion";
-import { resultHeadline, scoreRows, statRows } from "../../game/ui/resultSummary";
+import { fakeBeatenCount, resultHeadline, scoreRows, statRows } from "../../game/ui/resultSummary";
 import type { SaveState } from "../../game/session/submitQueue";
 import type { RoundRecord } from "../../game/session/types";
+import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { localizeChrome } from "../../i18n/chrome";
 import { fill } from "../../i18n/strings";
+import { capture } from "../../lib/analytics";
+import { APP_SHARE_URL } from "../../lib/links";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
@@ -18,6 +23,7 @@ type Props = {
   score: number;
   /** Null when the play has not reached the server yet. */
   percentile: number | null;
+  gameKey?: string;
   gameTitle: string;
   onBackToFeed: () => void;
   onPlayAgain?: () => void;
@@ -34,6 +40,7 @@ type Props = {
   attempts?: number;
   rounds?: RoundRecord[];
   scoreBreakdown?: Record<string, number>;
+  coinsEarned?: number;
 };
 
 const BAR_MAX_HEIGHT = 72;
@@ -132,6 +139,7 @@ function Tile({ value, label, color = colors.paper }: { value: string; label: st
 export function PostGameResultScreen({
   score,
   percentile,
+  gameKey,
   gameTitle,
   onBackToFeed,
   onPlayAgain,
@@ -146,33 +154,57 @@ export function PostGameResultScreen({
   attempts,
   rounds,
   scoreBreakdown,
+  coinsEarned = 0,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const betterThan = percentile === null ? null : Math.max(0, Math.min(100, Math.round(percentile)));
-  const { title: headline, celebrate } = resultHeadline({ percentile: betterThan, correct, attempts });
+  const beaten = fakeBeatenCount(percentile, score);
+  const { title: headline, celebrate } = resultHeadline({
+    percentile: percentile === null ? null : beaten.pct,
+    correct,
+    attempts,
+  });
   const shownScore = useCountUp(score);
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState("");
   const showAccuracy = attempts !== undefined && attempts > 0 && correct !== undefined;
   const accuracyPct = showAccuracy ? Math.round((correct / attempts) * 100) : 0;
   const { t, language, fonts: ui } = useLanguage();
+  const { isSignedIn } = useAuth();
+  const { wallet } = useApp();
+  const sharePrompt = fill(celebrate ? t("resultSharePrompt") : t("resultSharePromptSoft"), { score });
+  const beatenLabel = beaten.count.toLocaleString(language === "hi" ? "hi-IN" : "en-IN");
+  const hitGameCap =
+    isSignedIn &&
+    coinsEarned <= 0 &&
+    saveState === "saved" &&
+    !!wallet &&
+    wallet.gamesRewarded >= wallet.gamesRewardCap;
 
   async function shareScore() {
+    capture("share_clicked", {
+      button_location: "game_result",
+      share_medium: "native_share",
+      user_id: null,
+    });
+    capture("result_action_clicked", { action: "challenge" });
+    capture("challenge_shared", {
+      game_id: gameKey ?? null,
+      score,
+      share_method: "native_share",
+    });
     setSharing(true);
     setShareError("");
-    const brag =
-      betterThan === null
-        ? fill(t("sharePlain"), { score, title: gameTitle })
-        : fill(t("shareBeat"), { score, title: gameTitle, pct: betterThan });
-    const link = process.env.EXPO_PUBLIC_APP_SHARE_URL?.trim();
+    const brag = fill(t("shareBeat"), { score, title: gameTitle, count: beatenLabel, pct: beaten.pct });
     try {
-      await Share.share({ message: link ? `${brag}\n${link}` : brag });
+      await Share.share({ message: `${brag}\n${APP_SHARE_URL}` });
     } catch {
       setShareError(t("shareFailed"));
     } finally {
       setSharing(false);
     }
   }
+
+  const shareLabel = sharing ? t("openingShare") : shareError ? t("retryShare") : t("challengeFriend");
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.ink }}>
@@ -182,6 +214,7 @@ export function PostGameResultScreen({
           { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg },
         ]}
       >
+        {/* Shareable hero: title + score + brag — kept above CTAs for clean screenshots */}
         <Text style={[type.metadata, styles.eyebrow]} numberOfLines={1}>
           {gameTitle.toUpperCase()} · {t("resultWord")}
         </Text>
@@ -191,15 +224,32 @@ export function PostGameResultScreen({
 
         <View style={styles.hero} accessible accessibilityLabel={`Score ${score}`}>
           <Text style={[type.largeScore, { color: colors.lime }]}>{shownScore}</Text>
-          <Text style={[type.micro, { color: colors.lilac, letterSpacing: 2 }]}>POINTS</Text>
-          {betterThan !== null ? (
-            <View style={styles.percentPill}>
-              <Text style={[type.bodySm, { color: colors.ink, fontFamily: fonts.bodyBold }]}>
-                Better than {betterThan}% of players today
+          <Text style={[type.micro, { color: colors.lilac, letterSpacing: 2 }]}>{t("pointsLabel")}</Text>
+          {coinsEarned > 0 ? (
+            <View style={styles.coinsEarned}>
+              <CoinIcon size={18} />
+              <Text style={[type.button, { color: colors.lime, fontFamily: ui.bodyBold }]}>
+                {fill(t("coinsEarnedLine"), { count: coinsEarned })}
               </Text>
             </View>
+          ) : hitGameCap ? (
+            <View style={styles.coinsEarned}>
+              <CoinIcon size={18} />
+              <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.body }]}>{t("dailyGameCoinsDone")}</Text>
+            </View>
+          ) : !isSignedIn && saveState === "saved" ? (
+            <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.body, marginTop: spacing.sm, textAlign: "center" }]}>
+              {t("signInAfterGame")}
+            </Text>
           ) : null}
+          <View style={styles.percentPill}>
+            <Text style={[type.bodySm, { color: colors.ink, fontFamily: fonts.bodyBold }]}>
+              {fill(t("betterThanPlayers"), { count: beatenLabel })}
+            </Text>
+          </View>
         </View>
+
+        <Text style={[type.bodyLg, styles.sharePrompt, { fontFamily: ui.body }]}>{sharePrompt}</Text>
 
         {saveState !== "saved" ? (
           <View
@@ -214,7 +264,7 @@ export function PostGameResultScreen({
             </Text>
             {saveState === "queued" && onRetrySave ? (
               <PrimaryButton
-                label={retryingSave ? "Saving…" : "Try saving now"}
+                label={retryingSave ? t("saving") : t("trySavingNow")}
                 variant="secondary"
                 disabled={retryingSave}
                 onPress={onRetrySave}
@@ -224,46 +274,71 @@ export function PostGameResultScreen({
           </View>
         ) : null}
 
+        <View style={styles.actions}>
+          {enableShare ? (
+            <PrimaryButton
+              label={shareLabel}
+              onPress={() => void shareScore()}
+              busy={sharing}
+              icon="share-outline"
+            />
+          ) : null}
+          {onPlayAgain ? (
+            <PrimaryButton
+              label={t("playAgain")}
+              variant="secondary"
+              onPress={() => {
+                capture("result_action_clicked", { action: "replay" });
+                onPlayAgain();
+              }}
+              icon="refresh"
+            />
+          ) : null}
+          {shareError ? (
+            <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{shareError}</Text>
+          ) : null}
+          {onNextGame ? (
+            <Pressable
+              onPress={() => {
+                capture("result_action_clicked", { action: "next game" });
+                onNextGame();
+              }}
+              accessibilityRole="button"
+              hitSlop={8}
+              style={styles.feedLink}
+            >
+              <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.bodyBold }]}>
+                {t("nextGame")} →
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() => {
+                capture("result_action_clicked", { action: "feed" });
+                onBackToFeed();
+              }}
+              accessibilityRole="button"
+              hitSlop={8}
+              style={styles.feedLink}
+            >
+              <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.bodyBold }]}>{t("backToFeed")}</Text>
+            </Pressable>
+          )}
+          {onNextGame ? (
+            <Pressable onPress={onBackToFeed} accessibilityRole="button" hitSlop={8} style={styles.feedLinkSubtle}>
+              <Text style={[type.micro, { color: colors.lilac, fontFamily: ui.body }]}>{t("backToFeed")}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+
         {showAccuracy || (rounds && rounds.length > 0) ? (
           <View style={styles.tiles}>
             {showAccuracy ? (
               <Tile value={`${accuracyPct}%`} label={`ACCURACY\n${correct}/${attempts} RIGHT`} color={colors.limeLive} />
             ) : null}
-            {rounds && rounds.length > 0 ? <Tile value={String(rounds.length)} label="ROUNDS" /> : null}
+            {rounds && rounds.length > 0 ? <Tile value={String(rounds.length)} label={t("roundsLabel")} /> : null}
           </View>
         ) : null}
-
-        <View style={styles.actions}>
-          {onPlayAgain ? <PrimaryButton label={t("playAgain")} onPress={onPlayAgain} icon="refresh" /> : null}
-          <View style={styles.actionRow}>
-            {onNextGame ? (
-              <PrimaryButton
-                label="Next game"
-                variant="secondary"
-                onPress={onNextGame}
-                trailingIcon="arrow-forward"
-                style={styles.actionRowItem}
-              />
-            ) : null}
-            {enableShare ? (
-              <PrimaryButton
-                label={sharing ? "Opening…" : shareError ? "Retry share" : "Share"}
-                variant="secondary"
-                disabled={sharing}
-                onPress={() => void shareScore()}
-                icon="share-outline"
-                style={styles.actionRowItem}
-              />
-            ) : null}
-          </View>
-          {sharing ? <ActivityIndicator color={colors.lime} /> : null}
-          {shareError ? (
-            <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{shareError}</Text>
-          ) : null}
-          <Pressable onPress={onBackToFeed} accessibilityRole="button" hitSlop={8} style={styles.feedLink}>
-            <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.bodyBold }]}>{t("backToFeed")}</Text>
-          </Pressable>
-        </View>
 
         {rounds && rounds.length > 1 ? <RoundBars rounds={rounds} /> : null}
         <ScoreComposition breakdown={scoreBreakdown} />
@@ -309,6 +384,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
+  sharePrompt: {
+    color: colors.paper,
+    textAlign: "center",
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  coinsEarned: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: spacing.xs,
+  },
   percentPill: {
     marginTop: spacing.sm,
     backgroundColor: colors.lime,
@@ -316,7 +404,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
   },
-  tiles: { flexDirection: "row", gap: spacing.sm, width: "100%", marginTop: spacing.xs },
+  tiles: { flexDirection: "row", gap: spacing.sm, width: "100%", marginTop: spacing.md },
   tile: {
     flex: 1,
     backgroundColor: colors.cardAlt,
@@ -357,9 +445,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardAlt,
   },
   actions: { width: "100%", gap: spacing.sm, marginTop: spacing.md },
-  actionRow: { flexDirection: "row", gap: spacing.sm },
-  actionRowItem: { flex: 1, paddingHorizontal: spacing.sm },
   feedLink: { alignSelf: "center", paddingVertical: spacing.sm },
+  feedLinkSubtle: { alignSelf: "center", paddingBottom: spacing.xs },
   saveBanner: {
     width: "100%",
     marginTop: spacing.sm,

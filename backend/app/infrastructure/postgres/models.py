@@ -546,3 +546,61 @@ class ModerationAction(Base):
     target_id: Mapped[str] = mapped_column(Text)
     action: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Wallet(Base):
+    __tablename__ = "wallets"
+    __table_args__ = (CheckConstraint("balance >= 0", name="wallets_balance_chk"),)
+
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
+    balance: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CoinLedger(Base):
+    __tablename__ = "coin_ledger"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
+    delta: Mapped[int] = mapped_column(Integer)
+    balance_after: Mapped[int] = mapped_column(Integer)
+    reason: Mapped[str] = mapped_column(Text)
+    ref_type: Mapped[str | None] = mapped_column(Text)
+    ref_id: Mapped[str | None] = mapped_column(Text)
+    idempotency_key: Mapped[str] = mapped_column(Text, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class EconomyDay(Base):
+    __tablename__ = "economy_days"
+
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    free_hints_used: Mapped[int] = mapped_column(Integer, default=0)
+    games_rewarded: Mapped[int] = mapped_column(Integer, default=0)
+    moments_rewarded: Mapped[int] = mapped_column(Integer, default=0)
+    streak_claimed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class UserStreak(Base):
+    __tablename__ = "user_streaks"
+
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
+    current_count: Mapped[int] = mapped_column(Integer, default=0)
+    best_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_active_date: Mapped[date | None] = mapped_column(Date)
+    freezes: Mapped[int] = mapped_column(Integer, default=0)
+    milestones: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=list)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class IapPurchase(Base):
+    __tablename__ = "iap_purchases"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
+    store: Mapped[str] = mapped_column(Text)
+    store_transaction_id: Mapped[str] = mapped_column(Text, unique=True)
+    product_id: Mapped[str] = mapped_column(Text)
+    coins: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

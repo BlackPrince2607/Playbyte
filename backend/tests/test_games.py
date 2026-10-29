@@ -91,6 +91,8 @@ async def test_submit_play_clamps_score_and_duration() -> None:
 
     assert result["score"] == 40
     assert result["created"] is True
+    assert result["coinsEarned"] == 0
+    assert result["balance"] is None
     added = session.add.call_args[0][0]
     assert added.duration_ms == 7_200_000
     assert added.score == 40
@@ -133,3 +135,28 @@ async def test_submit_play_integrity_error_replays_existing() -> None:
     assert result["created"] is False
     assert result["score"] == 17
     session.rollback.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_submit_play_grants_flat_coins_for_signed_in_players() -> None:
+    game = SimpleNamespace(key="color_match", status="enabled", config={"maxScore": 40})
+    session = _session_for_game(game)
+    play_id = uuid4()
+
+    def add_play(obj: object) -> None:
+        obj.id = play_id  # type: ignore[attr-defined]
+
+    session.add = MagicMock(side_effect=add_play)
+    grant = AsyncMock(return_value={"coinsEarned": 5, "balance": 35})
+
+    with (
+        patch("app.modules.games.service.game_stats", AsyncMock(return_value={"playsToday": 1, "averageScore": 10.0, "percentile": 50.0})),
+        patch("app.modules.games.service._prompt", return_value=False),
+        patch("app.modules.games.service.grant_game", grant),
+    ):
+        result = await submit_play(session, _actor("user"), "color_match", 10, 5_000, "idem-user")
+
+    assert result["coinsEarned"] == 5
+    assert result["balance"] == 35
+    grant.assert_awaited_once()
+    assert grant.await_args.args[2] == play_id

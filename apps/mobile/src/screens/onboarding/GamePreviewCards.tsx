@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   letterText: { fontFamily: fonts.mono, fontSize: 10, color: colors.lilac },
-  answerText: { fontFamily: fonts.bodyMedium, fontSize: 14, lineHeight: 20, color: "rgba(245,240,255,0.85)" },
+  answerText: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 22, color: "rgba(245,240,255,0.85)" },
   tick: {
     width: 20,
     height: 20,
@@ -411,9 +411,9 @@ const styles = StyleSheet.create({
   padRow: { flexDirection: "row", gap: 4 },
   padKey: { width: 24, height: 24, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   pollMeta: { flexDirection: "row", alignItems: "center", gap: 6, paddingBottom: 4 },
-  metaText: { fontFamily: fonts.bodyMedium, fontSize: 10, color: "rgba(143,127,192,0.8)" },
+  metaText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: "rgba(143,127,192,0.8)" },
   pollRow: {
-    height: 40,
+    height: 48,
     borderRadius: 12,
     paddingHorizontal: 14,
     flexDirection: "row",

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { api, isApiError, WeeklyRecap } from "../../api";
+import { BackLink } from "../../components/BackLink";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
-import { PrimaryButton } from "../../components/PrimaryButton";
+import { GuestGate } from "../../components/GuestGate";
+import { ScreenLoading } from "../../components/ScreenLoading";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
@@ -49,37 +51,32 @@ export function WeeklyRecapScreen({ onBack, onSignIn }: Props) {
 
   if (!isSignedIn) {
     return (
-      <View style={styles.wrap}>
-        <Pressable onPress={onBack} style={styles.back}>
-          <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
-        </Pressable>
+      <View style={[styles.wrap, styles.padded]}>
+        <BackLink onPress={onBack} style={styles.back} />
         <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("weeklyRecap")}</Text>
-        <Text style={[type.bodySm, { color: colors.lilac, marginVertical: spacing.md }]}>
-          Sign in to see your week in the crowd.
-        </Text>
-        {isSupabaseConfigured() && onSignIn ? <PrimaryButton label="Sign in" onPress={onSignIn} /> : null}
+        <GuestGate
+          title={t("weeklyRecap")}
+          message={t("signInToRecap")}
+          actionLabel={t("signIn")}
+          onSignIn={isSupabaseConfigured() ? onSignIn : undefined}
+        />
       </View>
     );
   }
 
   if (loading && !recap) {
     return (
-      <View style={[styles.wrap, styles.center]}>
-        <Pressable onPress={onBack} style={styles.back}>
-          <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
-        </Pressable>
-        <ActivityIndicator color={colors.lime} size="large" />
-        <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md }]}>Loading your week…</Text>
+      <View style={[styles.wrap, styles.padded]}>
+        <BackLink onPress={onBack} style={styles.back} />
+        <ScreenLoading label={t("loadingWeek")} />
       </View>
     );
   }
 
   if (error && !recap) {
     return (
-      <View style={styles.wrap}>
-        <Pressable onPress={onBack} style={styles.back}>
-          <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
-        </Pressable>
+      <View style={[styles.wrap, styles.padded]}>
+        <BackLink onPress={onBack} style={styles.back} />
         <ErrorState message={error} onRetry={() => void loadRecap()} />
       </View>
     );
@@ -93,9 +90,7 @@ export function WeeklyRecapScreen({ onBack, onSignIn }: Props) {
 
   return (
     <ScrollView style={styles.wrap} contentContainerStyle={styles.inner}>
-      <Pressable onPress={onBack} style={styles.back}>
-        <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
-      </Pressable>
+      <BackLink onPress={onBack} style={styles.back} />
       <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("weeklyRecap")}</Text>
       {recap ? (
         <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.sm }]}>
@@ -146,8 +141,8 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.ink },
+  padded: { padding: spacing.margin, paddingTop: 56 },
   inner: { padding: spacing.margin, paddingTop: 56, paddingBottom: 100 },
-  center: { justifyContent: "center" },
   back: { marginBottom: spacing.md },
   statGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.lg },
   statCard: {

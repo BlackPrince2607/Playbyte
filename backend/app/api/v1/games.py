@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.common.auth import Actor, get_actor
 from app.infrastructure.postgres.db import get_session
 from app.infrastructure.postgres.models import MiniGame
+from app.modules.economy.rules import parse_local_date
 from app.modules.games.service import catalog_entry, game_stats, submit_play
 
 router = APIRouter(prefix="/games", tags=["games"])
@@ -80,5 +81,15 @@ async def post_play(
     session: AsyncSession = Depends(get_session),
     actor: Actor = Depends(get_actor),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    x_local_date: str | None = Header(default=None, alias="X-Local-Date"),
 ) -> dict:
-    return await submit_play(session, actor, game_key, body.score, body.durationMs, idempotency_key, meta=body.meta())
+    return await submit_play(
+        session,
+        actor,
+        game_key,
+        body.score,
+        body.durationMs,
+        idempotency_key,
+        meta=body.meta(),
+        local_day=parse_local_date(x_local_date),
+    )

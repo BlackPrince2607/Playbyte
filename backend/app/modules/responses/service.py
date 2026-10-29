@@ -19,6 +19,7 @@ from app.infrastructure.postgres.models import (
 )
 from app.infrastructure.queue.outbox import enqueue
 from app.modules.crowd.volume import volume_state
+from app.modules.economy.service import grant_moment, lookup_moment_reward
 from app.modules.feed.service import my_response, serialize_snapshot
 
 
@@ -28,6 +29,7 @@ async def submit_response(
     moment_id: UUID,
     option_id: UUID,
     idempotency_key: str | None,
+    local_day=None,
 ) -> dict:
     moment = await session.get(Moment, moment_id, options=[selectinload(Moment.options)])
     if moment is None:
@@ -46,7 +48,8 @@ async def submit_response(
     existing = await my_response(session, moment_id, actor.user_id, actor.guest_id)
     if existing:
         snap = await session.get(CrowdSnapshot, moment_id)
-        return _result_payload(actor, existing, snap, created=False, moment=moment)
+        coins = await _response_coins(session, actor, existing.id, created=False, local_day=local_day, correct=False)
+        return _result_payload(actor, existing, snap, created=False, moment=moment, coins=coins)
 
     if idempotency_key:
         stmt = select(Response).where(Response.moment_id == moment_id, Response.idempotency_key == idempotency_key)
@@ -57,7 +60,8 @@ async def submit_response(
         dup = await session.scalar(stmt)
         if dup:
             snap = await session.get(CrowdSnapshot, moment_id)
-            return _result_payload(actor, dup, snap, created=False, moment=moment)
+            coins = await _response_coins(session, actor, dup.id, created=False, local_day=local_day, correct=False)
+            return _result_payload(actor, dup, snap, created=False, moment=moment, coins=coins)
 
     row = Response(
         moment_id=moment_id,
@@ -75,7 +79,8 @@ async def submit_response(
         if existing is None:
             raise AppError("conflict", "Could not record response.", 409) from None
         snap = await session.get(CrowdSnapshot, moment_id)
-        return _result_payload(actor, existing, snap, created=False, moment=moment)
+        coins = await _response_coins(session, actor, existing.id, created=False, local_day=local_day, correct=False)
+        return _result_payload(actor, existing, snap, created=False, moment=moment, coins=coins)
     await enqueue(
         session,
         "response.created",
@@ -90,7 +95,9 @@ async def submit_response(
         await _bump_daily(session, actor.user_id, moments=1)
     await session.flush()
     snap = await _optimistic_snapshot(session, moment_id, option_id)
-    return _result_payload(actor, row, snap, created=True, moment=moment)
+    correct = moment.scoring_mode == "correct_option" and bool(option.is_correct)
+    coins = await _response_coins(session, actor, row.id, created=True, local_day=local_day, correct=correct)
+    return _result_payload(actor, row, snap, created=True, moment=moment, coins=coins)
 
 
 def _result_payload(
@@ -100,6 +107,7 @@ def _result_payload(
     created: bool,
     *,
     moment: Moment | None = None,
+    coins: dict | None = None,
 ) -> dict:
     settings = get_settings()
     prompt = actor.kind == "guest" and actor.engagements >= settings.account_prompt_after
@@ -115,7 +123,26 @@ def _result_payload(
         "created": created,
         "promptAccountCreation": prompt,
         "result": serialize_snapshot(response.moment_id, snap, correct_option_id=correct_id),
+        **(coins or {"coinsEarned": 0, "balance": None}),
     }
+
+
+async def _response_coins(
+    session: AsyncSession,
+    actor: Actor,
+    response_id: UUID,
+    *,
+    created: bool,
+    local_day,
+    correct: bool,
+) -> dict:
+    if not actor.user_id or response_id is None:
+        return {"coinsEarned": 0, "balance": None}
+    # A repeat answer must not toast the reward again. The balance is still current.
+    if not created:
+        looked = await lookup_moment_reward(session, actor.user_id, response_id)
+        return {"coinsEarned": 0, "balance": looked["balance"]}
+    return await grant_moment(session, actor.user_id, response_id, local_day, correct=correct)
 
 
 async def _optimistic_snapshot(session: AsyncSession, moment_id: UUID, option_id: UUID) -> CrowdSnapshot:

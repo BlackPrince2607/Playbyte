@@ -18,14 +18,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api, isApiError, MeProfile, NotificationPreferences } from "../../api";
 import { setSoundPref, useSoundPrefs } from "../../audio/sound";
 import { AvatarImage } from "../../components/AvatarImage";
+import { ErrorState } from "../../components/ErrorState";
+import { GuestGate } from "../../components/GuestGate";
 import { PrimaryButton } from "../../components/PrimaryButton";
+import { ScreenLoading } from "../../components/ScreenLoading";
 import { SectionCard, SettingsRow, ToggleRow } from "../../components/StitchPrimitives";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { pickAndUploadAvatar, removeAvatar } from "../../lib/avatarUpload";
 import { useLanguage } from "../../context/LanguageContext";
+import { capture } from "../../lib/analytics";
 import { APP_LANGUAGES } from "../../lib/languages";
-import { legalLinks, SUPPORT_EMAIL, supportMailto } from "../../lib/links";
+import { legalLinks, PLAY_STORE_URL, SUPPORT_EMAIL, supportMailto } from "../../lib/links";
 import { formatFriendCode, friendCodeFor } from "../../lib/friendCode";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
@@ -93,6 +97,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
 
   function chooseLanguage(id: string) {
     setAppLanguage(id);
+    capture("language_selected", { language: id });
   }
 
   const loadMe = useCallback(async () => {
@@ -365,6 +370,11 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   const support = (
     <SectionCard title={t("support")}>
       <SettingsRow label={t("reportProblem")} value={SUPPORT_EMAIL} icon="bug-outline" onPress={reportProblem} />
+      <SettingsRow
+        label={t("rateOnPlayStore")}
+        icon="star-outline"
+        onPress={() => openLink(PLAY_STORE_URL)}
+      />
       {LEGAL ? (
         <SettingsRow label={t("privacyPolicy")} icon="document-text-outline" onPress={() => openLink(LEGAL.privacy)} />
       ) : null}
@@ -392,30 +402,28 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
             <View style={styles.guestIcon}>
               <Ionicons name="person-outline" size={26} color={colors.pink} />
             </View>
-            <Text style={[type.bodyLg, styles.guestTitle, { fontFamily: ui.body }]}>{t("guestTitle")}</Text>
-            <Text style={[type.bodySm, styles.guestBody]}>
-              Sign in to save your streaks, add friends and control your privacy.
-            </Text>
-            {isSupabaseConfigured() ? (
-              <PrimaryButton label="Sign in or create account" onPress={onSignIn} style={{ alignSelf: "stretch" }} />
-            ) : null}
+            <GuestGate
+              title={t("guestTitle")}
+              message={t("guestBody")}
+              actionLabel={t("signInOrCreate")}
+              onSignIn={isSupabaseConfigured() ? onSignIn : undefined}
+            />
           </View>
           {preferences}
           {support}
         </>
       ) : loading && !me ? (
-        <ActivityIndicator color={colors.lime} style={{ marginVertical: spacing.xl }} />
+        <ScreenLoading label={t("loadingProfile")} style={{ flex: 0, minHeight: 120 }} />
       ) : (
         <>
           {loadError ? (
-            <View style={[styles.card, styles.errorCard]}>
-              <Text style={[type.bodySm, { color: colors.pink }]}>{loadError}</Text>
-              {loadError.toLowerCase().includes("session") ? (
-                <PrimaryButton label="Sign in again" onPress={onSignIn} />
-              ) : (
-                <PrimaryButton label="Retry" variant="secondary" onPress={() => void loadMe()} />
-              )}
-            </View>
+            <ErrorState
+              message={loadError}
+              compact
+              style={styles.errorCard}
+              onRetry={loadError.toLowerCase().includes("session") ? onSignIn : () => void loadMe()}
+              retryLabel={loadError.toLowerCase().includes("session") ? "Sign in again" : t("retry")}
+            />
           ) : null}
 
           {me ? (
@@ -537,9 +545,10 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
                       style={{ flex: 1 }}
                     />
                     <PrimaryButton
-                      label={saving ? "Saving…" : "Save"}
+                      label={t("save")}
+                      busyLabel={t("saving")}
                       onPress={() => void saveProfile()}
-                      disabled={saving}
+                      busy={saving}
                       style={{ flex: 1 }}
                     />
                   </View>

@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     app_download_url: str = ""
 
     sentry_dsn: str = ""
+    # RevenueCat secret API key (server only). Empty disables coin pack verification.
+    revenuecat_secret_api_key: str = ""
+    # Full Authorization header value configured on the RevenueCat webhook.
+    revenuecat_webhook_authorization: str = ""
     rate_limit_response_per_minute: int = 60
     rate_limit_guest_create_per_hour: int = 30
     rate_limit_event_batches_per_minute: int = 30

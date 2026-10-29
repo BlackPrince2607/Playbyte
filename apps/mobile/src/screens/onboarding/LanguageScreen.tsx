@@ -1,10 +1,11 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MajaLogo } from "../../components/MajaLogo";
 import { useLanguage } from "../../context/LanguageContext";
 import { appLang } from "../../i18n/lang";
+import { capture } from "../../lib/analytics";
 import { APP_LANGUAGES, UPCOMING_LANGUAGES, supportedLanguage } from "../../lib/languages";
 import { lineHeightFor } from "../../lib/promptSize";
 import { colors, spacing, surface } from "../../theme/colors";
@@ -19,6 +20,7 @@ export function LanguageScreen({ onNext, onBack }: Props) {
   const insets = useSafeAreaInsets();
   const { language, setAppLanguage, t, fonts: ui } = useLanguage();
   const [selected, setSelected] = useState(language);
+  const trackedLanguage = useRef(false);
 
   useEffect(() => {
     setSelected(appLang(supportedLanguage(language)));
@@ -61,8 +63,11 @@ export function LanguageScreen({ onNext, onBack }: Props) {
             <Pressable
               key={l.id}
               onPress={() => {
-                setSelected(appLang(l.id));
+                const next = appLang(l.id);
+                setSelected(next);
                 setAppLanguage(l.id);
+                capture("language_selected", { language: next });
+                trackedLanguage.current = true;
               }}
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
@@ -122,7 +127,18 @@ export function LanguageScreen({ onNext, onBack }: Props) {
       </View>
 
       <View style={styles.footer}>
-        <CtaButton label={t("continue")} onPress={onNext} style={{ alignSelf: "stretch" }} />
+        <CtaButton
+          label={t("continue")}
+          onPress={() => {
+            if (!trackedLanguage.current) {
+              setAppLanguage(selected);
+              capture("language_selected", { language: selected });
+              trackedLanguage.current = true;
+            }
+            onNext();
+          }}
+          style={{ alignSelf: "stretch" }}
+        />
         <View style={styles.note}>
           <Ionicons name="settings-outline" size={14} color={colors.lilac} />
           <Text style={[type.metadata, { color: colors.lilac, fontFamily: ui.body, flexShrink: 1 }]} numberOfLines={2}>

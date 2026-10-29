@@ -53,8 +53,15 @@ export function groupBuild(prompt: string, showLabels: boolean) {
     const oddChoices = membersOf(other).filter((m) => !taken.has(normLabel(m.label)));
     if (!oddChoices.length) return null;
     const odd = rng.pick(oddChoices);
-    const opt = (id: string, m: Member): QuizOption => ({ id, label: showLabels || !m.emoji ? m.label : "", emoji: m.emoji, alt: m.label });
     const chosen = rng.sample(members.map((m, i) => ({ m, i })), k);
+    // Only show emoji when every card has one — a mixed set visually leaks the odd one out.
+    const withEmoji = chosen.every(({ m }) => !!m.emoji) && !!odd.emoji;
+    const opt = (id: string, m: Member): QuizOption => ({
+      id,
+      label: showLabels || !withEmoji ? m.label : "",
+      emoji: withEmoji ? m.emoji : undefined,
+      alt: m.label,
+    });
     const answerId = `${other.id}#odd`;
     return {
       id: `${item.id}>${other.id}`,

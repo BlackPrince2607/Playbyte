@@ -15,6 +15,7 @@ export type EngineId =
   | "tap"
   | "tap_dont_tap"
   | "connect_dots"
+  | "arrow_puzzle"
   | "maze"
   | "fact_fake"
   | "choice"

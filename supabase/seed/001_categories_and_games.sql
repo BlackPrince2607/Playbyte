@@ -15,7 +15,9 @@ INSERT INTO categories (slug, name, sort_order) VALUES
   ('politics', 'Politics', 14),
   ('science', 'Science', 15),
   ('health', 'Health', 16),
-  ('k-drama', 'K-Drama', 17)
+  ('k-drama', 'K-Drama', 17),
+  ('personality-vibe', 'Personality & Vibe', 18),
+  ('kpop', 'K-Pop', 19)
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO content_tags (slug, name, sort_order) VALUES

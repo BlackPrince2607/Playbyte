@@ -31,6 +31,7 @@ from app.modules.avatars.service import (
     remove_avatar,
     store_avatar,
 )
+from app.modules.feed.stock import ensure_category_stock
 from app.modules.privacy.service import export_download_url
 from app.modules.recap.service import weekly_recap
 
@@ -181,6 +182,7 @@ async def put_interests(
         await session.execute(delete(GuestInterest).where(GuestInterest.guest_session_id == actor.guest_id))
         for cid in body.categoryIds:
             session.add(GuestInterest(guest_session_id=actor.guest_id, category_id=cid))
+    await ensure_category_stock(session, body.categoryIds, actor.user_id)
     return {"ok": True}
 
 
@@ -321,6 +323,8 @@ async def convert_guest(
         )
         if not exists:
             session.add(UserInterest(user_id=actor.user_id, category_id=cid))
+    if guest_interests:
+        await ensure_category_stock(session, guest_interests, actor.user_id)
     user = await session.get(User, actor.user_id)
     if body.dateOfBirth:
         user.date_of_birth = body.dateOfBirth

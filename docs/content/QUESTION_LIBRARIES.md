@@ -10,7 +10,7 @@ There is **no hard DB cap** on total moments. Practical limits:
 |-------|-----|
 | Feed API page | `GET /v1/feed?limit=` default **10**, max **20** |
 | Ranking pool | All `live` + unexpired moments are loaded, ranked, interleaved with games, then sliced to `limit` |
-| Live set (ops) | Soft target **~40 live** via auto-refresh (retire previous live each run) |
+| Live set (ops) | Soft target **~20 × onboarding categories** via auto-refresh (retire previous live each run; 4h TTL) |
 | Option / prompt media | `moment-media` bucket: **5MB**, `png/jpeg/webp` |
 | Options per card | predict/reaction = 2; pulse = 2–4 |
 
@@ -69,15 +69,17 @@ For those, use **editorial polls** (CMS or the packs below), not OpenTDB.
 
 ## Auto-refresh (every 4 hours)
 
-Preview freshness is intentional: GitHub Actions retires live moments and floods a new batch (~40) with a ~5h `endsAt` window.
+Each run **fills** the feed from the India-trend agent (~20 cards per category), reads engagement insights (responses / likes / comments / shares) so the next batch leans into what worked, publishes with a **4-hour `endsAt`**, then retires **all** previous live moments. Viewers get a fresh feed every cycle — nothing repeats.
 
 1. Workflow: [`.github/workflows/refresh-feed-content.yml`](../../.github/workflows/refresh-feed-content.yml)
-2. Script: `python scripts/refresh_feed_content.py --count 40`
-3. Required GitHub secrets:
+2. Script: `python scripts/refresh_feed_content.py --per-category 20 --count 12 --window-hours 4`
+3. Insights API (used by the job): `GET /v1/admin/moments/insights`
+4. Required GitHub secrets:
    - `MAJA_API_URL` — e.g. `https://majaa-production.up.railway.app`
    - `MAJA_ADMIN_KEY` — same key the API accepts via `X-Admin-Key` (non-prod) / admin path as deployed
-4. Manual run: Actions → **Refresh feed content** → **Run workflow**
-5. Local dry-run: `python scripts/refresh_feed_content.py --dry-run --no-images`
+   - `OPENAI_API_KEY` — model key for the category agent
+5. Manual run: Actions → **Refresh feed content** → **Run workflow**
+6. Local dry-run: `python scripts/refresh_feed_content.py --dry-run --no-images`
 
 Admin media upload (needed for image moments):
 
@@ -88,14 +90,14 @@ POST /v1/admin/media
 
 ## Recommended workflow
 
-1. **Quizzes** — pull from OpenTDB / open-quiz-bank → edit wording → tag `quiz` → CMS draft → live  
-2. **Polls / predicts** — use `docs/content/category-question-pack.json` (or content_gen)  
-3. **Meme / image choices** — use `docs/content/meme-image-pack.json` via refresh (auto-publish) or CMS with uploaded keys  
+1. **Polls and quizzes** — the refresh agent fills the live feed every few hours (India-trend polls + trend trivia + bank/brief quizzes). It learns from `moments/insights` (hits vs misses). Catalogs in `backend/scripts/content_gen/catalog.py` are the fallback bank only. Saving interests stocks any empty selected category until the next refresh; the feed shows those categories.
+2. **Current events** — verified briefs in `backend/scripts/content_gen/briefs/`. Sports and films (and the other event categories) emit opinion, debate, prediction, and quiz cards only when the brief has the facts.
+3. **Meme / image choices** — light spice via `docs/content/meme-image-pack.json` (optional); the agent batch is the main feed  
 4. Restricted topics still need dual approval — auto-refresh always sets `restrictedTopic=none`
 
 ## Related in-repo
 
-- Generator: `backend/scripts/content_gen/` (aligned to live category slugs)  
+- Generator: `backend/scripts/content_gen/` (category catalogs, event briefs, OpenAI agent)  
 - Seed samples: `supabase/seed/002_sample_moments.sql`  
 - Text pack: `docs/content/category-question-pack.json`  
 - Meme image pack: `docs/content/meme-image-pack.json`  

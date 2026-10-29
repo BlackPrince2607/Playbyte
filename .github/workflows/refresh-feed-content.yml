@@ -2,7 +2,7 @@ name: Refresh feed content
 
 on:
   schedule:
-    # Every 4 hours
+    # Every 4 hours — matches card TTL so the whole feed expires and turns over
     - cron: "0 */4 * * *"
   workflow_dispatch:
 
@@ -24,14 +24,17 @@ jobs:
         env:
           MAJA_API_URL: ${{ secrets.MAJA_API_URL }}
           MAJA_ADMIN_KEY: ${{ secrets.MAJA_ADMIN_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-4o-mini
         run: |
-          if [ -z "$MAJA_API_URL" ] || [ -z "$MAJA_ADMIN_KEY" ]; then
-            echo "Missing MAJA_API_URL or MAJA_ADMIN_KEY secrets."
+          if [ -z "$MAJA_API_URL" ] || [ -z "$MAJA_ADMIN_KEY" ] || [ -z "$OPENAI_API_KEY" ]; then
+            echo "Missing MAJA_API_URL, MAJA_ADMIN_KEY, or OPENAI_API_KEY secrets."
             exit 1
           fi
           python scripts/refresh_feed_content.py \
             --api-url "$MAJA_API_URL" \
             --admin-key "$MAJA_ADMIN_KEY" \
-            --count 40 \
-            --window-hours 12 \
+            --per-category 20 \
+            --count 12 \
+            --window-hours 4 \
             --include-images

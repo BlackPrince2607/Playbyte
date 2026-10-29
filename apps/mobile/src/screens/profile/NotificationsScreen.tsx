@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { api, isApiError, NotificationPreferences } from "../../api";
+import { BackLink } from "../../components/BackLink";
 import { ErrorState } from "../../components/ErrorState";
-import { PrimaryButton } from "../../components/PrimaryButton";
+import { GuestGate } from "../../components/GuestGate";
+import { ScreenLoading } from "../../components/ScreenLoading";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
@@ -67,28 +69,23 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
   if (!isSignedIn) {
     return (
       <View style={styles.wrap}>
-        <Pressable onPress={onBack} style={styles.back}>
-          <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
-        </Pressable>
+        <BackLink onPress={onBack} style={styles.back} />
         <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("notifications")}</Text>
-        <Text style={[type.bodySm, { color: colors.lilac, marginVertical: spacing.md }]}>
-          Sign in to manage notification preferences.
-        </Text>
-        {isSupabaseConfigured() && onSignIn ? (
-          <PrimaryButton label="Sign in" onPress={onSignIn} />
-        ) : null}
+        <GuestGate
+          title={t("notifications")}
+          message={t("signInToNotifications")}
+          actionLabel={t("signIn")}
+          onSignIn={isSupabaseConfigured() ? onSignIn : undefined}
+        />
       </View>
     );
   }
 
   if (loading && !prefs) {
     return (
-      <View style={[styles.wrap, styles.center]}>
-        <Pressable onPress={onBack} style={styles.back}>
-          <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
-        </Pressable>
-        <ActivityIndicator color={colors.lime} size="large" />
-        <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md }]}>Loading preferences…</Text>
+      <View style={styles.wrap}>
+        <BackLink onPress={onBack} style={styles.back} />
+        <ScreenLoading label={t("loadingPrefs")} />
       </View>
     );
   }
@@ -96,9 +93,7 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
   if (loadError && !prefs) {
     return (
       <View style={styles.wrap}>
-        <Pressable onPress={onBack} style={styles.back}>
-          <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
-        </Pressable>
+        <BackLink onPress={onBack} style={styles.back} />
         <ErrorState message={loadError} onRetry={() => void loadPrefs()} />
       </View>
     );
@@ -112,9 +107,7 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <Pressable onPress={onBack} style={styles.back}>
-        <Text style={{ color: colors.pinkSoft }}>‹ Back</Text>
-      </Pressable>
+      <BackLink onPress={onBack} style={styles.back} />
       <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("notifications")}</Text>
       <Text style={[type.hero, { color: colors.paper, fontSize: 28, marginTop: spacing.sm }]}>
         Your game is getting social.
@@ -151,7 +144,6 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.ink, padding: spacing.margin, paddingTop: 56 },
-  center: { justifyContent: "center" },
   back: { marginBottom: spacing.md },
   row: {
     flexDirection: "row",

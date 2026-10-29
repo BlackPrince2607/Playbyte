@@ -87,6 +87,11 @@ export async function setOnboardingDone() {
   await clearOnboardingStep();
 }
 
+/** Re-open onboarding mid-app (e.g. guest skipped profile/interests, then signed in). */
+export async function clearOnboardingDone() {
+  await AsyncStorage.removeItem(KEYS.onboarding);
+}
+
 /** True only for players who just finished onboarding and haven't swiped the feed yet. */
 export async function isSwipeHintPending() {
   return (await AsyncStorage.getItem(KEYS.swipeHint)) === "pending";
@@ -142,6 +147,42 @@ export async function setSoundPrefs(prefs: SoundPrefs) {
 export async function getStreak() {
   const v = await AsyncStorage.getItem(KEYS.streak);
   return v ? Number(v) : 0;
+}
+
+export async function getStreakDate() {
+  return AsyncStorage.getItem(KEYS.streakDate);
+}
+
+const FREE_HINTS_KEY = "maja_free_hints";
+
+export async function guestFreeHintsLeft(now = new Date()): Promise<number> {
+  const today = localDateString(now);
+  const raw = await AsyncStorage.getItem(FREE_HINTS_KEY);
+  let used = 0;
+  try {
+    const parsed = raw ? (JSON.parse(raw) as { date?: string; used?: number }) : null;
+    if (parsed?.date === today) used = Number(parsed.used) || 0;
+  } catch {
+    used = 0;
+  }
+  return Math.max(0, 3 - used);
+}
+
+/** Uses one of the three daily guest hints. False when today's allowance is gone. */
+export async function takeGuestFreeHint(now = new Date()): Promise<boolean> {
+  const today = localDateString(now);
+  const left = await guestFreeHintsLeft(now);
+  if (left <= 0) return false;
+  const raw = await AsyncStorage.getItem(FREE_HINTS_KEY);
+  let used = 0;
+  try {
+    const parsed = raw ? (JSON.parse(raw) as { date?: string; used?: number }) : null;
+    if (parsed?.date === today) used = Number(parsed.used) || 0;
+  } catch {
+    used = 0;
+  }
+  await AsyncStorage.setItem(FREE_HINTS_KEY, JSON.stringify({ date: today, used: used + 1 }));
+  return true;
 }
 
 export async function recordDailyVisit(now = new Date()): Promise<number> {

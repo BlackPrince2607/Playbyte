@@ -52,7 +52,7 @@
       "categorySlug": "food",
       "type": "predict",
       "tags": ["poll"],
-      "prompt": "Chai vs coffee — pick a side (visually).",
+      "prompt": "Chai vs coffee - pick a side (visually).",
       "options": [
         {
           "label": "Chai",
@@ -76,7 +76,7 @@
       "categorySlug": "tech",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Battery at 3% — which face is you?",
+      "prompt": "Battery at 3% - which face is you?",
       "options": [
         {
           "label": "Panic",
@@ -100,7 +100,7 @@
       "categorySlug": "social",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Seen-zoned — pick your response vibe.",
+      "prompt": "Seen-zoned - pick your response vibe.",
       "options": [
         {
           "label": "Double text",
@@ -124,7 +124,7 @@
       "categorySlug": "cricket",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Last over of a chase — your face?",
+      "prompt": "Last over of a chase - your face?",
       "options": [
         {
           "label": "Believe",
@@ -148,7 +148,7 @@
       "categorySlug": "movies",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Interval twist just hit — reaction?",
+      "prompt": "Interval twist just hit - reaction?",
       "options": [
         {
           "label": "Mind blown",
@@ -172,7 +172,7 @@
       "categorySlug": "music",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Concert tickets sold out — which meme are you?",
+      "prompt": "Concert tickets sold out - which meme are you?",
       "options": [
         {
           "label": "Crying",
@@ -220,7 +220,7 @@
       "categorySlug": "news",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Breaking news alert at 11pm — you…",
+      "prompt": "Breaking news alert at 11pm - you…",
       "options": [
         {
           "label": "Open it",
@@ -244,7 +244,7 @@
       "categorySlug": "sports",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Your team blew a lead — pick a coping meme.",
+      "prompt": "Your team blew a lead - pick a coping meme.",
       "options": [
         {
           "label": "It's fine",
@@ -268,7 +268,7 @@
       "categorySlug": "tech",
       "type": "predict",
       "tags": ["poll"],
-      "prompt": "AI wrote your email — pride or shame?",
+      "prompt": "AI wrote your email - pride or shame?",
       "options": [
         {
           "label": "Pride",
@@ -292,7 +292,7 @@
       "categorySlug": "casual",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Alarm went off — which one are you?",
+      "prompt": "Alarm went off - which one are you?",
       "options": [
         {
           "label": "Snooze army",
@@ -340,7 +340,7 @@
       "categorySlug": "pop-culture",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Celebrity drama dropped — your move?",
+      "prompt": "Celebrity drama dropped - your move?",
       "options": [
         {
           "label": "Full thread",
@@ -364,7 +364,7 @@
       "categorySlug": "food",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "1am Maggi vs biryani — visual showdown.",
+      "prompt": "1am Maggi vs biryani - visual showdown.",
       "options": [
         {
           "label": "Maggi",
@@ -412,7 +412,7 @@
       "categorySlug": "music",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Earworm stuck for 3 days — pick a face.",
+      "prompt": "Earworm stuck for 3 days - pick a face.",
       "options": [
         {
           "label": "Suffer",
@@ -448,7 +448,7 @@
       "categorySlug": "tech",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Software update overnight — morning mood?",
+      "prompt": "Software update overnight - morning mood?",
       "options": [
         {
           "label": "Everything broke",
@@ -484,7 +484,7 @@
       "categorySlug": "cricket",
       "type": "predict",
       "tags": ["poll"],
-      "prompt": "DRS — review or trust the call?",
+      "prompt": "DRS - review or trust the call?",
       "options": [
         {
           "label": "Review",
@@ -532,7 +532,7 @@
       "categorySlug": "news",
       "type": "pulse",
       "tags": ["poll"],
-      "prompt": "Fact-check before share — honest meme?",
+      "prompt": "Fact-check before share - honest meme?",
       "options": [
         {
           "label": "I verify",

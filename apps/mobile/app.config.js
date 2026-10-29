@@ -9,8 +9,12 @@
  * matching /.well-known/assetlinks.json, which must list the signing key's SHA-256 fingerprint.
  */
 module.exports = ({ config }) => {
-  let plugins = config.plugins ?? [];
+  let plugins = [...(config.plugins ?? [])];
   let android = config.android ?? {};
+
+  if (!plugins.includes("expo-localization")) {
+    plugins.push("expo-localization");
+  }
 
   const inviteHost = hostOf(process.env.EXPO_PUBLIC_API_URL);
   if (inviteHost) {

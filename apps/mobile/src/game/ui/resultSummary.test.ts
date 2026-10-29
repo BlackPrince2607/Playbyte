@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { resultHeadline, scoreRows, statRows } from "./resultSummary";
+import { fakeBeatenCount, resultHeadline, scoreRows, statRows } from "./resultSummary";
 
 describe("result summary", () => {
   it("lists non-zero point components in a stable order and skips totals", () => {
@@ -30,5 +30,16 @@ describe("result summary", () => {
     assert.deepEqual(resultHeadline({ percentile: 20, correct: 5, attempts: 5 }), { title: "Flawless!", celebrate: true });
     assert.deepEqual(resultHeadline({ percentile: null, correct: 3, attempts: 4 }), { title: "Strong run!", celebrate: true });
     assert.deepEqual(resultHeadline({ percentile: null }), { title: "Run complete.", celebrate: false });
+  });
+
+  it("invents a stable fake player count from percentile and score", () => {
+    const a = fakeBeatenCount(80, 120);
+    const b = fakeBeatenCount(80, 120);
+    assert.equal(a.pct, 80);
+    assert.equal(a.count, b.count);
+    assert.ok(a.count >= 12);
+    const missing = fakeBeatenCount(null, 120);
+    assert.ok(missing.pct >= 22 && missing.pct <= 92);
+    assert.ok(missing.count >= 12);
   });
 });

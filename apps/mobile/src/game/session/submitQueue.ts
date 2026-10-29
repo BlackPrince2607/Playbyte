@@ -25,6 +25,8 @@ export type SaveOutcome = {
   saveState: SaveState;
   saveMessage?: string;
   promptAccountCreation?: boolean;
+  coinsEarned?: number;
+  balance?: number | null;
 };
 
 /**
@@ -32,14 +34,28 @@ export type SaveOutcome = {
  * the play queued for later unless the server rejected it, and a successful one retries older queued plays.
  */
 export async function savePlay(
-  queue: SubmitQueue<{ score: number; percentile: number; promptAccountCreation?: boolean }>,
+  queue: SubmitQueue<{
+    score: number;
+    percentile: number;
+    promptAccountCreation?: boolean;
+    coinsEarned?: number;
+    balance?: number | null;
+  }>,
   play: CompletedPlay,
   messageOf: (e: unknown) => string | undefined = () => undefined,
 ): Promise<SaveOutcome> {
   try {
     const res = await queue.submit(play);
     void queue.flush().catch(() => {});
-    return { score: res.score, percentile: res.percentile, saveState: "saved", promptAccountCreation: res.promptAccountCreation };
+    const outcome: SaveOutcome = {
+      score: res.score,
+      percentile: res.percentile,
+      saveState: "saved",
+      promptAccountCreation: res.promptAccountCreation,
+    };
+    if (typeof res.coinsEarned === "number") outcome.coinsEarned = res.coinsEarned;
+    if (typeof res.balance === "number") outcome.balance = res.balance;
+    return outcome;
   } catch (e) {
     if ((e as SubmitError)?.permanent === true) {
       return { score: play.score, percentile: null, saveState: "rejected", saveMessage: messageOf(e) };

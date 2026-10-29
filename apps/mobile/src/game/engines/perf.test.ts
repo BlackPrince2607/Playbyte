@@ -12,6 +12,7 @@ import { missingContent } from "../content/query";
 import type { GameEngine } from "../core/engine";
 import { createRng } from "../core/rng";
 import { definition, packBundle, playHeadless } from "../testing/harness";
+import { arrowEngine } from "./arrow-puzzle/logic/arrowPuzzle";
 import { choiceEngine } from "./choice/logic/choice";
 import { connectDotsEngine } from "./connect-dots/logic/connectDots";
 import { emojiGuessEngine } from "./emoji-guess/logic/engine";
@@ -47,6 +48,7 @@ const ENGINES: GameEngine<any, any, any>[] = [
   tapDontTapEngine,
   mazeEngine,
   connectDotsEngine,
+  arrowEngine,
 ];
 
 const packsDir = path.join(__dirname, "..", "content", "packs");

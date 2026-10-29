@@ -8,6 +8,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { useLanguage } from "../../../../context/LanguageContext";
+import { localizeChrome } from "../../../../i18n/chrome";
 import { colors, radius, spacing } from "../../../../theme/colors";
 import { type } from "../../../../theme/typography";
 import { feedback, prefersReducedMotion } from "../../../ui/feedback";
@@ -199,33 +201,37 @@ function RoundCard({ state }: { state: TapState }) {
 const CUE_MS = 350;
 
 function ReactionField({ state, dispatch, snapshot, now }: EngineViewProps<TapState, TapAction>) {
+  const { language } = useLanguage();
   const playing = snapshot.status === "playing";
   const t = useClock(now, playing, 0);
   const go = state.goAt !== null && t >= state.goAt;
   const cue = !go && state.cueAt !== null && t >= state.cueAt && t < state.cueAt + CUE_MS;
 
   let bg: string = "#93000a";
-  let title = "Wait for green…";
+  let title = localizeChrome("Wait for green…", language);
   let sub = "";
   if (state.roundOver) {
     if (state.falseStart) {
       bg = colors.cardAlt;
-      title = "Too soon!";
-      sub = "Wait for green";
+      title = localizeChrome("Too soon!", language);
+      sub = localizeChrome("Wait for green", language);
     } else if (state.reactionMs !== null) {
       bg = colors.cardAlt;
       title = `${state.reactionMs} ms`;
-      sub = state.reactionMs < 250 ? "Lightning!" : state.reactionMs < 350 ? "Quick!" : "Nice";
+      sub = localizeChrome(
+        state.reactionMs < 250 ? "Lightning!" : state.reactionMs < 350 ? "Quick!" : "Nice",
+        language,
+      );
     } else {
       bg = colors.cardAlt;
-      title = "Too slow!";
+      title = localizeChrome("Too slow!", language);
     }
   } else if (go) {
     bg = colors.limeLive;
-    title = "TAP!";
+    title = localizeChrome("TAP!", language);
   } else if (cue) {
     bg = GOLD;
-    title = "Not yet…";
+    title = localizeChrome("Not yet…", language);
   }
 
   useEffect(() => {
@@ -239,7 +245,7 @@ function ReactionField({ state, dispatch, snapshot, now }: EngineViewProps<TapSt
           if (playing) dispatch({ type: "tap", id: null });
         }}
         accessibilityRole="button"
-        accessibilityLabel={go ? "Tap now" : "Wait for green, then tap"}
+        accessibilityLabel={go ? localizeChrome("Tap now", language) : localizeChrome("Wait for green, then tap", language)}
         style={[styles.field, styles.reaction, { backgroundColor: bg }]}
       >
         <Text style={[type.largeScore, { color: go || cue ? colors.ink : colors.paper, textAlign: "center" }]}>{title}</Text>

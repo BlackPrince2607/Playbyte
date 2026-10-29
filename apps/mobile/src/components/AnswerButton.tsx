@@ -65,10 +65,10 @@ export function AnswerButton({
       ) : null}
       <View style={styles.row}>
         <Text
-          style={[tile ? type.bodySm : type.bodyLg, styles.label, { fontFamily: fonts.bodyBold }]}
-          numberOfLines={tile ? 1 : 2}
+          style={[tile ? type.bodyLg : type.button, styles.label, compact && styles.labelCompact, { fontFamily: fonts.bodyBold }]}
+          numberOfLines={tile ? 2 : 2}
           adjustsFontSizeToFit
-          minimumFontScale={0.75}
+          minimumFontScale={0.85}
         >
           {emoji ? `${emoji} ` : ""}
           {label ?? ""}
@@ -76,7 +76,7 @@ export function AnswerButton({
         <View style={styles.trailing}>
           {showCheck || selected || correct ? <Text style={styles.check}>✓</Text> : null}
           {percent != null ? (
-            <Text style={[tile ? type.metadata : type.statsSm, { color: colors.lime, fontFamily: fonts.mono }]}>
+            <Text style={[type.statsSm, { color: colors.lime, fontFamily: fonts.mono }]}>
               {percent}%
             </Text>
           ) : null}
@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: spacing.xs },
   label: { color: colors.paper, flex: 1 },
+  labelCompact: { fontSize: 15, lineHeight: 20 },
   trailing: { flexDirection: "row", alignItems: "center", gap: 6 },
   check: { color: colors.lime, fontSize: 18, fontWeight: "700" },
 });

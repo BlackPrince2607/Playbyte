@@ -1,4 +1,5 @@
 import { assertMobileEnv, getApiBaseUrl } from "./lib/env";
+import { localDateString } from "./lib/dailyStreak";
 import { getStoredGuestToken, setStoredGuestToken } from "./lib/storage";
 
 assertMobileEnv();
@@ -30,6 +31,10 @@ export class ApiError extends Error {
 
 function friendlyMessage(status: number, code: string, backendMessage: string): string {
   if (status === 401) return "Your session expired. Sign in again or continue as guest.";
+  if (status === 402) {
+    if (code === "insufficient_coins") return "Not enough coins.";
+    return backendMessage || "That purchase could not be verified.";
+  }
   if (status === 403) return "You don't have permission to do that.";
   if (status === 404) {
     if (code === "user_not_found") return backendMessage || "No player has that ID.";
@@ -58,6 +63,10 @@ export function setUnauthorizedHandler(handler: (() => Promise<boolean>) | null)
 
 export function setUserAccessToken(value: string | null) {
   userAccessToken = value ?? "";
+}
+
+export function getUserAccessToken() {
+  return userAccessToken || null;
 }
 
 export function getGuestToken() {
@@ -105,6 +114,7 @@ async function fetchApi<T>(path: string, init: RequestInit, authRetries: number)
   // FormData needs fetch to set its own multipart boundary header.
   const headers: Record<string, string> = {
     ...(init.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
+    "X-Local-Date": localDateString(),
     ...(init.headers as Record<string, string>),
   };
   const auth = await authorizationHeader();
@@ -217,6 +227,8 @@ export type RespondResult = {
   created: boolean;
   promptAccountCreation: boolean;
   result: CrowdSnapshot | null;
+  coinsEarned?: number;
+  balance?: number | null;
 };
 
 export function formatCount(n: number): string {

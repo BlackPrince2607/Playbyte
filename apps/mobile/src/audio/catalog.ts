@@ -10,6 +10,7 @@ const ENGINE_MUSIC: Record<string, MusicKey> = {
   word_search: "calm",
   maze: "calm",
   connect_dots: "calm",
+  arrow_puzzle: "calm",
   spot_difference: "calm",
   tap: "arcade",
   tap_dont_tap: "arcade",

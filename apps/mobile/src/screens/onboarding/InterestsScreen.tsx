@@ -1,9 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api, isApiError } from "../../api";
+import { ScreenLoading } from "../../components/ScreenLoading";
 import { useLanguage } from "../../context/LanguageContext";
 import { categoryName } from "../../i18n/categories";
 import { fill } from "../../i18n/strings";
@@ -33,6 +34,8 @@ const FALLBACK: Category[] = [
   { id: "music", name: "Music" },
   { id: "travel", name: "Travel" },
   { id: "general-knowledge", name: "General Knowledge" },
+  { id: "kpop", name: "K-Pop" },
+  { id: "personality-vibe", name: "Personality & Vibe" },
 ];
 
 const ICONS: [string, string][] = [
@@ -46,6 +49,9 @@ const ICONS: [string, string][] = [
   ["movie", "🎬"],
   ["cinema", "🎬"],
   ["k-drama", "📺"],
+  ["kpop", "🎤"],
+  ["personality", "🪞"],
+  ["vibe", "🪞"],
   ["food", "🍜"],
   ["weather", "⛅"],
   ["tech", "💻"],
@@ -147,12 +153,7 @@ export function InterestsScreen({ onDone, onBack }: Props) {
         <Text style={[onboardingStyles.lede, { fontFamily: ui.body, color: colors.lilac }]}>{t("interestsLede")}</Text>
 
         {loading ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={surface.lime} size="large" />
-            <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md, fontFamily: ui.body }]}>
-              {t("loadingInterests")}
-            </Text>
-          </View>
+          <ScreenLoading label={t("loadingInterests")} style={styles.center} />
         ) : (
           <>
             {loadError ? (

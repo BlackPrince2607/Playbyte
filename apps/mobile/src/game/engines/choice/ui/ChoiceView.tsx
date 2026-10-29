@@ -95,7 +95,7 @@ export function ChoiceView({ state, dispatch, snapshot }: EngineViewProps<Choice
           accessibilityRole="header"
           numberOfLines={4}
           adjustsFontSizeToFit
-          minimumFontScale={0.7}
+          minimumFontScale={0.85}
         >
           {q.prompt}
         </Text>
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   fill: { position: "absolute", left: 0, right: 0, bottom: 0 },
   emoji: { fontSize: 64 },
-  label: { ...type.button, fontSize: 18, color: colors.paper, textAlign: "center" },
+  label: { ...type.button, fontSize: 20, lineHeight: 26, color: colors.paper, textAlign: "center" },
   pct: { fontFamily: fonts.display, fontSize: 32 },
   vs: { width: 36, alignItems: "center", justifyContent: "center" },
   vsText: { fontFamily: fonts.display, fontSize: 16, color: colors.pink },

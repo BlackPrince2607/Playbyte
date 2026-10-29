@@ -17,6 +17,7 @@ import { api, FeedMoment, formatCount, isApiError, MeProfile } from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
 import { ErrorState } from "../../components/ErrorState";
 import { PrimaryButton } from "../../components/PrimaryButton";
+import { ScreenLoading } from "../../components/ScreenLoading";
 import { isMoment, useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
@@ -208,7 +209,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
   }
 
   async function inviteFriends() {
-    await shareAppInvite(me?.id);
+    await shareAppInvite(me?.id, "friends");
   }
 
   if (!isSignedIn) {
@@ -237,12 +238,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
   const nothingLoaded = !friends.length && !friendRequests.incoming.length && !friendRequests.outgoing.length;
 
   if ((friendsLoading || friendRequestsLoading) && nothingLoaded && !me) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.lime} size="large" />
-        <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md, fontFamily: ui.body }]}>{t("loadingFriends")}</Text>
-      </View>
-    );
+    return <ScreenLoading label={t("loadingFriends")} style={styles.center} />;
   }
 
   if (friendsError && nothingLoaded && !me) {
@@ -487,7 +483,7 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
                   accessibilityLabel={`Cancel request to ${r.displayName}`}
                 >
                   {busy === `cancel:${r.id}` ? (
-                    <ActivityIndicator size="small" color={colors.lilac} />
+                    <ActivityIndicator size="small" color={colors.lime} />
                   ) : (
                     <Text style={[styles.textButtonLabel, { fontFamily: ui.bodyBold }]}>{t("cancel")}</Text>
                   )}
@@ -564,7 +560,7 @@ function MyCodeRow({ playerId }: { playerId: string }) {
       <IconButton
         icon="share-social-outline"
         label="Share invite link"
-        onPress={() => void shareAppInvite(playerId)}
+        onPress={() => void shareAppInvite(playerId, "friends_profile")}
         small
       />
     </View>

@@ -9,10 +9,10 @@ import pytest
 from app.modules.feed.ranking import FeedCursor, RankedItem, fill_page, rotate_games
 from app.modules.feed.service import build_feed, serialize_moment
 
-# Enabled games per engine, as seeded by supabase/seed/003_sdk_games.sql (42 rows, 11 engines).
+# Enabled games per engine, as seeded by supabase/seed/003_sdk_games.sql (44 rows, 12 engines).
 CATALOG = {
     "guess": 4, "emoji_guess": 4, "odd_one_out": 4, "tap": 3, "word_search": 4, "spot_difference": 4,
-    "fact_fake": 5, "choice": 4, "tap_dont_tap": 3, "maze": 4, "connect_dots": 3,
+    "fact_fake": 5, "choice": 4, "tap_dont_tap": 3, "maze": 4, "connect_dots": 3, "arrow_puzzle": 2,
 }
 
 
@@ -72,6 +72,7 @@ async def test_build_feed_game_slots_span_distinct_engines() -> None:
         patch("app.modules.feed.service.active_window_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=[moment(i) for i in range(14)])),
         patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=set())),
+        patch("app.modules.feed.service.my_option_ids", AsyncMock(return_value={})),
         patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
         patch("app.modules.feed.service.engagement_for", AsyncMock(return_value={})),
     ):
@@ -89,6 +90,7 @@ def test_serialize_moment_includes_my_option_id() -> None:
         id=moment_id,
         type="poll",
         prompt="Pick one",
+        prompt_hi=None,
         prompt_image_key=None,
         scoring_mode="crowd",
         category=SimpleNamespace(slug="sports", name="Sports"),
@@ -96,12 +98,39 @@ def test_serialize_moment_includes_my_option_id() -> None:
         starts_at=datetime.now(UTC),
         ends_at=None,
         options=[
-            SimpleNamespace(id=option_id, label="A", sort_order=0, image_key=None, is_correct=False),
-            SimpleNamespace(id=uuid4(), label="B", sort_order=1, image_key=None, is_correct=False),
+            SimpleNamespace(id=option_id, label="A", label_hi=None, sort_order=0, image_key=None, is_correct=False),
+            SimpleNamespace(id=uuid4(), label="B", label_hi=None, sort_order=1, image_key=None, is_correct=False),
         ],
     )
     payload = serialize_moment(m, snap=None, my_option_id=option_id)
     assert payload["myOptionId"] == str(option_id)
+
+
+def test_serialize_moment_uses_hindi_when_lang_hi() -> None:
+    option_id = uuid4()
+    m = SimpleNamespace(
+        id=uuid4(),
+        type="poll",
+        prompt="Who wins tonight?",
+        prompt_hi="आज रात कौन जीतेगा?",
+        prompt_image_key=None,
+        scoring_mode="crowd",
+        category=SimpleNamespace(slug="sports", name="Sports"),
+        status="live",
+        starts_at=datetime.now(UTC),
+        ends_at=None,
+        options=[
+            SimpleNamespace(id=option_id, label="India", label_hi="भारत", sort_order=0, image_key=None, is_correct=False),
+            SimpleNamespace(id=uuid4(), label="Australia", label_hi=None, sort_order=1, image_key=None, is_correct=False),
+        ],
+    )
+    hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
+    assert hi["prompt"] == "आज रात कौन जीतेगा?"
+    assert hi["options"][0]["label"] == "भारत"
+    assert hi["options"][1]["label"] == "Australia"
+    en = serialize_moment(m, snap=None, my_option_id=None, lang="en")
+    assert en["prompt"] == "Who wins tonight?"
+    assert en["options"][0]["label"] == "India"
 
 
 async def feed_page(
@@ -121,6 +150,7 @@ async def feed_page(
         patch("app.modules.feed.service.active_window_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=moments)),
         patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=answered)) as answered_ids,
+        patch("app.modules.feed.service.my_option_ids", AsyncMock(return_value={})),
         patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
         patch("app.modules.feed.service.engagement_for", AsyncMock(return_value={})),
     ):
@@ -138,11 +168,40 @@ async def feed_moment_ids(moments: list[SimpleNamespace], answered: set, seed: i
 
 
 @pytest.mark.asyncio
-async def test_build_feed_leaves_out_answered_moments() -> None:
+async def test_build_feed_keeps_only_the_selected_category() -> None:
+    kpop_id = uuid4()
+    sports_id = uuid4()
+    kpop = moment(0)
+    kpop.category_id = kpop_id
+    kpop.category = SimpleNamespace(slug="kpop", name="K-Pop")
+    kpop.prompt = "Your bias is the one who…"
+    sports = moment(1)
+    sports.category_id = sports_id
+    sports.category = SimpleNamespace(slug="sports", name="Sports")
+    session = AsyncMock()
+    session.scalars = AsyncMock(side_effect=[[], []])
+    with (
+        patch("app.modules.feed.service.interest_ids", AsyncMock(return_value={kpop_id})),
+        patch("app.modules.feed.service.active_window_ids", AsyncMock(return_value=set())),
+        patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=[kpop, sports])),
+        patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=set())),
+        patch("app.modules.feed.service.my_option_ids", AsyncMock(return_value={})),
+        patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
+        patch("app.modules.feed.service.engagement_for", AsyncMock(return_value={})),
+    ):
+        page = await build_feed(session, user_id=uuid4(), guest_id=None, limit=10, rng=random.Random(1))
+    moment_ids = [item["id"] for item in page["items"] if item["type"] == "moment"]
+    assert moment_ids == [str(kpop.id)]
+
+
+@pytest.mark.asyncio
+async def test_build_feed_leads_with_unanswered_then_recycles() -> None:
     moments = [moment(i) for i in range(6)]
     answered = {moments[0].id, moments[3].id}
+    unanswered = [str(m.id) for m in moments if m.id not in answered]
     ids = await feed_moment_ids(moments, answered, seed=1, user_id=uuid4())
-    assert sorted(ids) == sorted(str(m.id) for m in moments if m.id not in answered)
+    assert sorted(ids) == sorted(str(m.id) for m in moments)
+    assert sorted(ids[: len(unanswered)]) == sorted(unanswered)
 
 
 @pytest.mark.asyncio
@@ -173,21 +232,26 @@ async def test_build_feed_cursor_pages_through_every_moment_then_starts_over() -
 
 
 @pytest.mark.asyncio
-async def test_build_feed_cursor_skips_moments_answered_since_last_page() -> None:
+async def test_build_feed_cursor_prefers_still_unanswered_on_next_page() -> None:
     moments = [moment(i) for i in range(12)]
     first = await feed_page(moments, set(), 1, limit=4)
-    rest_answered = {m.id for m in moments if str(m.id) not in moment_ids_of(first)}
-    answered_now = set(list(rest_answered)[:4])
+    rest = [m for m in moments if str(m.id) not in moment_ids_of(first)]
+    answered_now = {m.id for m in rest[:4]}
+    still_open = {str(m.id) for m in rest[4:]}
     second = await feed_page(moments, answered_now, 2, limit=4, cursor=first["cursor"])
-    assert not set(moment_ids_of(second)) & {str(i) for i in answered_now}
-    assert not set(moment_ids_of(second)) & set(moment_ids_of(first))
+    second_moments = moment_ids_of(second)
+    assert not set(second_moments) & set(moment_ids_of(first))
+    assert set(second_moments) <= still_open
 
 
 @pytest.mark.asyncio
-async def test_build_feed_keeps_serving_games_once_every_moment_is_answered() -> None:
+async def test_build_feed_recycles_answered_moments_instead_of_games_only() -> None:
     moments = [moment(i) for i in range(3)]
     page = await feed_page(moments, {m.id for m in moments}, 1, games=catalog_games()[:5], limit=10)
-    assert [i["type"] for i in page["items"]] == ["mini_game"] * 5
+    types = [i["type"] for i in page["items"]]
+    assert types.count("moment") == 3
+    assert types.count("mini_game") == 5
+    assert sorted(moment_ids_of(page)) == sorted(str(m.id) for m in moments)
     assert page["cursor"]
 
 

@@ -5,10 +5,11 @@ import { FeedGame, FeedItem } from "../../api";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
 import { FeedTopBar } from "../../components/FeedTopBar";
-import { LoadingSkeleton } from "../../components/LoadingSkeleton";
+import { ScreenLoading } from "../../components/ScreenLoading";
 import { SwipeHintOverlay } from "../../components/SwipeHintOverlay";
 import { isMoment, useApp } from "../../context/AppContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { capture } from "../../lib/analytics";
 import { FEED_PREFETCH_AHEAD, feedKeys } from "../../lib/feedPages";
 import { isSwipeHintPending, markSwipeHintSeen } from "../../lib/storage";
 import { colors } from "../../theme/colors";
@@ -19,15 +20,17 @@ type Props = {
   onPlayGame: (game: FeedGame) => void;
   onOpenProfile?: () => void;
   onOpenStreak?: () => void;
+  onOpenWallet?: () => void;
   onSignIn?: () => void;
 };
 
 const VIEWABILITY = { itemVisiblePercentThreshold: 60 };
 
-export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }: Props) {
+export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onOpenWallet, onSignIn }: Props) {
   const {
     items,
     streak,
+    wallet,
     feedIndex,
     setFeedIndex,
     feedLoading,
@@ -46,6 +49,9 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
   const listRef = useRef<FlatList<FeedItem>>(null);
   /** Page the list is showing, so programmatic jumps (Live tab, refresh) only scroll when needed. */
   const shownIndex = useRef(feedIndex);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const viewedIds = useRef(new Set<string>());
   /** Feed page the swipe tip appeared on; moving off it counts as having learned the gesture. */
   const [swipeHintFrom, setSwipeHintFrom] = useState<number | null>(null);
 
@@ -79,6 +85,18 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
     if (index === null || index === undefined) return;
     shownIndex.current = index;
     setFeedIndex(index);
+    const item = itemsRef.current[index];
+    if (item) {
+      const viewKey = `${item.type}:${item.type === "mini_game" ? item.key : item.id}`;
+      if (!viewedIds.current.has(viewKey)) {
+        viewedIds.current.add(viewKey);
+        capture("feed_item_viewed", {
+          item_id: item.type === "mini_game" ? item.key : item.id,
+          item_type: item.type,
+          position: index,
+        });
+      }
+    }
     if (index >= nearEnd.current.count - 1 - FEED_PREFETCH_AHEAD) void nearEnd.current.loadMore(index);
   }).current;
 
@@ -101,8 +119,8 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
   if (feedLoading && items.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
-        <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
-        <LoadingSkeleton />
+        <FeedTopBar streak={streak} coins={wallet?.balance ?? 0} onStreak={onOpenStreak} onCoins={onOpenWallet} onProfile={onOpenProfile} />
+        <ScreenLoading label={t("loadingFeed")} />
       </View>
     );
   }
@@ -110,7 +128,7 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
   if (feedError && items.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
-        <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
+        <FeedTopBar streak={streak} coins={wallet?.balance ?? 0} onStreak={onOpenStreak} onCoins={onOpenWallet} onProfile={onOpenProfile} />
         <ErrorState message={feedError} onRetry={() => void refreshFeed(true)} />
       </View>
     );
@@ -119,7 +137,7 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
   if (!items.length) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.ink }}>
-        <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
+        <FeedTopBar streak={streak} coins={wallet?.balance ?? 0} onStreak={onOpenStreak} onCoins={onOpenWallet} onProfile={onOpenProfile} />
         <EmptyState
           title={t("nothingLive")}
           message={t("checkBack")}
@@ -178,7 +196,7 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onSignIn }
       {pageH > 0 && swipeHintFrom !== null && isFeedTabActive ? (
         <SwipeHintOverlay onDismiss={dismissSwipeHint} />
       ) : null}
-      <FeedTopBar streak={streak} onStreak={onOpenStreak} onProfile={onOpenProfile} />
+      <FeedTopBar streak={streak} coins={wallet?.balance ?? 0} onStreak={onOpenStreak} onCoins={onOpenWallet} onProfile={onOpenProfile} />
     </View>
   );
 }

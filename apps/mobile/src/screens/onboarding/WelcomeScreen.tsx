@@ -15,7 +15,6 @@ type Props = {
   onBack: () => void;
   onGuest: () => void;
   onGoogleSignIn?: () => void;
-  onEmailSignIn?: () => void;
   googleAvailable?: boolean;
   busy?: boolean;
   /** Already signed in (e.g. came back to this step) — the auth button just continues. */
@@ -85,7 +84,6 @@ export function WelcomeScreen({
   onBack,
   onGuest,
   onGoogleSignIn,
-  onEmailSignIn,
   googleAvailable,
   busy,
   signedInAs,
@@ -103,12 +101,6 @@ export function WelcomeScreen({
     };
   } else if (googleAvailable && onGoogleSignIn) {
     auth = { label: t("continueGoogle"), onPress: onGoogleSignIn, icon: <GoogleLogo /> };
-  } else if (onEmailSignIn) {
-    auth = {
-      label: t("continueEmail"),
-      onPress: onEmailSignIn,
-      icon: <Ionicons name="mail-outline" size={20} color={colors.paper} />,
-    };
   } else {
     auth = { label: t("signInUnavailable"), icon: <GoogleLogo /> };
   }

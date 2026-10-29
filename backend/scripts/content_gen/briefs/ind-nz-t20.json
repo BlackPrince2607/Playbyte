@@ -1,0 +1,44 @@
+{
+  "id": "ind-nz-t20-2026-10-22",
+  "category": "cricket",
+  "title": "India beat New Zealand",
+  "eventDate": "2026-10-22",
+  "context": "India vs New Zealand · 1st T20I",
+  "freshnessHours": 8,
+  "allowPrediction": true,
+  "angles": ["controversial decision", "unexpected performance"],
+  "facts": [
+    "Sanju Samson scored 67 off 33",
+    "Sanju Samson was Player of the Match",
+    "Naman Dhir finished the chase",
+    "India beat New Zealand",
+    "Shreyas Iyer scored 102 off 43"
+  ],
+  "opinion": {
+    "prompt": "Sanju Samson got Player of the Match. Fair decision?",
+    "options": [
+      "Sanju Samson earned it",
+      "Naman Dhir finished the chase",
+      "Shreyas Iyer scored 102 off 43 and mattered too",
+      "India won as a team"
+    ]
+  },
+  "debate": {
+    "prompt": "Who contributed more to the win?",
+    "options": ["Sanju Samson", "Naman Dhir"]
+  },
+  "prediction": {
+    "prompt": "Prediction: who wins the next match?",
+    "options": ["India", "New Zealand"]
+  },
+  "challenge": {
+    "prompt": "From that chase, which score feels closer?",
+    "options": ["67 off 33", "102 off 43"]
+  },
+  "quiz": {
+    "questionType": "stat",
+    "prompt": "How many runs did Sanju Samson score?",
+    "options": ["67", "33", "102"],
+    "correct": "67"
+  }
+}

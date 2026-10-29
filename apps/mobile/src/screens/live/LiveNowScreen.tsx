@@ -1,12 +1,14 @@
 import { useMemo } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { FeedMoment, formatCount } from "../../api";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
 import { FeedTopBar } from "../../components/FeedTopBar";
 import { FriendAvatars } from "../../components/FriendAvatars";
+import { ScreenLoading } from "../../components/ScreenLoading";
 import { MajorityChip } from "../../components/StitchPrimitives";
 import { isMoment, useApp } from "../../context/AppContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { withSeededCrowd } from "../../lib/seededEngagement";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
@@ -16,6 +18,7 @@ type Props = {
 };
 
 export function LiveNowScreen({ onProfile }: Props) {
+  const { t } = useLanguage();
   const { items, jumpToMoment, feedLoading, feedError, refreshFeed, friendAvatars } = useApp();
 
   const moments = useMemo(() => {
@@ -37,10 +40,7 @@ export function LiveNowScreen({ onProfile }: Props) {
     return (
       <View style={styles.wrap}>
         <FeedTopBar variant="compete" onProfile={onProfile} />
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.lime} size="large" />
-          <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.md }]}>Loading live moments…</Text>
-        </View>
+        <ScreenLoading label={t("loadingLive")} />
       </View>
     );
   }
@@ -129,7 +129,6 @@ export function LiveNowScreen({ onProfile }: Props) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.ink },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 120 },
   scroll: { paddingTop: 110, paddingHorizontal: spacing.margin, paddingBottom: 120 },
   grid: { gap: spacing.md },
   card: {

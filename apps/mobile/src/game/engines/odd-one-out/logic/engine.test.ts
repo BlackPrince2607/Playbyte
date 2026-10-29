@@ -79,6 +79,22 @@ describe("odd one out", () => {
     assert.ok(q.options.every((o) => o.label === "" && o.emoji && o.alt));
   });
 
+  it("words variation never mixes emoji and non-emoji cards", () => {
+    for (let i = 0; i < 80; i++) {
+      const { runner } = playHeadless({
+        engine: oddOneOutEngine,
+        definition: definition({ engine: "odd_one_out", variation: "words", roundCount: 10 }),
+        content: packBundle("word_group"),
+        seed: `emoji-mix-${i}`,
+        pickAction: () => null,
+        stopAfter: 0,
+      });
+      const q = runner.getSnapshot().state.q!;
+      const withEmoji = q.options.filter((o) => o.emoji).length;
+      assert.ok(withEmoji === 0 || withEmoji === q.options.length, q.id);
+    }
+  });
+
   it("numbers: exactly one option breaks the rule, across all difficulty tiers", () => {
     for (const d of [0.15, 0.4, 0.5, 0.7, 0.85]) {
       for (let i = 0; i < 40; i++) {

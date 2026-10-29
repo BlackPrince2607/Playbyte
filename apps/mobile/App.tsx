@@ -9,16 +9,28 @@ import { NotoSansDevanagari_700Bold } from "@expo-google-fonts/noto-sans-devanag
 import { SpaceGrotesk_700Bold } from "@expo-google-fonts/space-grotesk/700Bold";
 import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { PostHogProvider } from "posthog-react-native";
+import { useEffect, type ReactNode } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { setMusicScene, startSound } from "./src/audio/sound";
 import { AppProvider } from "./src/context/AppContext";
 import { AuthProvider } from "./src/context/AuthContext";
 import { LanguageProvider } from "./src/context/LanguageContext";
+import { getPostHog } from "./src/lib/analytics";
 import { initMetaSdk } from "./src/lib/metaSdk";
 import MainShell from "./src/MainShell";
 import { colors } from "./src/theme/colors";
+
+function AnalyticsRoot({ children }: { children: ReactNode }) {
+  const client = getPostHog();
+  if (!client) return <>{children}</>;
+  return (
+    <PostHogProvider client={client} autocapture={false}>
+      {children}
+    </PostHogProvider>
+  );
+}
 
 export default function App() {
   useEffect(() => {
@@ -49,14 +61,16 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <LanguageProvider>
-          <AppProvider>
-            <StatusBar style="light" />
-            <MainShell />
-          </AppProvider>
-        </LanguageProvider>
-      </AuthProvider>
+      <AnalyticsRoot>
+        <AuthProvider>
+          <LanguageProvider>
+            <AppProvider>
+              <StatusBar style="light" />
+              <MainShell />
+            </AppProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </AnalyticsRoot>
     </GestureHandlerRootView>
   );
 }

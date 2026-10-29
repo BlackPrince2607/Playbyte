@@ -12,6 +12,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { useLanguage } from "../../../../context/LanguageContext";
+import { localizeChrome } from "../../../../i18n/chrome";
 import { promptTextStyle } from "../../../../lib/promptSize";
 import { colors, radius, spacing } from "../../../../theme/colors";
 import { fonts, type } from "../../../../theme/typography";
@@ -113,6 +115,7 @@ function VerdictButton({ id, label, color, disabled, picked, onPress }: { id: st
 }
 
 export function FactView({ state, dispatch, snapshot }: EngineViewProps<QuizState, QuizAction>) {
+  const { language } = useLanguage();
   const q = state.q;
   if (!q) return null;
   const answered = state.answer;
@@ -121,21 +124,41 @@ export function FactView({ state, dispatch, snapshot }: EngineViewProps<QuizStat
     if (disabled) return;
     dispatch({ type: "answer", optionId });
   };
+  const resultLine =
+    answered?.optionId === null
+      ? localizeChrome("Time's up!", language)
+      : answered?.correct
+        ? localizeChrome("Correct!", language)
+        : localizeChrome("Not quite.", language);
 
   return (
     <View style={styles.root}>
       <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>
-        {answered ? " " : "Swipe right for Fact, left for Fake"}
+        {answered ? " " : localizeChrome("Swipe right for Fact, left for Fake", language)}
       </Text>
       <StatementCard key={q.id} q={q} answered={answered} disabled={disabled} onAnswer={answer} />
       <View style={styles.buttons}>
-        <VerdictButton id={FAKE_ID} label="✗ Fake" color={colors.pink} disabled={disabled} picked={answered?.optionId === FAKE_ID} onPress={answer} />
-        <VerdictButton id={FACT_ID} label="✓ Fact" color={colors.lime} disabled={disabled} picked={answered?.optionId === FACT_ID} onPress={answer} />
+        <VerdictButton
+          id={FAKE_ID}
+          label={localizeChrome("✗ Fake", language)}
+          color={colors.pink}
+          disabled={disabled}
+          picked={answered?.optionId === FAKE_ID}
+          onPress={answer}
+        />
+        <VerdictButton
+          id={FACT_ID}
+          label={localizeChrome("✓ Fact", language)}
+          color={colors.lime}
+          disabled={disabled}
+          picked={answered?.optionId === FACT_ID}
+          onPress={answer}
+        />
       </View>
       {answered ? (
         <Animated.View entering={prefersReducedMotion() ? undefined : FadeIn.duration(220)} style={{ gap: spacing.xs }} accessibilityLiveRegion="polite">
           <Text style={[type.bodyLg, { color: answered.correct ? colors.lime : colors.pink, textAlign: "center", fontFamily: fonts.bodyBold }]}>
-            {answered.optionId === null ? "Time's up!" : answered.correct ? "Correct!" : "Not quite."}
+            {resultLine}
           </Text>
           {q.explanation ? <Text style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>{q.explanation}</Text> : null}
         </Animated.View>

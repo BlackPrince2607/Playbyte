@@ -20,8 +20,7 @@ type Props = {
 
 const SLIDES = 2;
 const CARDS: ComponentType[] = [QuizPreview, MazePreview, PollPreview, WordSearchPreview];
-const AUTO_ADVANCE_MS = 3500;
-const PAUSE_AFTER_TOUCH_MS = 6000;
+const AUTO_ADVANCE_MS = 2000;
 
 const TITLE_SIZE = 32;
 
@@ -92,13 +91,14 @@ function GameCarousel({ index, onIndex }: { index: number; onIndex: (i: number) 
   const [width, setWidth] = useState(0);
   const indexRef = useRef(index);
   indexRef.current = index;
-  const pausedUntil = useRef(0);
+  const holding = useRef(false);
+  const dragging = useRef(false);
   const bob = useFloat(900, -6);
 
   useEffect(() => {
     if (!width) return;
     const t = setInterval(() => {
-      if (Date.now() < pausedUntil.current) return;
+      if (holding.current || dragging.current) return;
       const nextIndex = (indexRef.current + 1) % CARDS.length;
       ref.current?.scrollTo({ x: nextIndex * width, animated: true });
       onIndex(nextIndex);
@@ -122,11 +122,24 @@ function GameCarousel({ index, onIndex }: { index: number; onIndex: (i: number) 
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
+              onTouchStart={() => {
+                holding.current = true;
+              }}
+              onTouchEnd={() => {
+                holding.current = false;
+              }}
+              onTouchCancel={() => {
+                holding.current = false;
+              }}
               onScrollBeginDrag={() => {
-                pausedUntil.current = Date.now() + PAUSE_AFTER_TOUCH_MS;
+                dragging.current = true;
+              }}
+              onScrollEndDrag={(e) => {
+                const vx = e.nativeEvent.velocity?.x ?? 0;
+                if (Math.abs(vx) < 0.05) dragging.current = false;
               }}
               onMomentumScrollEnd={(e) => {
-                pausedUntil.current = Date.now() + PAUSE_AFTER_TOUCH_MS;
+                dragging.current = false;
                 onIndex(Math.round(e.nativeEvent.contentOffset.x / width));
               }}
             >

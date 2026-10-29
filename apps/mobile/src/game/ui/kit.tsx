@@ -1,9 +1,10 @@
 /** Shared game UI building blocks (answer tiles, hint bar, clue card) used across engine views. */
-import React from "react";
+import React, { createContext, useContext } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
+import { hintCoinCost } from "../../lib/economy";
 import type { Hint } from "../core/types";
 import { feedback, prefersReducedMotion } from "./feedback";
 
@@ -125,28 +126,45 @@ export function GridTile({
   );
 }
 
+export type HintPrices = {
+  engine: string;
+  freeLeft: number;
+  freeText: string;
+  coinText: (cost: number) => string;
+};
+
+export const HintPriceContext = createContext<HintPrices | null>(null);
+
 export function HintBar({ hints, onHint }: { hints: Hint[]; onHint: (id: string) => void }) {
+  const prices = useContext(HintPriceContext);
   if (!hints.length) return null;
   return (
     <View style={styles.hintRow}>
-      {hints.map((h) => (
-        <Pressable
-          key={h.id}
-          onPress={() => {
-            feedback("select");
-            onHint(h.id);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={`${h.label}${h.cost ? `, costs ${h.cost} points` : ""}`}
-          hitSlop={6}
-          style={styles.hint}
-        >
-          <Text style={[type.metadata, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
-            💡 {h.label}
-            {h.cost ? <Text style={{ color: colors.lilac }}>{`  −${h.cost}`}</Text> : null}
-          </Text>
-        </Pressable>
-      ))}
+      {hints.map((h) => {
+        const coinCost = prices ? hintCoinCost(prices.engine, h.id) : null;
+        const tag =
+          prices && coinCost != null ? (prices.freeLeft > 0 ? prices.freeText : prices.coinText(coinCost)) : null;
+        const paid = tag != null && tag !== prices?.freeText;
+        return (
+          <Pressable
+            key={h.id}
+            onPress={() => {
+              feedback("select");
+              onHint(h.id);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={tag ? `${h.label}, ${tag}` : `${h.label}${h.cost ? `, costs ${h.cost} points` : ""}`}
+            hitSlop={6}
+            style={styles.hint}
+          >
+            <Text style={[type.metadata, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
+              💡 {h.label}
+              {tag ? <Text style={{ color: paid ? colors.lilac : colors.lime }}>{`  ${tag}`}</Text> : null}
+              {!tag && h.cost ? <Text style={{ color: colors.lilac }}>{`  −${h.cost}`}</Text> : null}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }

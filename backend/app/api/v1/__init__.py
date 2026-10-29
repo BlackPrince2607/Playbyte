@@ -4,6 +4,7 @@ from app.api.v1 import (
     admin,
     catalog,
     content,
+    economy,
     events,
     feed,
     friends,
@@ -28,3 +29,5 @@ api_router.include_router(admin.router)
 api_router.include_router(catalog.router)
 api_router.include_router(content.router)
 api_router.include_router(events.router)
+api_router.include_router(economy.router)
+api_router.include_router(economy.webhook_router)

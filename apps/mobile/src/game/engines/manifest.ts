@@ -1,5 +1,6 @@
 import type { EngineMeta } from "../core/engine";
 import type { EngineModule } from "../ui/types";
+import { arrowMeta } from "./arrow-puzzle/meta";
 import { choiceMeta } from "./choice/meta";
 import { connectDotsMeta } from "./connect-dots/meta";
 import { emojiGuessMeta } from "./emoji-guess/meta";
@@ -29,6 +30,7 @@ const ENGINES: { meta: EngineMeta; load: () => Promise<{ default: EngineModule }
   { meta: tapDontTapMeta, load: () => import("./tap-dont-tap") },
   { meta: mazeMeta, load: () => import("./maze") },
   { meta: connectDotsMeta, load: () => import("./connect-dots") },
+  { meta: arrowMeta, load: () => import("./arrow-puzzle") },
 ];
 
 let registered = false;

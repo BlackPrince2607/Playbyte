@@ -1,7 +1,14 @@
 import { api, isApiError } from "../../api";
 import type { PendingPlay } from "../session/submitQueue";
 
-export type SubmitPlayResponse = { score: number; percentile: number; playsToday: number; promptAccountCreation: boolean };
+export type SubmitPlayResponse = {
+  score: number;
+  percentile: number;
+  playsToday: number;
+  promptAccountCreation: boolean;
+  coinsEarned?: number;
+  balance?: number | null;
+};
 
 export async function submitPlay(play: PendingPlay) {
   const summary =

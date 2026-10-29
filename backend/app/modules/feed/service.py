@@ -28,6 +28,9 @@ from app.modules.social.service import EMPTY_ENGAGEMENT, engagement_for
 # Random score added per request: reshuffles moments within the same tier (interest match is +100,
 # freshness up to +50) while active-window moments (+1000) still lead.
 MOMENT_JITTER = 100.0
+# Keep unanswered polls/quizzes ahead of ones the viewer already picked; answered cards still recycle
+# so the feed does not collapse to games-only.
+UNANSWERED_BOOST = 10_000.0
 
 
 def media_url(key: str | None) -> str | None:
@@ -96,6 +99,18 @@ async def answered_moment_ids(
     return set(rows)
 
 
+async def my_option_ids(
+    session: AsyncSession, moment_ids: list[UUID], user_id: UUID | None, guest_id: UUID | None
+) -> dict[UUID, UUID]:
+    if not moment_ids or not (user_id or guest_id):
+        return {}
+    owner = Response.user_id == user_id if user_id else Response.guest_session_id == guest_id
+    rows = await session.execute(
+        select(Response.moment_id, Response.option_id).where(Response.moment_id.in_(moment_ids), owner)
+    )
+    return {moment_id: option_id for moment_id, option_id in rows}
+
+
 def _wants_hindi(lang: str | None) -> bool:
     return bool(lang) and lang.lower().startswith("hi")
 
@@ -110,16 +125,20 @@ async def build_feed(
     rng: random.Random | None = None,
     lang: str | None = None,
 ) -> dict:
-    """One page of the endless feed: live moments the viewer has not answered yet, in a shuffled order
-    that the returned cursor continues (and reshuffles once every moment has been shown), with games
-    interleaved."""
+    """One page of the endless feed: live moments ranked with unanswered first, then recycled answered
+    cards, interleaved with games. The cursor continues (and reshuffles once every moment has been shown)."""
     rng = rng or random.Random()
     new_seed = lambda: rng.getrandbits(31)  # noqa: E731
     position = (cursor and FeedCursor.decode(cursor)) or FeedCursor(new_seed(), 0, new_seed(), 0)
     interests = await interest_ids(session, user_id, guest_id)
     windows = await active_window_ids(session)
-    moments = await load_live_moments(session)
-    answered = await answered_moment_ids(session, [m.id for m in moments], user_id, guest_id)
+    loaded = await load_live_moments(session)
+    answered = await answered_moment_ids(session, [m.id for m in loaded], user_id, guest_id)
+    # Onboarding picks are the whole moment pool. No picks still shows every live category.
+    # If picks have nothing live, widen so the feed can still fill with polls/quizzes.
+    moments = [m for m in loaded if m.category_id in interests] if interests else loaded
+    if interests and not moments:
+        moments = loaded
     now = datetime.now(UTC)
     by_id = {m.id: m for m in moments}
     base_scores = {
@@ -129,6 +148,7 @@ async def build_feed(
             in_active_window=m.content_window_id in windows if m.content_window_id else False,
             interest_match=m.category_id in interests,
         )
+        + (0.0 if m.id in answered else UNANSWERED_BOOST)
         for m in sorted(moments, key=lambda m: str(m.id))
     }
 
@@ -154,7 +174,7 @@ async def build_feed(
         rank_moments=rank_moments,
         rank_games=rank_games,
         cursor=position,
-        exclude={str(mid) for mid in answered},
+        exclude=set(),
         limit=limit,
         cadence=4 if windows else 2,
         new_seed=new_seed,
@@ -162,6 +182,7 @@ async def build_feed(
 
     shown_ids = [UUID(i.id) for i in ordered if i.kind == "moment"]
     snapshots = {}
+    mine = await my_option_ids(session, shown_ids, user_id, guest_id)
     if shown_ids:
         snapshots = {
             s.moment_id: s
@@ -174,7 +195,15 @@ async def build_feed(
     for item in ordered:
         if item.kind == "moment":
             m = by_id[UUID(item.id)]
-            payload = serialize_moment(m, snapshots.get(m.id), None, tags=tag_map.get(m.id, []), lang=lang)
+            my_option = mine.get(m.id)
+            payload = serialize_moment(
+                m,
+                snapshots.get(m.id),
+                my_option,
+                tags=tag_map.get(m.id, []),
+                reveal_correct=my_option is not None and m.scoring_mode == "correct_option",
+                lang=lang,
+            )
             payload["engagement"] = engagement.get(m.id) or dict(EMPTY_ENGAGEMENT)
             items.append(payload)
         else:
