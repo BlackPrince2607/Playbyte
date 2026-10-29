@@ -19,8 +19,10 @@ from scripts.content_gen.catalog import (
     briefs_for,
     fact_issues,
     generate_stock,
+    has_devanagari,
     load_briefs,
     question_types,
+    strip_devanagari,
 )
 
 DEFAULT_MODEL = "gpt-4o-mini"
@@ -75,7 +77,9 @@ def _messages(
             "A quiz has exactly one correct option. Polls must set isCorrect false on every option.",
             "Two options use type predict. Three or four use type pulse.",
             "Do not use gambling words.",
-            "Also return promptHi and each option labelHi in everyday spoken Hindi (Devanagari).",
+            "LANGUAGE SPLIT (critical): prompt and every option.label must be English only — Latin script, no Devanagari.",
+            "Do not put Hindi inside prompt or label. Do not write bilingual 'English / हिंदी' lines in one field.",
+            "Hindi goes ONLY in promptHi and each option labelHi (everyday spoken Hindi in Devanagari).",
             "Hindi style: bolchal — keep common English loanwords (क्विज़, पोल, गेम, स्कोर, ट्रेंड). Keep proper names.",
             "Avoid stiff textbook Hindi. Do not invent facts in Hindi that are not in the English copy.",
             f"Return about {need} candidates — fill the feed; quantity with quality.",
@@ -89,6 +93,8 @@ def _messages(
                 "Bias hard toward what is trending in India today. Make cards addictive, interactive, and fast. "
                 "Use engagementInsights to improve: more of what got responses/likes, none of the duds. "
                 "Never repeat avoidPrompts. "
+                "Keep languages separate: prompt/label = English only; promptHi/labelHi = Hindi only. "
+                "Never mix Devanagari into English fields. "
                 "Reply with a JSON object only: {\"candidates\": [...]} . "
                 "Each candidate has format, category, questionType, type, prompt, promptHi, options, briefId. "
                 "options are {label, labelHi, isCorrect}. briefId is null unless the card uses a verified brief. "
@@ -165,15 +171,17 @@ def validate_candidates(
         if not isinstance(item, dict):
             dropped.append(f"{index}:shape")
             continue
-        reason = _reject(item, slug, by_id, allowed_bank)
+        # English fields must stay Latin-only; Devanagari belongs in promptHi / labelHi.
+        cleaned = _english_only_fields(item)
+        reason = _reject(cleaned, slug, by_id, allowed_bank)
         if reason:
             dropped.append(f"{index}:{reason}")
             continue
-        brief_id = item.get("briefId") or None
+        brief_id = cleaned.get("briefId") or None
         brief = by_id.get(str(brief_id)) if brief_id else None
-        options = item["options"]
-        fmt = item["format"]
-        prompt_hi = str(item.get("promptHi") or "").strip() or None
+        options = cleaned["options"]
+        fmt = cleaned["format"]
+        prompt_hi = str(cleaned.get("promptHi") or "").strip() or None
         mapped_options = []
         for opt in options:
             row = {"label": str(opt["label"]).strip(), "isCorrect": bool(opt.get("isCorrect"))}
@@ -183,11 +191,11 @@ def validate_candidates(
             mapped_options.append(row)
         cards.append(
             Card(
-                type=item["type"],
+                type=cleaned["type"],
                 category_slug=slug,
                 format=fmt,
-                question_type=str(item["questionType"]),
-                prompt=str(item["prompt"]).strip(),
+                question_type=str(cleaned["questionType"]),
+                prompt=str(cleaned["prompt"]).strip(),
                 options=mapped_options,
                 scoring_mode="correct_option" if fmt == "quiz" else "none",
                 tags=["quiz" if fmt == "quiz" else "poll"],
@@ -199,6 +207,22 @@ def validate_candidates(
             )
         )
     return cards, dropped
+
+
+def _english_only_fields(item: dict[str, Any]) -> dict[str, Any]:
+    """Copy a candidate with Devanagari stripped from English prompt/label fields."""
+    out = dict(item)
+    out["prompt"] = strip_devanagari(str(item.get("prompt") or ""))
+    mapped: list[Any] = []
+    for opt in item.get("options") or []:
+        if not isinstance(opt, dict):
+            mapped.append(opt)
+            continue
+        row = dict(opt)
+        row["label"] = strip_devanagari(str(opt.get("label") or ""))
+        mapped.append(row)
+    out["options"] = mapped
+    return out
 
 
 def _reject(item: dict[str, Any], slug: str, by_id: dict[str, dict[str, Any]], allowed_bank: str) -> str | None:
@@ -225,6 +249,11 @@ def _reject(item: dict[str, Any], slug: str, by_id: dict[str, dict[str, Any]], a
     prompt = str(item.get("prompt") or "").strip()
     if not prompt:
         return "prompt"
+    # Guardrail if strip left junk / model ignored the language split.
+    if has_devanagari(prompt) or any(has_devanagari(label) for label in labels):
+        return "english-script"
+    if any(not label for label in labels):
+        return "options"
     correct = sum(1 for opt in options if opt.get("isCorrect"))
     if fmt == "quiz" and correct != 1:
         return "quiz-correct"
@@ -316,7 +345,8 @@ _HI_STYLE = (
     "Everyday spoken Hindi (bolchal) in Devanagari. "
     "Keep common English loanwords people say (क्विज़, पोल, गेम, स्कोर, ट्रेंड). "
     "Keep proper names and numbers. Avoid stiff textbook Hindi. "
-    "Do not change meaning or invent facts."
+    "Do not change meaning or invent facts. "
+    "Return Hindi only in promptHi / optionsHi — never rewrite the English prompt or labels."
 )
 
 

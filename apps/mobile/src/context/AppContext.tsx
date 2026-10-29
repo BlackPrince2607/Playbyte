@@ -25,6 +25,12 @@ import {
 import { isPlayable } from "../game/discovery";
 import { appendFeedPage, FEED_PREFETCH_AHEAD } from "../lib/feedPages";
 import type { CoinCredit, CoinCreditReason, WalletSnapshot } from "../lib/economy";
+import {
+  getLocalResponses,
+  saveLocalResponse,
+  scoreLocalVote,
+  withLocalAnswers,
+} from "../lib/localResponses";
 import { initPurchases } from "../lib/purchases";
 import {
   clearOnboardingDone,
@@ -191,6 +197,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const friendRequestsFetchedAt = useRef<number | null>(null);
   const wasSignedIn = useRef<boolean | null>(null);
   const respondingRef = useRef<Set<string>>(new Set());
+  const respondRef = useRef<(momentId: string, optionId: string) => Promise<RespondOutcome>>(async () => ({
+    ok: false,
+    message: "",
+  }));
 
   const clearUserScopedState = useCallback(() => {
     setFriends([]);
@@ -421,12 +431,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFeedError("");
 
       try {
-        const feed = await api<FeedPage>(feedPath(languageRef.current));
+        const [feed, localAnswers] = await Promise.all([
+          api<FeedPage>(feedPath(languageRef.current)),
+          getLocalResponses(),
+        ]);
         feedGeneration.current += 1;
         feedCursor.current = feed.cursor;
-        setItems(feed.items.filter(isShowable));
+        const page = feed.items.filter(isShowable);
+        const hydrated = withLocalAnswers(page, localAnswers);
+        setItems(hydrated);
+        itemsRef.current = hydrated;
         setEngagement({});
         hasLoadedFeed.current = true;
+        // Push any on-device answers the server never got (offline / failed sync).
+        for (const item of page) {
+          if (item.type !== "moment" || item.myOptionId) continue;
+          const optionId = localAnswers[item.id];
+          if (optionId) void respondRef.current(item.id, optionId);
+        }
       } catch (e) {
         const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : tRef.current("couldNotLoadFeed");
         setFeedError(message);
@@ -468,7 +490,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           pages += 1;
           failures = 0;
           feedCursor.current = feed.cursor;
-          const page = feed.items.filter(isShowable);
+          const localAnswers = await getLocalResponses();
+          const page = withLocalAnswers(feed.items.filter(isShowable), localAnswers);
           list = appendFeedPage(list, page);
           setItems((prev) => appendFeedPage(prev, page));
         } catch {
@@ -623,6 +646,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       respondingRef.current.add(momentId);
       setRespondingIds(new Set(respondingRef.current));
+
+      const current = itemsRef.current.find(
+        (i): i is FeedMoment => i.type === "moment" && i.id === momentId,
+      );
+      if (current && !current.myOptionId) {
+        setItems((prev) => patchMoment(prev, momentId, scoreLocalVote(current, optionId)));
+      } else if (current && current.myOptionId !== optionId) {
+        setItems((prev) => patchMoment(prev, momentId, { myOptionId: optionId }));
+      }
+      void saveLocalResponse(momentId, optionId).catch(() => {});
+
       try {
         const res = await api<RespondResult>(`/v1/moments/${momentId}/responses`, {
           method: "POST",
@@ -640,6 +674,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return { ok: true, result: res.result };
       } catch (e) {
         const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : tRef.current("couldNotSubmit");
+        // Keep the local pick + scored result so the card stays answered offline.
         return { ok: false, message };
       } finally {
         respondingRef.current.delete(momentId);
@@ -648,6 +683,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     },
     [noteEarn],
   );
+  respondRef.current = respond;
 
   const isResponding = useCallback(
     (momentId: string) => respondingIds.has(momentId),

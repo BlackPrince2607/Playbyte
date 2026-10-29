@@ -43,8 +43,24 @@ TREND_QUIZ_TYPES = frozenset({"trivia", "who", "which"})
 
 GAMBLING_WORDS = ("odds", "payout", "bet", "stake", "wager")
 SMALL_WORDS = frozenset({"The", "A", "An", "It", "Who", "How", "What", "Which", "Prediction", "Fair"})
+# Devanagari belongs only in promptHi / labelHi — never in the English prompt/label fields.
+_DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]+")
+_MULTI_SPACE_RE = re.compile(r"\s{2,}")
 
 BRIEFS_DIR = Path(__file__).resolve().parent / "briefs"
+
+
+def has_devanagari(text: str) -> bool:
+    return bool(_DEVANAGARI_RE.search(text or ""))
+
+
+def strip_devanagari(text: str) -> str:
+    """Remove Devanagari runs so English fields stay language-clean for lang=en."""
+    cleaned = _DEVANAGARI_RE.sub(" ", text or "")
+    cleaned = re.sub(r"\s*[|/·]+\s*", " ", cleaned)
+    cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip(" -")
+    cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned)
+    return cleaned.strip()
 
 
 @dataclass

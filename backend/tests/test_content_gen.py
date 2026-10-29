@@ -187,6 +187,34 @@ def test_trend_poll_allows_freeform_options() -> None:
     assert any(item.endswith(":gambling:stake") for item in dropped)
 
 
+def test_english_fields_strip_mixed_devanagari() -> None:
+    now = datetime(2026, 10, 29, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "Who wins tonight? आज रात कौन जीतेगा?",
+                "promptHi": "आज रात कौन जीतेगा?",
+                "options": [
+                    {"label": "India / भारत", "labelHi": "भारत", "isCorrect": False},
+                    {"label": "The other side", "labelHi": "दूसरी टीम", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "cricket", [], now=now)
+    assert dropped == []
+    assert len(cards) == 1
+    assert "आज" not in cards[0].prompt
+    assert cards[0].prompt.startswith("Who wins tonight")
+    assert cards[0].prompt_hi == "आज रात कौन जीतेगा?"
+    assert cards[0].options[0]["label"] == "India"
+    assert cards[0].options[0]["labelHi"] == "भारत"
+
+
 def test_trend_quiz_allows_freeform_well_known_trivia() -> None:
     now = datetime(2026, 10, 29, tzinfo=UTC)
     raw = {

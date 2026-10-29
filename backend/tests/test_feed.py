@@ -133,6 +133,36 @@ def test_serialize_moment_uses_hindi_when_lang_hi() -> None:
     assert en["options"][0]["label"] == "India"
 
 
+def test_serialize_moment_strips_devanagari_in_english_mode() -> None:
+    m = SimpleNamespace(
+        id=uuid4(),
+        type="poll",
+        prompt="Who wins tonight? आज रात कौन जीतेगा?",
+        prompt_hi="आज रात कौन जीतेगा?",
+        prompt_image_key=None,
+        scoring_mode="crowd",
+        category=SimpleNamespace(slug="sports", name="Sports"),
+        status="live",
+        starts_at=datetime.now(UTC),
+        ends_at=None,
+        options=[
+            SimpleNamespace(
+                id=uuid4(), label="India / भारत", label_hi="भारत", sort_order=0, image_key=None, is_correct=False
+            ),
+            SimpleNamespace(
+                id=uuid4(), label="Australia", label_hi="ऑस्ट्रेलिया", sort_order=1, image_key=None, is_correct=False
+            ),
+        ],
+    )
+    en = serialize_moment(m, snap=None, my_option_id=None, lang="en")
+    assert en["prompt"] == "Who wins tonight?"
+    assert "आज" not in en["prompt"]
+    assert en["options"][0]["label"] == "India"
+    hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
+    assert hi["prompt"] == "आज रात कौन जीतेगा?"
+    assert hi["options"][0]["label"] == "भारत"
+
+
 async def feed_page(
     moments: list[SimpleNamespace],
     answered: set,

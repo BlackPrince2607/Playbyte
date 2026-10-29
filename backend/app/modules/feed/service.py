@@ -1,4 +1,5 @@
 import random
+import re
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -31,6 +32,20 @@ MOMENT_JITTER = 100.0
 # Keep unanswered polls/quizzes ahead of ones the viewer already picked; answered cards still recycle
 # so the feed does not collapse to games-only.
 UNANSWERED_BOOST = 10_000.0
+_DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]+")
+_MULTI_SPACE_RE = re.compile(r"\s{2,}")
+
+
+def _latin_display(text: str | None) -> str:
+    """English UI: strip Devanagari that leaked into the English prompt/label columns."""
+    if not text:
+        return ""
+    cleaned = _DEVANAGARI_RE.sub(" ", text)
+    cleaned = re.sub(r"\s*[|/·]+\s*", " ", cleaned)
+    cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip(" -")
+    # Drop a second trailing ? / ! left behind after removing the Hindi half.
+    cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned)
+    return cleaned.strip()
 
 
 def media_url(key: str | None) -> str | None:
@@ -244,7 +259,11 @@ def serialize_moment(
                 break
     hindi = _wants_hindi(lang)
     prompt_hi = getattr(m, "prompt_hi", None)
-    prompt = prompt_hi if hindi and prompt_hi else m.prompt
+    if hindi and prompt_hi:
+        prompt = prompt_hi
+    else:
+        # English mode: never show Devanagari that leaked into the English prompt field.
+        prompt = _latin_display(m.prompt) or m.prompt
     return {
         "type": "moment",
         "id": str(m.id),
@@ -260,7 +279,11 @@ def serialize_moment(
         "options": [
             {
                 "id": str(o.id),
-                "label": (getattr(o, "label_hi", None) or o.label) if hindi else o.label,
+                "label": (
+                    (getattr(o, "label_hi", None) or o.label)
+                    if hindi
+                    else (_latin_display(o.label) or o.label)
+                ),
                 "imageUrl": media_url(o.image_key),
                 "sortOrder": o.sort_order,
             }

@@ -10,6 +10,7 @@ import { LivePill } from "../../components/MajaLogo";
 import { ScreenLoading } from "../../components/ScreenLoading";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
+import { scoreLocalVote } from "../../lib/localResponses";
 import { momentStatus, pairUp } from "../../lib/momentCard";
 import { promptTextStyle } from "../../lib/promptSize";
 import { seededCount, withSeededCrowd } from "../../lib/seededEngagement";
@@ -104,30 +105,32 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   async function pick(optionId: string) {
     if (answered || submitting) return;
     setRespondError("");
+    // Paint results immediately; server sync + coins land in the background.
+    setLocal((prev) => scoreLocalVote(prev, optionId));
+    if (!isQuiz) {
+      capture("poll_voted", {
+        poll_id: item.id,
+        category: local.category?.slug ?? null,
+      });
+    }
     const outcome = await respond(item.id, optionId);
     if (!mounted.current) return;
-    if (outcome.ok) {
-      if (!isQuiz) {
-        capture("poll_voted", {
-          poll_id: item.id,
-          category: local.category?.slug ?? null,
-        });
-      }
+    if (outcome.ok && outcome.result) {
+      const snap = outcome.result;
       setLocal((prev) => ({
         ...prev,
         myOptionId: optionId,
-        result: outcome.result
-          ? {
-              totalResponses: outcome.result.totalResponses,
-              optionCounts: outcome.result.optionCounts,
-              volumeState: outcome.result.volumeState,
-              joinedLastMinute: outcome.result.joinedLastMinute,
-              correctOptionId: outcome.result.correctOptionId,
-            }
-          : prev.result,
+        result: {
+          totalResponses: snap.totalResponses,
+          optionCounts: snap.optionCounts,
+          volumeState: snap.volumeState,
+          joinedLastMinute: snap.joinedLastMinute,
+          correctOptionId: snap.correctOptionId,
+        },
       }));
-    } else {
-      setRespondError(outcome.message);
+    } else if (!outcome.ok) {
+      // Keep the instant local result; one quiet retry for flaky networks.
+      void respond(item.id, optionId);
     }
   }
 
