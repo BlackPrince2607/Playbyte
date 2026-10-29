@@ -318,7 +318,7 @@ def plan_agent_batch(
 ) -> list[dict[str, Any]]:
     """Fresh agent cards for every category (plus event briefs). Avoids all prior live prompts."""
     from scripts.content_gen.agent import agent_candidates, fill_evergreen, localize_hi
-    from scripts.content_gen.catalog import MIN_LIVE, ONBOARDING_SLUGS, event_cards
+    from scripts.content_gen.catalog import MIN_LIVE, ONBOARDING_SLUGS, event_cards, has_devanagari
 
     need = max(per_category, MIN_LIVE)
     freshness_hours = max(1, int(round(window_hours)))
@@ -353,6 +353,17 @@ def plan_agent_batch(
         proposed = fill_evergreen(slug, proposed, need)
         proposed.extend(event_cards(slug, now=now))
         proposed = localize_hi(proposed)
+        # Only publish cards with clean English fields + complete Devanagari Hindi fields.
+        complete = []
+        for card in proposed:
+            en_clean = not has_devanagari(card.prompt) and all(
+                not has_devanagari(str(opt.get("label") or "")) for opt in card.options
+            )
+            if en_clean and card.has_complete_hi():
+                complete.append(card)
+        if len(complete) < len(proposed):
+            print(f"WARN {slug}: dropped {len(proposed) - len(complete)} cards missing clean EN/HI split")
+        proposed = complete
         added = 0
         for card in proposed:
             if card.prompt in seen:

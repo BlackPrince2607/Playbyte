@@ -6,6 +6,7 @@ import pytest
 
 from scripts.content_gen.agent import (
     MissingOpenAIKey,
+    ensure_language_split,
     fill_evergreen,
     localize_hi,
     require_key,
@@ -24,6 +25,8 @@ from scripts.content_gen.catalog import (
     fact_issues,
     generate_stock,
     load_briefs,
+    prefer_devanagari,
+    strip_devanagari,
 )
 
 
@@ -279,6 +282,37 @@ def test_validate_candidates_keeps_hindi_fields() -> None:
     assert cards[0].prompt_hi == "पहले MV देखोगे या कोरस सीखोगे?"
     assert cards[0].options[0]["labelHi"] == "पहले MV"
     assert not cards[0].needs_hi()
+
+
+def test_ensure_language_split_separates_en_and_hi() -> None:
+    card = Card(
+        type="predict",
+        category_slug="cinema",
+        format="poll",
+        question_type="opinion",
+        prompt="What's your vibe? आपका वाइब?",
+        options=[
+            {"label": "Excited! / एक्साइटेड!", "labelHi": "Excited! / बहुत ज़्यादा! 🔥", "isCorrect": False},
+            {"label": "Wait for trailer", "labelHi": "ट्रेलर आने दो पहले 👀", "isCorrect": False},
+        ],
+        scoring_mode="none",
+        tags=["poll"],
+        prompt_hi="What's your vibe? / कितने एक्साइटेड हो?",
+    )
+    split = ensure_language_split(card)
+    assert "आपका" not in split.prompt
+    assert "What's" in split.prompt or "vibe" in split.prompt.lower()
+    assert "एक्साइटेड" not in split.options[0]["label"]
+    assert "Excited" not in (split.prompt_hi or "")
+    assert "एक्साइटेड" in (split.prompt_hi or "")
+    assert "Excited" not in split.options[0]["labelHi"]
+    assert "बहुत" in split.options[0]["labelHi"]
+    assert split.has_complete_hi()
+
+
+def test_prefer_devanagari_and_strip() -> None:
+    assert strip_devanagari("India / भारत") == "India"
+    assert prefer_devanagari("Excited! / बहुत ज़्यादा!") == "बहुत ज़्यादा!"
 
 
 def test_localize_hi_fills_missing_fields(monkeypatch: pytest.MonkeyPatch) -> None:

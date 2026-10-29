@@ -48,6 +48,23 @@ def _latin_display(text: str | None) -> str:
     return cleaned.strip()
 
 
+_LATIN_TOKEN_RE = re.compile(r"(?:^|\s)[A-Za-z][A-Za-z0-9''!?.%&-]{0,40}(?=\s|$)")
+
+
+def _hindi_display(text: str | None) -> str:
+    """Hindi UI: keep Devanagari; drop Latin-only bilingual halves like 'Excited! / एक्साइटेड'."""
+    if not text:
+        return ""
+    raw = text.strip()
+    if not _DEVANAGARI_RE.search(raw):
+        return raw
+    cleaned = re.sub(r"\s*[|/·]+\s*", " ", raw)
+    cleaned = _LATIN_TOKEN_RE.sub(" ", cleaned)
+    cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip()
+    cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned).strip()
+    return cleaned or raw
+
+
 def media_url(key: str | None) -> str | None:
     if not key:
         return None
@@ -259,8 +276,10 @@ def serialize_moment(
                 break
     hindi = _wants_hindi(lang)
     prompt_hi = getattr(m, "prompt_hi", None)
-    if hindi and prompt_hi:
-        prompt = prompt_hi
+    if hindi:
+        # Prefer Hindi fields; fall back to English prompt when hi is missing.
+        # Never leave Latin bilingual halves in Hindi mode.
+        prompt = _hindi_display(prompt_hi) or (prompt_hi or m.prompt or "").strip()
     else:
         # English mode: never show Devanagari that leaked into the English prompt field.
         prompt = _latin_display(m.prompt) or m.prompt
@@ -280,7 +299,11 @@ def serialize_moment(
             {
                 "id": str(o.id),
                 "label": (
-                    (getattr(o, "label_hi", None) or o.label)
+                    (
+                        _hindi_display(getattr(o, "label_hi", None))
+                        or (getattr(o, "label_hi", None) or o.label)
+                        or ""
+                    )
                     if hindi
                     else (_latin_display(o.label) or o.label)
                 ),

@@ -63,6 +63,21 @@ def strip_devanagari(text: str) -> str:
     return cleaned.strip()
 
 
+_LATIN_TOKEN_RE = re.compile(r"(?:^|\s)[A-Za-z][A-Za-z0-9''!?.%&-]{0,40}(?=\s|$)")
+
+
+def prefer_devanagari(text: str) -> str:
+    """Keep Hindi/Devanagari; drop Latin-only bilingual halves from a Hindi field."""
+    raw = (text or "").strip()
+    if not raw or not has_devanagari(raw):
+        return raw
+    cleaned = re.sub(r"\s*[|/·]+\s*", " ", raw)
+    cleaned = _LATIN_TOKEN_RE.sub(" ", cleaned)
+    cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip()
+    cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned).strip()
+    return cleaned or raw
+
+
 @dataclass
 class Card:
     type: str
@@ -86,6 +101,14 @@ class Card:
         if not (self.prompt_hi or "").strip():
             return True
         return any(not str(opt.get("labelHi") or "").strip() for opt in self.options)
+
+    def has_complete_hi(self) -> bool:
+        """True when Hindi fields are present and look like Devanagari copy."""
+        if self.needs_hi():
+            return False
+        if not has_devanagari(self.prompt_hi or ""):
+            return False
+        return all(has_devanagari(str(opt.get("labelHi") or "")) for opt in self.options)
 
 
 # (question_type, prompt, options)

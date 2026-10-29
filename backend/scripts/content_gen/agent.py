@@ -21,6 +21,7 @@ from scripts.content_gen.catalog import (
     generate_stock,
     has_devanagari,
     load_briefs,
+    prefer_devanagari,
     question_types,
     strip_devanagari,
 )
@@ -77,11 +78,15 @@ def _messages(
             "A quiz has exactly one correct option. Polls must set isCorrect false on every option.",
             "Two options use type predict. Three or four use type pulse.",
             "Do not use gambling words.",
-            "LANGUAGE SPLIT (critical): prompt and every option.label must be English only — Latin script, no Devanagari.",
-            "Do not put Hindi inside prompt or label. Do not write bilingual 'English / हिंदी' lines in one field.",
-            "Hindi goes ONLY in promptHi and each option labelHi (everyday spoken Hindi in Devanagari).",
-            "Hindi style: bolchal — keep common English loanwords (क्विज़, पोल, गेम, स्कोर, ट्रेंड). Keep proper names.",
-            "Avoid stiff textbook Hindi. Do not invent facts in Hindi that are not in the English copy.",
+            "LANGUAGE SPLIT (critical): English and Hindi are completely separate fields — never mix in one string.",
+            "prompt + option.label = English only (Latin script, no Devanagari, no Hindi words).",
+            "promptHi + option.labelHi = Hindi only (Devanagari). No English sentences inside Hindi fields.",
+            "Do not write bilingual lines like 'Excited! / एक्साइटेड' in any single field.",
+            "Hindi must sound like Indian Gen Z bolchal, not literal translation.",
+            "BAD Hindi: 'आपका वाइब क्या है?' + options 'एक्साइटेड!' / 'सावधान संदेह'.",
+            "BETTER Hindi: 'कितने एक्साइटेड हो?' + 'बहुत ज़्यादा! 🔥' / 'ट्रेलर आने दो पहले 👀'.",
+            "Keep loanwords people say (क्विज़, पोल, गेम, स्कोर, ट्रेंड, वाइब, फ़िल्म). Keep proper names.",
+            "Every candidate MUST include promptHi and labelHi on every option. Never leave Hindi empty.",
             f"Return about {need} candidates — fill the feed; quantity with quality.",
         ],
     }
@@ -341,12 +346,23 @@ def agent_candidates(
     return cards
 
 
+# Localization brief adapted from Maja Hindi Localization Expert (product copy guide).
 _HI_STYLE = (
-    "Everyday spoken Hindi (bolchal) in Devanagari. "
-    "Keep common English loanwords people say (क्विज़, पोल, गेम, स्कोर, ट्रेंड). "
-    "Keep proper names and numbers. Avoid stiff textbook Hindi. "
-    "Do not change meaning or invent facts. "
-    "Return Hindi only in promptHi / optionsHi — never rewrite the English prompt or labels."
+    "You are a native Hindi copywriter for Maja (Indian Gen Z / Tier-1–3). "
+    "Write natural spoken Hindi in Devanagari — not literal machine translation. "
+    "Prefer everyday bolchal over formal/Sanskrit-heavy Hindi. "
+    "Keep familiar loanwords people say: गेम, क्विज़, पोल, स्कोर, चैलेंज, फ़िल्म, ट्रेलर, "
+    "क्रिकेट, एक्साइटेड, वोट, रिज़ल्ट, कमेंट, शेयर, लाइक, वाइब, ट्रेंड. "
+    "Do not force awkward pure-Hindi for those words. "
+    "Polls must sound like questions friends would ask. Options must sound like real choices. "
+    "BAD prompt: 'अगले बड़े बॉलीवुड म्यूजिक रिलीज़ के लिए आपका वाइब क्या है?' "
+    "BETTER: 'अगली बड़ी बॉलीवुड फ़िल्म को लेकर कितने एक्साइटेड हो?' "
+    "BAD options: 'एक्साइटेड!' / 'सावधान संदेह'. "
+    "BETTER: 'बहुत ज़्यादा! 🔥' / 'ट्रेलर आने दो पहले 👀'. "
+    "Keep meaning, facts, option count/order, and correct answers unchanged. "
+    "Do not invent names, numbers, or new facts. "
+    "Return Hindi ONLY in promptHi / optionsHi — never rewrite English prompt or labels. "
+    "Never put Devanagari into English fields. Never put English sentences into Hindi fields."
 )
 
 
@@ -365,17 +381,33 @@ def _localize_messages(cards: list[Card]) -> list[dict[str, str]]:
             "Return JSON: {\"translations\": [{\"id\", \"promptHi\", \"optionsHi\": [string, ...]}]} .",
             "optionsHi length must match options length and keep the same order.",
             "id must match the input id.",
+            "Every promptHi and optionsHi entry must be Devanagari Hindi (loanwords OK).",
+            "No bilingual English/Hindi in one field.",
+        ],
+        "examples": [
+            {
+                "en": "What's your vibe for the next big Bollywood music release?",
+                "hi": "अगली बड़ी बॉलीवुड फ़िल्म को लेकर कितने एक्साइटेड हो?",
+                "optionsEn": ["Excited!", "Cautiously skeptical"],
+                "optionsHi": ["बहुत ज़्यादा! 🔥", "ट्रेलर आने दो पहले 👀"],
+            },
+            {
+                "en": "Which one do you prefer?",
+                "hi": "तुम्हें इनमें से क्या पसंद है?",
+                "optionsEn": ["Option A", "Option B"],
+                "optionsHi": ["ये वाला", "वो वाला"],
+            },
         ],
     }
     return [
         {
             "role": "system",
             "content": (
-                "You translate Maja poll and quiz cards into everyday spoken Hindi. "
-                "Reply with a JSON object only."
+                "You localize Maja poll and quiz cards into natural Indian Hindi for Gen Z. "
+                "You are a copywriter, not a literal translator. Reply with a JSON object only."
             ),
         },
-        {"role": "user", "content": json.dumps(payload)},
+        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
     ]
 
 
@@ -410,17 +442,47 @@ def _apply_hi_row(card: Card, row: dict[str, Any] | None) -> Card:
     )
 
 
+def ensure_language_split(card: Card) -> Card:
+    """Hard-separate languages: English fields Latin-only, Hindi fields Devanagari-only."""
+    options: list[dict[str, Any]] = []
+    for opt in card.options:
+        row = dict(opt)
+        row["label"] = strip_devanagari(str(opt.get("label") or ""))
+        label_hi = prefer_devanagari(str(opt.get("labelHi") or "")) or None
+        if label_hi:
+            row["labelHi"] = label_hi
+        elif "labelHi" in row:
+            row.pop("labelHi", None)
+        options.append(row)
+    prompt_hi = prefer_devanagari(card.prompt_hi or "") or None
+    return Card(
+        type=card.type,
+        category_slug=card.category_slug,
+        format=card.format,
+        question_type=card.question_type,
+        prompt=strip_devanagari(card.prompt),
+        options=options,
+        scoring_mode=card.scoring_mode,
+        tags=list(card.tags),
+        ends_at=card.ends_at,
+        brief_id=card.brief_id,
+        event_date=card.event_date,
+        facts_used=list(card.facts_used),
+        prompt_hi=prompt_hi,
+    )
+
+
 def localize_hi(cards: list[Card]) -> list[Card]:
     """Fill missing prompt_hi / labelHi via one batched model call. English stays source of truth."""
     pending = [card for card in cards if card.needs_hi()]
     if not pending:
-        return cards
+        return [ensure_language_split(card) for card in cards]
     try:
         raw = call_openai(_localize_messages(pending))
     except MissingOpenAIKey:
-        return cards
+        return [ensure_language_split(card) for card in cards]
     except Exception:  # noqa: BLE001 — keep English cards if translation fails
-        return cards
+        return [ensure_language_split(card) for card in cards]
     by_id: dict[str, dict[str, Any]] = {}
     for row in raw.get("translations") or []:
         if isinstance(row, dict) and row.get("id") is not None:
@@ -429,11 +491,11 @@ def localize_hi(cards: list[Card]) -> list[Card]:
     pending_i = 0
     for card in cards:
         if not card.needs_hi():
-            out.append(card)
+            out.append(ensure_language_split(card))
             continue
         row = by_id.get(str(pending_i))
         pending_i += 1
-        out.append(_apply_hi_row(card, row))
+        out.append(ensure_language_split(_apply_hi_row(card, row)))
     return out
 
 

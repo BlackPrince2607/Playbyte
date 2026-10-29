@@ -3,9 +3,10 @@ import * as Haptics from "expo-haptics";
 import type { ComponentProps } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { formatCount } from "../api";
+import { useLanguage } from "../context/LanguageContext";
 import { shareAppInvite } from "../lib/shareInvite";
 import { colors, spacing } from "../theme/colors";
-import { fonts, type } from "../theme/typography";
+import { type } from "../theme/typography";
 
 type Props = {
   likes: number;
@@ -43,6 +44,7 @@ export function ActionRail({
   shareDisabled,
   shareLoading,
 }: Props) {
+  const { t, fonts: ui } = useLanguage();
   const items: Item[] = [
     {
       key: "like",
@@ -56,8 +58,8 @@ export function ActionRail({
     {
       key: "comment",
       icon: "chatbubble-outline",
-      label: comments > 0 ? formatCount(comments) : "Comment",
-      a11y: `Comments, ${comments}`,
+      label: comments > 0 ? formatCount(comments) : t("comment"),
+      a11y: `${t("comments")}, ${comments}`,
       onPress: onComments,
     },
     {
@@ -72,8 +74,8 @@ export function ActionRail({
     {
       key: "invite",
       icon: "person-add-outline",
-      label: "Invite",
-      a11y: "Invite friends",
+      label: t("invite"),
+      a11y: t("inviteFriends"),
       onPress: () => void shareAppInvite(undefined, "action_rail"),
     },
   ];
@@ -101,7 +103,7 @@ export function ActionRail({
               <Ionicons name={item.icon} size={20} color={item.iconColor ?? colors.paper} />
             )}
           </View>
-          <Text style={[type.micro, { color: colors.lilac, fontFamily: fonts.bodyMedium }]}>{item.label}</Text>
+          <Text style={[type.micro, { color: colors.lilac, fontFamily: ui.bodyMedium }]}>{item.label}</Text>
         </Pressable>
       ))}
     </View>

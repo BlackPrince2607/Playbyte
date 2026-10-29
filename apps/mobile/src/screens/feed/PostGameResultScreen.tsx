@@ -67,11 +67,12 @@ function useCountUp(target: number) {
 }
 
 function RoundBars({ rounds }: { rounds: RoundRecord[] }) {
+  const { t, fonts: ui } = useLanguage();
   const top = Math.max(1, ...rounds.map((r) => r.points));
   const dense = rounds.length > 12;
   return (
     <View style={styles.panel}>
-      <Text style={styles.panelTitle}>ROUND BY ROUND</Text>
+      <Text style={[styles.panelTitle, { fontFamily: ui.bodyBold }]}>{t("roundByRound")}</Text>
       <View style={styles.barsRow}>
         {rounds.map((r) => {
           const perfect = r.attempts > 0 && r.correct === r.attempts;
@@ -326,7 +327,7 @@ export function PostGameResultScreen({
           )}
           {onNextGame ? (
             <Pressable onPress={onBackToFeed} accessibilityRole="button" hitSlop={8} style={styles.feedLinkSubtle}>
-              <Text style={[type.micro, { color: colors.lilac, fontFamily: ui.body }]}>{t("backToFeed")}</Text>
+              <Text style={[type.micro, { color: colors.lilac, fontFamily: ui.body }]}>{t("onFeed")}</Text>
             </Pressable>
           ) : null}
         </View>
@@ -334,7 +335,11 @@ export function PostGameResultScreen({
         {showAccuracy || (rounds && rounds.length > 0) ? (
           <View style={styles.tiles}>
             {showAccuracy ? (
-              <Tile value={`${accuracyPct}%`} label={`ACCURACY\n${correct}/${attempts} RIGHT`} color={colors.limeLive} />
+              <Tile
+                value={`${accuracyPct}%`}
+                label={`${t("accuracyLabel")}\n${fill(t("correctOfAttempts"), { correct: correct!, attempts: attempts! })}`}
+                color={colors.limeLive}
+              />
             ) : null}
             {rounds && rounds.length > 0 ? <Tile value={String(rounds.length)} label={t("roundsLabel")} /> : null}
           </View>
@@ -345,7 +350,7 @@ export function PostGameResultScreen({
 
         {optionBreakdown && optionBreakdown.length > 0 ? (
           <View style={styles.panel}>
-            <Text style={styles.panelTitle}>HOW THE CROWD VOTED</Text>
+            <Text style={[styles.panelTitle, { fontFamily: ui.bodyBold }]}>{t("howCrowdVoted")}</Text>
             {optionBreakdown.map((o) => (
               <ResultBar key={o.label} label={o.label} percent={o.percent} highlight={o.highlight} />
             ))}

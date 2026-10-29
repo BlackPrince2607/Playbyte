@@ -10,6 +10,7 @@ import { LivePill } from "../../components/MajaLogo";
 import { ScreenLoading } from "../../components/ScreenLoading";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
+import { displayCopy } from "../../lib/displayLang";
 import { scoreLocalVote } from "../../lib/localResponses";
 import { momentStatus, pairUp } from "../../lib/momentCard";
 import { promptTextStyle } from "../../lib/promptSize";
@@ -197,7 +198,9 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
     : undefined;
   const imageOptions = local.options.some((o) => Boolean(o.imageUrl));
   const crowded = Boolean(local.promptImageUrl) || imageOptions || local.options.length > 3;
-  const promptStyle = promptTextStyle(local.prompt, { crowded });
+  const prompt = displayCopy(local.prompt, language);
+  const promptStyle = promptTextStyle(prompt, { crowded });
+  const optionLabel = (label: string | null | undefined) => displayCopy(label, language) || label || "";
   const status = momentStatus(
     {
       respondError,
@@ -209,10 +212,12 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
       friend: disagreeingFriend
         ? {
             name: disagreeingFriend.displayName,
-            choice: local.options.find((o) => o.id === disagreeingFriend.optionId)?.label ?? t("somethingElse"),
+            choice:
+              optionLabel(local.options.find((o) => o.id === disagreeingFriend.optionId)?.label) ||
+              t("somethingElse"),
           }
         : null,
-      myChoice: myOption ? (myOption.label ?? t("selected")) : null,
+      myChoice: myOption ? optionLabel(myOption.label) || t("selected") : null,
     },
     {
       pickQuizAnswer: t("pickQuizAnswer"),
@@ -225,11 +230,12 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   );
 
   function renderOption(o: FeedMoment["options"][number], tile: boolean) {
+    const label = optionLabel(o.label);
     if (!answered) {
       return (
         <AnswerButton
           key={o.id}
-          label={o.label}
+          label={label}
           imageUrl={o.imageUrl}
           tile={tile}
           compact={local.options.length > 4}
@@ -244,7 +250,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
     return (
       <AnswerButton
         key={o.id}
-        label={o.label}
+        label={label}
         imageUrl={o.imageUrl}
         tile={tile}
         compact={local.options.length > 4}
@@ -301,7 +307,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
             adjustsFontSizeToFit
             minimumFontScale={0.85}
           >
-            {local.prompt}
+            {prompt}
           </Text>
           <View style={styles.status}>
             {status ? (

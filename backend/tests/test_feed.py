@@ -133,6 +133,27 @@ def test_serialize_moment_uses_hindi_when_lang_hi() -> None:
     assert en["options"][0]["label"] == "India"
 
 
+def test_serialize_moment_hindi_falls_back_to_english_prompt() -> None:
+    m = SimpleNamespace(
+        id=uuid4(),
+        type="poll",
+        prompt="How often do you check news updates?",
+        prompt_hi=None,
+        prompt_image_key=None,
+        scoring_mode="crowd",
+        category=SimpleNamespace(slug="news", name="News"),
+        status="live",
+        starts_at=datetime.now(UTC),
+        ends_at=None,
+        options=[
+            SimpleNamespace(id=uuid4(), label="Once a day.", label_hi=None, sort_order=0, image_key=None, is_correct=False),
+        ],
+    )
+    hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
+    assert hi["prompt"] == "How often do you check news updates?"
+    assert hi["options"][0]["label"] == "Once a day."
+
+
 def test_serialize_moment_strips_devanagari_in_english_mode() -> None:
     m = SimpleNamespace(
         id=uuid4(),
@@ -161,6 +182,39 @@ def test_serialize_moment_strips_devanagari_in_english_mode() -> None:
     hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
     assert hi["prompt"] == "आज रात कौन जीतेगा?"
     assert hi["options"][0]["label"] == "भारत"
+
+
+def test_serialize_moment_strips_latin_from_hindi_fields() -> None:
+    m = SimpleNamespace(
+        id=uuid4(),
+        type="poll",
+        prompt="What's your vibe?",
+        prompt_hi="Excited! / कितने एक्साइटेड हो?",
+        prompt_image_key=None,
+        scoring_mode="crowd",
+        category=SimpleNamespace(slug="cinema", name="Cinema"),
+        status="live",
+        starts_at=datetime.now(UTC),
+        ends_at=None,
+        options=[
+            SimpleNamespace(
+                id=uuid4(),
+                label="Excited!",
+                label_hi="Excited! / बहुत ज़्यादा! 🔥",
+                sort_order=0,
+                image_key=None,
+                is_correct=False,
+            ),
+        ],
+    )
+    hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
+    assert "Excited" not in hi["prompt"]
+    assert "एक्साइटेड" in hi["prompt"]
+    assert "Excited" not in hi["options"][0]["label"]
+    assert "बहुत" in hi["options"][0]["label"]
+    en = serialize_moment(m, snap=None, my_option_id=None, lang="en")
+    assert en["prompt"] == "What's your vibe?"
+    assert en["options"][0]["label"] == "Excited!"
 
 
 async def feed_page(
