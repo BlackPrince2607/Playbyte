@@ -10,7 +10,9 @@ router = APIRouter(tags=["catalog"])
 
 @router.get("/categories")
 async def list_categories(session: AsyncSession = Depends(get_session)) -> dict:
-    rows = await session.scalars(select(Category).order_by(Category.sort_order))
+    rows = await session.scalars(
+        select(Category).where(Category.active.is_(True)).order_by(Category.sort_order)
+    )
     return {"categories": [{"id": str(c.id), "slug": c.slug, "name": c.name} for c in rows]}
 
 

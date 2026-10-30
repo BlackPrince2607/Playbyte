@@ -1,6 +1,6 @@
 # Category polls and quizzes
 
-Every onboarding category has a poll catalog and a matching quiz catalog. Personality & Vibe and K-Pop are included. Sports, cricket, and movies also read verified event briefs.
+Every onboarding category has a poll catalog and a matching quiz catalog. Merged picks: K-Pop & K-Drama, Technology (+ science), Personality & Quizzes (+ social), Bollywood (movies only). Sports, cricket, and Bollywood also read verified event briefs.
 
 The OpenAI agent **fills** a fresh batch for every category on each refresh (~20 cards by default). It reads engagement insights (what got answers, likes, comments, shares) and biases the next prompts toward India trends that performed. Cards expire in ~4 hours. After the new batch is live, the job retires **all** previous live moments so nothing repeats. Freeform opinion/hot polls and trend trivia (`trivia` / `who` / `which`) are allowed; evergreen bank quizzes remain a fallback. Each card also gets everyday spoken Hindi (`promptHi` / `labelHi`); evergreen and meme cards go through a `localize_hi` pass. `OPENAI_API_KEY` is required. Set it in `.env` locally and as a GitHub secret for the refresh job. Do not commit the key. `OPENAI_MODEL` defaults to `gpt-4o-mini`. A key that starts with `sk-or-` is sent to OpenRouter, and a model name without a slash becomes `openai/gpt-4o-mini`. Set `OPENAI_BASE_URL` to override the host.
 

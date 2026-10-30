@@ -5,8 +5,9 @@ from __future__ import annotations
 import json
 import os
 import random
+import re
 import urllib.request
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from scripts.content_gen.catalog import (
@@ -24,6 +25,70 @@ from scripts.content_gen.catalog import (
     prefer_devanagari,
     question_types,
     strip_devanagari,
+)
+
+# Outcome-prediction wording about seasons/tournaments that are already closed.
+_PREDICTIONISH_RE = re.compile(
+    r"(?i)\b("
+    r"prediction|"
+    r"who\s+will\s+win|who\s+wins|who'?ll\s+win|"
+    r"will\s+\w[\w\s]{0,40}\s+win|"
+    r"champion\s+of|lift\s+the\s+(?:cup|trophy)|take\s+the\s+trophy|"
+    r"winner\s+of"
+    r")\b"
+)
+_YEAR_RE = re.compile(r"\b(20\d{2})\b")
+# Seasons that are typically over by mid-year in India (safe to treat as closed after June).
+_MIDYEAR_CLOSED_TOURNAMENTS_RE = re.compile(
+    r"(?i)\b(ipl|indian\s+premier\s+league|pro\s+kabaddi|pkl|isl\b|indian\s+super\s+league)\b"
+)
+_FORWARD_LOOKING_RE = re.compile(
+    r"(?i)\b(next|upcoming|tonight|today|this\s+weekend|tomorrow|coming\s+up|yet\s+to\s+play)\b"
+)
+# Time-sensitive "who holds office / who is current X" claims go stale fast — brief only.
+_VOLATILE_FACT_RE = re.compile(
+    r"(?i)\b("
+    r"(?:current|present|incumbent|sitting|right\s+now|as\s+of\s+(?:now|today)|nowadays)"
+    r".{0,48}"
+    r"(?:chief\s+minister|\bcm\b|prime\s+minister|\bpm\b|president|governor|mayor|"
+    r"home\s+minister|finance\s+minister|defence\s+minister|defense\s+minister|"
+    r"speaker|captain|coach|ceo|chairman|chairperson)|"
+    r"who\s+is\s+(?:the\s+)?(?:current|present|incumbent|new)\b|"
+    r"who\s+(?:currently|presently)\b|"
+    r"(?:which|who).{0,40}\b(?:in\s+power|ruling\s+party|governs|governing)\b"
+    r")"
+)
+_STOP_TOKENS = frozenset(
+    {
+        "the",
+        "a",
+        "an",
+        "you",
+        "your",
+        "to",
+        "of",
+        "in",
+        "for",
+        "is",
+        "are",
+        "do",
+        "or",
+        "and",
+        "who",
+        "what",
+        "which",
+        "will",
+        "would",
+        "your",
+        "vs",
+        "with",
+        "from",
+        "that",
+        "this",
+        "more",
+        "than",
+        "about",
+    }
 )
 
 DEFAULT_MODEL = "gpt-4o-mini"
@@ -49,10 +114,13 @@ def _messages(
     insights: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     today = datetime.now(UTC).date().isoformat()
+    poll_target = max(1, round(need * 0.7))
+    quiz_target = max(0, need - poll_target)
     payload = {
         "category": slug,
         "need": need,
         "today": today,
+        "mix": {"polls": poll_target, "quizzes": quiz_target},
         "market": "India (Hindi + Hinglish swipe audience; Gen Z / millennial metros + Tier-2)",
         "pollQuestionTypes": sorted(question_types(slug, "poll")),
         "quizQuestionTypes": sorted(question_types(slug, "quiz")),
@@ -61,17 +129,59 @@ def _messages(
         "briefs": briefs,
         "avoidPrompts": list(avoid_prompts or [])[:120],
         "engagementInsights": insights or {},
+        "voiceExamples": {
+            "englishGood": [
+                "Midnight craving hits. Street stall or Maggi at home?",
+                "New trailer dropped. Instant watch or wait for friends?",
+                "Rain starts mid-commute. Cab now or tough it out?",
+            ],
+            "englishBad": [
+                "What is your preferred late-night dining option?",
+                "Please select your level of excitement for the release.",
+            ],
+            "hindiGood": [
+                {
+                    "promptHi": "रात को भूख लगी तो क्या लोगे?",
+                    "optionsHi": ["स्ट्रीट फूड 🔥", "घर की मैगी"],
+                },
+                {
+                    "promptHi": "नया ट्रेलर आया — अभी देखोगे?",
+                    "optionsHi": ["अभी स्किप मत करो", "दोस्तों के साथ बाद में"],
+                },
+            ],
+            "hindiBad": [
+                {
+                    "promptHi": "आपका वाइब क्या है?",
+                    "optionsHi": ["एक्साइटेड!", "सावधान संदेह"],
+                }
+            ],
+        },
         "rules": [
             "Return JSON with a candidates array.",
             "Every candidate category must equal the requested category.",
             f"Today is {today}. Every card must feel current — what India is talking about in this category right now.",
+            f"MIX: aim for about {poll_target} polls and {quiz_target} quizzes (poll-heavy; polls drive the swipe feed).",
             "Write brand-new prompts. Never reuse or lightly rephrase anything in avoidPrompts.",
-            "Prioritize India trends: cricket/IPL, Bollywood/OTT, campus slang, food debates, city weather, reels, politics people actually argue about, tech launches Indians care about.",
+            "UNIQUENESS (critical): each candidate must cover a DIFFERENT topic/angle — not the same question with new wording.",
+            "BAD uniqueness: 'Kohli or Rohit for captain?' and 'Who should captain — Kohli or Rohit?'.",
+            "Vary subjects, stakes, and questionType across the batch so the feed does not feel repetitive.",
+            "Prioritize India trends that are LIVE or UPCOMING: cricket fixtures still to play, Bollywood releases, OTT drops, campus slang, food debates, gaming, reels, tech launches Indians care about. Skip party politics.",
+            "CLOSED / PAST EVENTS (critical): NEVER ask users to predict the outcome of a match, tournament, season, election, award, or final that has already concluded as of today.",
+            f"BAD past prediction: 'Who will win IPL 2026?' when IPL {today[:4]} is already over by {today}.",
+            "BAD past prediction: 'Prediction: who wins the final?' for a final that already happened.",
+            "OK on past events: opinion/debate only ('Fair Player of the Match?', 'Was that the right call?').",
+            "OK predictions: only UPCOMING fixtures (tonight / this weekend / next match) that have not started — and only with briefId when questionType is prediction.",
+            "If unsure whether an event is still open, write an opinion/debate/hot poll instead of a prediction.",
             "Learn from engagementInsights: copy the energy of hits (format, length, debate heat); do not clone miss prompts; follow lessons.",
-            "Tone: fast, interactive, swipeable — short punchy prompts, spicy but friendly options, no essays.",
-            "Aim for roughly half polls and half quizzes when possible.",
+            "ENGLISH voice: Indian Gen Z chat energy in clean Latin English — short, second-person, swipeable. Options feel like taps friends would argue over.",
+            "Not formal survey speak. Not essays. Spicy but friendly.",
+            "HINDI voice: natural bolchal Devanagari like a friend texting — not literal translation, not textbook Hindi.",
             "Polls use questionType opinion, debate, or hot for freeform India-trend options.",
-            "Trend quizzes use questionType trivia, who, or which with well-known correct answers (no obscure stats, no invented numbers).",
+            "Trend quizzes use questionType trivia, who, or which with STABLE well-known facts only (rules, definitions, permanent records).",
+            "NEVER write a freeform quiz about who currently holds an office (CM, PM, president, captain, coach, CEO) — those need a verified briefId.",
+            "BAD freeform quiz: 'Who is the current Chief Minister of Delhi?' / 'Who is India's PM right now?'.",
+            "OK freeform quiz: 'How many players take the field for one side in cricket?' / 'What does OTT stand for?'.",
+            "Time-sensitive politics/news facts belong in briefs — or write an opinion/debate poll instead of a quiz.",
             "A prediction prompt must contain the word Prediction, set briefId, and the brief must allow it.",
             "Bank quizzes (evergreen types not in trendQuizTypes) must copy prompt and options from the evergreen bank.",
             "Event copy may use only names and numbers that appear in that brief.",
@@ -82,10 +192,9 @@ def _messages(
             "prompt + option.label = English only (Latin script, no Devanagari, no Hindi words).",
             "promptHi + option.labelHi = Hindi only (Devanagari). No English sentences inside Hindi fields.",
             "Do not write bilingual lines like 'Excited! / एक्साइटेड' in any single field.",
-            "Hindi must sound like Indian Gen Z bolchal, not literal translation.",
             "BAD Hindi: 'आपका वाइब क्या है?' + options 'एक्साइटेड!' / 'सावधान संदेह'.",
             "BETTER Hindi: 'कितने एक्साइटेड हो?' + 'बहुत ज़्यादा! 🔥' / 'ट्रेलर आने दो पहले 👀'.",
-            "Keep loanwords people say (क्विज़, पोल, गेम, स्कोर, ट्रेंड, वाइब, फ़िल्म). Keep proper names.",
+            "Keep loanwords people say (क्विज़, पोल, गेम, स्कोर, ट्रेंड, वाइब, फ़िल्म, ट्रेलर, मैच). Keep proper names.",
             "Every candidate MUST include promptHi and labelHi on every option. Never leave Hindi empty.",
             f"Return about {need} candidates — fill the feed; quantity with quality.",
         ],
@@ -95,18 +204,18 @@ def _messages(
             "role": "system",
             "content": (
                 "You create fresh Maja poll and quiz cards for one category for an Indian swipe feed. "
-                "Bias hard toward what is trending in India today. Make cards addictive, interactive, and fast. "
-                "Use engagementInsights to improve: more of what got responses/likes, none of the duds. "
-                "Never repeat avoidPrompts. "
+                "Bias hard toward LIVE and UPCOMING India trends. Prefer interactive polls over quizzes. "
+                "Never predict outcomes of events that are already over. "
+                "Never ship freeform quizzes about current officeholders or other facts that change — use briefs or opinion polls. "
+                "Never paraphrase avoidPrompts or repeat the same question with different sentences. "
+                "English = punchy Indian Gen Z Latin copy; Hindi = spoken bolchal Devanagari with natural loanwords. "
                 "Keep languages separate: prompt/label = English only; promptHi/labelHi = Hindi only. "
-                "Never mix Devanagari into English fields. "
                 "Reply with a JSON object only: {\"candidates\": [...]} . "
                 "Each candidate has format, category, questionType, type, prompt, promptHi, options, briefId. "
-                "options are {label, labelHi, isCorrect}. briefId is null unless the card uses a verified brief. "
-                "promptHi and labelHi are everyday spoken Hindi in Devanagari with common English loanwords."
+                "options are {label, labelHi, isCorrect}. briefId is null unless the card uses a verified brief."
             ),
         },
-        {"role": "user", "content": json.dumps(payload)},
+        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
     ]
 
 
@@ -157,6 +266,77 @@ def _ends_at(
     return now + timedelta(hours=default_hours)
 
 
+def _prompt_tokens(text: str) -> set[str]:
+    cleaned = re.sub(r"[^a-z0-9\s]", " ", (text or "").lower())
+    return {tok for tok in cleaned.split() if tok not in _STOP_TOKENS and len(tok) > 2}
+
+
+def near_duplicate_prompt(a: str, b: str, *, threshold: float = 0.72) -> bool:
+    """True when two prompts share most content words (rephrase / same question)."""
+    ta, tb = _prompt_tokens(a), _prompt_tokens(b)
+    if not ta or not tb:
+        return False
+    return len(ta & tb) / len(ta | tb) >= threshold
+
+
+def past_outcome_issue(prompt: str, today: date | None = None) -> str | None:
+    """Reject outcome predictions for seasons/events that are already closed."""
+    today = today or datetime.now(UTC).date()
+    text = (prompt or "").strip()
+    if not text or not _PREDICTIONISH_RE.search(text):
+        return None
+    years = [int(y) for y in _YEAR_RE.findall(text)]
+    if years and max(years) < today.year:
+        return "past-outcome"
+    if (
+        years
+        and max(years) == today.year
+        and today.month >= 6
+        and _MIDYEAR_CLOSED_TOURNAMENTS_RE.search(text)
+        and not _FORWARD_LOOKING_RE.search(text)
+    ):
+        return "past-outcome"
+    if re.search(r"(?i)\b(already\s+over|already\s+won|last\s+season|yesterday'?s\s+final)\b", text):
+        return "past-outcome"
+    return None
+
+
+def volatile_fact_issue(prompt: str) -> str | None:
+    """Reject freeform quizzes about who currently holds a changing office or role."""
+    text = (prompt or "").strip()
+    if not text:
+        return None
+    if _VOLATILE_FACT_RE.search(text):
+        return "volatile-fact"
+    return None
+
+
+def needs_fact_verify(card: Card) -> bool:
+    """Freeform trend quizzes without a brief must pass an LLM fact gate before publish."""
+    return (
+        card.format == "quiz"
+        and card.question_type in TREND_QUIZ_TYPES
+        and not card.brief_id
+    )
+
+
+def prediction_brief_open(brief: dict[str, Any], prompt: str, today: date | None = None) -> bool:
+    """Predictions need allowPrediction; past-dated briefs must stay forward-looking."""
+    if not brief.get("allowPrediction"):
+        return False
+    today = today or datetime.now(UTC).date()
+    raw_date = str(brief.get("eventDate") or "").strip()
+    if not raw_date:
+        return True
+    try:
+        event_day = date.fromisoformat(raw_date[:10])
+    except ValueError:
+        return True
+    if event_day >= today:
+        return True
+    return bool(_FORWARD_LOOKING_RE.search(prompt or ""))
+
+
 def validate_candidates(
     raw: dict[str, Any],
     slug: str,
@@ -164,23 +344,37 @@ def validate_candidates(
     now: datetime | None = None,
     *,
     freshness_hours: int = DEFAULT_FRESHNESS_HOURS,
+    avoid_prompts: list[str] | None = None,
 ) -> tuple[list[Card], list[str]]:
     """Keep candidates that match the catalog. Drop the rest with a short reason."""
     now = now or datetime.now(UTC)
+    today = now.date()
     rows = briefs_for(slug, briefs if briefs is not None else load_briefs())
     by_id = {str(row["id"]): row for row in rows}
     allowed_bank = bank_text(slug)
     dropped: list[str] = []
     cards: list[Card] = []
+    kept_prompts: list[str] = []
+    avoid = [str(p).strip() for p in (avoid_prompts or []) if str(p).strip()]
     for index, item in enumerate(raw.get("candidates") or []):
         if not isinstance(item, dict):
             dropped.append(f"{index}:shape")
             continue
         # English fields must stay Latin-only; Devanagari belongs in promptHi / labelHi.
         cleaned = _english_only_fields(item)
-        reason = _reject(cleaned, slug, by_id, allowed_bank)
+        reason = _reject(cleaned, slug, by_id, allowed_bank, today=today)
         if reason:
             dropped.append(f"{index}:{reason}")
+            continue
+        prompt = str(cleaned["prompt"]).strip()
+        if past_outcome_issue(prompt, today):
+            dropped.append(f"{index}:past-outcome")
+            continue
+        if any(near_duplicate_prompt(prompt, prev) for prev in kept_prompts):
+            dropped.append(f"{index}:near-duplicate")
+            continue
+        if any(near_duplicate_prompt(prompt, prev) for prev in avoid):
+            dropped.append(f"{index}:avoid-near-duplicate")
             continue
         brief_id = cleaned.get("briefId") or None
         brief = by_id.get(str(brief_id)) if brief_id else None
@@ -200,7 +394,7 @@ def validate_candidates(
                 category_slug=slug,
                 format=fmt,
                 question_type=str(cleaned["questionType"]),
-                prompt=str(cleaned["prompt"]).strip(),
+                prompt=prompt,
                 options=mapped_options,
                 scoring_mode="correct_option" if fmt == "quiz" else "none",
                 tags=["quiz" if fmt == "quiz" else "poll"],
@@ -211,6 +405,7 @@ def validate_candidates(
                 prompt_hi=prompt_hi,
             )
         )
+        kept_prompts.append(prompt)
     return cards, dropped
 
 
@@ -230,7 +425,14 @@ def _english_only_fields(item: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def _reject(item: dict[str, Any], slug: str, by_id: dict[str, dict[str, Any]], allowed_bank: str) -> str | None:
+def _reject(
+    item: dict[str, Any],
+    slug: str,
+    by_id: dict[str, dict[str, Any]],
+    allowed_bank: str,
+    *,
+    today: date | None = None,
+) -> str | None:
     if item.get("category") != slug:
         return "category"
     fmt = item.get("format")
@@ -269,10 +471,11 @@ def _reject(item: dict[str, Any], slug: str, by_id: dict[str, dict[str, Any]], a
         brief = by_id.get(str(brief_id))
         if brief is None:
             return "brief"
-        if question_type == "prediction" and not brief.get("allowPrediction"):
-            return "prediction-closed"
-        if question_type == "prediction" and "prediction" not in prompt.lower():
-            return "prediction-label"
+        if question_type == "prediction":
+            if not prediction_brief_open(brief, prompt, today):
+                return "prediction-closed"
+            if "prediction" not in prompt.lower():
+                return "prediction-label"
         allowed = json.dumps(brief)
         issues = fact_issues(prompt, labels, allowed)
         if issues:
@@ -283,7 +486,9 @@ def _reject(item: dict[str, Any], slug: str, by_id: dict[str, dict[str, Any]], a
         return "brief"
     if fmt == "quiz":
         if question_type in TREND_QUIZ_TYPES:
-            # Freeform India-trend trivia — gambling check only; model must use well-known facts.
+            # Freeform trivia: no current-office / time-sensitive claims without a brief.
+            if volatile_fact_issue(prompt):
+                return "volatile-fact"
             issues = fact_issues(prompt, labels, "", check_entities=False)
             if issues:
                 return issues[0]
@@ -311,14 +516,17 @@ def _evergreen_types(slug: str, fmt: str) -> set[str]:
 
 
 def fill_evergreen(slug: str, cards: list[Card], need: int) -> list[Card]:
-    """Top up with catalog cards when the model returns fewer than `need` prompts."""
+    """Top up with catalog cards when the model returns fewer than `need` prompts. Prefer polls."""
     out = list(cards)
     have = {card.prompt for card in out}
     if len(out) >= need:
         return out
     stock = list(generate_stock(slug))
-    random.shuffle(stock)
-    for card in stock:
+    polls = [card for card in stock if card.format == "poll"]
+    quizzes = [card for card in stock if card.format != "poll"]
+    random.shuffle(polls)
+    random.shuffle(quizzes)
+    for card in polls + quizzes:
         if card.prompt in have:
             continue
         out.append(card)
@@ -326,6 +534,100 @@ def fill_evergreen(slug: str, cards: list[Card], need: int) -> list[Card]:
         if len(out) >= need:
             break
     return out
+
+
+def _verify_quiz_messages(cards: list[Card], *, today: date) -> list[dict[str, str]]:
+    payload = {
+        "today": today.isoformat(),
+        "market": "India",
+        "quizzes": [
+            {
+                "id": str(i),
+                "category": card.category_slug,
+                "prompt": card.prompt,
+                "options": [
+                    {
+                        "label": str(opt.get("label") or ""),
+                        "isCorrect": bool(opt.get("isCorrect")),
+                    }
+                    for opt in card.options
+                ],
+            }
+            for i, card in enumerate(cards)
+        ],
+        "rules": [
+            "You are a strict fact checker for a public quiz feed.",
+            f"Today is {today.isoformat()}. Reject anything outdated as of today.",
+            "Pass ONLY when the marked correct option is clearly true and distractors are clearly wrong.",
+            "Fail when the answer is wrong, outdated, ambiguous, contested, or you are not highly confident.",
+            "Fail current-office / 'who is the current X' quizzes unless you are certain the marked answer holds today.",
+            'Return JSON only: {"results":[{"id":"0","verdict":"pass"|"fail","reason":"..."}]} .',
+            "Every input id must appear exactly once in results.",
+        ],
+    }
+    return [
+        {
+            "role": "system",
+            "content": (
+                "You verify quiz answer correctness for an Indian Gen Z feed. "
+                "Be strict and fail-closed. Reply with a JSON object only."
+            ),
+        },
+        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+    ]
+
+
+def verify_quiz_facts(
+    cards: list[Card],
+    *,
+    today: date | None = None,
+    call_model: Any | None = None,
+) -> tuple[list[Card], list[str]]:
+    """LLM fact gate for freeform trend quizzes. Fail-closed on errors or uncertain answers."""
+    today = today or datetime.now(UTC).date()
+    trusted: list[Card] = []
+    pending: list[Card] = []
+    for card in cards:
+        if needs_fact_verify(card):
+            pending.append(card)
+        else:
+            trusted.append(card)
+    if not pending:
+        return cards, []
+
+    caller = call_model or call_openai
+    dropped: list[str] = []
+    try:
+        raw = caller(_verify_quiz_messages(pending, today=today))
+    except Exception as exc:  # noqa: BLE001 — never publish unverified freeform quizzes
+        for i, card in enumerate(pending):
+            dropped.append(f"verify-error:{i}:{type(exc).__name__}:{card.prompt[:48]}")
+        return trusted, dropped
+
+    by_id: dict[str, dict[str, Any]] = {}
+    for row in raw.get("results") or []:
+        if isinstance(row, dict) and row.get("id") is not None:
+            by_id[str(row["id"])] = row
+
+    kept_pending: list[Card] = []
+    for i, card in enumerate(pending):
+        row = by_id.get(str(i))
+        verdict = str((row or {}).get("verdict") or "").strip().lower()
+        if verdict == "pass":
+            kept_pending.append(card)
+            continue
+        reason = str((row or {}).get("reason") or "unverified").strip() or "unverified"
+        dropped.append(f"fact-fail:{i}:{reason}:{card.prompt[:48]}")
+
+    # Preserve original order: trusted + verified pending interleaved as in input.
+    pending_ok = {id(card) for card in kept_pending}
+    out: list[Card] = []
+    for card in cards:
+        if not needs_fact_verify(card):
+            out.append(card)
+        elif id(card) in pending_ok:
+            out.append(card)
+    return out, dropped
 
 
 def agent_candidates(
@@ -339,28 +641,42 @@ def agent_candidates(
 ) -> list[Card]:
     """Ask OpenAI for one category. Raises MissingOpenAIKey when the key is absent."""
     rows = briefs_for(slug, briefs)
+    # Ask for a little extra so past-outcome / near-duplicate drops still leave a full batch.
+    request = max(need, int(need * 1.35))
     raw = call_openai(
-        _messages(slug, need, rows, avoid_prompts=avoid_prompts, insights=insights)
+        _messages(slug, request, rows, avoid_prompts=avoid_prompts, insights=insights)
     )
-    cards, _dropped = validate_candidates(raw, slug, rows, freshness_hours=freshness_hours)
-    return cards
+    cards, dropped = validate_candidates(
+        raw,
+        slug,
+        rows,
+        freshness_hours=freshness_hours,
+        avoid_prompts=avoid_prompts,
+    )
+    cards, fact_dropped = verify_quiz_facts(cards)
+    if fact_dropped:
+        dropped.extend(fact_dropped)
+        print(f"FACT-GATE {slug}: dropped {len(fact_dropped)} unverified quiz(es)")
+    return cards[:need] if len(cards) > need else cards
 
 
 # Localization brief adapted from Maja Hindi Localization Expert (product copy guide).
 _HI_STYLE = (
     "You are a native Hindi copywriter for Maja (Indian Gen Z / Tier-1–3). "
     "Write natural spoken Hindi in Devanagari — not literal machine translation. "
-    "Prefer everyday bolchal over formal/Sanskrit-heavy Hindi. "
+    "Prefer everyday bolchal / WhatsApp energy over formal or Sanskrit-heavy Hindi. "
+    "Sound like a friend asking a quick tap question — short, playful, interactive. "
     "Keep familiar loanwords people say: गेम, क्विज़, पोल, स्कोर, चैलेंज, फ़िल्म, ट्रेलर, "
-    "क्रिकेट, एक्साइटेड, वोट, रिज़ल्ट, कमेंट, शेयर, लाइक, वाइब, ट्रेंड. "
+    "क्रिकेट, मैच, एक्साइटेड, वोट, रिज़ल्ट, कमेंट, शेयर, लाइक, वाइब, ट्रेंड, स्किप, रील्स. "
     "Do not force awkward pure-Hindi for those words. "
-    "Polls must sound like questions friends would ask. Options must sound like real choices. "
+    "Polls must sound like questions friends would ask. Options must sound like real choices people tap. "
     "BAD prompt: 'अगले बड़े बॉलीवुड म्यूजिक रिलीज़ के लिए आपका वाइब क्या है?' "
     "BETTER: 'अगली बड़ी बॉलीवुड फ़िल्म को लेकर कितने एक्साइटेड हो?' "
     "BAD options: 'एक्साइटेड!' / 'सावधान संदेह'. "
     "BETTER: 'बहुत ज़्यादा! 🔥' / 'ट्रेलर आने दो पहले 👀'. "
     "Keep meaning, facts, option count/order, and correct answers unchanged. "
     "Do not invent names, numbers, or new facts. "
+    "Do not turn a past-event opinion into a future prediction. "
     "Return Hindi ONLY in promptHi / optionsHi — never rewrite English prompt or labels. "
     "Never put Devanagari into English fields. Never put English sentences into Hindi fields."
 )
@@ -392,8 +708,14 @@ def _localize_messages(cards: list[Card]) -> list[dict[str, str]]:
                 "optionsHi": ["बहुत ज़्यादा! 🔥", "ट्रेलर आने दो पहले 👀"],
             },
             {
+                "en": "Midnight craving hits. Street stall or Maggi at home?",
+                "hi": "रात को भूख लगी तो क्या लोगे?",
+                "optionsEn": ["Street stall", "Maggi at home"],
+                "optionsHi": ["स्ट्रीट फूड 🔥", "घर की मैगी"],
+            },
+            {
                 "en": "Which one do you prefer?",
-                "hi": "तुम्हें इनमें से क्या पसंद है?",
+                "hi": "तुम्हें इनमें से क्या ज़्यादा पसंद है?",
                 "optionsEn": ["Option A", "Option B"],
                 "optionsHi": ["ये वाला", "वो वाला"],
             },
@@ -404,7 +726,8 @@ def _localize_messages(cards: list[Card]) -> list[dict[str, str]]:
             "role": "system",
             "content": (
                 "You localize Maja poll and quiz cards into natural Indian Hindi for Gen Z. "
-                "You are a copywriter, not a literal translator. Reply with a JSON object only."
+                "Write like a friend texting — interactive bolchal, not literal translation. "
+                "Reply with a JSON object only."
             ),
         },
         {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},

@@ -349,112 +349,112 @@
       "options": ["Always verify", "Sometimes", "Trust the source", "Share first, oops later"]
     },
     {
-      "categorySlug": "weather",
+      "categorySlug": "news",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Monsoon mood - love it or dread it?",
       "options": ["Love the rain", "Only if I'm home", "Traffic nightmare", "AC season forever"]
     },
     {
-      "categorySlug": "weather",
+      "categorySlug": "news",
       "type": "predict",
       "tags": ["poll"],
       "prompt": "Unexpected rain - cancel plans or push through?",
       "options": ["Cancel", "Push through"]
     },
     {
-      "categorySlug": "weather",
+      "categorySlug": "news",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Peak summer survival kit?",
       "options": ["AC + naps", "Nimbu pani spam", "Night walks only", "Leave the city"]
     },
     {
-      "categorySlug": "weather",
+      "categorySlug": "news",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Winter mornings - blanket or gym?",
       "options": ["Blanket wins", "Gym anyway", "Work from bed", "Chai then decide"]
     },
     {
-      "categorySlug": "social",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Group plan just got moved - you…",
       "options": ["Adapt instantly", "Mildly annoyed", "Bail politely", "Start a new plan"]
     },
     {
-      "categorySlug": "social",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Seen-zoned for 3 hours - your move?",
       "options": ["Double text", "Wait patiently", "Leave them on read back", "Call instead"]
     },
     {
-      "categorySlug": "social",
+      "categorySlug": "personality-vibe",
       "type": "predict",
       "tags": ["poll"],
       "prompt": "Big group dinner or 1:1 hang?",
       "options": ["Big group", "1:1"]
     },
     {
-      "categorySlug": "social",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Friend starts a drama thread - you…",
       "options": ["Mediator mode", "Popcorn mode", "Mute chat", "Take a side"]
     },
     {
-      "categorySlug": "social",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Birthday wish style?",
       "options": ["Story post", "Private text", "Call them", "Late but heartfelt"]
     },
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Sunday vibe check - what's the move?",
       "options": ["Sleep catch-up", "Errands + adulting", "Hang with people", "Solo scroll day"]
     },
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "reaction",
       "tags": ["poll"],
       "prompt": "Is Monday already winning?",
       "options": ["Yes", "Not yet"]
     },
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Productivity hack that actually works?",
       "options": ["Timers", "To-do lists", "Body doubling", "Panic deadline"]
     },
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "predict",
       "tags": ["poll"],
       "prompt": "Night owl or early bird - real talk?",
       "options": ["Night owl", "Early bird"]
     },
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Phone battery at 12% - your move?",
       "options": ["Power saver panic", "Find a charger now", "Ignore it", "Borrow a friend's"]
     },
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Unexpected free evening - how do you spend it?",
       "options": ["Catch up sleep", "Finish chores", "Call friends", "Do absolutely nothing"]
     },
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Alarm snooze count - honest number?",
@@ -500,7 +500,7 @@
       ]
     },
     {
-      "categorySlug": "weather",
+      "categorySlug": "news",
       "type": "reaction",
       "tags": ["poll"],
       "prompt": "Umbrella packed today?",
@@ -514,7 +514,7 @@
       "options": ["Yes", "Not today"]
     },
     {
-      "categorySlug": "social",
+      "categorySlug": "personality-vibe",
       "type": "reaction",
       "tags": ["poll"],
       "prompt": "Did you leave someone on read today?",

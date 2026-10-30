@@ -100,6 +100,7 @@ export function MainShell() {
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [retryingSave, setRetryingSave] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
+  const [showInterests, setShowInterests] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
   const [showStreak, setShowStreak] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
@@ -137,6 +138,7 @@ export function MainShell() {
     setSignInError("");
     setShowLeaderboard(false);
     setShowNotif(false);
+    setShowInterests(false);
     setShowRecap(false);
     setShowStreak(false);
     setPlaying(null);
@@ -330,6 +332,10 @@ export function MainShell() {
         setShowNotif(false);
         return true;
       }
+      if (showInterests) {
+        setShowInterests(false);
+        return true;
+      }
       if (showRecap) {
         setShowRecap(false);
         return true;
@@ -352,6 +358,7 @@ export function MainShell() {
     gameResult,
     showLeaderboard,
     showNotif,
+    showInterests,
     showRecap,
     showStreak,
   ]);
@@ -386,6 +393,10 @@ export function MainShell() {
       trackScreen("notifications");
       return;
     }
+    if (showInterests) {
+      trackScreen("edit_interests");
+      return;
+    }
     if (showRecap) {
       trackScreen("weekly_recap");
       return;
@@ -408,6 +419,7 @@ export function MainShell() {
     gameResult,
     showLeaderboard,
     showNotif,
+    showInterests,
     showRecap,
     showStreak,
     showWallet,
@@ -592,6 +604,19 @@ export function MainShell() {
     );
   }
 
+  if (showInterests) {
+    return (
+      <InterestsScreen
+        mode="settings"
+        onBack={() => setShowInterests(false)}
+        onDone={() => {
+          setShowInterests(false);
+          void refreshFeed();
+        }}
+      />
+    );
+  }
+
   if (showRecap) {
     return (
       <WeeklyRecapScreen
@@ -632,6 +657,7 @@ export function MainShell() {
         <View style={[styles.tabPane, tab !== "vault" && styles.hidden]}>
           <SettingsScreen
             onOpenNotifications={() => setShowNotif(true)}
+            onOpenInterests={() => setShowInterests(true)}
             onOpenRecap={() => setShowRecap(true)}
             onSignIn={() => setShowSignIn(true)}
           />

@@ -1,24 +1,32 @@
-INSERT INTO categories (slug, name, sort_order) VALUES
-  ('sports', 'Sports', 1),
-  ('cricket', 'Cricket', 2),
-  ('news', 'News', 3),
-  ('pop-culture', 'Pop Culture', 4),
-  ('food', 'Food', 5),
-  ('weather', 'Weather', 6),
-  ('tech', 'Tech', 7),
-  ('music', 'Music', 8),
-  ('movies', 'Movies', 9),
-  ('social', 'Social', 10),
-  ('casual', 'Casual', 11),
-  ('entertainment', 'Entertainment', 12),
-  ('fashion', 'Fashion', 13),
-  ('politics', 'Politics', 14),
-  ('science', 'Science', 15),
-  ('health', 'Health', 16),
-  ('k-drama', 'K-Drama', 17),
-  ('personality-vibe', 'Personality & Vibe', 18),
-  ('kpop', 'K-Pop', 19)
-ON CONFLICT (slug) DO NOTHING;
+INSERT INTO categories (slug, name, sort_order, active) VALUES
+  ('cricket', 'Cricket', 1, true),
+  ('movies', 'Bollywood', 2, true),
+  ('music', 'Music', 3, true),
+  ('pop-culture', 'Memes & Pop Culture', 4, true),
+  ('food', 'Food', 5, true),
+  ('gaming', 'Gaming', 6, true),
+  ('sports', 'Sports (Non-Cricket)', 7, true),
+  ('news', 'News & Current Affairs', 8, true),
+  ('tech', 'Technology', 9, true),
+  ('personality-vibe', 'Personality & Quizzes', 10, true),
+  ('fashion', 'Fashion & Beauty', 11, true),
+  ('health', 'Health & Fitness', 12, true),
+  ('kpop', 'K-Pop & K-Drama', 13, true),
+  ('puzzles', 'Puzzles', 14, true),
+  ('logical-reasoning', 'Logical Reasoning', 15, true),
+  ('math-numbers', 'Math & Numbers', 16, true),
+  -- Legacy / merged — kept inactive so old content FKs stay valid.
+  ('weather', 'Weather', 90, false),
+  ('casual', 'Casual', 91, false),
+  ('entertainment', 'Entertainment', 92, false),
+  ('politics', 'Politics', 93, false),
+  ('science', 'Science', 94, false),
+  ('social', 'Social', 95, false),
+  ('k-drama', 'K-Drama', 96, false)
+ON CONFLICT (slug) DO UPDATE SET
+  name = EXCLUDED.name,
+  sort_order = EXCLUDED.sort_order,
+  active = EXCLUDED.active;
 
 INSERT INTO content_tags (slug, name, sort_order) VALUES
   ('quiz', 'Quiz', 1),

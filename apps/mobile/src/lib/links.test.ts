@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { legalLinks, supportMailto } from "./links";
+import { legalLinks, supportMailto, supportTel } from "./links";
 
 describe("links", () => {
   it("builds legal page URLs from the admin site", () => {
@@ -22,5 +22,9 @@ describe("links", () => {
       supportMailto("Bug report", "Version 1.0 & Android", "help@maja.app"),
       "mailto:help@maja.app?subject=Bug%20report&body=Version%201.0%20%26%20Android",
     );
+  });
+
+  it("builds a tel link for the support phone", () => {
+    assert.equal(supportTel("7022831039"), "tel:+917022831039");
   });
 });

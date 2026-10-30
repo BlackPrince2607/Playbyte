@@ -9,9 +9,13 @@ from scripts.content_gen.agent import (
     ensure_language_split,
     fill_evergreen,
     localize_hi,
+    near_duplicate_prompt,
+    past_outcome_issue,
     require_key,
     resolve_chat_endpoint,
     validate_candidates,
+    verify_quiz_facts,
+    volatile_fact_issue,
 )
 from scripts.content_gen.catalog import (
     MIN_LIVE,
@@ -51,12 +55,12 @@ def test_every_category_has_polls_and_quizzes() -> None:
 def test_personality_options_come_from_the_bank() -> None:
     labels = bank_labels("personality-vibe")
     types = {row[0] for row in POLLS["personality-vibe"]}
-    assert types == {"travel", "fitness", "social", "everyday", "work", "friendship"}
-    assert {row[0] for row in QUIZZES["personality-vibe"]} == types
+    assert {"travel", "fitness", "social", "everyday", "work", "friendship"} <= types
+    assert {row[0] for row in QUIZZES["personality-vibe"]} <= types
     polls = [card for card in generate_stock("personality-vibe") if card.format == "poll"]
     assert polls
     for card in polls:
-        assert card.type == "predict"
+        assert card.type in {"predict", "pulse"}
         for option in card.options:
             assert option["label"] in labels
             assert option["isCorrect"] is False
@@ -64,7 +68,7 @@ def test_personality_options_come_from_the_bank() -> None:
 
 def test_personality_quizzes_have_one_correct_profile() -> None:
     quizzes = [card for card in generate_stock("personality-vibe") if card.format == "quiz"]
-    assert len(quizzes) == 6
+    assert len(quizzes) >= 6
     for card in quizzes:
         assert sum(1 for option in card.options if option["isCorrect"]) == 1
         assert card.scoring_mode == "correct_option"
@@ -244,6 +248,121 @@ def test_trend_quiz_allows_freeform_well_known_trivia() -> None:
     assert cards[0].question_type == "trivia"
 
 
+def test_volatile_current_office_quiz_is_rejected_without_brief() -> None:
+    assert volatile_fact_issue("Who is the current Chief Minister of Delhi?") == "volatile-fact"
+    assert volatile_fact_issue("How many players are on the field for one side in cricket?") is None
+
+    now = datetime(2026, 10, 30, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "quiz",
+                "category": "politics",
+                "questionType": "who",
+                "type": "pulse",
+                "prompt": "Who is the current Chief Minister of Delhi?",
+                "options": [
+                    {"label": "Arvind Kejriwal", "isCorrect": True},
+                    {"label": "Manish Sisodia", "isCorrect": False},
+                    {"label": "Rajiv Gandhi", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "poll",
+                "category": "politics",
+                "questionType": "debate",
+                "type": "predict",
+                "prompt": "Delhi politics tonight — debate heat or mute?",
+                "options": [
+                    {"label": "Bring the debate", "isCorrect": False},
+                    {"label": "Mute and scroll", "isCorrect": False},
+                ],
+            },
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "politics", [], now=now)
+    assert len(cards) == 1
+    assert cards[0].format == "poll"
+    assert any(item.endswith(":volatile-fact") for item in dropped)
+
+
+def test_verify_quiz_facts_drops_failed_and_keeps_passed() -> None:
+    stable = Card(
+        type="pulse",
+        category_slug="cricket",
+        format="quiz",
+        question_type="trivia",
+        prompt="How many players are on the field for one side in cricket?",
+        options=[
+            {"label": "11", "isCorrect": True},
+            {"label": "9", "isCorrect": False},
+        ],
+        scoring_mode="correct_option",
+        tags=["quiz"],
+    )
+    bad = Card(
+        type="pulse",
+        category_slug="politics",
+        format="quiz",
+        question_type="who",
+        prompt="Who founded the Aam Aadmi Party according to this wrong card?",
+        options=[
+            {"label": "Wrong name", "isCorrect": True},
+            {"label": "Another wrong", "isCorrect": False},
+        ],
+        scoring_mode="correct_option",
+        tags=["quiz"],
+    )
+    poll = Card(
+        type="predict",
+        category_slug="politics",
+        format="poll",
+        question_type="debate",
+        prompt="Hot take or soft take on the latest bill?",
+        options=[
+            {"label": "Hot take", "isCorrect": False},
+            {"label": "Soft take", "isCorrect": False},
+        ],
+        scoring_mode="none",
+        tags=["poll"],
+    )
+
+    def fake_verify(_messages: list[dict[str, str]]) -> dict:
+        return {
+            "results": [
+                {"id": "0", "verdict": "pass", "reason": "stable rule"},
+                {"id": "1", "verdict": "fail", "reason": "wrong answer"},
+            ]
+        }
+
+    kept, dropped = verify_quiz_facts([stable, bad, poll], call_model=fake_verify)
+    assert [c.prompt for c in kept] == [stable.prompt, poll.prompt]
+    assert any("fact-fail" in row for row in dropped)
+
+
+def test_verify_quiz_facts_fails_closed_on_model_error() -> None:
+    quiz = Card(
+        type="pulse",
+        category_slug="tech",
+        format="quiz",
+        question_type="trivia",
+        prompt="What does CPU stand for?",
+        options=[
+            {"label": "Central Processing Unit", "isCorrect": True},
+            {"label": "Computer Power Utility", "isCorrect": False},
+        ],
+        scoring_mode="correct_option",
+        tags=["quiz"],
+    )
+
+    def boom(_messages: list[dict[str, str]]) -> dict:
+        raise RuntimeError("model down")
+
+    kept, dropped = verify_quiz_facts([quiz], call_model=boom)
+    assert kept == []
+    assert any("verify-error" in row for row in dropped)
+
+
 def test_fill_evergreen_uses_the_catalog_when_the_model_is_short() -> None:
     cards = fill_evergreen("kpop", [], MIN_LIVE)
     assert len(cards) >= MIN_LIVE
@@ -367,3 +486,100 @@ def test_missing_openai_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     with pytest.raises(MissingOpenAIKey):
         require_key()
+
+
+def test_past_outcome_issue_blocks_closed_season_predictions() -> None:
+    today = datetime(2026, 10, 30, tzinfo=UTC).date()
+    assert past_outcome_issue("Who will win IPL 2026?", today) == "past-outcome"
+    assert past_outcome_issue("Prediction: who wins IPL 2025?", today) == "past-outcome"
+    assert past_outcome_issue("Fair Player of the Match for Samson?", today) is None
+    assert past_outcome_issue("Prediction: who wins the next match tonight?", today) is None
+
+
+def test_near_duplicate_prompt_catches_rephrases() -> None:
+    assert near_duplicate_prompt(
+        "Kohli or Rohit for captain?",
+        "Who should captain — Kohli or Rohit?",
+    )
+    assert not near_duplicate_prompt(
+        "Kohli or Rohit for captain?",
+        "Midnight craving hits. Street stall or Maggi at home?",
+    )
+
+
+def test_validate_candidates_drops_past_outcomes_and_near_dupes() -> None:
+    now = datetime(2026, 10, 30, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "Who will win IPL 2026?",
+                "promptHi": "आईपीएल २०२६ कौन जीतेगा?",
+                "options": [
+                    {"label": "Mumbai", "labelHi": "मुंबई", "isCorrect": False},
+                    {"label": "Chennai", "labelHi": "चेन्नई", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "debate",
+                "type": "predict",
+                "prompt": "Kohli or Rohit for captain?",
+                "promptHi": "कप्तान कौन — कोहली या रोहित?",
+                "options": [
+                    {"label": "Kohli", "labelHi": "कोहली", "isCorrect": False},
+                    {"label": "Rohit", "labelHi": "रोहित", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "debate",
+                "type": "predict",
+                "prompt": "Who should captain — Kohli or Rohit?",
+                "promptHi": "कप्तानी किसे दें — कोहली या रोहित?",
+                "options": [
+                    {"label": "Kohli", "labelHi": "कोहली", "isCorrect": False},
+                    {"label": "Rohit", "labelHi": "रोहित", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "Rain delay. Stay glued or sleep?",
+                "promptHi": "बारिश रुकी — जगे रहोगे या सो जाओगे?",
+                "options": [
+                    {"label": "Stay glued", "labelHi": "जगे रहो", "isCorrect": False},
+                    {"label": "Sleep", "labelHi": "सो जाओ", "isCorrect": False},
+                ],
+            },
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "cricket", [], now=now)
+    assert [card.prompt for card in cards] == [
+        "Kohli or Rohit for captain?",
+        "Rain delay. Stay glued or sleep?",
+    ]
+    assert any(item.endswith(":past-outcome") for item in dropped)
+    assert any(item.endswith(":near-duplicate") for item in dropped)
+
+
+def test_past_brief_keeps_only_forward_looking_predictions() -> None:
+    brief = next(row for row in load_briefs() if row["id"] == "ind-nz-t20-2026-10-22")
+    now = datetime(2026, 10, 30, tzinfo=UTC)
+    cards = cards_from_brief(brief, now=now)
+    kinds = {card.question_type for card in cards}
+    assert "prediction" in kinds  # prompt says "next match"
+    closed = dict(brief)
+    closed["prediction"] = {
+        "prompt": "Prediction: who wins this match?",
+        "options": ["India", "New Zealand"],
+    }
+    closed_kinds = {card.question_type for card in cards_from_brief(closed, now=now)}
+    assert "prediction" not in closed_kinds

@@ -21,62 +21,70 @@ function rowsOf<T>(items: T[], size: number): T[][] {
   return rows;
 }
 
-type Props = { onDone: (picked: Category[]) => void; onBack?: () => void };
+type Props = {
+  onDone: (picked: Category[]) => void;
+  onBack?: () => void;
+  /** Settings: preselect saved interests and use a Save CTA (no onboarding step chrome). */
+  mode?: "onboarding" | "settings";
+};
 
 const FALLBACK: Category[] = [
-  { id: "sports", name: "Sports" },
-  { id: "cricket", name: "Cricket" },
-  { id: "news", name: "News" },
-  { id: "pop-culture", name: "Pop Culture" },
-  { id: "food", name: "Food" },
-  { id: "weather", name: "Weather" },
-  { id: "tech", name: "Tech" },
-  { id: "music", name: "Music" },
-  { id: "travel", name: "Travel" },
-  { id: "general-knowledge", name: "General Knowledge" },
-  { id: "kpop", name: "K-Pop" },
-  { id: "personality-vibe", name: "Personality & Vibe" },
+  { id: "cricket", name: "Cricket", slug: "cricket" },
+  { id: "movies", name: "Bollywood", slug: "movies" },
+  { id: "music", name: "Music", slug: "music" },
+  { id: "pop-culture", name: "Memes & Pop Culture", slug: "pop-culture" },
+  { id: "food", name: "Food", slug: "food" },
+  { id: "gaming", name: "Gaming", slug: "gaming" },
+  { id: "sports", name: "Sports (Non-Cricket)", slug: "sports" },
+  { id: "news", name: "News & Current Affairs", slug: "news" },
+  { id: "tech", name: "Technology", slug: "tech" },
+  { id: "personality-vibe", name: "Personality & Quizzes", slug: "personality-vibe" },
+  { id: "fashion", name: "Fashion & Beauty", slug: "fashion" },
+  { id: "health", name: "Health & Fitness", slug: "health" },
+  { id: "kpop", name: "K-Pop & K-Drama", slug: "kpop" },
+  { id: "puzzles", name: "Puzzles", slug: "puzzles" },
+  { id: "logical-reasoning", name: "Logical Reasoning", slug: "logical-reasoning" },
+  { id: "math-numbers", name: "Math & Numbers", slug: "math-numbers" },
 ];
 
 const ICONS: [string, string][] = [
   ["cricket", "🏏"],
+  ["movie", "🍿"],
+  ["bollywood", "🍿"],
+  ["music", "🎵"],
+  ["pop", "😂"],
+  ["meme", "😂"],
+  ["food", "🍔"],
+  ["gaming", "🎮"],
+  ["game", "🎮"],
   ["sport", "⚽"],
   ["news", "📰"],
-  ["politic", "🏛️"],
-  ["pop", "🎬"],
-  ["bollywood", "🎬"],
-  ["entertainment", "🎬"],
-  ["movie", "🎬"],
-  ["cinema", "🎬"],
-  ["k-drama", "📺"],
-  ["kpop", "🎤"],
-  ["personality", "🪞"],
-  ["vibe", "🪞"],
-  ["food", "🍜"],
-  ["weather", "⛅"],
   ["tech", "💻"],
-  ["science", "🔬"],
-  ["music", "🎵"],
-  ["travel", "✈️"],
-  ["knowledge", "💡"],
-  ["trivia", "💡"],
-  ["meme", "😂"],
-  ["fashion", "👗"],
+  ["science", "💻"],
+  ["personality", "🎯"],
+  ["vibe", "🎯"],
+  ["fashion", "🛍️"],
+  ["beauty", "🛍️"],
   ["health", "💪"],
-  ["relationship", "💜"],
+  ["fitness", "💪"],
+  ["kpop", "📺"],
+  ["k-drama", "📺"],
+  ["drama", "📺"],
   ["puzzle", "🧩"],
-  ["trending", "🔥"],
-  ["india", "🇮🇳"],
+  ["logical", "🧠"],
+  ["math", "🧮"],
+  ["number", "🧮"],
 ];
 
 function iconFor(c: Category): string {
-  const hay = `${c.id} ${c.name}`.toLowerCase();
+  const hay = `${c.id} ${c.slug ?? ""} ${c.name}`.toLowerCase();
   return ICONS.find(([k]) => hay.includes(k))?.[1] ?? "✨";
 }
 
-export function InterestsScreen({ onDone, onBack }: Props) {
+export function InterestsScreen({ onDone, onBack, mode = "onboarding" }: Props) {
   const insets = useSafeAreaInsets();
   const { t, fonts: ui, language } = useLanguage();
+  const settings = mode === "settings";
   const [categories, setCategories] = useState<Category[]>([]);
   const [picked, setPicked] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +106,14 @@ export function InterestsScreen({ onDone, onBack }: Props) {
         setUsingFallback(true);
         setLoadError(t("interestsFallback"));
       }
+      if (settings) {
+        try {
+          const mine = await api<{ categories: Category[] }>("/v1/me/interests");
+          setPicked((mine.categories ?? []).map((c) => c.id));
+        } catch {
+          /* keep empty selection if interests can't load */
+        }
+      }
     } catch (e) {
       setCategories(FALLBACK);
       setUsingFallback(true);
@@ -113,7 +129,12 @@ export function InterestsScreen({ onDone, onBack }: Props) {
 
   async function finish() {
     setSaveError("");
-    if (picked.length && !usingFallback) {
+    const shouldPersist = !usingFallback && (settings || picked.length > 0);
+    if (settings && usingFallback) {
+      setSaveError(t("couldNotSaveInterests"));
+      return;
+    }
+    if (shouldPersist) {
       setSaving(true);
       try {
         await api("/v1/me/interests", {
@@ -130,6 +151,10 @@ export function InterestsScreen({ onDone, onBack }: Props) {
     onDone(categories.filter((c) => picked.includes(c.id)));
   }
 
+  const titleBefore = settings ? t("editInterestsTitleBefore") : t("interestsTitleBefore");
+  const titleAccent = settings ? t("editInterestsTitleAccent") : t("interestsTitleAccent");
+  const lede = settings ? t("editInterestsLede") : t("interestsLede");
+
   return (
     <View style={[onboardingStyles.root, { paddingTop: insets.top + 4 }]}>
       <View style={styles.pad}>
@@ -142,15 +167,15 @@ export function InterestsScreen({ onDone, onBack }: Props) {
             onboardingStyles.title,
             {
               fontFamily: ui.display,
-              lineHeight: lineHeightFor(`${t("interestsTitleBefore")}${t("interestsTitleAccent")}`, 32),
+              lineHeight: lineHeightFor(`${titleBefore}${titleAccent}`, 32),
               marginTop: spacing.xs,
             },
           ]}
         >
-          {t("interestsTitleBefore")}
-          <Text style={{ color: colors.pink }}>{t("interestsTitleAccent")}</Text>
+          {titleBefore}
+          <Text style={{ color: colors.pink }}>{titleAccent}</Text>
         </Text>
-        <Text style={[onboardingStyles.lede, { fontFamily: ui.body, color: colors.lilac }]}>{t("interestsLede")}</Text>
+        <Text style={[onboardingStyles.lede, { fontFamily: ui.body, color: colors.lilac }]}>{lede}</Text>
 
         {loading ? (
           <ScreenLoading label={t("loadingInterests")} style={styles.center} />
@@ -208,13 +233,17 @@ export function InterestsScreen({ onDone, onBack }: Props) {
           </Text>
         ) : null}
         <CtaButton
-          label={saving ? t("saving") : t("continue")}
-          icon={saving ? null : "arrow-forward"}
+          label={saving ? t("saving") : settings ? t("save") : t("continue")}
+          icon={saving ? null : settings ? "checkmark" : "arrow-forward"}
           disabled={loading || saving}
           onPress={() => void finish()}
           style={{ alignSelf: "stretch" }}
         />
-        <Text style={[onboardingStyles.stepLabel, { fontFamily: ui.bodyBold }]}>{fill(t("stepOf"), { step: 5, total: 5 })}</Text>
+        {settings ? null : (
+          <Text style={[onboardingStyles.stepLabel, { fontFamily: ui.bodyBold }]}>
+            {fill(t("stepOf"), { step: 5, total: 5 })}
+          </Text>
+        )}
       </LinearGradient>
     </View>
   );

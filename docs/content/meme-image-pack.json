@@ -4,7 +4,7 @@
   "attribution": "Meme frames generated with https://api.memegen.link/ (open-source memegen).",
   "moments": [
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Which Monday energy are you?",
@@ -97,7 +97,7 @@
       ]
     },
     {
-      "categorySlug": "social",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Seen-zoned - pick your response vibe.",
@@ -193,7 +193,7 @@
       ]
     },
     {
-      "categorySlug": "weather",
+      "categorySlug": "news",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Sudden monsoon on your commute?",
@@ -289,7 +289,7 @@
       ]
     },
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Alarm went off - which one are you?",
@@ -313,7 +313,7 @@
       ]
     },
     {
-      "categorySlug": "social",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Group chat blowing up at 2am?",
@@ -433,7 +433,7 @@
       ]
     },
     {
-      "categorySlug": "casual",
+      "categorySlug": "personality-vibe",
       "type": "reaction",
       "tags": ["poll"],
       "prompt": "Is this your weekend plan?",
@@ -469,7 +469,7 @@
       ]
     },
     {
-      "categorySlug": "weather",
+      "categorySlug": "news",
       "type": "reaction",
       "tags": ["poll"],
       "prompt": "Is AC season your personality?",
@@ -505,7 +505,7 @@
       ]
     },
     {
-      "categorySlug": "social",
+      "categorySlug": "personality-vibe",
       "type": "pulse",
       "tags": ["poll"],
       "prompt": "Birthday story post vs private text?",

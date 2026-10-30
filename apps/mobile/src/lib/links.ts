@@ -1,5 +1,8 @@
 export const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() || "support@maja.app";
 
+/** Support phone shown in Settings. Override with EXPO_PUBLIC_SUPPORT_PHONE if needed. */
+export const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE?.trim() || "7022831039";
+
 /** Android package / Play Store listing id (matches app.json android.package). */
 export const ANDROID_PACKAGE = "app.maja.mobile";
 
@@ -19,4 +22,10 @@ export function legalLinks(base: string | undefined = process.env.EXPO_PUBLIC_LE
 
 export function supportMailto(subject: string, body = "", email = SUPPORT_EMAIL): string {
   return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+export function supportTel(phone = SUPPORT_PHONE): string {
+  const digits = phone.replace(/\D/g, "");
+  const e164 = digits.length === 10 ? `+91${digits}` : `+${digits}`;
+  return `tel:${e164}`;
 }

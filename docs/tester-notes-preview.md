@@ -15,7 +15,7 @@
 7. **Profile photo:** Vault → Profile → **Add a photo** (or tap the badge during onboarding when signed in). Pick and crop a photo; it shows in the top bar, on boards and on comments. **Remove photo** clears it.
 8. **Vault / Settings:** display name and bio, privacy visibility, notification preferences, sound (music / sound effects), language, weekly recap, sign out.
 9. **Your data:** **Export my data** then **Download my export** (opens a JSON file); **Delete my data** asks for confirmation, then signs you out and deletes the account, including the sign-in login.
-10. **Support:** **Report a problem** opens an email with the app version and your player ID filled in.
+10. **Support:** **Report a problem** shows `7022831039` and opens a call to that number.
 
 ### Auth checklist (Android)
 

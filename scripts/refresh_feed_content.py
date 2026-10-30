@@ -447,7 +447,7 @@ def main() -> int:
         print(f"Agent generation failed: {exc}")
         return 1
 
-    from scripts.content_gen.agent import localize_hi_dicts
+    from scripts.content_gen.agent import localize_hi_dicts, volatile_fact_issue
 
     # Agent batch is the feed; memes are light spice only.
     meme_batch = localize_hi_dicts(build_batch(args.count, include_images=args.include_images))
@@ -479,6 +479,15 @@ def main() -> int:
         # Every published card expires with the refresh window so the next run can replace it.
         if not moment.get("endsAt"):
             moment = {**moment, "endsAt": ends.isoformat().replace("+00:00", "Z")}
+
+        tags = set(moment.get("tags") or [])
+        is_quiz = "quiz" in tags or moment.get("scoringMode") == "correct_option"
+        if is_quiz and not moment.get("briefId"):
+            blocked = volatile_fact_issue(str(moment.get("prompt") or ""))
+            if blocked:
+                failed += 1
+                print(f"SKIP unvalidated quiz ({blocked}): {moment.get('prompt', '')[:60]}")
+                continue
 
         cat_id = by_slug[moment["categorySlug"]]
         ok = publish_moment(

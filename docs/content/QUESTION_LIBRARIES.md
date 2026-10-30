@@ -1,6 +1,6 @@
 # Question libraries → Maja categories
 
-Live API categories today: **sports, cricket, news, pop-culture, food, weather, tech, music, movies, social, casual**.
+Live API categories today: **cricket, movies (Bollywood), music, pop-culture, food, gaming, sports, news, tech, personality-vibe, fashion, health, kpop, puzzles, logical-reasoning, math-numbers**.
 
 ## Feed caps
 

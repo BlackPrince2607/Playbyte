@@ -12,28 +12,25 @@ from typing import Any
 MIN_LIVE = 8
 
 ONBOARDING_SLUGS = (
-    "sports",
     "cricket",
-    "news",
+    "movies",
+    "music",
     "pop-culture",
     "food",
-    "weather",
+    "gaming",
+    "sports",
+    "news",
     "tech",
-    "music",
-    "movies",
-    "social",
-    "casual",
-    "entertainment",
-    "fashion",
-    "politics",
-    "science",
-    "health",
-    "k-drama",
     "personality-vibe",
+    "fashion",
+    "health",
     "kpop",
+    "puzzles",
+    "logical-reasoning",
+    "math-numbers",
 )
 
-EVENT_SLUGS = frozenset({"sports", "cricket", "movies", "music", "tech", "news", "pop-culture"})
+EVENT_SLUGS = frozenset({"sports", "cricket", "movies", "music", "tech", "news", "pop-culture", "kpop"})
 EVENT_POLL_TYPES = frozenset({"opinion", "debate", "prediction", "challenge"})
 EVENT_QUIZ_TYPES = frozenset({"stat", "who", "which"})
 # Freeform trend polls for every onboarding category (not bound to the evergreen bank).
@@ -139,6 +136,12 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("work", "How do you do the work?", "Work alone — headphones on", "Brainstorm with a team — whiteboard full"),
         _p("friendship", "How do you show up for a friend?", "Call them — hear the whole story", "Send a meme — say it without a speech"),
         _p("friendship", "A disagreement looks like…", "Sort it out now — talk before you sleep", "Take some space — come back calmer"),
+        _p("plans", "Group plan, short notice. You…", "Say yes", "Need a day to decide"),
+        _p("seen", "You read the message. You…", "Reply now", "Leave it on seen"),
+        _p("birthday", "A birthday. You…", "Call", "A text is enough", "Story reply and done"),
+        _p("drama", "The group chat is on fire. You…", "Jump in", "Mute for an hour"),
+        _p("intro", "A new person joins. You…", "Talk first", "Wait to be pulled in"),
+        _p("cancel", "You need to cancel. You…", "Say it early", "Hope they cancel first"),
     ),
     "kpop": (
         _p("bias", "Your bias is the one who…", "Owns the encore — center of the stage", "Sings the high note — you wait for that line"),
@@ -147,6 +150,12 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("lightstick", "Concert night looks like…", "Lightstick up — you know every fan chant", "Phone away — you just want the live vocal"),
         _p("playlist", "Your playlist is mostly…", "Title tracks — the big chorus only", "B-sides — the songs they skip promoting"),
         _p("bias", "Pick your fandom habit.", "Streaming party — refresh the view count", "Fancam loop — one member, all night"),
+        _p("pace", "You press play for…", "A slow romance", "A thriller that starts loud"),
+        _p("binge", "Episode one ends. You…", "Start episode two", "Save it for tomorrow"),
+        _p("lead", "You root for…", "The quiet lead", "The friend who steals scenes"),
+        _p("ost", "The soundtrack. You…", "Add it immediately", "Notice it only in the sad scene"),
+        _p("end", "A sad ending. You…", "Accept it", "Need a fan edit"),
+        _p("sub", "You watch with…", "Subtitles, original audio", "A dub if you are cooking"),
     ),
     "sports": (
         _p("watch", "Big match night. Where are you?", "On the couch with the stream", "In the stands if you can get a ticket"),
@@ -169,8 +178,14 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("interval", "What keeps you in the seat?", "An interval twist", "A slow burn that earns the end"),
         _p("sequel", "A sequel is announced. You…", "Book early", "Wait for reviews", "Protect the original"),
         _p("snack", "Interval snack. Your move?", "Always popcorn", "Sneak your own", "Skip food"),
-        _p("language", "How do you watch?", "Original language", "Dubbed, subtitles on"),
+        _p("language", "How do you watch?", "Hindi original", "Dubbed, subtitles on"),
         _p("company", "Who is in the next seat?", "The group chat, all of them", "One friend who will not talk"),
+        _p("night", "Tonight is for…", "A new Hindi release", "A rewatch of a classic"),
+        _p("spoiler", "Someone starts a spoiler. You…", "Cover your ears", "Tell them to finish"),
+        _p("rewatch", "You rewatch because…", "It feels like home", "You forgot the plot"),
+        _p("song", "The interval song. You…", "Sing along", "Wait for the story"),
+        _p("star", "You pick a film for…", "The lead pair", "The director"),
+        _p("end", "The credits roll. You…", "Sit through them", "Are already discussing the end"),
     ),
     "music": (
         _p("playlist", "What is winning your week?", "Film songs", "Indie and alt", "Hip-hop", "Lo-fi focus"),
@@ -203,6 +218,12 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("apps", "Your home screen is…", "A few tools you actually open", "A folder of apps you forgot"),
         _p("os", "Your phone is…", "iOS", "Android"),
         _p("hype", "A startup launch. You…", "Try the preview", "Wait until your friends complain"),
+        _p("read", "A science headline. You…", "Open the paper", "Trust the summary"),
+        _p("wonder", "You would rather understand…", "Space", "The human body"),
+        _p("experiment", "A kitchen experiment. You…", "Follow the steps", "Change one thing and see"),
+        _p("fact", "A surprising fact. You…", "Check it", "Repeat it at dinner"),
+        _p("future", "The invention you want is…", "Clean energy that just works", "A doctor in your pocket"),
+        _p("class", "Science class was…", "The lab", "The diagrams"),
     ),
     "news": (
         _p("habit", "Morning news. You…", "Read one long piece", "Scroll headlines and stop"),
@@ -284,6 +305,38 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("end", "A sad ending. You…", "Accept it", "Need a fan edit"),
         _p("sub", "You watch with…", "Subtitles, original audio", "A dub if you are cooking"),
     ),
+    "gaming": (
+        _p("session", "Tonight you queue for…", "A ranked match", "A chill casual lobby"),
+        _p("genre", "Your main is…", "Shooters", "Strategy and MOBAs", "Story single-player"),
+        _p("squad", "You play with…", "The same trio every night", "Solo queue and vibes"),
+        _p("spend", "A battle pass drops. You…", "Buy it on day one", "Grind free rewards only"),
+        _p("device", "You mostly play on…", "Mobile", "PC or console"),
+        _p("tilt", "After a loss streak you…", "One more game", "Close the app"),
+    ),
+    "puzzles": (
+        _p("pace", "Your puzzle mood is…", "One hard board, no hints", "Easy wins and a streak"),
+        _p("type", "You open first…", "Word puzzles", "Number grids", "Visual spot-the-difference"),
+        _p("hint", "Stuck for a minute. You…", "Take the hint", "Stare until it clicks"),
+        _p("timer", "A countdown on a puzzle…", "Makes it more fun", "Kills the fun"),
+        _p("share", "You clear a tough one. You…", "Send a screenshot", "Start the next immediately"),
+        _p("style", "You prefer…", "Logic that feels fair", "A clever trick ending"),
+    ),
+    "logical-reasoning": (
+        _p("style", "A logic question lands. You…", "Map it out step by step", "Guess from the vibe"),
+        _p("pattern", "Number patterns are…", "Your comfort zone", "Where you slow down"),
+        _p("debate", "Two answers both feel right. You…", "Eliminate until one remains", "Pick and move on"),
+        _p("speed", "You want…", "Fast rounds", "Time to think"),
+        _p("type", "Your favourite is…", "Odd one out", "If-then scenarios"),
+        _p("fail", "You miss one. You…", "Read why and lock it in", "Skip the explanation"),
+    ),
+    "math-numbers": (
+        _p("feel", "Mental maths feels…", "Like a warm-up", "Like a trap"),
+        _p("topic", "You prefer…", "Percentages and deals", "Sequences and patterns"),
+        _p("calc", "A tough sum. You…", "Do it in your head", "Need a notepad"),
+        _p("speed", "Number rounds should be…", "Blitz", "Unhurried"),
+        _p("school", "Maths class was…", "Actually fun", "A survival sport"),
+        _p("real", "You notice numbers most in…", "Cricket scores", "Sale prices"),
+    ),
 }
 
 QUIZZES: dict[str, tuple[Quiz, ...]] = {
@@ -299,6 +352,8 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
         _q("concept", "A group returns in black outfits with a whisper chorus. Which concept is it?", ("Dark and cinematic — black outfits, whisper chorus", "Fresh and bright — pastels and a smile", "Title tracks — the big chorus only"), 0),
         _q("playlist", "You skip the promoted single and loop the deep cuts. Which playlist habit is that?", ("B-sides — the songs they skip promoting", "Title tracks — the big chorus only", "Streaming party — refresh the view count"), 0),
         _q("lightstick", "You know every fan chant and the colour of the official light. Which concert habit is that?", ("Lightstick up — you know every fan chant", "Phone away — you just want the live vocal", "Fancam loop — one member, all night"), 0),
+        _q("ost", "The songs written for a series are the…", ("Soundtrack", "Toss", "Headline"), 0),
+        _q("sub", "Translated lines on screen while you hear the original actors are…", ("Subtitles", "A derby", "A century"), 0),
     ),
     "sports": (
         _q("watch", "A sport uses a round ball and a goal, and outfield players may not handle the ball. Which sport is it?", ("Football", "Swimming", "Chess"), 0),
@@ -311,6 +366,8 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
     "movies": (
         _q("interval", "The short break in the middle of a theatrical film in India is called the…", ("Interval", "Encore", "Overture"), 0),
         _q("screen", "A film you leave the house to see on a large shared screen is a…", ("Theatre screening", "Dub", "Sequel"), 0),
+        _q("spoiler", "Telling the ending before someone has watched is a…", ("Spoiler", "Chorus", "Headline"), 0),
+        _q("rewatch", "Playing a film you have already finished is a…", ("Rewatch", "Debut", "Toss"), 0),
     ),
     "music": (
         _q("live", "A recording made in front of an audience, wrong notes included, is a…", ("Live album", "Studio album", "Playlist"), 0),
@@ -327,6 +384,8 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
     "tech": (
         _q("os", "The mobile system made by Apple is…", ("iOS", "A browser", "A charger"), 0),
         _q("privacy", "A prompt that asks if an app may use your camera is a…", ("Permission", "Playlist", "Derby"), 0),
+        _q("read", "A formal write-up of an experiment is a…", ("Paper", "Playlist", "Jersey"), 0),
+        _q("wonder", "The study of stars, planets, and what is beyond Earth is…", ("Space science", "Fashion", "A derby"), 0),
     ),
     "news": (
         _q("check", "Comparing a viral claim with a named source is a…", ("Fact check", "Rumour", "Spoiler"), 0),
@@ -367,6 +426,22 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
     "k-drama": (
         _q("ost", "The songs written for a series are the…", ("Soundtrack", "Toss", "Headline"), 0),
         _q("sub", "Translated lines on screen while you hear the original actors are…", ("Subtitles", "A derby", "A century"), 0),
+    ),
+    "gaming": (
+        _q("genre", "A game built around shooting from a first-person view is often called…", ("An FPS", "A puzzle", "A rhythm game"), 0),
+        _q("mode", "Playing against other people online is…", ("Multiplayer", "A cutscene", "A tutorial"), 0),
+    ),
+    "puzzles": (
+        _q("sudoku", "A number grid where each row and column uses 1–9 once is…", ("Sudoku", "Chess", "Ludo"), 0),
+        _q("riddle", "A short question that hides the answer in wordplay is a…", ("Riddle", "Jersey", "Interval"), 0),
+    ),
+    "logical-reasoning": (
+        _q("pattern", "Finding what comes next in a sequence is…", ("Pattern recognition", "A spoiler", "A powerplay"), 0),
+        _q("odd", "Picking the item that does not belong is finding the…", ("Odd one out", "Captain", "Encore"), 0),
+    ),
+    "math-numbers": (
+        _q("percent", "Half of 100 is…", ("50", "25", "75"), 0),
+        _q("order", "The next even number after 8 is…", ("10", "9", "7"), 0),
     ),
 }
 
@@ -489,6 +564,27 @@ def load_briefs(folder: Path | None = None) -> list[dict[str, Any]]:
     return briefs
 
 
+_FORWARD_LOOKING_RE = re.compile(
+    r"(?i)\b(next|upcoming|tonight|today|this\s+weekend|tomorrow|coming\s+up|yet\s+to\s+play)\b"
+)
+
+
+def _brief_prediction_open(brief: dict[str, Any], prompt: str, now: datetime) -> bool:
+    """Past-dated briefs may keep predictions only when the prompt is clearly forward-looking."""
+    if not brief.get("allowPrediction"):
+        return False
+    raw_date = str(brief.get("eventDate") or "").strip()
+    if not raw_date:
+        return True
+    try:
+        event_day = datetime.fromisoformat(raw_date[:10]).date()
+    except ValueError:
+        return True
+    if event_day >= now.date():
+        return True
+    return bool(_FORWARD_LOOKING_RE.search(prompt or ""))
+
+
 def cards_from_brief(brief: dict[str, Any], now: datetime | None = None) -> list[Card]:
     """Emit only the formats the brief can support. Predictions need allowPrediction."""
     now = now or datetime.now(UTC)
@@ -511,8 +607,6 @@ def cards_from_brief(brief: dict[str, Any], now: datetime | None = None) -> list
         block = brief.get(key)
         if not isinstance(block, dict):
             continue
-        if needs_open and not brief.get("allowPrediction"):
-            continue
         options = [str(o) for o in block.get("options") or []]
         if not (2 <= len(options) <= 4):
             continue
@@ -521,6 +615,8 @@ def cards_from_brief(brief: dict[str, Any], now: datetime | None = None) -> list
             continue
         if context and context not in prompt:
             prompt = f"{prompt}\n{context}"
+        if needs_open and not _brief_prediction_open(brief, prompt, now):
+            continue
         qtype = question_type
         if fmt == "quiz":
             qtype = str(block.get("questionType") or "stat")

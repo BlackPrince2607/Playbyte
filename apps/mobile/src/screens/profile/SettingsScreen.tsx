@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,7 +28,7 @@ import { pickAndUploadAvatar, removeAvatar } from "../../lib/avatarUpload";
 import { useLanguage } from "../../context/LanguageContext";
 import { capture } from "../../lib/analytics";
 import { APP_LANGUAGES } from "../../lib/languages";
-import { legalLinks, PLAY_STORE_URL, SUPPORT_EMAIL, supportMailto } from "../../lib/links";
+import { legalLinks, PLAY_STORE_URL, SUPPORT_PHONE, supportTel } from "../../lib/links";
 import { formatFriendCode, friendCodeFor } from "../../lib/friendCode";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
@@ -37,6 +36,7 @@ import { fonts, type } from "../../theme/typography";
 
 type Props = {
   onOpenNotifications: () => void;
+  onOpenInterests: () => void;
   onOpenRecap: () => void;
   onSignIn: () => void;
 };
@@ -64,7 +64,7 @@ function openLink(url: string) {
   Linking.openURL(url).catch(() => Alert.alert("Couldn't open link", url));
 }
 
-export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: Props) {
+export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRecap, onSignIn }: Props) {
   const insets = useSafeAreaInsets();
   const { isSignedIn, user, signOut } = useAuth();
   const { language, setAppLanguage, t, fonts: ui } = useLanguage();
@@ -320,10 +320,8 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
   }
 
   function reportProblem() {
-    const details = [`App version: ${APP_VERSION}`, `Platform: ${Platform.OS} ${Platform.Version}`];
-    if (me?.id) details.push(`Player ID: ${me.id}`);
-    Linking.openURL(supportMailto("MAJA problem report", `\n\n---\n${details.join("\n")}`)).catch(() =>
-      Alert.alert("Email us", `Write to ${SUPPORT_EMAIL} and tell us what went wrong.`),
+    Linking.openURL(supportTel()).catch(() =>
+      Alert.alert("Call us", `Call ${SUPPORT_PHONE} and tell us what went wrong.`),
     );
   }
 
@@ -339,6 +337,12 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
 
   const preferences = (
     <SectionCard title={t("preferences")}>
+      <SettingsRow
+        label={t("interests")}
+        value={t("interestsValue")}
+        icon="heart-outline"
+        onPress={onOpenInterests}
+      />
       <View style={styles.blockRow}>
         <View style={styles.blockHeader}>
           <View style={styles.blockIcon}>
@@ -369,7 +373,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenRecap, onSignIn }: P
 
   const support = (
     <SectionCard title={t("support")}>
-      <SettingsRow label={t("reportProblem")} value={SUPPORT_EMAIL} icon="bug-outline" onPress={reportProblem} />
+      <SettingsRow label={t("reportProblem")} value={SUPPORT_PHONE} icon="call-outline" onPress={reportProblem} />
       <SettingsRow
         label={t("rateOnPlayStore")}
         icon="star-outline"

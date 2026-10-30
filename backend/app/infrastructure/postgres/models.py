@@ -99,6 +99,7 @@ class Category(Base):
     slug: Mapped[str] = mapped_column(Text, unique=True)
     name: Mapped[str] = mapped_column(Text)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
 
 
 class ContentTag(Base):
