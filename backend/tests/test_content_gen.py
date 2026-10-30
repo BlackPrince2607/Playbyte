@@ -513,6 +513,59 @@ def test_near_duplicate_prompt_catches_rephrases() -> None:
     )
 
 
+def test_validate_candidates_drops_repeated_star_names() -> None:
+    from scripts.content_gen.agent import validate_candidates
+
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "Sanju Samson got Player of the Match. Fair?",
+                "promptHi": "संजू सैमसन प्लेयर ऑफ द मैच — सही रहा?",
+                "options": [
+                    {"label": "Fair", "labelHi": "सही", "isCorrect": False},
+                    {"label": "Unfair", "labelHi": "गलत", "isCorrect": False},
+                ],
+                "briefId": None,
+            },
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "debate",
+                "type": "predict",
+                "prompt": "Sanju Samson or Pant behind the stumps?",
+                "promptHi": "संजू सैमसन या पंत विकेट के पीछे?",
+                "options": [
+                    {"label": "Samson", "labelHi": "सैमसन", "isCorrect": False},
+                    {"label": "Pant", "labelHi": "पंत", "isCorrect": False},
+                ],
+                "briefId": None,
+            },
+            {
+                "format": "quiz",
+                "category": "cricket",
+                "questionType": "trivia",
+                "type": "pulse",
+                "prompt": "How many balls are there in a standard over?",
+                "promptHi": "एक ओवर में कितनी गेंदें होती हैं?",
+                "options": [
+                    {"label": "6", "labelHi": "६", "isCorrect": True},
+                    {"label": "8", "labelHi": "८", "isCorrect": False},
+                    {"label": "4", "labelHi": "४", "isCorrect": False},
+                ],
+                "briefId": None,
+            },
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "cricket", [], now=datetime(2026, 10, 30, tzinfo=UTC))
+    assert any("name-repeat" in d for d in dropped)
+    assert any("How many balls" in c.prompt for c in cards)
+    assert sum(1 for c in cards if "Samson" in c.prompt) == 1
+
+
 def test_validate_candidates_drops_past_outcomes_and_near_dupes() -> None:
     now = datetime(2026, 10, 30, tzinfo=UTC)
     raw = {

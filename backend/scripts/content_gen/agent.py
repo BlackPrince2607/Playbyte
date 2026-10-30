@@ -114,13 +114,14 @@ def _messages(
     insights: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     today = datetime.now(UTC).date().isoformat()
-    poll_target = max(1, round(need * 0.7))
-    quiz_target = max(0, need - poll_target)
+    # Trivia-first mix: most cards should be quizzes; polls stay for debate energy.
+    quiz_target = max(1, round(need * 0.6))
+    poll_target = max(1, need - quiz_target)
     payload = {
         "category": slug,
         "need": need,
         "today": today,
-        "mix": {"polls": poll_target, "quizzes": quiz_target},
+        "mix": {"quizzes": quiz_target, "polls": poll_target, "preferQuizTypes": ["trivia", "who", "which"]},
         "market": "India (bilingual product: separate English layer + separate Hindi layer; Gen Z / millennial metros + Tier-2)",
         "pollQuestionTypes": sorted(question_types(slug, "poll")),
         "quizQuestionTypes": sorted(question_types(slug, "quiz")),
@@ -128,6 +129,9 @@ def _messages(
         "evergreenBank": bank_text(slug),
         "briefs": briefs,
         "avoidPrompts": list(avoid_prompts or [])[:120],
+        "avoidNames": sorted(
+            {n for prompt in (avoid_prompts or []) for n in proper_names(str(prompt))}
+        )[:40],
         "engagementInsights": insights or {},
         "voiceExamples": {
             "englishGood": [
@@ -166,11 +170,20 @@ def _messages(
             "Return JSON with a candidates array.",
             "Every candidate category must equal the requested category.",
             f"Today is {today}. Every card must feel current — what India is talking about in this category right now.",
-            f"MIX: aim for about {poll_target} polls and {quiz_target} quizzes (poll-heavy; polls drive the swipe feed).",
+            f"MIX (critical): about {quiz_target} QUIZZES and {poll_target} polls. Quizzes should dominate.",
+            "Prefer trivia / who / which quizzes with one clear correct answer over soft opinion polls.",
+            "BAD batch: ten similar preference polls ('How do you watch movies?', 'Favourite snack?', 'Happy ending or cliffhanger?').",
+            "GOOD batch: mix of fact trivia, who/which quizzes, and a few sharp debate polls on DIFFERENT topics.",
             "Write brand-new prompts. Never reuse or lightly rephrase anything in avoidPrompts.",
             "UNIQUENESS (critical): each candidate must cover a DIFFERENT topic/angle — not the same question with new wording.",
+            "NAME DIVERSITY (critical): do not reuse the same player/celebrity/team focus across multiple cards in one batch.",
+            "BAD name spam: three cricket cards all about Sanju Samson / Kohli / Rohit. Rotate subjects or ask knowledge questions with no star name.",
+            "Knowledge trivia is encouraged: rules, formats, history, records, definitions — not only 'who is hot today' opinion polls.",
+            "GOOD cricket mix: 'How many balls in an over?', 'What does DRS stand for?', one debate poll, one upcoming-match take — different angles.",
             "BAD uniqueness: 'Kohli or Rohit for captain?' and 'Who should captain — Kohli or Rohit?'.",
-            "Vary subjects, stakes, and questionType across the batch so the feed does not feel repetitive.",
+            "BAD uniqueness: 'Theatre or OTT?' and 'How do you prefer to watch films?'.",
+            "Vary subjects, stakes, formats, and questionType across the batch so consecutive cards feel different.",
+            "Do not lean on the same names that already appear in avoidPrompts / avoidNames.",
             "Prioritize India trends that are LIVE or UPCOMING: cricket fixtures still to play, Bollywood releases, OTT drops, campus slang, food debates, gaming, reels, tech launches Indians care about. Skip party politics.",
             "CLOSED / PAST EVENTS (critical): NEVER ask users to predict the outcome of a match, tournament, season, election, award, or final that has already concluded as of today.",
             f"BAD past prediction: 'Who will win IPL 2026?' when IPL {today[:4]} is already over by {today}.",
@@ -208,8 +221,9 @@ def _messages(
         {
             "role": "system",
             "content": (
-                "You create fresh Maja poll and quiz cards for one category for an Indian swipe feed. "
-                "Bias hard toward LIVE and UPCOMING India trends. Prefer interactive polls over quizzes. "
+                "You create fresh Maja quiz and poll cards for one category for an Indian swipe feed. "
+                "Bias hard toward LIVE and UPCOMING India trends. Prefer TRIVIA quizzes (one correct answer) over opinion polls. "
+                "Every card in a batch must feel different — no near-duplicate preference questions. "
                 "Never predict outcomes of events that are already over. "
                 "Never ship freeform quizzes about current officeholders or other facts that change — use briefs or opinion polls. "
                 "Never paraphrase avoidPrompts or repeat the same question with different sentences. "
@@ -277,7 +291,53 @@ def _prompt_tokens(text: str) -> set[str]:
     return {tok for tok in cleaned.split() if tok not in _STOP_TOKENS and len(tok) > 2}
 
 
-def near_duplicate_prompt(a: str, b: str, *, threshold: float = 0.72) -> bool:
+_NAME_STOP = frozenset(
+    {
+        "The",
+        "A",
+        "An",
+        "Who",
+        "What",
+        "Which",
+        "How",
+        "When",
+        "Where",
+        "Why",
+        "India",
+        "Indian",
+        "Prediction",
+        "Player",
+        "Match",
+        "Team",
+        "Game",
+        "Movie",
+        "Film",
+        "Song",
+        "Music",
+        "News",
+        "Diwali",
+        "IPL",
+        "T20",
+        "OTT",
+        "DRS",
+    }
+)
+_PROPER_NAME_RE = re.compile(r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b")
+
+
+def proper_names(text: str) -> set[str]:
+    """Person/place-style Latin names in a prompt (used to stop star-name spam)."""
+    names: set[str] = set()
+    for match in _PROPER_NAME_RE.finditer(text or ""):
+        name = match.group(1).strip()
+        if not name or name in _NAME_STOP:
+            continue
+        if " " in name or len(name) >= 5:
+            names.add(name.lower())
+    return names
+
+
+def near_duplicate_prompt(a: str, b: str, *, threshold: float = 0.55) -> bool:
     """True when two prompts share most content words (rephrase / same question)."""
     ta, tb = _prompt_tokens(a), _prompt_tokens(b)
     if not ta or not tb:
@@ -361,7 +421,11 @@ def validate_candidates(
     dropped: list[str] = []
     cards: list[Card] = []
     kept_prompts: list[str] = []
+    used_names: set[str] = set()
     avoid = [str(p).strip() for p in (avoid_prompts or []) if str(p).strip()]
+    avoid_names: set[str] = set()
+    for prev in avoid:
+        avoid_names |= proper_names(prev)
     for index, item in enumerate(raw.get("candidates") or []):
         if not isinstance(item, dict):
             dropped.append(f"{index}:shape")
@@ -381,6 +445,15 @@ def validate_candidates(
             continue
         if any(near_duplicate_prompt(prompt, prev) for prev in avoid):
             dropped.append(f"{index}:avoid-near-duplicate")
+            continue
+        names = proper_names(prompt)
+        # One focused star/name per batch; also skip names already hammered in avoidPrompts.
+        if names & used_names:
+            dropped.append(f"{index}:name-repeat")
+            continue
+        if names & avoid_names and str(cleaned.get("format") or "") != "quiz":
+            # Opinion/debate about the same star again — prefer knowledge trivia instead.
+            dropped.append(f"{index}:avoid-name")
             continue
         brief_id = cleaned.get("briefId") or None
         brief = by_id.get(str(brief_id)) if brief_id else None
@@ -412,6 +485,7 @@ def validate_candidates(
             )
         )
         kept_prompts.append(prompt)
+        used_names |= names
     return cards, dropped
 
 
@@ -522,23 +596,29 @@ def _evergreen_types(slug: str, fmt: str) -> set[str]:
 
 
 def fill_evergreen(slug: str, cards: list[Card], need: int) -> list[Card]:
-    """Top up with catalog cards when the model returns fewer than `need` prompts. Prefer polls."""
+    """Light top-up from the catalog. Prefer quizzes; keep evergreen sparse so batches stay varied."""
     out = list(cards)
     have = {card.prompt for card in out}
     if len(out) >= need:
         return out
+    # Cap filler so agent-written trivia dominates and evergreen polls do not flood the feed.
+    evergreen_slots = min(need - len(out), max(2, need // 4))
     stock = list(generate_stock(slug))
     polls = [card for card in stock if card.format == "poll"]
     quizzes = [card for card in stock if card.format != "poll"]
     random.shuffle(polls)
     random.shuffle(quizzes)
-    for card in polls + quizzes:
+    added = 0
+    for card in quizzes + polls:
+        if added >= evergreen_slots:
+            break
         if card.prompt in have:
+            continue
+        if any(near_duplicate_prompt(card.prompt, prev) for prev in have):
             continue
         out.append(card)
         have.add(card.prompt)
-        if len(out) >= need:
-            break
+        added += 1
     return out
 
 

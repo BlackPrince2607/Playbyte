@@ -279,6 +279,37 @@ async def test_build_feed_keeps_only_the_selected_category() -> None:
 
 
 @pytest.mark.asyncio
+async def test_build_feed_mixes_selected_categories() -> None:
+    """Swipe order should rotate across preference categories, not dump one topic then the next."""
+    cricket_id, music_id, food_id = uuid4(), uuid4(), uuid4()
+    moments = []
+    for i, (cid, slug) in enumerate(
+        [(cricket_id, "cricket"), (cricket_id, "cricket"), (music_id, "music"), (music_id, "music"), (food_id, "food"), (food_id, "food")]
+    ):
+        m = moment(i)
+        m.category_id = cid
+        m.category = SimpleNamespace(slug=slug, name=slug.title())
+        m.scoring_mode = "correct_option" if i % 2 == 0 else "none"
+        moments.append(m)
+    session = AsyncMock()
+    session.scalars = AsyncMock(side_effect=[[], []])
+    with (
+        patch("app.modules.feed.service.interest_ids", AsyncMock(return_value={cricket_id, music_id, food_id})),
+        patch("app.modules.feed.service.active_window_ids", AsyncMock(return_value=set())),
+        patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=moments)),
+        patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=set())),
+        patch("app.modules.feed.service.my_option_ids", AsyncMock(return_value={})),
+        patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
+        patch("app.modules.feed.service.engagement_for", AsyncMock(return_value={})),
+    ):
+        page = await build_feed(session, user_id=uuid4(), guest_id=None, limit=12, rng=random.Random(2))
+    slugs = [item["category"]["slug"] for item in page["items"] if item["type"] == "moment"]
+    assert set(slugs) == {"cricket", "music", "food"}
+    # First three moment slots should cover three different picks when all have stock.
+    assert len(set(slugs[:3])) == 3
+
+
+@pytest.mark.asyncio
 async def test_build_feed_leads_with_unanswered_then_recycles() -> None:
     moments = [moment(i) for i in range(6)]
     answered = {moments[0].id, moments[3].id}

@@ -166,10 +166,9 @@ async def build_feed(
     windows = await active_window_ids(session)
     loaded = await load_live_moments(session)
     answered = await answered_moment_ids(session, [m.id for m in loaded], user_id, guest_id)
-    # Onboarding picks prefer matching live moments. If picks are sparse (new categories
-    # without stock yet), widen to the full live pool so the feed does not collapse.
+    # Preference picks are the pool. If those categories have nothing live yet, widen so the feed works.
     moments = [m for m in loaded if m.category_id in interests] if interests else loaded
-    if interests and len(moments) < max(limit * 2, 8):
+    if interests and not moments:
         moments = loaded
     now = datetime.now(UTC)
     by_id = {m.id: m for m in moments}
@@ -185,12 +184,38 @@ async def build_feed(
     }
 
     def rank_moments(seed: int) -> list[RankedItem]:
+        """Mix preference categories and card kinds (quiz vs poll) so the feed does not feel samey."""
         jitter = random.Random(seed)
-        ranked = [
-            RankedItem(kind="moment", id=mid, score=base + jitter.uniform(0, MOMENT_JITTER))
-            for mid, base in base_scores.items()
-        ]
-        return sorted(ranked, key=lambda x: x.score, reverse=True)
+        # category -> format -> ranked items
+        by_cat_fmt: dict[str, dict[str, list[RankedItem]]] = {}
+        for mid, base in base_scores.items():
+            m = by_id[UUID(mid)]
+            fmt = "quiz" if getattr(m, "scoring_mode", None) == "correct_option" else "poll"
+            item = RankedItem(
+                kind="moment",
+                id=mid,
+                score=base + jitter.uniform(0, MOMENT_JITTER),
+            )
+            by_cat_fmt.setdefault(str(m.category_id), {}).setdefault(fmt, []).append(item)
+        for formats in by_cat_fmt.values():
+            for rows in formats.values():
+                rows.sort(key=lambda x: x.score, reverse=True)
+        cat_ids = list(by_cat_fmt.keys())
+        jitter.shuffle(cat_ids)
+        fmt_order = ["quiz", "poll"]
+        jitter.shuffle(fmt_order)
+        ranked: list[RankedItem] = []
+        # Outer: categories; inner: alternate quiz/poll so picks and kinds both rotate.
+        while any(any(rows) for formats in by_cat_fmt.values() for rows in formats.values()):
+            for c in cat_ids:
+                formats = by_cat_fmt.get(c) or {}
+                for fmt in fmt_order:
+                    rows = formats.get(fmt) or []
+                    if rows:
+                        ranked.append(rows.pop(0))
+                        break
+            fmt_order.reverse()
+        return ranked
 
     games = list(
         await session.scalars(
