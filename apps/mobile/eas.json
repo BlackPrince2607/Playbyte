@@ -23,6 +23,7 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://pzemlrjjqmfosprasivr.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_b54BLPldgFedFNejqR9YVg_WkROtN5u",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "588544939621-m33hneb3poboe5fpkfi4659tmf1k8dr7.apps.googleusercontent.com",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_qWW9jTinyLiKPyKBYtwiHMMGuLqoqPhtaaixyLSk4CKV",
         "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com"
       }
     },
@@ -38,6 +39,7 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://pzemlrjjqmfosprasivr.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_b54BLPldgFedFNejqR9YVg_WkROtN5u",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "588544939621-m33hneb3poboe5fpkfi4659tmf1k8dr7.apps.googleusercontent.com",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_qWW9jTinyLiKPyKBYtwiHMMGuLqoqPhtaaixyLSk4CKV",
         "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com"
       }
     }
