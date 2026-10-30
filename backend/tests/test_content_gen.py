@@ -430,8 +430,14 @@ def test_ensure_language_split_separates_en_and_hi() -> None:
 
 
 def test_prefer_devanagari_and_strip() -> None:
+    from scripts.content_gen.catalog import has_hinglish_latin
+
     assert strip_devanagari("India / भारत") == "India"
     assert prefer_devanagari("Excited! / बहुत ज़्यादा!") == "बहुत ज़्यादा!"
+    assert has_hinglish_latin("Kitne excited ho for the match?")
+    assert has_hinglish_latin("Kya scene hai tonight?")
+    assert not has_hinglish_latin("How excited are you for the match?")
+    assert not has_hinglish_latin("New trailer just dropped. Watch now?")
 
 
 def test_localize_hi_fills_missing_fields(monkeypatch: pytest.MonkeyPatch) -> None:

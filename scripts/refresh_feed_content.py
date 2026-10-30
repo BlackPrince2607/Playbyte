@@ -318,7 +318,13 @@ def plan_agent_batch(
 ) -> list[dict[str, Any]]:
     """Fresh agent cards for every category (plus event briefs). Avoids all prior live prompts."""
     from scripts.content_gen.agent import agent_candidates, fill_evergreen, localize_hi
-    from scripts.content_gen.catalog import MIN_LIVE, ONBOARDING_SLUGS, event_cards, has_devanagari
+    from scripts.content_gen.catalog import (
+        MIN_LIVE,
+        ONBOARDING_SLUGS,
+        event_cards,
+        has_devanagari,
+        has_hinglish_latin,
+    )
 
     need = max(per_category, MIN_LIVE)
     freshness_hours = max(1, int(round(window_hours)))
@@ -341,7 +347,7 @@ def plan_agent_batch(
             if text and text not in seen:
                 seen.add(text)
                 avoid.append(text)
-        print(f"AGENT {slug}: requesting {need} cards…")
+        print(f"AGENT {slug}: requesting {need} cards…", flush=True)
         proposed = agent_candidates(
             slug,
             need,
@@ -353,16 +359,22 @@ def plan_agent_batch(
         proposed = fill_evergreen(slug, proposed, need)
         proposed.extend(event_cards(slug, now=now))
         proposed = localize_hi(proposed)
-        # Only publish cards with clean English fields + complete Devanagari Hindi fields.
+        # Only publish cards with clean English + complete Devanagari Hindi (two separate layers).
         complete = []
         for card in proposed:
-            en_clean = not has_devanagari(card.prompt) and all(
-                not has_devanagari(str(opt.get("label") or "")) for opt in card.options
+            en_blob = card.prompt + "\n" + "\n".join(str(opt.get("label") or "") for opt in card.options)
+            en_clean = (
+                not has_devanagari(en_blob)
+                and not has_hinglish_latin(en_blob)
+                and all(str(opt.get("label") or "").strip() for opt in card.options)
             )
             if en_clean and card.has_complete_hi():
                 complete.append(card)
         if len(complete) < len(proposed):
-            print(f"WARN {slug}: dropped {len(proposed) - len(complete)} cards missing clean EN/HI split")
+            print(
+                f"WARN {slug}: dropped {len(proposed) - len(complete)} cards missing clean EN/HI split",
+                flush=True,
+            )
         proposed = complete
         added = 0
         for card in proposed:
@@ -388,7 +400,7 @@ def plan_agent_batch(
             avoid.append(card.prompt)
             if not is_event:
                 added += 1
-        print(f"AGENT {slug}: kept {added} (+events) of {len(proposed)} proposed")
+        print(f"AGENT {slug}: kept {added} (+events) of {len(proposed)} proposed", flush=True)
     return planned
 
 

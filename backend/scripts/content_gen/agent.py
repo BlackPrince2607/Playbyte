@@ -121,7 +121,7 @@ def _messages(
         "need": need,
         "today": today,
         "mix": {"polls": poll_target, "quizzes": quiz_target},
-        "market": "India (Hindi + Hinglish swipe audience; Gen Z / millennial metros + Tier-2)",
+        "market": "India (bilingual product: separate English layer + separate Hindi layer; Gen Z / millennial metros + Tier-2)",
         "pollQuestionTypes": sorted(question_types(slug, "poll")),
         "quizQuestionTypes": sorted(question_types(slug, "quiz")),
         "trendQuizTypes": sorted(TREND_QUIZ_TYPES),
@@ -131,13 +131,15 @@ def _messages(
         "engagementInsights": insights or {},
         "voiceExamples": {
             "englishGood": [
-                "Midnight craving hits. Street stall or Maggi at home?",
-                "New trailer dropped. Instant watch or wait for friends?",
-                "Rain starts mid-commute. Cab now or tough it out?",
+                "Midnight craving hits. Street food or Maggi at home?",
+                "New trailer just dropped. Watch now or wait for friends?",
+                "Rain mid-commute. Grab a cab or tough it out?",
             ],
             "englishBad": [
+                "Kya scene hai for the release?",
+                "Kitne excited ho for the match?",
+                "What's your vibe yaar?",
                 "What is your preferred late-night dining option?",
-                "Please select your level of excitement for the release.",
             ],
             "hindiGood": [
                 {
@@ -146,14 +148,18 @@ def _messages(
                 },
                 {
                     "promptHi": "नया ट्रेलर आया — अभी देखोगे?",
-                    "optionsHi": ["अभी स्किप मत करो", "दोस्तों के साथ बाद में"],
+                    "optionsHi": ["अभी देखना है", "दोस्तों के साथ बाद में"],
                 },
             ],
             "hindiBad": [
                 {
-                    "promptHi": "आपका वाइब क्या है?",
-                    "optionsHi": ["एक्साइटेड!", "सावधान संदेह"],
-                }
+                    "promptHi": "What's your vibe for the trailer?",
+                    "optionsHi": ["Excited!", "Wait and see"],
+                },
+                {
+                    "promptHi": "Excited! / कितने एक्साइटेड हो?",
+                    "optionsHi": ["Very much", "बहुत ज़्यादा"],
+                },
             ],
         },
         "rules": [
@@ -173,9 +179,15 @@ def _messages(
             "OK predictions: only UPCOMING fixtures (tonight / this weekend / next match) that have not started — and only with briefId when questionType is prediction.",
             "If unsure whether an event is still open, write an opinion/debate/hot poll instead of a prediction.",
             "Learn from engagementInsights: copy the energy of hits (format, length, debate heat); do not clone miss prompts; follow lessons.",
-            "ENGLISH voice: Indian Gen Z chat energy in clean Latin English — short, second-person, swipeable. Options feel like taps friends would argue over.",
+            "TWO LANGUAGE LAYERS (critical): each card has an English set AND a Hindi set. They are independent copy — not mixed, not Hinglish.",
+            "ENGLISH (prompt + option.label): natural English only. Short, second-person, swipeable. Latin script only.",
+            "NO Hinglish in English fields: never use Hindi words or transliteration (yaar, kya, kitna, bahut, nahi, scene hai, full on, etc.).",
+            "English must read like English a fluent speaker would write — not an English translation of a Hindi line, not Hindi written in Latin letters.",
+            "HINDI (promptHi + option.labelHi): natural spoken Devanagari Hindi, written as a Hindi speaker would ask a friend.",
+            "Hindi is NOT a word-for-word translation of the English line — rewrite the same idea in natural Hindi.",
+            "Hindi fields: Devanagari only (familiar loanwords in Devanagari OK: फ़िल्म, ट्रेलर, मैच, क्विज़). No English sentences.",
+            "Never put both languages in one field (no 'Excited! / एक्साइटेड').",
             "Not formal survey speak. Not essays. Spicy but friendly.",
-            "HINDI voice: natural bolchal Devanagari like a friend texting — not literal translation, not textbook Hindi.",
             "Polls use questionType opinion, debate, or hot for freeform India-trend options.",
             "Trend quizzes use questionType trivia, who, or which with STABLE well-known facts only (rules, definitions, permanent records).",
             "NEVER write a freeform quiz about who currently holds an office (CM, PM, president, captain, coach, CEO) — those need a verified briefId.",
@@ -188,13 +200,6 @@ def _messages(
             "A quiz has exactly one correct option. Polls must set isCorrect false on every option.",
             "Two options use type predict. Three or four use type pulse.",
             "Do not use gambling words.",
-            "LANGUAGE SPLIT (critical): English and Hindi are completely separate fields — never mix in one string.",
-            "prompt + option.label = English only (Latin script, no Devanagari, no Hindi words).",
-            "promptHi + option.labelHi = Hindi only (Devanagari). No English sentences inside Hindi fields.",
-            "Do not write bilingual lines like 'Excited! / एक्साइटेड' in any single field.",
-            "BAD Hindi: 'आपका वाइब क्या है?' + options 'एक्साइटेड!' / 'सावधान संदेह'.",
-            "BETTER Hindi: 'कितने एक्साइटेड हो?' + 'बहुत ज़्यादा! 🔥' / 'ट्रेलर आने दो पहले 👀'.",
-            "Keep loanwords people say (क्विज़, पोल, गेम, स्कोर, ट्रेंड, वाइब, फ़िल्म, ट्रेलर, मैच). Keep proper names.",
             "Every candidate MUST include promptHi and labelHi on every option. Never leave Hindi empty.",
             f"Return about {need} candidates — fill the feed; quantity with quality.",
         ],
@@ -208,8 +213,9 @@ def _messages(
                 "Never predict outcomes of events that are already over. "
                 "Never ship freeform quizzes about current officeholders or other facts that change — use briefs or opinion polls. "
                 "Never paraphrase avoidPrompts or repeat the same question with different sentences. "
-                "English = punchy Indian Gen Z Latin copy; Hindi = spoken bolchal Devanagari with natural loanwords. "
-                "Keep languages separate: prompt/label = English only; promptHi/labelHi = Hindi only. "
+                "TWO LAYERS: prompt/label = natural English only (no Hinglish, no Hindi transliteration); "
+                "promptHi/labelHi = natural Devanagari Hindi rewritten for Hindi speakers (not a literal translation). "
+                "Never mix languages in one field. "
                 "Reply with a JSON object only: {\"candidates\": [...]} . "
                 "Each candidate has format, category, questionType, type, prompt, promptHi, options, briefId. "
                 "options are {label, labelHi, isCorrect}. briefId is null unless the card uses a verified brief."
@@ -660,24 +666,20 @@ def agent_candidates(
     return cards[:need] if len(cards) > need else cards
 
 
-# Localization brief adapted from Maja Hindi Localization Expert (product copy guide).
+# Localization brief: Hindi is its own creative layer, not an English calque.
 _HI_STYLE = (
     "You are a native Hindi copywriter for Maja (Indian Gen Z / Tier-1–3). "
-    "Write natural spoken Hindi in Devanagari — not literal machine translation. "
-    "Prefer everyday bolchal / WhatsApp energy over formal or Sanskrit-heavy Hindi. "
-    "Sound like a friend asking a quick tap question — short, playful, interactive. "
-    "Keep familiar loanwords people say: गेम, क्विज़, पोल, स्कोर, चैलेंज, फ़िल्म, ट्रेलर, "
-    "क्रिकेट, मैच, एक्साइटेड, वोट, रिज़ल्ट, कमेंट, शेयर, लाइक, वाइब, ट्रेंड, स्किप, रील्स. "
-    "Do not force awkward pure-Hindi for those words. "
-    "Polls must sound like questions friends would ask. Options must sound like real choices people tap. "
-    "BAD prompt: 'अगले बड़े बॉलीवुड म्यूजिक रिलीज़ के लिए आपका वाइब क्या है?' "
-    "BETTER: 'अगली बड़ी बॉलीवुड फ़िल्म को लेकर कितने एक्साइटेड हो?' "
-    "BAD options: 'एक्साइटेड!' / 'सावधान संदेह'. "
-    "BETTER: 'बहुत ज़्यादा! 🔥' / 'ट्रेलर आने दो पहले 👀'. "
+    "Write a SEPARATE Hindi version in Devanagari — natural spoken bolchal, not machine translation. "
+    "Do NOT transliterate the English line. Do NOT keep English words/sentences in Hindi fields. "
+    "Rewrite the same idea the way a Hindi-speaking friend would ask it on WhatsApp. "
+    "Short, playful, interactive. Prefer everyday Hindi over formal/Sanskrit-heavy Hindi. "
+    "Familiar Devanagari loanwords are OK when people actually say them: फ़िल्म, ट्रेलर, मैच, "
+    "क्रिकेट, क्विज़, पोल, गेम, स्कोर, रील्स. "
+    "BAD: English left in Hindi fields, or literal calques like 'आपका वाइब क्या है?'. "
+    "BETTER: 'अगली बड़ी फ़िल्म को लेकर कितने एक्साइटेड हो?' with options 'बहुत ज़्यादा! 🔥' / 'ट्रेलर आने दो पहले'. "
     "Keep meaning, facts, option count/order, and correct answers unchanged. "
     "Do not invent names, numbers, or new facts. "
-    "Do not turn a past-event opinion into a future prediction. "
-    "Return Hindi ONLY in promptHi / optionsHi — never rewrite English prompt or labels. "
+    "Return Hindi ONLY in promptHi / optionsHi — never change the English prompt or labels. "
     "Never put Devanagari into English fields. Never put English sentences into Hindi fields."
 )
 

@@ -43,12 +43,26 @@ SMALL_WORDS = frozenset({"The", "A", "An", "It", "Who", "How", "What", "Which", 
 # Devanagari belongs only in promptHi / labelHi — never in the English prompt/label fields.
 _DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]+")
 _MULTI_SPACE_RE = re.compile(r"\s{2,}")
+# Latin-script Hindi / Hinglish tokens that must not appear in English prompt/label fields.
+_HINGLISH_LATIN_RE = re.compile(
+    r"(?i)(?<![A-Za-z])("
+    r"yaar|yaarr|kya|kyun|kyoon|nahi|nahin|bahut|bohot|kitna|kitne|kitni|"
+    r"itna|itne|matlab|bilkul|accha|achha|acha|theek|thik|bhaiya|bhai|"
+    r"abhi|phir|lekin|magar|toh|hai\s+kya|kya\s+hai|scene\s+hai|full\s+on|"
+    r"maja\s+aa|mazza|mazzaa|arre|arrey|arey|bas\s+yaar"
+    r")(?![A-Za-z])"
+)
 
 BRIEFS_DIR = Path(__file__).resolve().parent / "briefs"
 
 
 def has_devanagari(text: str) -> bool:
     return bool(_DEVANAGARI_RE.search(text or ""))
+
+
+def has_hinglish_latin(text: str) -> bool:
+    """True when English fields contain Hindi/Hinglish written in Latin letters."""
+    return bool(_HINGLISH_LATIN_RE.search(text or ""))
 
 
 def strip_devanagari(text: str) -> str:

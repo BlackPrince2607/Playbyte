@@ -166,10 +166,10 @@ async def build_feed(
     windows = await active_window_ids(session)
     loaded = await load_live_moments(session)
     answered = await answered_moment_ids(session, [m.id for m in loaded], user_id, guest_id)
-    # Onboarding picks are the whole moment pool. No picks still shows every live category.
-    # If picks have nothing live, widen so the feed can still fill with polls/quizzes.
+    # Onboarding picks prefer matching live moments. If picks are sparse (new categories
+    # without stock yet), widen to the full live pool so the feed does not collapse.
     moments = [m for m in loaded if m.category_id in interests] if interests else loaded
-    if interests and not moments:
+    if interests and len(moments) < max(limit * 2, 8):
         moments = loaded
     now = datetime.now(UTC)
     by_id = {m.id: m for m in moments}
@@ -277,11 +277,14 @@ def serialize_moment(
     hindi = _wants_hindi(lang)
     prompt_hi = getattr(m, "prompt_hi", None)
     if hindi:
-        # Prefer Hindi fields; fall back to English prompt when hi is missing.
-        # Never leave Latin bilingual halves in Hindi mode.
-        prompt = _hindi_display(prompt_hi) or (prompt_hi or m.prompt or "").strip()
+        # Hindi settings: show Hindi layer only. Fall back to English only if hi is missing.
+        hi_prompt = _hindi_display(prompt_hi)
+        if hi_prompt and _DEVANAGARI_RE.search(hi_prompt):
+            prompt = hi_prompt
+        else:
+            prompt = _latin_display(m.prompt) or m.prompt
     else:
-        # English mode: never show Devanagari that leaked into the English prompt field.
+        # English settings: English layer only — never Devanagari.
         prompt = _latin_display(m.prompt) or m.prompt
     return {
         "type": "moment",
@@ -300,8 +303,14 @@ def serialize_moment(
                 "id": str(o.id),
                 "label": (
                     (
-                        _hindi_display(getattr(o, "label_hi", None))
-                        or (getattr(o, "label_hi", None) or o.label)
+                        (
+                            _hindi_display(getattr(o, "label_hi", None))
+                            if getattr(o, "label_hi", None)
+                            and _DEVANAGARI_RE.search(str(getattr(o, "label_hi", None) or ""))
+                            else None
+                        )
+                        or _latin_display(o.label)
+                        or o.label
                         or ""
                     )
                     if hindi
