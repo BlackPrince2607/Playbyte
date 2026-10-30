@@ -31,6 +31,7 @@ from app.modules.avatars.service import (
     remove_avatar,
     store_avatar,
 )
+from app.modules.challenges.service import list_challenges, serialize_challenge
 from app.modules.feed.stock import ensure_category_stock
 from app.modules.privacy.service import export_download_url
 from app.modules.recap.service import weekly_recap
@@ -92,6 +93,23 @@ async def get_me(session: AsyncSession = Depends(get_session), actor: Actor = De
         "avatarKey": profile.avatar_key,
         "defaultVisibility": profile.default_visibility,
         "ageVerified": user.age_verified,
+    }
+
+
+@router.get("/challenges")
+async def get_my_challenges(
+    status: str | None = None,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(require_user),
+) -> dict:
+    allowed = {None, "pending", "active", "completed", "declined", "expired"}
+    if status not in allowed:
+        raise AppError("invalid", "Unknown challenge status filter.", 400)
+    rows = await list_challenges(session, actor.user_id, status=status)
+    return {
+        "challenges": [
+            await serialize_challenge(session, row, viewer_id=actor.user_id) for row in rows
+        ]
     }
 
 

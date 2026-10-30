@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Header
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -29,6 +31,7 @@ class PlayIn(BaseModel):
     seed: str | None = Field(default=None, max_length=80)
     level: float | None = Field(default=None, ge=0, le=1)
     summary: PlaySummary | None = None
+    challengeId: UUID | None = None
 
     def meta(self) -> dict | None:
         if not self.engine:
@@ -92,4 +95,5 @@ async def post_play(
         idempotency_key,
         meta=body.meta(),
         local_day=parse_local_date(x_local_date),
+        challenge_id=body.challengeId,
     )

@@ -20,6 +20,12 @@ def test_play_in_allows_two_hour_endless_session() -> None:
     assert body.durationMs == 7_200_000
 
 
+def test_play_in_accepts_challenge_id() -> None:
+    cid = uuid4()
+    body = PlayIn(score=10, durationMs=1000, challengeId=cid)
+    assert body.challengeId == cid
+
+
 def test_play_in_rejects_over_two_hours() -> None:
     with pytest.raises(ValidationError):
         PlayIn(score=1, durationMs=7_200_001)

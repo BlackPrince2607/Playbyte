@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -8,6 +9,7 @@ from app.common.auth import Actor
 from app.common.errors import AppError
 from app.config import get_settings
 from app.infrastructure.postgres.models import GamePlay, GuestSession, MiniGame
+from app.modules.challenges.service import attach_play_to_challenge, serialize_challenge
 from app.modules.economy.service import grant_game, lookup_game_reward
 from app.modules.games.scoring import clamp_score, min_plausible_duration_ms, percentile
 from app.modules.responses.service import _bump_daily
@@ -58,7 +60,22 @@ async def _play_coins(session: AsyncSession, actor: Actor, play_id, *, created: 
         return _no_coins()
     if created:
         return await grant_game(session, actor.user_id, play_id, local_day)
+    # Replay still returns the prior grant so the result screen can show "+N coins",
+    # but clients must treat coinsEarned as display-only unless this submit created the play.
     return await lookup_game_reward(session, actor.user_id, play_id)
+
+
+async def _challenge_payload(
+    session: AsyncSession, actor: Actor, challenge_id: UUID | None
+) -> dict:
+    if not challenge_id or not actor.user_id:
+        return {}
+    from app.infrastructure.postgres.models import Challenge
+
+    row = await session.get(Challenge, challenge_id)
+    if row is None:
+        return {}
+    return {"challenge": await serialize_challenge(session, row, viewer_id=actor.user_id)}
 
 
 async def submit_play(
@@ -70,6 +87,7 @@ async def submit_play(
     idempotency_key: str | None,
     meta: dict | None = None,
     local_day=None,
+    challenge_id: UUID | None = None,
 ) -> dict:
     game = await session.get(MiniGame, game_key)
     if game is None or game.status != "enabled":
@@ -79,6 +97,9 @@ async def submit_play(
     duration_ms = max(0, min(duration_ms, 7_200_000))  # 2h safety max
     direction = getattr(game, "score_direction", None) or "higher_is_better"
 
+    if challenge_id is not None and not actor.user_id:
+        raise AppError("user_required", "Sign in to play a challenge.", 401)
+
     if meta:
         attempts = (meta.get("summary") or {}).get("attempts")
         if score > 0 and duration_ms < min_plausible_duration_ms(attempts):
@@ -87,6 +108,10 @@ async def submit_play(
     if idempotency_key:
         existing = await _existing_play(session, actor, game_key, idempotency_key)
         if existing:
+            if challenge_id and actor.user_id and existing.challenge_id != challenge_id:
+                await attach_play_to_challenge(
+                    session, challenge_id=challenge_id, user_id=actor.user_id, play=existing
+                )
             stats = await game_stats(session, game_key, existing.score, direction)
             coins = await _play_coins(session, actor, existing.id, created=False, local_day=local_day)
             return {
@@ -96,6 +121,11 @@ async def submit_play(
                 **stats,
                 "promptAccountCreation": _prompt(actor),
                 **coins,
+                **(
+                    await _challenge_payload(
+                        session, actor, challenge_id or getattr(existing, "challenge_id", None)
+                    )
+                ),
             }
 
     if await _recent_play_count(session, actor) >= PLAYS_PER_MINUTE_LIMIT:
@@ -114,6 +144,7 @@ async def submit_play(
         engine_version=(meta or {}).get("engine_version"),
         config_version=getattr(game, "config_version", None) if meta else None,
         summary=(meta or {}).get("summary"),
+        challenge_id=challenge_id,
     )
     session.add(play)
     try:
@@ -134,7 +165,17 @@ async def submit_play(
             **stats,
             "promptAccountCreation": _prompt(actor),
             **coins,
+            **(
+                await _challenge_payload(
+                    session, actor, challenge_id or getattr(existing, "challenge_id", None)
+                )
+            ),
         }
+
+    if challenge_id and actor.user_id:
+        await attach_play_to_challenge(
+            session, challenge_id=challenge_id, user_id=actor.user_id, play=play
+        )
 
     if actor.guest_id:
         guest = await session.get(GuestSession, actor.guest_id)
@@ -153,6 +194,7 @@ async def submit_play(
         **stats,
         "promptAccountCreation": _prompt(actor),
         **coins,
+        **(await _challenge_payload(session, actor, challenge_id)),
     }
 
 

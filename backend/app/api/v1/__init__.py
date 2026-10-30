@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     admin,
     catalog,
+    challenges,
     content,
     economy,
     events,
@@ -23,6 +24,7 @@ api_router.include_router(moments.router)
 api_router.include_router(games.router)
 api_router.include_router(me.router)
 api_router.include_router(friends.router)
+api_router.include_router(challenges.router)
 api_router.include_router(leaderboards.router)
 api_router.include_router(reports.router)
 api_router.include_router(admin.router)

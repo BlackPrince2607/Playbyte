@@ -35,6 +35,9 @@ moment_status = _pg_enum(
 )
 restricted_topic = _pg_enum("none", "health", "tragedy", "election", name="restricted_topic")
 friendship_status = _pg_enum("pending", "accepted", "blocked", name="friendship_status")
+challenge_status = _pg_enum(
+    "pending", "active", "completed", "declined", "expired", name="challenge_status"
+)
 game_status = _pg_enum("enabled", "disabled", name="game_status")
 window_status = _pg_enum("draft", "active", "ended", name="window_status")
 outbox_status = _pg_enum("pending", "processing", "done", "dead", name="outbox_status")
@@ -220,6 +223,25 @@ class Friendship(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class Challenge(Base):
+    __tablename__ = "challenges"
+    __table_args__ = (CheckConstraint("challenger_id <> opponent_id"),)
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    challenger_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
+    opponent_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
+    game_key: Mapped[str] = mapped_column(Text, ForeignKey("mini_games.key"))
+    moment_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("moments.id"))
+    seed: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(challenge_status, default="pending")
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    challenger_play_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("game_plays.id"))
+    opponent_play_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("game_plays.id"))
+    idempotency_key: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class ResponseVisibility(Base):
     __tablename__ = "response_visibility"
 
@@ -269,6 +291,7 @@ class GamePlay(Base):
     engine_version: Mapped[int | None] = mapped_column(Integer)
     config_version: Mapped[int | None] = mapped_column(Integer)
     summary: Mapped[dict | None] = mapped_column(JSONB)
+    challenge_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("challenges.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
