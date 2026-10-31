@@ -29,13 +29,17 @@ from scripts.content_gen.catalog import (  # noqa: E402
     QUIZZES,
     TREND_POLL_TYPES,
     TREND_QUIZ_TYPES,
+    TRENDS_DIR,
     bank_text,
     briefs_for,
     load_briefs,
+    load_trends,
     question_types,
+    trends_for,
 )
 
 OUT = ROOT / "docs" / "content" / "maja-content-gen-prompts.xlsx"
+OUT_FALLBACK = ROOT / "docs" / "content" / "maja-content-gen-prompts-latest.xlsx"
 MEME_PACK = ROOT / "docs" / "content" / "meme-image-pack.json"
 
 HEADER_FONT = Font(bold=True)
@@ -95,7 +99,14 @@ def main() -> None:
                 "Agent System Prompt = English-only LLM system message. Agent User Payload = JSON user message schema. "
                 "Shared Rules = rules[] sent every category. Category Scope/Rules = sports vs cricket extras. "
                 "Evergreen Polls/Quizzes = bank templates. Brief Templates = verified event cards. "
-                "Meme Pack = memegen image polls. Hindi Localize = second-pass localization prompt (never invents cards).",
+                "Meme Pack = memegen image polls. Hindi Localize = second-pass localization prompt (never invents cards). "
+                "Poll Gen & Feed = how polls are created and shown in the swipe feed. "
+                "Trends Input = ops-maintained India trends JSON per category.",
+            ],
+            [
+                "India trends",
+                "Ops fill backend/scripts/content_gen/trends/{category}.json before refresh. "
+                "Merged with briefs into verifiedTrends. Model must not invent trending claims.",
             ],
         ],
         widths=[28, 100],
@@ -166,7 +177,10 @@ def main() -> None:
         ["quizQuestionTypes", "Allowed quiz questionType values for this category"],
         ["trendQuizTypes", "Freeform trivia types not locked to evergreen bank"],
         ["evergreenBank", "Concatenated bank prompts/options the model may copy for bank quizzes"],
-        ["verifiedTrends", "Normalized verified trend context derived from briefs (never invent trends)"],
+        [
+            "verifiedTrends",
+            "Merged manual India trends JSON + brief-derived trends (never invent trends)",
+        ],
         ["briefs", "Verified event briefs for this category (if any)"],
         ["avoidPrompts", "Prompts already live / recent — do not reuse"],
         ["avoidNames", "Proper names extracted from avoidPrompts"],
@@ -350,6 +364,57 @@ def main() -> None:
         widths=[24, 12, 28, 12, 30, 14, 14, 30, 50, 12, 14, 50, 50, 20],
     )
 
+    # Manual India trends input (ops JSON per category)
+    trend_rows: list[list[object]] = [
+        [
+            "OPS NOTE",
+            "backend/scripts/content_gen/trends/{slug}.json",
+            "Fill before refresh; expired expiresAt rows are ignored",
+            0,
+            0,
+            "(schema: trendId, topic, trendScore, freshness, indiaRelevance, eventStatus, facts, allowedAngles, sourceConfidence, expiresAt)",
+            "Never invent trending/viral claims without a matching verifiedTrends row or brief",
+        ]
+    ]
+    all_trends = load_trends(TRENDS_DIR)
+    for slug in ONBOARDING_SLUGS:
+        active = trends_for(slug)
+        raw_count = len(all_trends.get(slug) or [])
+        path = TRENDS_DIR / f"{slug}.json"
+        topics = " | ".join(str(t.get("topic") or "") for t in active[:8])
+        angles = " | ".join(
+            ",".join(str(a) for a in (t.get("allowedAngles") or [])) for t in active[:5]
+        )
+        facts = " | ".join(
+            "; ".join(str(f) for f in (t.get("facts") or [])[:2]) for t in active[:5]
+        )
+        trend_rows.append(
+            [
+                slug,
+                str(path.as_posix().replace(str(ROOT.as_posix()) + "/", "")) if path.exists() else "(missing)",
+                topics or "(empty — use evergreen trivia + sharp debates, no viral framing)",
+                raw_count,
+                len(active),
+                angles or "",
+                facts or "",
+            ]
+        )
+    _sheet(
+        wb,
+        "Trends Input",
+        [
+            "category",
+            "file",
+            "active_topics",
+            "raw_count",
+            "active_count",
+            "allowedAngles",
+            "facts_preview",
+        ],
+        trend_rows,
+        widths=[18, 48, 55, 12, 12, 28, 50],
+    )
+
     # Hindi localize
     _sheet(
         wb,
@@ -447,6 +512,57 @@ def main() -> None:
         widths=[18, 10, 12, 50, 40, 30, 50, 40],
     )
 
+    # Poll generation + feed display (product/ops explainer)
+    poll_feed_rows: list[list[object]] = [
+        ["What is a poll?", "A moment card with scoringMode=none, tag poll, and isCorrect=false on every option. No right answer — pick a side / debate."],
+        ["Poll vs quiz", "Quiz uses scoringMode=correct_option and exactly one isCorrect=true. Poll never reveals a correct option after answer."],
+        ["Card type", "predict = 2 options (A vs B). pulse = 3–4 options."],
+        ["Shared poll questionTypes", ", ".join(sorted(TREND_POLL_TYPES)) + " (opinion / debate / hot for freeform India-trend polls)"],
+        ["Event poll questionTypes", ", ".join(sorted(EVENT_POLL_TYPES)) + " when category has verified briefs"],
+        ["Category bank polls", "Each onboarding category also has evergreen poll templates in catalog.py (see Evergreen Polls sheet)."],
+        ["", ""],
+        ["GENERATE — step 1", "GitHub Actions / refresh job loads engagement insights (hits, misses, avoidPrompts) from GET /v1/admin/moments/insights."],
+        ["GENERATE — step 2", "English Content Agent invents English-only poll prompts + option labels for one category (EN_SYSTEM). Never writes promptHi/labelHi."],
+        ["GENERATE — step 3", "Validate: schema, category scope (sports≠cricket), lazy-poll reject, near-duplicates, avoidNames, past-outcome predictions, English purity."],
+        ["GENERATE — step 4", "Rank/diversify batch; evergreen bank top-up if still short; attach verified brief event cards when available."],
+        ["GENERATE — step 5", "Hindi Localization Agent writes promptHi + labelHi only. Must not change format, options, isCorrect, or briefId."],
+        ["GENERATE — step 6", "Publish via POST /v1/admin/moments then transition ready → live. TTL ~4 hours. Previous live moments retired after new batch is up."],
+        ["Content sources", "1) Agent freeform trend/opinion polls  2) Evergreen bank polls  3) Verified event briefs  4) Optional meme/image spice"],
+        ["Soft mix target", "~55–65% quizzes, ~25–35% polls, ≤~10% predictions when upcoming events exist. Quality beats quotas."],
+        ["Strong poll patterns", "A vs B, pick your side, worth the hype?, underrated/overrated, keep or skip, which one wins, best comeback"],
+        ["Rejected lazy polls", "Who is your favourite…? / Do you like X? / Which do you prefer? (unless timely + specific)"],
+        ["", ""],
+        ["FEED — API", "App calls GET /v1/feed?limit=20&lang=en|hi"],
+        ["FEED — pool", "Only status=live moments within startsAt/endsAt. Prefer user's interest categories; widen if those are empty."],
+        ["FEED — ranking", "Unanswered boosted. Categories shuffled; quiz vs poll alternated so the swipe feed does not feel samey. Mini-games interleaved."],
+        ["FEED — language", "One card, two display layers. lang=en → prompt + label. lang=hi → promptHi + labelHi when present. Same card ID, votes, analytics."],
+        ["FEED — UI", "MomentFeedPage shows prompt + option buttons. Tap → POST /v1/moments/{id}/responses. Then crowd % split / friends; no correct reveal for polls."],
+        ["FEED — client cleanup", "displayCopy() strips leaked Devanagari in English mode (and Latin leftovers in Hindi mode) as a final safety net."],
+        ["", ""],
+        ["Publish script", "scripts/refresh_feed_content.py (plan_agent_batch → localize_hi → publish_moment)"],
+        ["English agent", "backend/scripts/content_gen/agent.py → EN_SYSTEM / _messages / agent_candidates"],
+        ["Hindi agent", "backend/scripts/content_gen/hi_localize_prompt.py → HI_LOCALIZE_SYSTEM; localize_hi()"],
+        ["Feed ranking", "backend/app/modules/feed/service.py → build_feed / serialize_moment"],
+        ["Mobile render", "apps/mobile/src/screens/feed/MomentFeedPage.tsx + lib/displayLang.ts"],
+    ]
+    # Per-category poll type snapshot for ops.
+    for slug in ONBOARDING_SLUGS:
+        poll_types = ", ".join(sorted(question_types(slug, "poll")))
+        poll_count = len(POLLS.get(slug) or ())
+        poll_feed_rows.append(
+            [
+                f"Category polls — {slug}",
+                f"{poll_count} evergreen bank polls; allowed questionTypes: {poll_types}",
+            ]
+        )
+    _sheet(
+        wb,
+        "Poll Gen & Feed",
+        ["Topic", "Detail"],
+        poll_feed_rows,
+        widths=[28, 110],
+    )
+
     # Candidate output contract
     _sheet(
         wb,
@@ -475,8 +591,14 @@ def main() -> None:
     )
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    wb.save(OUT)
-    print(f"Wrote {OUT}")
+    try:
+        wb.save(OUT)
+        saved = OUT
+    except PermissionError:
+        wb.save(OUT_FALLBACK)
+        saved = OUT_FALLBACK
+        print(f"WARN: {OUT.name} is locked (close Excel if open). Wrote fallback instead.")
+    print(f"Wrote {saved}")
     print(f"Sheets: {wb.sheetnames}")
 
 

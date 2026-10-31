@@ -15,12 +15,14 @@ from scripts.content_gen.agent import (
     lazy_poll_issue,
     localization_preserves_mechanics,
     localize_hi,
+    merge_verified_trends,
     near_duplicate_prompt,
     normalize_verified_trends,
     off_category_topic_issue,
     past_outcome_issue,
     require_key,
     resolve_chat_endpoint,
+    unverified_trend_claim_issue,
     validate_candidates,
     verify_quiz_facts,
     volatile_fact_issue,
@@ -38,8 +40,10 @@ from scripts.content_gen.catalog import (
     fact_issues,
     generate_stock,
     load_briefs,
+    normalize_manual_trends,
     prefer_devanagari,
     strip_devanagari,
+    trends_for,
 )
 
 
@@ -787,6 +791,9 @@ def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     assert "prompthi" in lowered
     assert "labelhi" in lowered
     assert "separate hindi localization" in lowered
+    assert "swipe" in lowered
+    assert "never invent a trend" in lowered
+    assert "trivia" in lowered
     msgs = _messages("food", 4, [], avoid_prompts=[], insights={})
     assert msgs[0]["content"] == EN_SYSTEM
     payload = msgs[1]["content"]
@@ -794,6 +801,7 @@ def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     assert "Never generate" in EN_SYSTEM or "never generate" in lowered
     assert "verifiedTrends" in payload
     assert "hindiGood" not in payload
+    assert "quizShare" in payload
 
 
 def test_normalize_verified_trends_marks_completed_events() -> None:
@@ -1101,3 +1109,133 @@ def test_hinglish_latin_rejected_in_english_validation() -> None:
     cards, dropped = validate_candidates(raw, "food", [], now=now)
     assert cards == []
     assert any("english-hinglish" in item for item in dropped)
+
+
+def test_trends_for_filters_expired_and_wrong_category() -> None:
+    now = datetime(2026, 10, 31, 12, 0, tzinfo=UTC)
+    rows = [
+        {
+            "trendId": "alive",
+            "topic": "Festival weekend snacks",
+            "expiresAt": "2026-11-05T00:00:00Z",
+        },
+        {
+            "trendId": "dead",
+            "topic": "Old meme",
+            "expiresAt": "2026-10-01T00:00:00Z",
+        },
+        {
+            "trendId": "other-cat",
+            "category": "movies",
+            "topic": "Wrong file scope",
+            "expiresAt": "2026-11-05T00:00:00Z",
+        },
+        {
+            "trendId": "no-topic",
+            "expiresAt": "2026-11-05T00:00:00Z",
+        },
+    ]
+    active = trends_for("food", now=now, rows=rows)
+    assert [r["trendId"] for r in active] == ["alive"]
+
+
+def test_merge_verified_trends_includes_manual_and_briefs() -> None:
+    now = datetime(2026, 10, 31, 12, 0, tzinfo=UTC)
+    manual = [
+        {
+            "trendId": "food-chai-debate",
+            "topic": "Chai vs filter coffee week",
+            "trendScore": 88,
+            "freshness": "live",
+            "indiaRelevance": 100,
+            "eventStatus": "live",
+            "facts": ["South filter coffee vs North chai debates spike on food reels"],
+            "allowedAngles": ["debate", "trivia"],
+            "sourceConfidence": "high",
+            "expiresAt": "2026-11-10T00:00:00Z",
+        }
+    ]
+    foodish = normalize_manual_trends(manual, slug="food", now=now)
+    assert foodish[0]["trendId"] == "food-chai-debate"
+    assert foodish[0]["source"] == "manual_trends"
+
+    briefs = [row for row in load_briefs() if row.get("category") == "movies"]
+    movie_trends = merge_verified_trends("movies", briefs, now=now)
+    assert any(t.get("source") == "brief" for t in movie_trends)
+
+    merged_food = merge_verified_trends("food", [], manual_rows=manual, now=now)
+    assert [t["trendId"] for t in merged_food] == ["food-chai-debate"]
+
+    msgs = _messages("food", 4, [], manual_trends=manual, now=now)
+    payload = __import__("json").loads(msgs[1]["content"])
+    ids = {t["trendId"] for t in payload["verifiedTrends"]}
+    assert "food-chai-debate" in ids
+
+
+def test_unverified_trend_claim_rejected_without_support() -> None:
+    assert (
+        unverified_trend_claim_issue(
+            "This is trending everywhere in India right now — Maggi or roll?",
+            brief_id=None,
+            verified_trends=[],
+        )
+        == "unverified-trend"
+    )
+    supported = [
+        {
+            "trendId": "food-1",
+            "topic": "Maggi late night India",
+            "facts": ["Maggi midnight debates spike on food reels"],
+        }
+    ]
+    assert (
+        unverified_trend_claim_issue(
+            "Maggi is trending for midnight cravings — cup or packet?",
+            brief_id=None,
+            verified_trends=supported,
+        )
+        is None
+    )
+
+    now = datetime(2026, 10, 31, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "food",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "This is trending everywhere in India right now — Maggi or roll?",
+                "options": [
+                    {"label": "Maggi", "isCorrect": False},
+                    {"label": "Roll", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "quiz",
+                "category": "food",
+                "questionType": "trivia",
+                "type": "pulse",
+                "prompt": "Milk, tea, and spice simmered together is called?",
+                "options": [
+                    {"label": "Chai", "isCorrect": True},
+                    {"label": "Black coffee", "isCorrect": False},
+                    {"label": "A smoothie", "isCorrect": False},
+                ],
+            },
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "food", [], now=now, verified_trends=[])
+    assert any(item.endswith(":unverified-trend") for item in dropped)
+    assert [c.prompt for c in cards] == ["Milk, tea, and spice simmered together is called?"]
+
+
+def test_category_hooks_cover_onboarding_slugs() -> None:
+    from scripts.content_gen.agent import _category_rules, _category_scope
+
+    for slug in ONBOARDING_SLUGS:
+        scope = _category_scope(slug)
+        assert scope.get("label")
+        rules = _category_rules(slug)
+        assert rules
+        assert any("verifiedTrends" in r or "categoryScope" in r for r in rules)

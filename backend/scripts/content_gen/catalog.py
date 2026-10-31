@@ -54,6 +54,7 @@ _HINGLISH_LATIN_RE = re.compile(
 )
 
 BRIEFS_DIR = Path(__file__).resolve().parent / "briefs"
+TRENDS_DIR = Path(__file__).resolve().parent / "trends"
 
 
 def has_devanagari(text: str) -> bool:
@@ -584,6 +585,125 @@ def load_briefs(folder: Path | None = None) -> list[dict[str, Any]]:
     for path in sorted(root.glob("*.json")):
         briefs.append(json.loads(path.read_text(encoding="utf-8")))
     return briefs
+
+
+def _parse_expires_at(raw: str | None) -> datetime | None:
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    try:
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        dt = datetime.fromisoformat(text)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        return dt
+    except ValueError:
+        return None
+
+
+def load_trend_file(path: Path) -> dict[str, Any] | None:
+    """Load one category trends file. Returns None if missing/invalid."""
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    return data
+
+
+def load_trends(folder: Path | None = None) -> dict[str, list[dict[str, Any]]]:
+    """Load all ops trend files keyed by category slug (unfiltered)."""
+    root = folder or TRENDS_DIR
+    by_slug: dict[str, list[dict[str, Any]]] = {}
+    if not root.exists():
+        return by_slug
+    for path in sorted(root.glob("*.json")):
+        if path.name.startswith("_"):
+            continue
+        data = load_trend_file(path)
+        if not data:
+            continue
+        slug = str(data.get("category") or path.stem).strip()
+        rows = data.get("trends") or []
+        if not isinstance(rows, list):
+            continue
+        by_slug[slug] = [row for row in rows if isinstance(row, dict)]
+    return by_slug
+
+
+def trends_for(
+    slug: str,
+    *,
+    folder: Path | None = None,
+    now: datetime | None = None,
+    rows: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Active India trends for one category. Drops expired and wrong-category rows."""
+    now = now or datetime.now(UTC)
+    if rows is None:
+        all_rows = load_trends(folder)
+        rows = list(all_rows.get(slug) or [])
+    active: list[dict[str, Any]] = []
+    for row in rows:
+        cat = str(row.get("category") or "").strip()
+        # Items may omit category when the file already scopes the slug.
+        if cat and cat != slug:
+            continue
+        expires = _parse_expires_at(str(row.get("expiresAt") or "") or None)
+        if expires is not None and expires <= now:
+            continue
+        trend_id = str(row.get("trendId") or "").strip()
+        topic = str(row.get("topic") or "").strip()
+        if not trend_id or not topic:
+            continue
+        active.append(row)
+    return active
+
+
+def normalize_manual_trends(
+    rows: list[dict[str, Any]],
+    *,
+    slug: str,
+    now: datetime | None = None,
+) -> list[dict[str, Any]]:
+    """Normalize ops trend JSON into the shared verifiedTrends shape."""
+    now = now or datetime.now(UTC)
+    out: list[dict[str, Any]] = []
+    for row in trends_for(slug, now=now, rows=rows):
+        event_status = str(row.get("eventStatus") or row.get("freshness") or "live").strip().lower()
+        if event_status not in {"live", "upcoming", "recent", "completed", "unknown"}:
+            event_status = "live"
+        allowed = [str(a) for a in (row.get("allowedAngles") or []) if str(a).strip()]
+        if not allowed:
+            allowed = ["trivia", "which", "opinion", "debate"]
+        if event_status == "completed":
+            allowed = [a for a in allowed if a != "prediction"]
+        elif "prediction" not in allowed and event_status in {"upcoming", "live"}:
+            pass  # only include prediction when ops listed it
+        out.append(
+            {
+                "trendId": str(row["trendId"]),
+                "topic": str(row["topic"]),
+                "category": slug,
+                "trendScore": int(row.get("trendScore") or 50),
+                "freshness": str(row.get("freshness") or event_status),
+                "indiaRelevance": int(row.get("indiaRelevance") or 100),
+                "eventStatus": event_status,
+                "eventDate": str(row.get("eventDate") or "") or None,
+                "facts": list(row.get("facts") or []),
+                "allowedAngles": allowed,
+                "allowPrediction": "prediction" in allowed and event_status in {"upcoming", "live", "unknown"},
+                "sourceConfidence": str(row.get("sourceConfidence") or "high"),
+                "expiresAt": str(row.get("expiresAt") or "") or None,
+                "context": str(row.get("context") or row.get("topic") or ""),
+                "source": "manual_trends",
+            }
+        )
+    return out
 
 
 _FORWARD_LOOKING_RE = re.compile(

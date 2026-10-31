@@ -13,6 +13,15 @@ Both language layers belong to the same underlying card. The app language switch
 
 Pipeline: verified trends/briefs → English agent → English validation → fact/category gates → dedupe/diversity → evergreen top-up → Hindi localization → final validation → publish.
 
+## Manual India trends (ops)
+
+Before each refresh, ops can fill [`trends/{category}.json`](trends/) with verified India-relevant topics for that category. See [`trends/README.md`](trends/README.md).
+
+- Active (non-expired) rows are merged with event briefs into `verifiedTrends` for the English agent.
+- The model must **not** invent trending/viral claims without a matching verified trend or brief.
+- Empty `trends: []` is fine: the agent still generates recognizable trivia + sharp debates without fake viral framing.
+- Soft mix target: ~60% trivia/who/which quizzes, ~30% debate/hot/opinion polls, predictions only when upcoming + verified.
+
 The OpenAI agent **fills** a fresh batch for every category on each refresh (~20 cards by default). It reads engagement insights (what got answers, likes, comments, shares) and biases toward patterns that performed — not cloned wording. Cards expire in ~4 hours. After the new batch is live, the job retires **all** previous live moments so nothing repeats. Freeform opinion/hot polls and trend trivia (`trivia` / `who` / `which`) are allowed; evergreen bank quizzes remain a fallback. `OPENAI_API_KEY` is required. Set it in `.env` locally and as a GitHub secret for the refresh job. Do not commit the key. `OPENAI_MODEL` defaults to `gpt-4o-mini`. A key that starts with `sk-or-` is sent to OpenRouter, and a model name without a slash becomes `openai/gpt-4o-mini`. Set `OPENAI_BASE_URL` to override the host. Both agents may share the same key/model; separation is about responsibility, not infrastructure.
 
 Game content packs: `python -m scripts.localize_content_hi` upserts `hi-IN` items (id suffix `.hi`) from the English pack JSON.

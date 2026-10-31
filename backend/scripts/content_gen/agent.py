@@ -33,9 +33,11 @@ from scripts.content_gen.catalog import (
     has_devanagari,
     has_hinglish_latin,
     load_briefs,
+    normalize_manual_trends,
     prefer_devanagari,
     question_types,
     strip_devanagari,
+    trends_for,
 )
 from scripts.content_gen.hi_localize_prompt import HI_LOCALIZE_SYSTEM
 
@@ -102,11 +104,33 @@ _LAZY_POLL_RE = re.compile(
     r"which\s+(?:\w+\s+){0,3}(?:actor|actress|player|singer|team|movie|film)\s+do\s+you\s+(?:love|like|prefer)\b"
     r")"
 )
+# Claims that something is trending/viral require verifiedTrends or a brief.
+_TREND_CLAIM_RE = re.compile(
+    r"(?i)\b("
+    r"trending|viral|blowing\s+up|"
+    r"everyone'?s\s+talking|"
+    r"breaking\s+right\s+now|"
+    r"currently\s+trending|"
+    r"all\s+over\s+(?:india|instagram|twitter|x\b|the\s+internet)|"
+    r"india\s+is\s+obsessed"
+    r")\b"
+)
 _HI_FIELD_KEYS = frozenset({"promptHi", "prompt_hi", "labelHi", "label_hi", "optionsHi", "options_hi"})
 
 EN_SYSTEM = (
-    "You are the English Content Generation Agent for MAJA, an Indian interactive swipe feed.\n\n"
-    "Your job is to create fresh, highly swipeable quiz and poll cards for ONE requested category.\n\n"
+    "You are the English Content Generation Agent for MAJA, an Indian Gen-Z interactive swipe feed.\n\n"
+    "MAJA is not a news app, exam app, or survey tool. Users swipe fast, tap an answer, feel smart "
+    "or opinionated, and keep going.\n\n"
+    "Ideal reactions you should aim for:\n"
+    "- \"I know this.\"\n"
+    "- \"Wait, really?\"\n"
+    "- \"I definitely have an opinion on this.\"\n"
+    "- \"Let me prove I know this.\"\n"
+    "- \"That's actually a difficult choice.\"\n\n"
+    "Your job: create fresh, highly swipeable QUIZ and POLL cards for ONE requested category.\n"
+    "Bias toward knowable trivia (one correct answer) mixed with sharp debate/hot polls.\n"
+    "Ground timely/trending cards ONLY in verifiedTrends supplied in the user payload "
+    "(manual India trends JSON + verified event briefs). Never invent a trend.\n\n"
     "Generate natural English only.\n\n"
     "Never generate:\n"
     "- Hindi\n"
@@ -117,13 +141,9 @@ EN_SYSTEM = (
     "- labelHi\n"
     "- optionsHi\n\n"
     "A separate Hindi localization agent creates all Hindi/Hinglish display fields after English "
-    "content has been validated.\n\n"
-    "Do not translate or localize.\n\n"
-    "Your responsibility is to create the best possible English game content.\n\n"
-    "Optimize for: immediate comprehension, answerability, curiosity, emotional reaction, "
-    "willingness to choose, and willingness to keep swiping. "
-    "Every card should feel interactive within about three seconds — not like a school exam, "
-    "generic survey, news article, or random fact dump.\n\n"
+    "content has been validated. Do not translate or localize.\n\n"
+    "Every card must be understandable in about three seconds. Short prompts. Meaningful options. "
+    "No school-exam phrasing, generic surveys, news-article dumps, or random disconnected facts.\n\n"
     "Reply with a JSON object only: {\"candidates\": [...]} . "
     "Each candidate has format, category, questionType, type, prompt, options, briefId. "
     "options are {label, isCorrect}. briefId is null unless the card uses a verified brief."
@@ -178,8 +198,8 @@ def require_key() -> str:
 
 def _category_scope(slug: str) -> dict[str, Any]:
     """Tell the model what this category covers — especially sports vs cricket."""
-    if slug == "sports":
-        return {
+    scopes: dict[str, dict[str, Any]] = {
+        "sports": {
             "label": "Sports (Non-Cricket)",
             "include": [
                 "football/soccer",
@@ -202,10 +222,15 @@ def _category_scope(slug: str) -> dict[str, Any]:
                 "batting/bowling cricket terms",
                 "cricket players or Indian cricket takes",
             ],
+            "goodAngles": [
+                "rules trivia",
+                "derby A vs B",
+                "Olympics/F1 recognition",
+                "kabaddi / badminton heat",
+            ],
             "note": "Cricket has its own category slug 'cricket'. Never write cricket cards for sports.",
-        }
-    if slug == "cricket":
-        return {
+        },
+        "cricket": {
             "label": "Cricket",
             "include": [
                 "IPL",
@@ -217,27 +242,165 @@ def _category_scope(slug: str) -> dict[str, Any]:
                 "upcoming fixtures",
             ],
             "exclude": ["football and other non-cricket sports as the main topic"],
-        }
-    return {"label": slug}
+            "goodAngles": [
+                "rules/format trivia",
+                "who/which recognition",
+                "captaincy debate",
+                "upcoming fixture prediction only if verified",
+            ],
+        },
+        "movies": {
+            "label": "Movies / Bollywood & Indian cinema",
+            "include": ["theatrical releases", "trailers", "OTT", "interval culture", "stars", "rewatches"],
+            "exclude": ["non-film TV news dumps"],
+            "goodAngles": ["interval trivia", "theatre vs OTT debate", "trailer hype check", "who/which film fact"],
+        },
+        "music": {
+            "label": "Music",
+            "include": ["Bollywood songs", "indie", "hip-hop", "concerts", "playlists"],
+            "goodAngles": ["chorus vs B-side", "live vs studio", "recognition trivia"],
+        },
+        "pop-culture": {
+            "label": "Pop culture",
+            "include": ["memes", "viral audio", "creator drama", "fandom fights"],
+            "goodAngles": ["meme recognition", "side-picking debates", "trend reaction only if verified"],
+        },
+        "food": {
+            "label": "Food",
+            "include": ["street food", "chai/coffee", "biryani loyalty", "late-night cravings"],
+            "goodAngles": ["A vs B cravings", "city food loyalty", "simple food trivia"],
+        },
+        "gaming": {
+            "label": "Gaming",
+            "include": ["mobile esports", "ranked vs casual", "battle pass", "PC/console"],
+            "goodAngles": ["mode trivia", "tilt debates", "device preference with stakes"],
+        },
+        "news": {
+            "label": "News literacy (not party politics spam)",
+            "include": ["fact-check habits", "headline literacy", "viral claim skepticism"],
+            "exclude": ["partisan campaigning", "invented breaking news"],
+            "goodAngles": ["media literacy quizzes", "share-or-check debates"],
+        },
+        "tech": {
+            "label": "Tech",
+            "include": ["phones", "AI tools", "privacy", "startups Indians use"],
+            "goodAngles": ["acronym trivia", "hype vs wait debates", "permission quizzes"],
+        },
+        "personality-vibe": {
+            "label": "Personality & vibe",
+            "include": ["weekend energy", "plans", "friendship habits", "work style"],
+            "goodAngles": ["identity A vs B", "scenario quizzes that map to a vibe"],
+        },
+        "fashion": {
+            "label": "Fashion",
+            "include": ["fits", "trends", "wedding fits", "comfort vs drip"],
+            "goodAngles": ["outfit debates", "trend keep-or-skip", "simple fashion trivia"],
+        },
+        "health": {
+            "label": "Health habits",
+            "include": ["sleep", "movement", "stress", "eating well"],
+            "exclude": ["medical diagnosis advice"],
+            "goodAngles": ["habit A vs B", "gentle knowledge checks"],
+        },
+        "kpop": {
+            "label": "K-Pop & K-drama adjacent fandom",
+            "include": ["comebacks", "biases", "lightsticks", "OST", "binge habits"],
+            "goodAngles": ["concept debates", "fandom ritual polls", "recognition trivia"],
+        },
+        "puzzles": {
+            "label": "Puzzles",
+            "include": ["word/number/visual puzzle vibes", "hints vs no hints"],
+            "goodAngles": ["pace debates", "puzzle-type trivia"],
+        },
+        "logical-reasoning": {
+            "label": "Logical reasoning",
+            "include": ["patterns", "odd one out", "if-then"],
+            "goodAngles": ["mini logic quizzes", "speed vs accuracy debates"],
+        },
+        "math-numbers": {
+            "label": "Math & numbers",
+            "include": ["mental maths", "percentages", "sequences", "everyday numbers"],
+            "goodAngles": ["fast number quizzes", "school-trauma debates kept light"],
+        },
+    }
+    return scopes.get(slug, {"label": slug})
 
 
 def _category_rules(slug: str) -> list[str]:
-    if slug == "sports":
-        return [
-            "SCOPE (critical): category sports means Sports (Non-Cricket) ONLY.",
+    shared = [
+        "Stay inside categoryScope for this slug only.",
+        "If verifiedTrends is empty for this category: ship recognizable evergreen trivia + sharp debates — do NOT fake viral framing.",
+    ]
+    specific: dict[str, list[str]] = {
+        "sports": [
+            "SCOPE (critical): sports means Sports (Non-Cricket) ONLY.",
             "NEVER mention cricket, IPL, T20, ODI, BCCI, wickets, batting, bowling, or cricket players.",
-            "BAD sports card: 'How do you feel about the current state of Indian cricket?'.",
-            "GOOD sports mix: football derby takes, kabaddi, badminton, hockey, F1, Olympics, chess — rotate sports across the batch.",
-        ]
-    if slug == "cricket":
-        return [
-            "SCOPE: this is the cricket category — IPL, internationals, formats, rules, and debate takes.",
-            "Do NOT use football, kabaddi, F1, NBA, or other non-cricket sports as the primary topic.",
-            "BAD name spam: three cards all about Sanju Samson / Kohli / Rohit. Rotate subjects or ask knowledge questions with no star name.",
-            "GOOD cricket mix: 'How many balls in an over?', 'What does DRS stand for?', one debate poll, one upcoming-match take — different angles.",
-            "OK freeform quiz: 'How many players take the field for one side in cricket?'.",
-        ]
-    return []
+            "BAD: 'How do you feel about the current state of Indian cricket?'.",
+            "GOOD: football derby takes, kabaddi, badminton, hockey, F1, Olympics, chess — rotate sports.",
+        ],
+        "cricket": [
+            "SCOPE: IPL, internationals, formats, rules, debates — not football/NBA/F1 as the main topic.",
+            "BAD name spam: three cards all about Kohli / Rohit / Dhoni. Rotate or ask nameless knowledge questions.",
+            "GOOD: 'How many balls in an over?', 'What does DRS stand for?', one debate, one upcoming take if verified.",
+        ],
+        "movies": [
+            "GOOD: interval/theatre trivia, trailer hype checks, theatre vs OTT with a real stake.",
+            "BAD: endless 'who is your favourite actor?' variants.",
+        ],
+        "music": [
+            "GOOD: live vs studio, playlist identity, recognition trivia.",
+            "BAD: generic 'best singer' surveys with no angle.",
+        ],
+        "pop-culture": [
+            "GOOD: meme recognition, fandom side-picking, verified viral reactions only.",
+            "BAD: inventing that something is viral without verifiedTrends.",
+        ],
+        "food": [
+            "GOOD: late-night A vs B, city loyalty, simple food facts Indians know.",
+            "BAD: formal dining-survey language.",
+        ],
+        "gaming": [
+            "GOOD: ranked vs chill, tilt decisions, mode/device trivia.",
+            "BAD: vague 'do you like gaming?' cards.",
+        ],
+        "news": [
+            "GOOD: fact-check literacy quizzes and share-or-verify debates.",
+            "BAD: partisan propaganda or inventing breaking headlines.",
+        ],
+        "tech": [
+            "GOOD: acronym trivia, hype vs wait, privacy permission quizzes.",
+            "BAD: speculative product rumors without verifiedTrends/briefs.",
+        ],
+        "personality-vibe": [
+            "GOOD: identity A vs B with a vivid scenario; quizzes that map a behavior to a vibe.",
+            "BAD: bland personality inventories.",
+        ],
+        "fashion": [
+            "GOOD: keep-or-skip trend takes, comfort vs drip, wedding-fit debates.",
+            "BAD: generic 'favourite color' filler.",
+        ],
+        "health": [
+            "GOOD: habit choices and light knowledge checks. Never give medical advice.",
+            "BAD: diagnosis or treatment prompts.",
+        ],
+        "kpop": [
+            "GOOD: concept/comeback debates, fandom rituals, recognition trivia.",
+            "BAD: repeating the same bias poll with different names.",
+        ],
+        "puzzles": [
+            "GOOD: hint vs no-hint debates plus knowable puzzle trivia.",
+            "BAD: unsolvable riddles as polls.",
+        ],
+        "logical-reasoning": [
+            "GOOD: short fair logic quizzes; speed vs accuracy debates.",
+            "BAD: ambiguous trick questions with multiple valid answers.",
+        ],
+        "math-numbers": [
+            "GOOD: fast answerable number quizzes; light everyday-math debates.",
+            "BAD: opaque multi-step exam problems.",
+        ],
+    }
+    return [*shared, *specific.get(slug, [])]
 
 
 def normalize_verified_trends(briefs: list[dict[str, Any]], *, today: date | None = None) -> list[dict[str, Any]]:
@@ -286,10 +449,39 @@ def normalize_verified_trends(briefs: list[dict[str, Any]], *, today: date | Non
                 "allowPrediction": bool(brief.get("allowPrediction")) and event_status != "completed",
                 "sourceConfidence": "high",
                 "context": str(brief.get("context") or ""),
+                "source": "brief",
+                "briefId": str(brief["id"]),
                 "brief": brief,
             }
         )
     return out
+
+
+def merge_verified_trends(
+    slug: str,
+    briefs: list[dict[str, Any]],
+    *,
+    manual_rows: list[dict[str, Any]] | None = None,
+    now: datetime | None = None,
+) -> list[dict[str, Any]]:
+    """Merge ops manual trends with brief-derived trends for one category."""
+    now = now or datetime.now(UTC)
+    brief_trends = normalize_verified_trends(briefs, today=now.date())
+    manual = normalize_manual_trends(
+        manual_rows if manual_rows is not None else trends_for(slug, now=now),
+        slug=slug,
+        now=now,
+    )
+    # Manual first (ops India pulse), then briefs; de-dupe by trendId.
+    merged: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in [*manual, *brief_trends]:
+        tid = str(row.get("trendId") or "")
+        if not tid or tid in seen:
+            continue
+        seen.add(tid)
+        merged.append(row)
+    return merged
 
 
 def build_shared_system_rules(today: str, quiz_target: int, poll_target: int) -> list[str]:
@@ -298,10 +490,11 @@ def build_shared_system_rules(today: str, quiz_target: int, poll_target: int) ->
         "Every candidate category must equal the requested category.",
         "Stay inside categoryScope — never write a card that belongs in a different onboarding category.",
         f"Today is {today}. Prefer verified live/upcoming India context from verifiedTrends when present.",
-        "Never invent a trend. Never claim something is trending without verifiedTrends / briefs support.",
-        f"MIX (soft target): about {quiz_target} QUIZZES and {poll_target} polls. Quality beats quotas — do not pad with weak cards.",
-        "Prefer trivia / who / which quizzes with one clear correct answer over soft opinion polls.",
-        "Predictions: at most ~10% of the batch, and only for genuinely upcoming events with briefId.",
+        "Never invent a trend. Never claim something is trending/viral without a matching verifiedTrends row.",
+        f"MIX (soft target): about {quiz_target} QUIZZES (~60% trivia/who/which) and {poll_target} polls (~debate/hot/opinion). Quality beats quotas.",
+        "Trivia-first: most cards should be knowable quizzes with one clear correct answer; polls add debate heat.",
+        "Predictions: at most ~10% of the batch, only for upcoming verifiedTrends/briefs with briefId when required.",
+        "If verifiedTrends is empty: still invent strong evergreen trivia + debates — without viral/trending wording.",
         "Not formal survey speak. Not essays. Spicy but friendly. Understandable in ~3 seconds.",
         "A quiz has exactly one correct option. Polls must set isCorrect false on every option.",
         "Incorrect quiz options must be plausible — no absurd distractors, no 'All/None of the above'.",
@@ -340,7 +533,8 @@ def build_uniqueness_rules() -> list[str]:
 
 def build_event_fact_rules(today: str) -> list[str]:
     return [
-        "Prioritize verifiedTrends that are LIVE or UPCOMING for THIS category. Skip party politics.",
+        "Prioritize verifiedTrends that are LIVE or UPCOMING for THIS category (manual India trends JSON + briefs). Skip party politics.",
+        "One verified trend → normally ONE strong interaction angle (trivia OR debate OR prediction), not five paraphrases.",
         "CLOSED / PAST EVENTS (critical): NEVER ask users to predict the outcome of a match, tournament, season, "
         "election, award, or final that has already concluded as of today.",
         f"BAD past prediction: 'Who will win IPL 2026?' when IPL {today[:4]} is already over by {today}.",
@@ -350,14 +544,16 @@ def build_event_fact_rules(today: str) -> list[str]:
         "and only with briefId when questionType is prediction.",
         "If unsure whether an event is still open, write an opinion/debate/hot poll instead of a prediction.",
         "Polls use questionType opinion, debate, or hot for freeform India-trend options.",
-        "Trend quizzes use questionType trivia, who, or which with STABLE well-known facts only (rules, definitions, permanent records).",
+        "Trend quizzes use questionType trivia, who, or which with STABLE well-known facts only (rules, definitions, permanent records) "
+        "OR facts listed on a verifiedTrends row.",
         "NEVER write a freeform quiz about who currently holds an office (CM, PM, president, captain, coach, CEO) — those need a verified briefId.",
         "BAD freeform quiz: 'Who is the current Chief Minister of Delhi?' / 'Who is India's PM right now?'.",
         "OK freeform quiz: stable rules/definitions for THIS category (e.g. 'What does OTT stand for?' for movies/tech).",
-        "Time-sensitive politics/news facts belong in briefs — or write an opinion/debate poll instead of a quiz.",
+        "Time-sensitive politics/news facts belong in briefs/verifiedTrends — or write an opinion/debate poll instead of a quiz.",
         "A prediction prompt must contain the word Prediction, set briefId, and the brief must allow it.",
         "Bank quizzes (evergreen types not in trendQuizTypes) must copy prompt and options from the evergreen bank.",
-        "Event copy may use only names and numbers that appear in that brief / verified trend facts.",
+        "Event/brief copy may use only names and numbers that appear in that brief / verified trend facts.",
+        "Do NOT say trending/viral/everyone's talking unless the topic matches a verifiedTrends entry.",
     ]
 
 
@@ -387,13 +583,17 @@ def _messages(
     briefs: list[dict[str, Any]],
     avoid_prompts: list[str] | None = None,
     insights: dict[str, Any] | None = None,
+    *,
+    manual_trends: list[dict[str, Any]] | None = None,
+    now: datetime | None = None,
 ) -> list[dict[str, str]]:
-    today_date = datetime.now(UTC).date()
+    now = now or datetime.now(UTC)
+    today_date = now.date()
     today = today_date.isoformat()
     # Trivia-first mix: most cards should be quizzes; polls stay for debate energy.
     quiz_target = max(1, round(need * 0.6))
     poll_target = max(1, need - quiz_target)
-    trends = normalize_verified_trends(briefs, today=today_date)
+    trends = merge_verified_trends(slug, briefs, manual_rows=manual_trends, now=now)
     payload = {
         "category": slug,
         "categoryScope": _category_scope(slug),
@@ -402,11 +602,17 @@ def _messages(
         "mix": {
             "quizzes": quiz_target,
             "polls": poll_target,
+            "quizShare": 0.6,
+            "pollShare": 0.3,
             "predictionsMaxShare": 0.1,
             "preferQuizTypes": ["trivia", "who", "which"],
             "preferPollTypes": sorted(TREND_POLL_TYPES),
         },
-        "market": "India English feed (metros + Tier-2). Hindi/Hinglish is a separate localization stage.",
+        "market": (
+            "India English feed for Gen-Z (metros + Tier-2). "
+            "Fast swipe interactions: trivia proves knowledge; polls create debate. "
+            "Hindi/Hinglish is a separate localization stage."
+        ),
         "pollQuestionTypes": sorted(question_types(slug, "poll")),
         "quizQuestionTypes": sorted(question_types(slug, "quiz")),
         "trendQuizTypes": sorted(TREND_QUIZ_TYPES),
@@ -424,9 +630,10 @@ def _messages(
             "englishGood": [
                 "Midnight craving hits. Street food or Maggi at home?",
                 "New trailer just dropped. Watch now or wait for friends?",
-                "Rain mid-commute. Grab a cab or tough it out?",
+                "How many balls are there in a standard over?",
                 "DRS reviews left. Burn one now or save it?",
                 "Worth the hype or overrated — this weekend's release?",
+                "What does OTT stand for in streaming?",
             ],
             "englishBad": [
                 "Kya scene hai for the release?",
@@ -436,6 +643,7 @@ def _messages(
                 "Who is your favourite actor?",
                 "Do you like cricket?",
                 "Which do you prefer?",
+                "This is trending everywhere in India right now — guess why?",
             ],
         },
         "rules": [
@@ -618,6 +826,39 @@ def lazy_poll_issue(fmt: str, prompt: str) -> str | None:
     return None
 
 
+def _trend_support_blob(trends: list[dict[str, Any]]) -> str:
+    parts: list[str] = []
+    for row in trends:
+        parts.append(str(row.get("topic") or ""))
+        parts.append(str(row.get("context") or ""))
+        parts.extend(str(f) for f in (row.get("facts") or []))
+    return " ".join(parts).lower()
+
+
+def unverified_trend_claim_issue(
+    prompt: str,
+    *,
+    brief_id: str | None,
+    verified_trends: list[dict[str, Any]] | None,
+) -> str | None:
+    """Reject trending/viral framing unless grounded in verifiedTrends or a brief."""
+    text = (prompt or "").strip()
+    if not text or not _TREND_CLAIM_RE.search(text):
+        return None
+    if brief_id:
+        return None
+    trends = verified_trends or []
+    if not trends:
+        return "unverified-trend"
+    blob = _trend_support_blob(trends)
+    tokens = _prompt_tokens(text)
+    # Require at least one meaningful content overlap with supplied trend material.
+    support_tokens = _prompt_tokens(blob)
+    if tokens & support_tokens:
+        return None
+    return "unverified-trend"
+
+
 def interaction_pattern(card: Card) -> str:
     """Coarse interaction fingerprint used for batch diversity."""
     q = (card.question_type or "").lower()
@@ -676,6 +917,9 @@ def score_candidate(
         score -= 1.0
     if lazy_poll_issue(card.format, prompt):
         score -= 5.0
+    if _TREND_CLAIM_RE.search(prompt) and not card.brief_id:
+        # Prefer grounded cards; unverified claims should already be gated out.
+        score -= 1.0
     pattern = interaction_pattern(card)
     if used_patterns and pattern in used_patterns:
         score -= 1.5
@@ -747,6 +991,7 @@ def validate_candidates(
     *,
     freshness_hours: int = DEFAULT_FRESHNESS_HOURS,
     avoid_prompts: list[str] | None = None,
+    verified_trends: list[dict[str, Any]] | None = None,
 ) -> tuple[list[Card], list[str]]:
     """Keep candidates that match the catalog. Drop the rest with a short reason."""
     now = now or datetime.now(UTC)
@@ -754,6 +999,11 @@ def validate_candidates(
     rows = briefs_for(slug, briefs if briefs is not None else load_briefs())
     by_id = {str(row["id"]): row for row in rows}
     allowed_bank = bank_text(slug)
+    trends = (
+        verified_trends
+        if verified_trends is not None
+        else merge_verified_trends(slug, rows, now=now)
+    )
     dropped: list[str] = []
     cards: list[Card] = []
     kept_prompts: list[str] = []
@@ -781,6 +1031,14 @@ def validate_candidates(
         if lazy_poll_issue(fmt, prompt):
             dropped.append(f"{index}:lazy-poll")
             continue
+        brief_id = cleaned.get("briefId") or None
+        if unverified_trend_claim_issue(
+            prompt,
+            brief_id=str(brief_id) if brief_id else None,
+            verified_trends=trends,
+        ):
+            dropped.append(f"{index}:unverified-trend")
+            continue
         if any(near_duplicate_prompt(prompt, prev) for prev in kept_prompts):
             dropped.append(f"{index}:near-duplicate")
             continue
@@ -796,7 +1054,6 @@ def validate_candidates(
             # Opinion/debate about the same star again — prefer knowledge trivia instead.
             dropped.append(f"{index}:avoid-name")
             continue
-        brief_id = cleaned.get("briefId") or None
         brief = by_id.get(str(brief_id)) if brief_id else None
         options = cleaned["options"]
         mapped_options = [
@@ -1091,6 +1348,8 @@ def agent_candidates(
     cards: list[Card] = []
     dropped: list[str] = []
 
+    verified = merge_verified_trends(slug, rows)
+
     def _one_pass(extra_avoid: list[str], count: int) -> tuple[list[Card], list[str]]:
         raw = call_openai(
             _messages(slug, count, rows, avoid_prompts=extra_avoid, insights=insights)
@@ -1101,6 +1360,7 @@ def agent_candidates(
             rows,
             freshness_hours=freshness_hours,
             avoid_prompts=extra_avoid,
+            verified_trends=verified,
         )
         batch, fact_drop = verify_quiz_facts(batch)
         if fact_drop:
