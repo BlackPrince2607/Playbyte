@@ -10,14 +10,20 @@ import { SwipeHintOverlay } from "../../components/SwipeHintOverlay";
 import { isMoment, useApp } from "../../context/AppContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { capture } from "../../lib/analytics";
+import { prefetchGame } from "../../game/platform/prefetchGame";
+import type { CompletedPlay } from "../../game/session/types";
 import { FEED_PREFETCH_AHEAD, feedKeys } from "../../lib/feedPages";
 import { isSwipeHintPending, markSwipeHintSeen } from "../../lib/storage";
 import { colors } from "../../theme/colors";
 import { GameIntroPage } from "./GameIntroPage";
+import { GuessFeedPage, isInlineGuessGame } from "./GuessFeedPage";
 import { MomentFeedPage } from "./MomentFeedPage";
 
 type Props = {
   onPlayGame: (game: FeedGame) => void;
+  onChallengeGame?: (game: FeedGame, challenge: { id: string; seed: string }) => void;
+  /** Guess trivia finished in-feed — same submit/result path as GameHost. */
+  onGuessComplete?: (game: FeedGame, play: CompletedPlay) => void;
   onOpenProfile?: () => void;
   onOpenStreak?: () => void;
   onOpenWallet?: () => void;
@@ -26,7 +32,15 @@ type Props = {
 
 const VIEWABILITY = { itemVisiblePercentThreshold: 60 };
 
-export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onOpenWallet, onSignIn }: Props) {
+export function FeedScreen({
+  onPlayGame,
+  onChallengeGame,
+  onGuessComplete,
+  onOpenProfile,
+  onOpenStreak,
+  onOpenWallet,
+  onSignIn,
+}: Props) {
   const {
     items,
     streak,
@@ -73,6 +87,14 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onOpenWall
   useEffect(() => {
     if (swipeHintFrom !== null && feedIndex !== swipeHintFrom) dismissSwipeHint();
   }, [feedIndex, swipeHintFrom, dismissSwipeHint]);
+
+  // Warm the next game cards ahead of the viewer so Join never waits on packs.
+  useEffect(() => {
+    for (let i = feedIndex; i < Math.min(items.length, feedIndex + 3); i++) {
+      const item = items[i];
+      if (item?.type === "mini_game") prefetchGame(item);
+    }
+  }, [feedIndex, items]);
 
   useEffect(() => {
     if (!pageH || feedIndex === shownIndex.current || feedIndex < 0 || feedIndex >= items.length) return;
@@ -156,18 +178,44 @@ export function FeedScreen({ onPlayGame, onOpenProfile, onOpenStreak, onOpenWall
           data={items}
           keyExtractor={(_, index) => keys[index]}
           extraData={`${feedIndex}:${isFeedTabActive}`}
-          renderItem={({ item, index }) =>
-            isMoment(item) ? (
-              <MomentFeedPage
+          renderItem={({ item, index }) => {
+            if (isMoment(item)) {
+              return (
+                <MomentFeedPage
+                  item={item}
+                  height={pageH}
+                  isActive={isFeedTabActive && feedIndex === index}
+                  onSignIn={onSignIn}
+                />
+              );
+            }
+            if (isInlineGuessGame(item) && onGuessComplete) {
+              return (
+                <GuessFeedPage
+                  item={item}
+                  height={pageH}
+                  isActive={isFeedTabActive && feedIndex === index}
+                  onComplete={(play) => onGuessComplete(item, play)}
+                  onChallengeStart={
+                    onChallengeGame ? (challenge) => onChallengeGame(item, challenge) : undefined
+                  }
+                  onSignIn={onSignIn}
+                />
+              );
+            }
+            return (
+              <GameIntroPage
                 item={item}
                 height={pageH}
                 isActive={isFeedTabActive && feedIndex === index}
+                onStart={() => onPlayGame(item)}
+                onChallengeStart={
+                  onChallengeGame ? (challenge) => onChallengeGame(item, challenge) : undefined
+                }
                 onSignIn={onSignIn}
               />
-            ) : (
-              <GameIntroPage item={item} height={pageH} onStart={() => onPlayGame(item)} />
-            )
-          }
+            );
+          }}
           getItemLayout={(_, index) => ({ length: pageH, offset: pageH * index, index })}
           initialScrollIndex={Math.min(Math.max(0, feedIndex), items.length - 1)}
           pagingEnabled

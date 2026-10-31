@@ -359,7 +359,7 @@ def plan_agent_batch(
         proposed = fill_evergreen(slug, proposed, need)
         proposed.extend(event_cards(slug, now=now))
         proposed = localize_hi(proposed)
-        # Only publish cards with clean English + complete Devanagari Hindi (two separate layers).
+        # Publish only clean English + complete Devanagari Hinglish Hindi (Hinglish stays in HI).
         complete = []
         for card in proposed:
             en_blob = card.prompt + "\n" + "\n".join(str(opt.get("label") or "") for opt in card.options)

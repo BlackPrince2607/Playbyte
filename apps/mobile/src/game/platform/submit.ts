@@ -2,12 +2,22 @@ import { api, isApiError } from "../../api";
 import type { PendingPlay } from "../session/submitQueue";
 
 export type SubmitPlayResponse = {
+  playId?: string;
   score: number;
   percentile: number;
   playsToday: number;
   promptAccountCreation: boolean;
   coinsEarned?: number;
   balance?: number | null;
+  challenge?: {
+    id: string;
+    status: string;
+    myScore?: number | null;
+    theirScore?: number | null;
+    challenger?: { displayName: string };
+    opponent?: { displayName: string };
+    role?: "challenger" | "opponent";
+  };
 };
 
 export async function submitPlay(play: PendingPlay) {
@@ -28,6 +38,7 @@ export async function submitPlay(play: PendingPlay) {
         seed: play.seed,
         level: play.level,
         summary,
+        challengeId: play.challengeId,
       }),
     });
   } catch (e) {

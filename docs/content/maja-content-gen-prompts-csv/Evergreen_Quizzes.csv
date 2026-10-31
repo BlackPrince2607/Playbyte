@@ -1,0 +1,44 @@
+﻿category,format,question_type,prompt,options,correct_index,correct_label
+cricket,quiz,format,A batter scores a hundred runs in one innings. What is that score called?,A century | A duck | A maiden,0,A century
+cricket,quiz,powerplay,The fielding side is limited in how many fielders can be outside the circle at the start of a T20. What is that phase called?,The powerplay | The death | The toss,0,The powerplay
+movies,quiz,interval,The short break in the middle of a theatrical film in India is called the…,Interval | Encore | Overture,0,Interval
+movies,quiz,screen,A film you leave the house to see on a large shared screen is a…,Theatre screening | Dub | Sequel,0,Theatre screening
+movies,quiz,spoiler,Telling the ending before someone has watched is a…,Spoiler | Chorus | Headline,0,Spoiler
+movies,quiz,rewatch,Playing a film you have already finished is a…,Rewatch | Debut | Toss,0,Rewatch
+music,quiz,live,"A recording made in front of an audience, wrong notes included, is a…",Live album | Studio album | Playlist,0,Live album
+music,quiz,playlist,A short list of songs you queue on purpose is a…,Playlist | Encore | Ticket,0,Playlist
+pop-culture,quiz,meme,A joke format copied across thousands of posts is a…,Meme | Century | Derby,0,Meme
+pop-culture,quiz,audio,A short sound everyone reuses on video is a…,Viral audio | Headline | Toss,0,Viral audio
+food,quiz,chai,"Milk, tea, and spice simmered together is…",Chai | Black coffee | A smoothie,0,Chai
+food,quiz,loyalty,"A spiced rice dish with meat or vegetables, claimed by many cities, is…",Biryani | Toast | Salad,0,Biryani
+gaming,quiz,genre,A game built around shooting from a first-person view is often called…,An FPS | A puzzle | A rhythm game,0,An FPS
+gaming,quiz,mode,Playing against other people online is…,Multiplayer | A cutscene | A tutorial,0,Multiplayer
+sports,quiz,watch,"A sport uses a round ball and a goal, and outfield players may not handle the ball. Which sport is it?",Football | Swimming | Chess,0,Football
+sports,quiz,derby,Two local clubs play each other and the city splits. What is that match called?,A derby | A friendly | A trial,0,A derby
+news,quiz,check,Comparing a viral claim with a named source is a…,Fact check | Rumour | Spoiler,0,Fact check
+news,quiz,habit,"The title line of a story, before the article, is the…",Headline | Chorus | Interval,0,Headline
+tech,quiz,os,The mobile system made by Apple is…,iOS | A browser | A charger,0,iOS
+tech,quiz,privacy,A prompt that asks if an app may use your camera is a…,Permission | Playlist | Derby,0,Permission
+tech,quiz,read,A formal write-up of an experiment is a…,Paper | Playlist | Jersey,0,Paper
+tech,quiz,wonder,"The study of stars, planets, and what is beyond Earth is…",Space science | Fashion | A derby,0,Space science
+personality-vibe,quiz,travel,Aarav books nothing and takes the first bus toward the hills. Which travel vibe is that?,Spontaneous adventure — buy the ticket and go | Planned itinerary — every hour booked | Beach person — sunsets and slow days,0,Spontaneous adventure — buy the ticket and go
+personality-vibe,quiz,fitness,Meera lifts until the last set and skips the stretching mat. Which fitness vibe is that?,Heavy lifting — last set or it did not count | Yoga and stretching — slow and steady | Morning run — out the door before the city wakes,0,Heavy lifting — last set or it did not count
+personality-vibe,quiz,social,"Two friends, one table, home before midnight. Which social vibe is that?",Two close friends — one table is enough | Big friend group — the more the louder | Weekend party — stay out with the group,0,Two close friends — one table is enough
+personality-vibe,quiz,everyday,"The evening is a book, a quiet corner, and a hot cup. Which everyday vibe is that?",Books and coffee — a quiet corner | Movies and popcorn — lights off | Spend on experiences — the story is the point,0,Books and coffee — a quiet corner
+personality-vibe,quiz,work,They quit the steady role to build a project that might fail. Which work vibe is that?,Risky dream project — build the thing | Stable job — a clear ladder | Work alone — headphones on,0,Risky dream project — build the thing
+personality-vibe,quiz,friendship,"A friend is upset, so they send a meme instead of a speech. Which friendship vibe is that?",Send a meme — say it without a speech | Call them — hear the whole story | Sort it out now — talk before you sleep,0,Send a meme — say it without a speech
+fashion,quiz,fit,The combination of clothes you leave the house in is an…,Outfit | Playlist | Innings,0,Outfit
+fashion,quiz,shoes,The pair you wear on your feet is…,Shoes | Subtitles | A wicket,0,Shoes
+health,quiz,sleep,The hours your body uses to recover at night are…,Sleep | A comeback | A headline,0,Sleep
+health,quiz,move,Walking or training so your body works is…,Movement | A spoiler | A toss,0,Movement
+kpop,quiz,concept,A group returns in black outfits with a whisper chorus. Which concept is it?,"Dark and cinematic — black outfits, whisper chorus | Fresh and bright — pastels and a smile | Title tracks — the big chorus only",0,"Dark and cinematic — black outfits, whisper chorus"
+kpop,quiz,playlist,You skip the promoted single and loop the deep cuts. Which playlist habit is that?,B-sides — the songs they skip promoting | Title tracks — the big chorus only | Streaming party — refresh the view count,0,B-sides — the songs they skip promoting
+kpop,quiz,lightstick,You know every fan chant and the colour of the official light. Which concert habit is that?,"Lightstick up — you know every fan chant | Phone away — you just want the live vocal | Fancam loop — one member, all night",0,Lightstick up — you know every fan chant
+kpop,quiz,ost,The songs written for a series are the…,Soundtrack | Toss | Headline,0,Soundtrack
+kpop,quiz,sub,Translated lines on screen while you hear the original actors are…,Subtitles | A derby | A century,0,Subtitles
+puzzles,quiz,sudoku,A number grid where each row and column uses 1–9 once is…,Sudoku | Chess | Ludo,0,Sudoku
+puzzles,quiz,riddle,A short question that hides the answer in wordplay is a…,Riddle | Jersey | Interval,0,Riddle
+logical-reasoning,quiz,pattern,Finding what comes next in a sequence is…,Pattern recognition | A spoiler | A powerplay,0,Pattern recognition
+logical-reasoning,quiz,odd,Picking the item that does not belong is finding the…,Odd one out | Captain | Encore,0,Odd one out
+math-numbers,quiz,percent,Half of 100 is…,50 | 25 | 75,0,50
+math-numbers,quiz,order,The next even number after 8 is…,10 | 9 | 7,0,10

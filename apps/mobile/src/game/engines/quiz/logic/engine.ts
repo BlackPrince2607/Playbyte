@@ -4,6 +4,7 @@
  * hints, scoring and persistence live here once.
  */
 import { selectItems } from "../../../content/query";
+import { samplePreferFresh, seedUsedFromRecent } from "../../../content/recent";
 import type { ContentItem } from "../../../content/types";
 import type { GameDefinition } from "../../../core/definition";
 import type { EngineMeta, GameEngine, ReduceResult } from "../../../core/engine";
@@ -165,9 +166,11 @@ export function createQuizEngine(spec: QuizEngineSpec): GameEngine<QuizState, Qu
       if (!s.procedural) {
         const items = selectItems(ctx.content, { types: s.types, categories: categoriesFor(ctx.def, s) });
         const toPool = s.toPool ?? defaultToPool;
-        pool = rng.sample(items.map(toPool).filter((p): p is PoolItem => p !== null), poolCap);
+        const mapped = items.map(toPool).filter((p): p is PoolItem => p !== null);
+        pool = samplePreferFresh(mapped, ctx.avoidIds ?? [], rng, poolCap);
       }
       const total = s.procedural ? rounds(ctx.def) : Math.min(rounds(ctx.def), Math.max(1, pool.length));
+      const used = s.procedural ? [] : seedUsedFromRecent(pool.map((p) => p.id), ctx.avoidIds ?? [], total);
       return {
         v: 1,
         variation: ctx.def.variation,
@@ -179,7 +182,7 @@ export function createQuizEngine(spec: QuizEngineSpec): GameEngine<QuizState, Qu
         attempts: 0,
         lives: ctx.def.lives ?? null,
         pool,
-        used: [],
+        used,
         q: null,
         revealed: 0,
         eliminated: [],

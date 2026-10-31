@@ -30,6 +30,14 @@ import { capture } from "../../lib/analytics";
 import { APP_LANGUAGES } from "../../lib/languages";
 import { legalLinks, PLAY_STORE_URL, SUPPORT_PHONE, supportTel } from "../../lib/links";
 import { formatFriendCode, friendCodeFor } from "../../lib/friendCode";
+import {
+  peekPrefs,
+  peekProfile,
+  readPrefs,
+  readProfile,
+  writePrefs,
+  writeProfile,
+} from "../../lib/profileCache";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
@@ -100,33 +108,50 @@ export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRec
     capture("language_selected", { language: id });
   }
 
+  const applyProfile = useCallback((profile: MeProfile) => {
+    setMe(profile);
+    setDisplayName(profile.displayName ?? "");
+    setBio(profile.bio ?? "");
+    setVisibility(profile.defaultVisibility ?? "friends");
+    loadedUserId.current = user?.id ?? profile.id;
+  }, [user?.id]);
+
   const loadMe = useCallback(async () => {
-    if (!isSignedIn) {
+    if (!isSignedIn || !user?.id) {
       setMe(null);
       loadedUserId.current = null;
       return;
     }
-    setLoading(true);
+    const uid = user.id;
+    // Paint cached profile immediately; refresh in the background.
+    const cached = peekProfile(uid) ?? (await readProfile(uid));
+    if (cached) {
+      applyProfile(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setLoadError("");
     try {
-      const profile = await api<MeProfile>("/v1/me");
-      setMe(profile);
-      setDisplayName(profile.displayName ?? "");
-      setBio(profile.bio ?? "");
-      setVisibility(profile.defaultVisibility ?? "friends");
-      loadedUserId.current = user?.id ?? null;
-      try {
-        const p = await api<NotificationPreferences>("/v1/me/notification-preferences");
-        setPrefs(p);
-      } catch {
-        /* prefs optional on vault */
+      const [profile, prefsRes] = await Promise.all([
+        api<MeProfile>("/v1/me"),
+        api<NotificationPreferences>("/v1/me/notification-preferences").catch(() => null),
+      ]);
+      applyProfile(profile);
+      void writeProfile(uid, profile);
+      if (prefsRes) {
+        setPrefs(prefsRes);
+        void writePrefs(uid, prefsRes);
+      } else {
+        const cachedPrefs = peekPrefs(uid) ?? (await readPrefs(uid));
+        if (cachedPrefs) setPrefs(cachedPrefs);
       }
     } catch (e) {
-      setLoadError(isApiError(e) ? e.userMessage : t("couldNotLoadProfile"));
+      if (!cached) setLoadError(isApiError(e) ? e.userMessage : t("couldNotLoadProfile"));
     } finally {
       setLoading(false);
     }
-  }, [isSignedIn, user?.id]);
+  }, [isSignedIn, user?.id, applyProfile, t]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -198,19 +223,28 @@ export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRec
   async function togglePref(key: keyof NotificationPreferences, next: boolean) {
     if (!prefs) return;
     const prev = prefs[key];
-    setPrefs({ ...prefs, [key]: next });
+    const nextPrefs = { ...prefs, [key]: next };
+    setPrefs(nextPrefs);
+    if (user?.id) void writePrefs(user.id, nextPrefs);
     try {
       await api("/v1/me/notification-preferences", {
         method: "PATCH",
         body: JSON.stringify({ [key]: next }),
       });
     } catch {
-      setPrefs({ ...prefs, [key]: prev });
+      const rolled = { ...prefs, [key]: prev };
+      setPrefs(rolled);
+      if (user?.id) void writePrefs(user.id, rolled);
     }
   }
 
   function setAvatar(avatarKey: string | null) {
-    setMe((current) => (current ? { ...current, avatarKey } : current));
+    setMe((current) => {
+      if (!current) return current;
+      const next = { ...current, avatarKey };
+      if (user?.id) void writeProfile(user.id, next);
+      return next;
+    });
     updateMe({ avatarKey });
   }
 

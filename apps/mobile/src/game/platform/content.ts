@@ -70,8 +70,20 @@ const repository = createContentRepository({
 let memoryHook = false;
 onContentLocaleChange(() => repository.trim());
 
+export type LoadContentOpts = {
+  /**
+   * Max ms to wait on the first media URLs before starting play.
+   * 0 = fire-and-forget (prefetch / already warm). Default 400.
+   */
+  assetBudgetMs?: number;
+};
+
 /** Loads the content an engine needs, then warms the media cache for the first items. */
-export async function loadContent(queries: ContentQuery[], def: GameDefinition): Promise<ContentBundle> {
+export async function loadContent(
+  queries: ContentQuery[],
+  def: GameDefinition,
+  opts?: LoadContentOpts,
+): Promise<ContentBundle> {
   if (!memoryHook) {
     memoryHook = true;
     AppState.addEventListener("memoryWarning", () => repository.trim());
@@ -79,8 +91,14 @@ export async function loadContent(queries: ContentQuery[], def: GameDefinition):
   const bundle = await repository.load(queries, def);
   const urls = bundle.items.flatMap((i) => (i.media ?? []).flatMap((m) => (m.kind === "image" ? [m.thumbUrl ?? m.url] : [])));
   if (urls.length) {
-    // Warm the first few with a short cap so a slow network never blocks the start.
-    await Promise.race([prefetchAssets(urls.slice(0, 8)), new Promise((r) => setTimeout(r, 2500))]);
+    const budget = opts?.assetBudgetMs ?? 400;
+    const head = prefetchAssets(urls.slice(0, 8));
+    if (budget > 0) {
+      // Cap so a slow network never blocks the start; rest continues in background.
+      await Promise.race([head, new Promise((r) => setTimeout(r, budget))]);
+    } else {
+      void head;
+    }
     void prefetchAssets(urls.slice(8, 60));
   }
   return bundle;

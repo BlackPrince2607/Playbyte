@@ -7,7 +7,7 @@ export const arrowMeta: EngineMeta = {
   interaction: "grid",
   scoreDirection: "higher_is_better",
   variations: [
-    { id: "s20", title: "20s Arrow Puzzle", description: "Clear every arrow with an open path. 20 seconds.", categories: ["puzzle"] },
-    { id: "s25", title: "25s Arrow Puzzle", description: "The same rush with 25 seconds on the clock.", categories: ["puzzle"] },
+    { id: "s20", title: "Arrow Puzzle", description: "Clear every arrow with an open path. 10 seconds per board.", categories: ["puzzle"] },
+    { id: "s25", title: "Arrow Puzzle+", description: "The same rush with 12 seconds per board.", categories: ["puzzle"] },
   ],
 };

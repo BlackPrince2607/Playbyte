@@ -18,6 +18,11 @@ export type EngineViewProps<S, A> = {
   resolveAsset: (url: string) => string;
 };
 
+export type EngineHowToProps = {
+  onDone: () => void;
+  title?: string;
+};
+
 export type EngineModule = {
   engine: AnyEngine;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,6 +31,8 @@ export type EngineModule = {
   targetResponseMs?: number;
   /** Rapid-fire engines skip the host's per-outcome flash and haptic and give their own lighter feedback. */
   quietOutcomes?: boolean;
+  /** Shown once before the countdown/start so rules are clear while the clock is still paused. */
+  HowTo?: ComponentType<EngineHowToProps>;
 };
 
 export type { CompletedPlay } from "../session/types";

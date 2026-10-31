@@ -13,7 +13,15 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { api, FeedMoment, formatCount, isApiError, MeProfile } from "../../api";
+import {
+  api,
+  Challenge,
+  FeedGame,
+  FeedMoment,
+  formatCount,
+  isApiError,
+  MeProfile,
+} from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
 import { ErrorState } from "../../components/ErrorState";
 import { PrimaryButton } from "../../components/PrimaryButton";
@@ -22,22 +30,30 @@ import { isMoment, useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { formatFriendCode, friendCodeFor, parseFriendCode } from "../../lib/friendCode";
+import {
+  acceptChallenge,
+  createChallenge,
+  declineChallenge,
+  listChallenges,
+} from "../../lib/challenges";
 import { withSeededCrowd } from "../../lib/seededEngagement";
 import { shareAppInvite } from "../../lib/shareInvite";
 import { useLanguage } from "../../context/LanguageContext";
 import { fill } from "../../i18n/strings";
+import { localizeGame } from "../../i18n/games";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
 type Props = {
   onSignIn: () => void;
   onOpenLeaderboard?: () => void;
+  onPlayChallenge?: (game: FeedGame, challenge: { id: string; seed: string }) => void;
 };
 
 type Notice = { kind: "success" | "error"; text: string } | null;
 
-export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
-  const { t, fonts: ui } = useLanguage();
+export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge }: Props) {
+  const { t, language, fonts: ui } = useLanguage();
   const insets = useSafeAreaInsets();
   const { isSignedIn, user } = useAuth();
   const {
@@ -58,6 +74,8 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   const [addInput, setAddInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [challengeFriendId, setChallengeFriendId] = useState<string | null>(null);
 
   const parsedCode = parseFriendCode(addInput);
   const inputInvalid = addInput.trim().length >= 8 && !parsedCode;
@@ -73,6 +91,15 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
     [items],
   );
 
+  const feedGames = useMemo(
+    () => items.filter((i): i is FeedGame => i.type === "mini_game").slice(0, 12),
+    [items],
+  );
+
+  const challengeTarget = challengeFriendId
+    ? friends.find((f) => f.userId === challengeFriendId) ?? null
+    : null;
+
   const loadMe = useCallback(async () => {
     try {
       setMe(await api<MeProfile>("/v1/me"));
@@ -81,17 +108,39 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
     }
   }, []);
 
+  const loadChallenges = useCallback(async () => {
+    if (!isSignedIn) {
+      setChallenges([]);
+      return;
+    }
+    try {
+      const all = await listChallenges();
+      setChallenges(
+        all.filter((c) => c.status === "pending" || c.status === "active" || c.status === "completed"),
+      );
+    } catch {
+      /* keep prior list */
+    }
+  }, [isSignedIn]);
+
   useEffect(() => {
     if (!isSignedIn) {
       setMe(null);
+      setChallenges([]);
       return;
     }
     void loadMe();
-  }, [isSignedIn, user?.id, loadMe]);
+    void loadChallenges();
+  }, [isSignedIn, user?.id, loadMe, loadChallenges]);
 
   const reloadAll = useCallback(async () => {
-    await Promise.allSettled([refreshFriends(true), refreshFriendRequests(true), loadMe()]);
-  }, [refreshFriends, refreshFriendRequests, loadMe]);
+    await Promise.allSettled([
+      refreshFriends(true),
+      refreshFriendRequests(true),
+      loadMe(),
+      loadChallenges(),
+    ]);
+  }, [refreshFriends, refreshFriendRequests, loadMe, loadChallenges]);
 
   async function onRefresh() {
     setRefreshing(true);
@@ -111,6 +160,83 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
       await reloadAll();
     } catch (e) {
       setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : fallback });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function gameCardFor(challenge: Challenge): FeedGame {
+    const fromFeed = feedGames.find((g) => g.key === challenge.gameKey);
+    if (fromFeed) return fromFeed;
+    return {
+      type: "mini_game",
+      key: challenge.gameKey,
+      title: challenge.gameTitle,
+      blurb: "",
+    };
+  }
+
+  function challengeSubtitle(c: Challenge): string {
+    const other = c.role === "challenger" ? c.opponent : c.challenger;
+    if (c.status === "pending" && c.role === "opponent") {
+      return fill(t("challengePendingYou"), { name: other.displayName });
+    }
+    if (c.status === "pending") {
+      return fill(t("challengePendingThem"), { name: other.displayName });
+    }
+    if (c.status === "completed") {
+      return fill(t("challengeCompleted"), {
+        my: c.myScore ?? "—",
+        their: c.theirScore ?? "—",
+        name: other.displayName,
+      });
+    }
+    if (c.iHavePlayed) {
+      return fill(t("challengeWaitingThem"), { name: other.displayName });
+    }
+    return fill(t("challengeActivePlay"), { name: other.displayName });
+  }
+
+  async function onAcceptChallenge(c: Challenge) {
+    setBusy(`chal-accept:${c.id}`);
+    try {
+      const res = await acceptChallenge(c.id);
+      await loadChallenges();
+      onPlayChallenge?.(gameCardFor(c), { id: c.id, seed: res.seed });
+    } catch (e) {
+      setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : t("challengeSendFailed") });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function onDeclineChallenge(c: Challenge) {
+    setBusy(`chal-decline:${c.id}`);
+    try {
+      await declineChallenge(c.id);
+      await loadChallenges();
+    } catch (e) {
+      setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : t("challengeSendFailed") });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function onPlayOpenChallenge(c: Challenge) {
+    onPlayChallenge?.(gameCardFor(c), { id: c.id, seed: c.seed });
+  }
+
+  async function sendFriendChallenge(game: FeedGame) {
+    if (!challengeTarget) return;
+    const friend = challengeTarget;
+    setBusy(`chal-create:${friend.userId}`);
+    try {
+      await createChallenge({ opponentUserId: friend.userId, gameKey: game.key });
+      setChallengeFriendId(null);
+      setNotice({ kind: "success", text: fill(t("challengeSent"), { name: friend.displayName }) });
+      await loadChallenges();
+    } catch (e) {
+      setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : t("challengeSendFailed") });
     } finally {
       setBusy(null);
     }
@@ -415,6 +541,110 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
         </View>
       ) : null}
 
+      {challenges.length > 0 ? (
+        <View style={styles.section}>
+          <SectionTitle title={t("challengesTitle")} count={challenges.length} />
+          <View style={styles.list}>
+            {challenges.map((c, i) => {
+              const other = c.role === "challenger" ? c.opponent : c.challenger;
+              const pendingIncoming = c.status === "pending" && c.role === "opponent";
+              const canPlay =
+                (c.status === "active" || c.status === "pending") && !c.iHavePlayed && Boolean(onPlayChallenge);
+              return (
+                <PersonRow
+                  key={c.id}
+                  first={i === 0}
+                  name={c.gameTitle}
+                  avatarKey={other.avatarKey}
+                  subtitle={challengeSubtitle(c)}
+                >
+                  {pendingIncoming ? (
+                    <>
+                      <IconButton
+                        icon="close-outline"
+                        label={t("declineChallenge")}
+                        busy={busy === `chal-decline:${c.id}`}
+                        onPress={() => void onDeclineChallenge(c)}
+                        disabled={busy !== null}
+                        subtle
+                      />
+                      <IconButton
+                        icon="checkmark"
+                        label={t("acceptChallenge")}
+                        tone="lime"
+                        busy={busy === `chal-accept:${c.id}`}
+                        onPress={() => void onAcceptChallenge(c)}
+                        disabled={busy !== null}
+                      />
+                    </>
+                  ) : canPlay ? (
+                    <Pressable
+                      onPress={() => onPlayOpenChallenge(c)}
+                      style={({ pressed }) => [styles.textButton, pressed && { opacity: 0.7 }]}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("playChallenge")}
+                    >
+                      <Text style={[styles.textButtonLabel, { fontFamily: ui.bodyBold }]}>{t("playChallenge")}</Text>
+                    </Pressable>
+                  ) : c.status === "completed" ? (
+                    <Text style={[type.micro, { color: colors.lilac }]}>{t("seeChallengeResult")}</Text>
+                  ) : null}
+                </PersonRow>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
+      {challengeTarget ? (
+        <View style={styles.section}>
+          <SectionTitle title={fill(t("pickGameToChallenge"), { name: challengeTarget.displayName })} />
+          <View style={styles.list}>
+            {feedGames.length ? (
+              feedGames.map((g, i) => {
+                const localized = localizeGame(g, language);
+                return (
+                  <Pressable
+                    key={g.key}
+                    onPress={() => void sendFriendChallenge(g)}
+                    disabled={busy !== null}
+                    style={({ pressed }) => [
+                      styles.personRow,
+                      i > 0 && styles.personDivider,
+                      pressed && { opacity: 0.75 },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={localized.title}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]} numberOfLines={1}>
+                        {localized.title}
+                      </Text>
+                      <Text style={[type.metadata, { color: colors.lilac }]} numberOfLines={1}>
+                        {localized.blurb}
+                      </Text>
+                    </View>
+                    {busy === `chal-create:${challengeTarget.userId}` ? (
+                      <ActivityIndicator size="small" color={colors.lime} />
+                    ) : (
+                      <Text style={[type.micro, { color: colors.lime, fontFamily: ui.bodyBold }]}>{t("challenge")}</Text>
+                    )}
+                  </Pressable>
+                );
+              })
+            ) : (
+              <Text style={[type.bodySm, { color: colors.lilac }]}>{t("noChallenges")}</Text>
+            )}
+            <PrimaryButton
+              label={t("cancel")}
+              variant="secondary"
+              onPress={() => setChallengeFriendId(null)}
+              style={{ marginTop: spacing.sm }}
+            />
+          </View>
+        </View>
+      ) : null}
+
       <View style={styles.section}>
         <SectionTitle title="Your friends" count={friends.length || undefined} />
         {friendsError ? (
@@ -433,6 +663,14 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard }: Props) {
                 subtitle={formatFriendCode(friendCodeFor(f.userId))}
                 mono
               >
+                {onPlayChallenge ? (
+                  <IconButton
+                    icon="flash-outline"
+                    label={fill(t("challengeNamed"), { name: f.displayName })}
+                    onPress={() => setChallengeFriendId(f.userId)}
+                    disabled={busy !== null}
+                  />
+                ) : null}
                 <IconButton
                   icon="person-remove-outline"
                   label={`Remove ${f.displayName}`}

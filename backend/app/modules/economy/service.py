@@ -203,7 +203,8 @@ async def claim_streak(
     migrate_date: str | None = None,
 ) -> dict:
     today = _today(local_day)
-    await grant_welcome(session, user_id)
+    welcome = await grant_welcome(session, user_id)
+    welcome_earned = welcome.delta if welcome.created else 0
     streak = await _ensure_streak(session, user_id)
     if streak.last_active_date is None and int(streak.current_count) == 0 and migrate_count and migrate_count > 0:
         copied = parse_migrate_date(migrate_date, today)
@@ -224,7 +225,8 @@ async def claim_streak(
 
     if streak.last_active_date == today:
         view = await wallet_view(session, user_id, today)
-        view["coinsEarned"] = 0
+        # Welcome can land on the same request that finds the streak already claimed.
+        view["coinsEarned"] = welcome_earned
         view["freezeUsed"] = False
         return view
 
@@ -260,7 +262,8 @@ async def claim_streak(
         ref_type="streak",
         ref_id=today.isoformat(),
     )
-    view = await wallet_view(session, user_id, today, coins_earned=result.delta if result.created else 0)
+    earned = welcome_earned + (result.delta if result.created else 0)
+    view = await wallet_view(session, user_id, today, coins_earned=earned)
     if result.created:
         view["todayReward"] = payout
     view["freezeUsed"] = used_freeze

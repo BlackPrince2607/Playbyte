@@ -17,6 +17,7 @@ export function OptionTile({
   disabled,
   onPress,
   index,
+  compact,
 }: {
   label: string;
   emoji?: string;
@@ -24,6 +25,8 @@ export function OptionTile({
   disabled?: boolean;
   onPress: () => void;
   index?: number;
+  /** Feed card: shorter tiles so the page fits without scrolling. */
+  compact?: boolean;
 }) {
   const scale = useSharedValue(1);
   const anim = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -45,6 +48,7 @@ export function OptionTile({
         }}
         style={({ pressed }) => [
           styles.tile,
+          compact && styles.tileCompact,
           state === "correct" && styles.correct,
           state === "wrong" && styles.wrong,
           pressed && !off && { borderColor: colors.lime },
@@ -172,13 +176,37 @@ export function HintBar({ hints, onHint }: { hints: Hint[]; onHint: (id: string)
 export type ClueView = { kind: "emoji" | "text" | "image"; value: string; alt?: string };
 
 /** Emoji/image hero plus progressively revealed text clues. */
-export function ClueCard({ clues, revealed, resolveAsset }: { clues: ClueView[]; revealed: number; resolveAsset: (u: string) => string }) {
+export function ClueCard({
+  clues,
+  revealed,
+  resolveAsset,
+  compact,
+}: {
+  clues: ClueView[];
+  revealed: number;
+  resolveAsset: (u: string) => string;
+  /** Feed card: shorter clue block so options fit without scrolling. */
+  compact?: boolean;
+}) {
   const visible = clues.slice(0, Math.max(1, revealed));
   const hero = visible.find((c) => c.kind !== "text");
   const texts = visible.filter((c) => c.kind === "text");
-  const emojiSize = hero?.kind === "emoji" ? ([...hero.value].length <= 2 ? 96 : [...hero.value].length <= 4 ? 72 : 52) : 0;
+  const emojiSize =
+    hero?.kind === "emoji"
+      ? compact
+        ? [...hero.value].length <= 2
+          ? 56
+          : [...hero.value].length <= 4
+            ? 44
+            : 36
+        : [...hero.value].length <= 2
+          ? 96
+          : [...hero.value].length <= 4
+            ? 72
+            : 52
+      : 0;
   return (
-    <View style={styles.clueCard}>
+    <View style={[styles.clueCard, compact && styles.clueCardCompact]}>
       {hero?.kind === "emoji" ? (
         <Text style={{ fontSize: emojiSize, lineHeight: emojiSize * 1.2, textAlign: "center" }} accessibilityLabel="Emoji clue">
           {hero.value}
@@ -188,7 +216,7 @@ export function ClueCard({ clues, revealed, resolveAsset }: { clues: ClueView[];
       ) : null}
       {texts.map((c, i) => (
         <Animated.View key={`${i}-${c.value}`} entering={prefersReducedMotion() ? undefined : FadeInDown.duration(260)} style={styles.clueLine}>
-          <Text style={[type.bodyLg, { color: colors.paper, textAlign: "center" }]}>{c.value}</Text>
+          <Text style={[compact ? type.bodySm : type.bodyLg, { color: colors.paper, textAlign: "center" }]}>{c.value}</Text>
         </Animated.View>
       ))}
     </View>
@@ -207,6 +235,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     flexDirection: "row",
     alignItems: "center",
+  },
+  tileCompact: {
+    minHeight: 44,
+    paddingVertical: 10,
+    marginBottom: spacing.xs,
   },
   correct: { backgroundColor: colors.lime, borderColor: colors.lime },
   wrong: { backgroundColor: colors.pink, borderColor: colors.pink },
@@ -243,6 +276,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: 160,
     gap: spacing.sm,
+  },
+  clueCardCompact: {
+    padding: spacing.sm,
+    minHeight: 72,
+    gap: spacing.xs,
   },
   clueImage: { width: "100%", aspectRatio: 16 / 10, borderRadius: radius.md },
   clueLine: { paddingVertical: 2 },

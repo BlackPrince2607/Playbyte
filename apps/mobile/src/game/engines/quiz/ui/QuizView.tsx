@@ -8,13 +8,33 @@ import { useShake } from "../../../ui/motion";
 import type { EngineViewProps } from "../../../ui/types";
 import type { QuizAction, QuizState } from "../logic/types";
 
+type Props = EngineViewProps<QuizState, QuizAction> & {
+  /** Feed preview: options stay tappable while the session is still `ready`. */
+  allowReadyAnswer?: boolean;
+  /** Feed preview: skip wallet-backed hints. */
+  hideHints?: boolean;
+  /** Drop horizontal padding when hosted inside a padded feed card. */
+  compact?: boolean;
+};
+
 /** Shared view for the multiple-choice engine family (Guess, Emoji Guess, Odd One Out, Fact/Fake). */
-export function QuizView({ state, dispatch, requestHint, snapshot, resolveAsset }: EngineViewProps<QuizState, QuizAction>) {
+export function QuizView({
+  state,
+  dispatch,
+  requestHint,
+  snapshot,
+  resolveAsset,
+  allowReadyAnswer,
+  hideHints,
+  compact,
+}: Props) {
   const q = state.q;
   const wrongSeq = snapshot.lastOutcome && !snapshot.lastOutcome.correct ? snapshot.lastOutcome.seq : 0;
   const shake = useShake(wrongSeq);
   if (!q) return null;
   const answered = state.answer;
+  const canAnswer =
+    !answered && (snapshot.status === "playing" || (allowReadyAnswer && snapshot.status === "ready"));
 
   const tileState = (id: string): TileState => {
     if (state.eliminated.includes(id)) return "eliminated";
@@ -24,15 +44,15 @@ export function QuizView({ state, dispatch, requestHint, snapshot, resolveAsset 
     return "dim";
   };
 
-  return (
-    <ScrollView contentContainerStyle={{ paddingHorizontal: spacing.margin, paddingBottom: spacing.lg, gap: spacing.md }} bounces={false}>
+  const body = (
+    <>
       <Text style={[type.bodyLg, { color: colors.lilac, textAlign: "center" }]} accessibilityRole="header">
         {q.prompt}
       </Text>
       <Animated.View style={shake}>
-        <ClueCard clues={q.clues} revealed={state.revealed} resolveAsset={resolveAsset} />
+        <ClueCard clues={q.clues} revealed={state.revealed} resolveAsset={resolveAsset} compact={compact} />
       </Animated.View>
-      <HintBar hints={snapshot.hints} onHint={requestHint} />
+      {hideHints ? null : <HintBar hints={snapshot.hints} onHint={requestHint} />}
       <View>
         {q.options.map((o, i) => (
           <OptionTile
@@ -41,7 +61,8 @@ export function QuizView({ state, dispatch, requestHint, snapshot, resolveAsset 
             label={o.label}
             emoji={o.emoji}
             state={tileState(o.id)}
-            disabled={!!answered || snapshot.status !== "playing"}
+            disabled={!canAnswer}
+            compact={compact}
             onPress={() => dispatch({ type: "answer", optionId: o.id })}
           />
         ))}
@@ -52,6 +73,24 @@ export function QuizView({ state, dispatch, requestHint, snapshot, resolveAsset 
       {answered && q.explanation ? (
         <Text style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>{q.explanation}</Text>
       ) : null}
+    </>
+  );
+
+  if (compact) {
+    return <View style={{ flex: 1, minHeight: 0, gap: spacing.sm, justifyContent: "center" }}>{body}</View>;
+  }
+
+  return (
+    <ScrollView
+      contentContainerStyle={{
+        paddingHorizontal: spacing.margin,
+        paddingBottom: spacing.lg,
+        gap: spacing.md,
+      }}
+      bounces={false}
+      nestedScrollEnabled
+    >
+      {body}
     </ScrollView>
   );
 }

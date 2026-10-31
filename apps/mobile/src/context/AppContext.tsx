@@ -24,6 +24,7 @@ import {
 } from "../api";
 import { isPlayable } from "../game/discovery";
 import { appendFeedPage, FEED_PREFETCH_AHEAD } from "../lib/feedPages";
+import { readFeedSnapshot, writeFeedSnapshot } from "../lib/feedCache";
 import type { CoinCredit, CoinCreditReason, WalletSnapshot } from "../lib/economy";
 import {
   getLocalResponses,
@@ -32,6 +33,7 @@ import {
   withLocalAnswers,
 } from "../lib/localResponses";
 import { initPurchases } from "../lib/purchases";
+import { clearProfileCache, writeProfile } from "../lib/profileCache";
 import {
   clearOnboardingDone,
   getOnboardingStep,
@@ -77,7 +79,6 @@ type AppState = {
   feedError: string;
   streak: number;
   promptSave: boolean;
-  respondingIds: ReadonlySet<string>;
   refreshFeed: (force?: boolean) => Promise<void>;
   loadMoreFeed: (viewerIndex?: number) => Promise<void>;
   retryBoot: () => Promise<void>;
@@ -88,7 +89,6 @@ type AppState = {
   setTab: (t: TabKey) => void;
   setPromptSave: (v: boolean) => void;
   respond: (momentId: string, optionId: string) => Promise<RespondOutcome>;
-  isResponding: (momentId: string) => boolean;
   jumpToMoment: (id: string) => void;
   feedIndex: number;
   setFeedIndex: (i: number) => void;
@@ -119,7 +119,7 @@ type AppState = {
     balance: number | null | undefined,
     earned?: number,
     kind?: CoinCreditReason,
-    meta?: { gameId?: string; itemId?: string },
+    meta?: { gameId?: string; itemId?: string; playId?: string },
   ) => void;
 };
 
@@ -170,11 +170,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [wallet, setWallet] = useState<WalletSnapshot | null>(null);
   const [coinCredit, setCoinCredit] = useState<CoinCredit | null>(null);
   const creditSeq = useRef(0);
+  /** Dedupe toasts / daily progress bumps when a game or poll submit is retried. */
+  const creditedEarnKeys = useRef(new Set<string>());
   const [promptSave, setPromptSave] = useState(false);
   const [feedIndex, setFeedIndex] = useState(0);
   const feedIndexRef = useRef(feedIndex);
   feedIndexRef.current = feedIndex;
-  const [respondingIds, setRespondingIds] = useState<Set<string>>(new Set());
   const [engagement, setEngagement] = useState<Record<string, MomentEngagement>>({});
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
@@ -188,6 +189,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const moreInflight = useRef<Promise<void> | null>(null);
   /** Bumped whenever the feed is replaced, so a page fetched for the old feed is dropped. */
   const feedGeneration = useRef(0);
+  /** Bumped at the start of each feed fetch so a superseded response never paints. */
+  const feedRequestId = useRef(0);
   /** Where the server resumes the feed; null once it has nothing more to show. */
   const feedCursor = useRef<string | null>(null);
   const friendsInflight = useRef<Promise<void> | null>(null);
@@ -209,8 +212,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFriendRequestsError("");
     setMe(null);
     setWallet(null);
+    creditedEarnKeys.current.clear();
     friendsFetchedAt.current = null;
     friendRequestsFetchedAt.current = null;
+    clearProfileCache();
   }, []);
 
   const updateMe = useCallback((patch: Partial<MySummary>) => {
@@ -244,9 +249,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       balance: number | null | undefined,
       earned = 0,
       kind?: CoinCreditReason,
-      meta?: { gameId?: string; itemId?: string },
+      meta?: { gameId?: string; itemId?: string; playId?: string },
     ) => {
-      if (typeof balance === "number" || earned > 0) {
+      const creditKey =
+        earned > 0 && kind === "game" && meta?.playId
+          ? `game:${meta.playId}`
+          : earned > 0 && kind === "moment" && meta?.itemId
+            ? `moment:${meta.itemId}`
+            : null;
+      const applyEarned = creditKey && creditedEarnKeys.current.has(creditKey) ? 0 : earned;
+      if (creditKey && applyEarned > 0) creditedEarnKeys.current.add(creditKey);
+
+      if (typeof balance === "number" || applyEarned > 0) {
         setWallet((current) => {
           if (!current) {
             if (typeof balance !== "number") return current;
@@ -261,29 +275,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               todayReward: 0,
               streakClaimed: false,
               nextMilestone: null,
-              gamesRewarded: kind === "game" && earned > 0 ? 1 : 0,
+              gamesRewarded: kind === "game" && applyEarned > 0 ? 1 : 0,
               gamesRewardCap: 8,
-              momentsRewarded: kind === "moment" && earned > 0 ? 1 : 0,
+              momentsRewarded: kind === "moment" && applyEarned > 0 ? 1 : 0,
               momentsRewardCap: 10,
               packs: [],
             };
           }
           const next = { ...current };
           if (typeof balance === "number") next.balance = balance;
-          if (earned > 0 && kind === "game") {
+          if (applyEarned > 0 && kind === "game") {
             next.gamesRewarded = Math.min(current.gamesRewardCap, current.gamesRewarded + 1);
           }
-          if (earned > 0 && kind === "moment") {
+          if (applyEarned > 0 && kind === "moment") {
             next.momentsRewarded = Math.min(current.momentsRewardCap, current.momentsRewarded + 1);
           }
           return next;
         });
       }
-      if (earned > 0) {
+      if (applyEarned > 0) {
         const reason = kind ?? "reward";
-        showCoinCredit(earned, reason);
+        showCoinCredit(applyEarned, reason);
         capture("coin_earned", {
-          amount: earned,
+          amount: applyEarned,
           reason,
           game_id: meta?.gameId ?? null,
           item_id: meta?.itemId ?? null,
@@ -313,6 +327,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getStreakDate(),
       ]);
       setMe({ displayName: profile.displayName, avatarKey: profile.avatarKey });
+      void writeProfile(profile.id, profile);
       void initPurchases(profile.id);
       const next = await claimStreak({
         migrateCount: count > 0 ? count : undefined,
@@ -334,10 +349,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const profile = await api<MeProfile>("/v1/me");
       setMe({ displayName: profile.displayName, avatarKey: profile.avatarKey });
+      if (user?.id) void writeProfile(user.id, profile);
     } catch {
       /* the top bar falls back to initials */
     }
-  }, []);
+  }, [user?.id]);
 
   const refreshFriends = useCallback(async (force = false) => {
     if (!isSignedIn) {
@@ -419,11 +435,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [friends],
   );
 
+  const applyFeedPage = useCallback((page: FeedItem[], cursor: string | null, localAnswers: Record<string, string>) => {
+    feedGeneration.current += 1;
+    feedCursor.current = cursor;
+    const hydrated = withLocalAnswers(page, localAnswers);
+    setItems(hydrated);
+    itemsRef.current = hydrated;
+    setEngagement({});
+    hasLoadedFeed.current = true;
+    for (const item of page) {
+      if (item.type !== "moment" || item.myOptionId) continue;
+      const optionId = localAnswers[item.id];
+      if (optionId) void respondRef.current(item.id, optionId);
+    }
+  }, []);
+
+  const hydrateFeedFromCache = useCallback(async (forLang?: string): Promise<boolean> => {
+    const lang = forLang ?? languageRef.current;
+    const [snap, localAnswers] = await Promise.all([
+      readFeedSnapshot(lang),
+      getLocalResponses(),
+    ]);
+    if (languageRef.current !== lang) return false;
+    if (!snap?.items.length) return false;
+    const page = snap.items.filter(isShowable);
+    if (!page.length) return false;
+    applyFeedPage(page, snap.cursor, localAnswers);
+    setFeedLoading(false);
+    return true;
+  }, [applyFeedPage]);
+
   const loadFeed = useCallback(async (opts?: { force?: boolean; refreshing?: boolean }) => {
     const force = opts?.force ?? false;
     const refreshing = opts?.refreshing ?? false;
 
     if (feedInflight.current && !force) return feedInflight.current;
+
+    const requestId = ++feedRequestId.current;
+    const requestedLang = languageRef.current;
 
     const run = (async () => {
       if (refreshing) setFeedRefreshing(true);
@@ -432,30 +481,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const [feed, localAnswers] = await Promise.all([
-          api<FeedPage>(feedPath(languageRef.current)),
+          api<FeedPage>(feedPath(requestedLang)),
           getLocalResponses(),
         ]);
-        feedGeneration.current += 1;
-        feedCursor.current = feed.cursor;
+        if (requestId !== feedRequestId.current || languageRef.current !== requestedLang) return;
         const page = feed.items.filter(isShowable);
-        const hydrated = withLocalAnswers(page, localAnswers);
-        setItems(hydrated);
-        itemsRef.current = hydrated;
-        setEngagement({});
-        hasLoadedFeed.current = true;
-        // Push any on-device answers the server never got (offline / failed sync).
-        for (const item of page) {
-          if (item.type !== "moment" || item.myOptionId) continue;
-          const optionId = localAnswers[item.id];
-          if (optionId) void respondRef.current(item.id, optionId);
-        }
+        applyFeedPage(page, feed.cursor, localAnswers);
+        void writeFeedSnapshot({
+          lang: requestedLang,
+          items: page,
+          cursor: feed.cursor,
+        });
       } catch (e) {
+        if (requestId !== feedRequestId.current || languageRef.current !== requestedLang) return;
         const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : tRef.current("couldNotLoadFeed");
         setFeedError(message);
         throw e;
       } finally {
-        setFeedLoading(false);
-        setFeedRefreshing(false);
+        if (requestId === feedRequestId.current) {
+          setFeedLoading(false);
+          setFeedRefreshing(false);
+        }
       }
     })();
 
@@ -465,7 +511,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
       if (feedInflight.current === run) feedInflight.current = null;
     }
-  }, []);
+  }, [applyFeedPage]);
 
   const refreshFeed = useCallback(
     async (force = false) => {
@@ -473,6 +519,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     },
     [loadFeed],
   );
+
+  /** Drop mismatched-language cards, show loading, then hydrate cache + network for the new lang. */
+  const reloadFeedForLanguage = useCallback(async () => {
+    const lang = languageRef.current;
+    feedRequestId.current += 1;
+    feedGeneration.current += 1;
+    feedCursor.current = null;
+    hasLoadedFeed.current = false;
+    setFeedError("");
+    setFeedIndex(0);
+    setItems([]);
+    itemsRef.current = [];
+    setFeedLoading(true);
+
+    const cached = await hydrateFeedFromCache(lang).catch(() => false);
+    if (languageRef.current !== lang) return;
+    try {
+      await loadFeed({ force: true, refreshing: cached });
+    } catch {
+      /* feedError set inside loadFeed when this request is still current */
+    }
+  }, [hydrateFeedFromCache, loadFeed]);
 
   const loadMoreFeed = useCallback(async (viewerIndex?: number) => {
     if (!hasLoadedFeed.current || feedInflight.current || moreInflight.current) return;
@@ -494,6 +562,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const page = withLocalAnswers(feed.items.filter(isShowable), localAnswers);
           list = appendFeedPage(list, page);
           setItems((prev) => appendFeedPage(prev, page));
+          void writeFeedSnapshot({
+            lang: languageRef.current,
+            items: list,
+            cursor: feedCursor.current,
+          });
         } catch {
           if (++failures > MAX_FEED_RETRIES) return;
           await new Promise((resolve) => setTimeout(resolve, FEED_RETRY_MS * 2 ** (failures - 1)));
@@ -536,6 +609,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!done) {
         setOnboardingStepState(await getOnboardingStep());
       }
+      // Show last feed instantly when we have one; refresh in the background.
+      const cached = await hydrateFeedFromCache().catch(() => false);
+      if (cached) {
+        setReady(true);
+        void loadFeed({ refreshing: true }).catch(() => {});
+        return;
+      }
       try {
         await loadFeed();
       } catch {
@@ -547,7 +627,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setBootError(message);
       setReady(true);
     }
-  }, [loadFeed]);
+  }, [loadFeed, hydrateFeedFromCache]);
 
   useEffect(() => {
     if (!authReady || !languageReady) return;
@@ -559,6 +639,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (isSignedIn) void syncEconomy();
     else {
       setWallet(null);
+      creditedEarnKeys.current.clear();
       void recordDailyVisit().then(setStreak);
     }
   }, [ready, authReady, isSignedIn, syncEconomy]);
@@ -578,8 +659,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     if (seenLang.current === language) return;
     seenLang.current = language;
-    void refreshFeed(true);
-  }, [language, ready, languageReady, refreshFeed]);
+    void reloadFeedForLanguage();
+  }, [language, ready, languageReady, reloadFeedForLanguage]);
 
   // Reopening the app shows a fresh feed from the first post.
   useEffect(() => {
@@ -645,7 +726,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return { ok: false, message: tRef.current("alreadySubmitting") };
       }
       respondingRef.current.add(momentId);
-      setRespondingIds(new Set(respondingRef.current));
 
       const current = itemsRef.current.find(
         (i): i is FeedMoment => i.type === "moment" && i.id === momentId,
@@ -678,17 +758,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return { ok: false, message };
       } finally {
         respondingRef.current.delete(momentId);
-        setRespondingIds(new Set(respondingRef.current));
       }
     },
     [noteEarn],
   );
   respondRef.current = respond;
-
-  const isResponding = useCallback(
-    (momentId: string) => respondingIds.has(momentId),
-    [respondingIds],
-  );
 
   const engagementFor = useCallback(
     (m: FeedMoment) => engagement[m.id] ?? m.engagement ?? EMPTY_ENGAGEMENT,
@@ -732,7 +806,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       feedError,
       streak,
       promptSave,
-      respondingIds,
       refreshFeed,
       loadMoreFeed,
       retryBoot,
@@ -742,7 +815,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setTab,
       setPromptSave,
       respond,
-      isResponding,
       jumpToMoment,
       feedIndex,
       setFeedIndex,
@@ -779,7 +851,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       feedError,
       streak,
       promptSave,
-      respondingIds,
       refreshFeed,
       loadMoreFeed,
       retryBoot,
@@ -787,7 +858,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       resumeOnboarding,
       setOnboardingStep,
       respond,
-      isResponding,
       jumpToMoment,
       feedIndex,
       friends,

@@ -7,6 +7,7 @@ import { emojiGuessMeta } from "./emoji-guess/meta";
 import { factFakeMeta } from "./fact-fake/meta";
 import { guessMeta } from "./guess/meta";
 import { engineRegistry } from "./index";
+import { mathRushMeta } from "./math-rush/meta";
 import { mazeMeta } from "./maze/meta";
 import { oddOneOutMeta } from "./odd-one-out/meta";
 import { spotMeta } from "./spot-difference/meta";
@@ -31,6 +32,7 @@ const ENGINES: { meta: EngineMeta; load: () => Promise<{ default: EngineModule }
   { meta: mazeMeta, load: () => import("./maze") },
   { meta: connectDotsMeta, load: () => import("./connect-dots") },
   { meta: arrowMeta, load: () => import("./arrow-puzzle") },
+  { meta: mathRushMeta, load: () => import("./math-rush") },
 ];
 
 let registered = false;

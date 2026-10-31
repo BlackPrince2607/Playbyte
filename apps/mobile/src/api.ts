@@ -255,6 +255,42 @@ export type FriendRequest = {
   avatarKey: string | null;
 };
 
+export type ChallengeStatus = "pending" | "active" | "completed" | "declined" | "expired";
+
+export type ChallengePlayer = {
+  userId: string;
+  displayName: string;
+  avatarKey: string | null;
+};
+
+export type Challenge = {
+  id: string;
+  status: ChallengeStatus;
+  gameKey: string;
+  gameTitle: string;
+  seed: string;
+  createdAt: string | null;
+  expiresAt: string | null;
+  challenger: ChallengePlayer;
+  opponent: ChallengePlayer;
+  challengerScore: number | null;
+  opponentScore: number | null;
+  momentId: string | null;
+  role?: "challenger" | "opponent";
+  myScore?: number | null;
+  theirScore?: number | null;
+  iHavePlayed?: boolean;
+  theyHavePlayed?: boolean;
+};
+
+export type ChallengeCreated = {
+  id: string;
+  status: ChallengeStatus;
+  seed: string;
+  createdAt: string | null;
+  expiresAt: string | null;
+};
+
 export type MeProfile = {
   id: string;
   displayName: string;

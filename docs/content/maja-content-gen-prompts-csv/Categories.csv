@@ -1,0 +1,23 @@
+﻿slug,label,include,exclude,scope_note,category_rules,poll_question_types,quiz_question_types,evergreen_polls,evergreen_quizzes,uses_briefs,brief_count
+cricket,Cricket,"IPL, international cricket, T20 / ODI / Tests, players, rules, formats, upcoming fixtures",football and other non-cricket sports as the main topic,,"SCOPE: this is the cricket category — IPL, internationals, formats, rules, and debate takes.
+BAD name spam: three cards all about Sanju Samson / Kohli / Rohit. Rotate subjects or ask knowledge questions with no star name.
+GOOD cricket mix: 'How many balls in an over?', 'What does DRS stand for?', one debate poll, one upcoming-match take — different angles.
+OK freeform quiz: 'How many players take the field for one side in cricket?'.","captaincy, challenge, death, debate, format, hot, opinion, powerplay, prediction, toss, watch","format, powerplay, stat, trivia, which, who",6,2,yes,1
+movies,movies,,,,,"challenge, company, debate, end, hot, interval, language, night, opinion, prediction, rewatch, screen, sequel, snack, song, spoiler, star","interval, rewatch, screen, spoiler, stat, trivia, which, who",12,4,yes,1
+music,music,,,,,"challenge, debate, discovery, hot, live, memory, opinion, playlist, prediction, tickets, volume","live, playlist, stat, trivia, which, who",6,2,yes,0
+pop-culture,pop-culture,,,,,"audio, challenge, creator, debate, fandom, hot, meme, opinion, prediction, quote, trend","audio, meme, stat, trivia, which, who",6,2,yes,0
+food,food,,,,,"chai, craving, debate, hot, loyalty, opinion, plan, spice, sweet","chai, loyalty, trivia, which, who",6,2,no,0
+gaming,gaming,,,,,"debate, device, genre, hot, opinion, session, spend, squad, tilt","genre, mode, trivia, which, who",6,2,no,0
+sports,Sports (Non-Cricket),"football/soccer, hockey, badminton, tennis, kabaddi, athletics, F1, NBA / Olympics topics Indians follow, chess","cricket, IPL, T20, ODI, BCCI, wickets, batting/bowling cricket terms, cricket players or Indian cricket takes",Cricket has its own category slug 'cricket'. Never write cricket cards for sports.,"SCOPE (critical): category sports means Sports (Non-Cricket) ONLY.
+NEVER mention cricket, IPL, T20, ODI, BCCI, wickets, batting, bowling, or cricket players.
+BAD sports card: 'How do you feel about the current state of Indian cricket?'.
+GOOD sports mix: football derby takes, kabaddi, badminton, hockey, F1, Olympics, chess puzzles.","challenge, debate, derby, fantasy, hot, loyalty, opinion, prediction, ritual, take, watch","derby, stat, trivia, watch, which, who",6,2,yes,0
+news,news,,,,,"alerts, challenge, check, debate, depth, habit, hot, opinion, prediction, share, time","check, habit, stat, trivia, which, who",6,2,yes,0
+tech,tech,,,,,"apps, challenge, class, debate, experiment, fact, future, hot, hype, opinion, os, phone, prediction, privacy, read, wonder, work","os, privacy, read, stat, trivia, which, who, wonder",12,4,yes,0
+personality-vibe,personality-vibe,,,,,"birthday, cancel, debate, drama, everyday, fitness, friendship, hot, intro, opinion, plans, seen, social, travel, work","everyday, fitness, friendship, social, travel, trivia, which, who, work",18,6,no,0
+fashion,fashion,,,,,"colour, debate, event, fit, hot, opinion, shoes, shop, trend","fit, shoes, trivia, which, who",6,2,no,0
+health,health,,,,,"check, debate, food, hot, morning, move, opinion, sleep, stress","move, sleep, trivia, which, who",6,2,no,0
+kpop,kpop,,,,,"bias, binge, challenge, comeback, concept, debate, end, hot, lead, lightstick, opinion, ost, pace, playlist, prediction, sub","concept, lightstick, ost, playlist, stat, sub, trivia, which, who",12,5,yes,0
+puzzles,puzzles,,,,,"debate, hint, hot, opinion, pace, share, style, timer, type","riddle, sudoku, trivia, which, who",6,2,no,0
+logical-reasoning,logical-reasoning,,,,,"debate, fail, hot, opinion, pattern, speed, style, type","odd, pattern, trivia, which, who",6,2,no,0
+math-numbers,math-numbers,,,,,"calc, debate, feel, hot, opinion, real, school, speed, topic","order, percent, trivia, which, who",6,2,no,0

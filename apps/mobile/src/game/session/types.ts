@@ -62,6 +62,8 @@ export type CompletedPlay = {
   attempts?: number;
   breakdown?: Record<string, number>;
   rounds?: RoundRecord[];
+  /** When set, the server attaches this play to an async friend challenge. */
+  challengeId?: string;
 };
 
 /** Minimal async key-value interface (AsyncStorage-compatible) so persistence stays testable. */

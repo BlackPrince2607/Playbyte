@@ -24,6 +24,8 @@ export type RunnerOptions<S, A, P> = {
   startLevel?: number;
   /** Engine's comfortable response time, used by speed-aware difficulty controllers. */
   targetResponseMs?: number;
+  /** Recent content ids to avoid on a fresh solo session (not used for restore/challenge). */
+  avoidIds?: readonly string[];
   restore?: GameSession;
 };
 
@@ -89,7 +91,10 @@ export class SessionRunner<S, A, P> {
     const d = definition.difficulty;
     const level = Math.min(d.max, Math.max(d.min, opts.startLevel ?? d.start));
     const now = opts.clock.now();
-    let state = engine.init({ def: definition, seed, content: opts.content, now }, this.rng.fork("init"));
+    let state = engine.init(
+      { def: definition, seed, content: opts.content, now, avoidIds: opts.avoidIds },
+      this.rng.fork("init"),
+    );
     state = engine.generateRound(state, {
       rng: this.rng.fork(`round:${engine.progress(state).round + 1}`),
       params: engine.difficulty.paramsFor(level),

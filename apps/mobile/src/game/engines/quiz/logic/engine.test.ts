@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { createManualClock } from "../../../core/clock";
 import { createRng } from "../../../core/rng";
+import { SessionRunner } from "../../../session/runner";
 import { definition, packBundle, playHeadless } from "../../../testing/harness";
 import { guessEngine } from "../../guess/logic/engine";
 import { normLabel, pickDistractors } from "./distractors";
@@ -14,6 +16,33 @@ const wrong = (s: QuizState): QuizAction | null =>
   s.q && !s.answer ? { type: "answer", optionId: s.q.options.find((o) => o.id !== s.q!.answerId)!.id } : null;
 
 describe("quiz core", () => {
+  it("feed-style: Q1 is ready before start, and the first answer starts then scores", () => {
+    const clock = createManualClock();
+    const runner = new SessionRunner({
+      engine: guessEngine,
+      definition: def(),
+      content,
+      gameKey: "guess_flag",
+      sessionId: "feed-inline",
+      seed: "feed-seed",
+      clock,
+      wallClock: () => 1_700_000_000_000 + clock.now(),
+    });
+    const before = runner.getSnapshot();
+    assert.equal(before.status, "ready");
+    assert.ok(before.state.q);
+    assert.equal(before.state.answer, null);
+    assert.equal(runner.dispatch({ type: "answer", optionId: before.state.q!.answerId }).accepted, false);
+
+    runner.start();
+    assert.equal(runner.getSnapshot().status, "playing");
+    const q = runner.getSnapshot().state.q!;
+    assert.equal(runner.dispatch({ type: "answer", optionId: q.answerId }).accepted, true);
+    const after = runner.getSnapshot();
+    assert.equal(after.state.answer?.correct, true);
+    assert.ok(after.score > 0);
+  });
+
   it("builds questions with the right option count, unique labels and the answer present", () => {
     for (const [level, n] of [
       [0, 3],

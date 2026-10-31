@@ -74,16 +74,24 @@ def strip_devanagari(text: str) -> str:
     return cleaned.strip()
 
 
-_LATIN_TOKEN_RE = re.compile(r"(?:^|\s)[A-Za-z][A-Za-z0-9''!?.%&-]{0,40}(?=\s|$)")
+# Latin words that look like English leftovers in a Hindi field (Excited, trailer, What's…).
+# Keep short acronyms / brand tokens people leave in Latin (MV, OTT, DRS, IPL, Maggi).
+_LATIN_ENGLISH_LEFTOVER_RE = re.compile(
+    r"(?:^|\s)(?:(?:[A-Za-z]+')?[A-Za-z]*[a-z]{5,}[!?.]*|[Ww]hat'?s|[Yy]our|[Tt]he|[Aa]nd|[Ff]or|[Ww]ith)(?=\s|$)"
+)
 
 
 def prefer_devanagari(text: str) -> str:
-    """Keep Hindi/Devanagari; drop Latin-only bilingual halves from a Hindi field."""
+    """Keep Hindi/Devanagari Hinglish; drop Latin-only bilingual halves / English leftovers."""
     raw = (text or "").strip()
     if not raw or not has_devanagari(raw):
         return raw
-    cleaned = re.sub(r"\s*[|/·]+\s*", " ", raw)
-    cleaned = _LATIN_TOKEN_RE.sub(" ", cleaned)
+    parts = [p.strip() for p in re.split(r"\s*[|/·]+\s*", raw) if p.strip()]
+    if len(parts) > 1:
+        # Prefer the most Devanagari-heavy half (Hinglish loanwords stay with that half).
+        parts.sort(key=lambda p: (-len(_DEVANAGARI_RE.findall(p)), len(p)))
+        raw = parts[0]
+    cleaned = _LATIN_ENGLISH_LEFTOVER_RE.sub(" ", raw)
     cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip()
     cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned).strip()
     return cleaned or raw

@@ -7,6 +7,7 @@ import { GuestGate } from "../../components/GuestGate";
 import { ScreenLoading } from "../../components/ScreenLoading";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { peekPrefs, readPrefs, writePrefs } from "../../lib/profileCache";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
@@ -16,27 +17,37 @@ type Props = { onBack: () => void; onSignIn?: () => void };
 type PrefKey = keyof NotificationPreferences;
 
 export function NotificationsScreen({ onBack, onSignIn }: Props) {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, user } = useAuth();
   const { t, fonts: ui } = useLanguage();
-  const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
+  const [prefs, setPrefs] = useState<NotificationPreferences | null>(() =>
+    user?.id ? peekPrefs(user.id) : null,
+  );
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [updatingKeys, setUpdatingKeys] = useState<Set<PrefKey>>(new Set());
 
   const loadPrefs = useCallback(async () => {
-    if (!isSignedIn) return;
-    setLoading(true);
+    if (!isSignedIn || !user?.id) return;
+    const uid = user.id;
+    const cached = peekPrefs(uid) ?? (await readPrefs(uid));
+    if (cached) {
+      setPrefs(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setLoadError("");
     try {
       const res = await api<NotificationPreferences>("/v1/me/notification-preferences");
       setPrefs(res);
+      void writePrefs(uid, res);
     } catch (e) {
-      setLoadError(isApiError(e) ? e.userMessage : "Could not load preferences.");
+      if (!cached) setLoadError(isApiError(e) ? e.userMessage : "Could not load preferences.");
     } finally {
       setLoading(false);
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, user?.id]);
 
   useEffect(() => {
     if (isSignedIn) void loadPrefs();
@@ -48,7 +59,9 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
     const prev = prefs[key];
     setUpdatingKeys((s) => new Set(s).add(key));
     setSaveError("");
-    setPrefs({ ...prefs, [key]: next });
+    const nextPrefs = { ...prefs, [key]: next };
+    setPrefs(nextPrefs);
+    if (user?.id) void writePrefs(user.id, nextPrefs);
     try {
       await api("/v1/me/notification-preferences", {
         method: "PATCH",
@@ -56,6 +69,7 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
       });
     } catch (e) {
       setPrefs((current) => (current ? { ...current, [key]: prev } : current));
+      if (user?.id) void writePrefs(user.id, { ...prefs, [key]: prev });
       setSaveError(isApiError(e) ? e.userMessage : "Could not save preference.");
     } finally {
       setUpdatingKeys((s) => {

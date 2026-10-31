@@ -19,6 +19,14 @@ export type SubmitQueue<R> = {
 
 /** "queued": the play is stored on the phone and syncs later; "rejected": the server refused it. */
 export type SaveState = "saved" | "queued" | "rejected";
+export type ChallengeResultSummary = {
+  id: string;
+  status: string;
+  myScore?: number | null;
+  theirScore?: number | null;
+  opponentName?: string;
+};
+
 export type SaveOutcome = {
   score: number;
   percentile: number | null;
@@ -27,6 +35,8 @@ export type SaveOutcome = {
   promptAccountCreation?: boolean;
   coinsEarned?: number;
   balance?: number | null;
+  playId?: string;
+  challenge?: ChallengeResultSummary;
 };
 
 /**
@@ -35,11 +45,21 @@ export type SaveOutcome = {
  */
 export async function savePlay(
   queue: SubmitQueue<{
+    playId?: string;
     score: number;
     percentile: number;
     promptAccountCreation?: boolean;
     coinsEarned?: number;
     balance?: number | null;
+    challenge?: {
+      id: string;
+      status: string;
+      myScore?: number | null;
+      theirScore?: number | null;
+      challenger?: { displayName: string };
+      opponent?: { displayName: string };
+      role?: "challenger" | "opponent";
+    };
   }>,
   play: CompletedPlay,
   messageOf: (e: unknown) => string | undefined = () => undefined,
@@ -55,6 +75,20 @@ export async function savePlay(
     };
     if (typeof res.coinsEarned === "number") outcome.coinsEarned = res.coinsEarned;
     if (typeof res.balance === "number") outcome.balance = res.balance;
+    if (res.playId) outcome.playId = res.playId;
+    if (res.challenge) {
+      const opp =
+        res.challenge.role === "challenger"
+          ? res.challenge.opponent?.displayName
+          : res.challenge.challenger?.displayName;
+      outcome.challenge = {
+        id: res.challenge.id,
+        status: res.challenge.status,
+        myScore: res.challenge.myScore,
+        theirScore: res.challenge.theirScore,
+        opponentName: opp,
+      };
+    }
     return outcome;
   } catch (e) {
     if ((e as SubmitError)?.permanent === true) {

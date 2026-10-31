@@ -22,7 +22,8 @@ for (const v of arrowMeta.variations) {
     pickAction: solver,
     stepMs: 250,
     invalidAction: () => ({ type: "tap", index: -1 }),
-    finite: true,
+    // Per-board clock reset: a perfect solver never times out.
+    finite: false,
   });
 }
 
@@ -48,11 +49,11 @@ describe("arrow boards", () => {
 });
 
 describe("arrow rules", () => {
-  it("runs for 20 or 25 seconds", () => {
-    assert.equal(opened("s20").roundLimitMs, 20_000);
-    assert.equal(opened("s25").roundLimitMs, 25_000);
-    assert.equal(arrowEngine.maxScore(definition({ engine: "arrow_puzzle", variation: "s20" })), 4492);
-    assert.equal(arrowEngine.maxScore(definition({ engine: "arrow_puzzle", variation: "s25" })), 5616);
+  it("gives each board 10 or 12 seconds", () => {
+    assert.equal(opened("s20").roundLimitMs, 10_000);
+    assert.equal(opened("s25").roundLimitMs, 12_000);
+    assert.equal(arrowEngine.maxScore(definition({ engine: "arrow_puzzle", variation: "s20" })), 45012);
+    assert.equal(arrowEngine.maxScore(definition({ engine: "arrow_puzzle", variation: "s25" })), 54000);
   });
 
   it("sends a clear arrow and frees whatever was behind it", () => {
@@ -71,10 +72,19 @@ describe("arrow rules", () => {
     assert.equal(isFree(sent.state.cells, 3, 1, 0), true);
   });
 
-  it("a cleared board deals a larger one and pays the bonus", () => {
+  it("a cleared board deals a larger one, pays the bonus, and resets the clock", () => {
     const base = opened("s20");
-    const board: ArrowState = { ...base, cols: 2, rows: 2, cells: [1, null, null, null] as Cell[], fill: 0.62 };
-    const cleared = arrowEngine.reduce(board, { type: "tap", index: 0 }, { now: 50, rng: createRng("next") });
+    const board: ArrowState = {
+      ...base,
+      cols: 2,
+      rows: 2,
+      cells: [1, null, null, null] as Cell[],
+      fill: 0.62,
+      roundEnd: base.roundStart + 2_000,
+      roundLimitMs: base.limitMs,
+    };
+    const at = board.roundStart + 1_500;
+    const cleared = arrowEngine.reduce(board, { type: "tap", index: 0 }, { now: at, rng: createRng("next") });
     assert.equal(cleared.state.boards, 1);
     assert.equal(cleared.state.cleared, base.cleared + 1);
     assert.equal(cleared.state.cols, 3);
@@ -82,6 +92,9 @@ describe("arrow rules", () => {
     assert.ok(arrowCount(cleared.state.cells) > 1);
     assert.equal(cleared.state.breakdown.clear, BOARD_BONUS);
     assert.equal(solvable(cleared.state.cells, cleared.state.cols, cleared.state.rows), true);
+    assert.equal(cleared.state.roundStart, at);
+    assert.equal(cleared.state.roundEnd, at + board.limitMs);
+    assert.equal(cleared.state.roundLimitMs, board.limitMs);
   });
 
   it("opens on a square board", () => {

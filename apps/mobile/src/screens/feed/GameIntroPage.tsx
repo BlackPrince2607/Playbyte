@@ -1,11 +1,17 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View } from "react-native";
-import { FeedGame } from "../../api";
+import { useEffect, useState } from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import { FeedGame, isApiError } from "../../api";
+import { FriendPickerModal } from "../../components/FriendPickerModal";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { LivePill } from "../../components/MajaLogo";
+import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { prefetchGame } from "../../game/platform/prefetchGame";
 import { localizeGame } from "../../i18n/games";
 import { fill } from "../../i18n/strings";
+import { createChallenge } from "../../lib/challenges";
 import { lineHeightFor } from "../../lib/promptSize";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
@@ -14,6 +20,11 @@ type Props = {
   item: FeedGame;
   height: number;
   onStart: () => void;
+  /** Create challenge then start the same game with the shared seed. */
+  onChallengeStart?: (challenge: { id: string; seed: string }) => void;
+  onSignIn?: () => void;
+  /** When true, warm engine + content so Play starts without a loading gate. */
+  isActive?: boolean;
 };
 
 function tagFrom(item: FeedGame): string {
@@ -28,13 +39,22 @@ function modeLabel(item: FeedGame, t: (key: "endless" | "finite") => string): st
 
 function modeHint(item: FeedGame, t: (key: "endAnytime" | "rounds" | "puzzles" | "wordsCount" | "oneLevel") => string): string {
   if (item.config?.mode === "endless") return t("endAnytime");
-  const q = item.config?.questions;
+  const q = item.config?.questions ?? item.config?.roundCount;
   const levels = item.config?.levels;
   const words = item.config?.wordsToFind;
   if (typeof q === "number") return fill(t("rounds"), { count: q });
   if (typeof levels === "number") return fill(t("puzzles"), { count: levels });
   if (typeof words === "number") return fill(t("wordsCount"), { count: words });
   return t("oneLevel");
+}
+
+/** Per-screen / per-round timer from feed config (`timeLimitSec` drives engines; `timerSec` is display-only). */
+function timerSec(item: FeedGame): number | null {
+  for (const key of ["timeLimitSec", "timerSec"] as const) {
+    const n = item.config?.[key];
+    if (typeof n === "number" && Number.isFinite(n) && n > 0) return Math.round(n);
+  }
+  return null;
 }
 
 function Stat({ value, label, color }: { value: string; label: string; color: string }) {
@@ -56,11 +76,36 @@ function Stat({ value, label, color }: { value: string; label: string; color: st
   );
 }
 
-export function GameIntroPage({ item: raw, height, onStart }: Props) {
+export function GameIntroPage({ item: raw, height, onStart, onChallengeStart, onSignIn, isActive }: Props) {
   const { language, t, fonts: ui } = useLanguage();
+  const { isSignedIn } = useAuth();
+  const { friends, refreshFriends } = useApp();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [busyFriend, setBusyFriend] = useState<string | null>(null);
   const item = localizeGame(raw, language);
   const tag = tagFrom(item) === "GAME" ? t("gameTag") : tagFrom(item);
+  const secs = timerSec(item);
   const titleSize = 28;
+
+  useEffect(() => {
+    if (!isActive) return;
+    prefetchGame(raw);
+  }, [isActive, raw.key, raw.engine, raw.variation]);
+
+  async function challengeFriend(userId: string, name: string) {
+    setBusyFriend(userId);
+    try {
+      const created = await createChallenge({ opponentUserId: userId, gameKey: raw.key });
+      setPickerOpen(false);
+      Alert.alert(t("challengeFriend"), fill(t("challengeSent"), { name }));
+      onChallengeStart?.({ id: created.id, seed: created.seed });
+    } catch (e) {
+      Alert.alert(t("challengeFriend"), isApiError(e) ? e.userMessage : t("challengeSendFailed"));
+    } finally {
+      setBusyFriend(null);
+    }
+  }
+
   return (
     <View style={[styles.page, { height }]}>
       <LinearGradient colors={["rgba(198,255,61,0.18)", "transparent", colors.ink]} style={StyleSheet.absoluteFill} />
@@ -105,7 +150,11 @@ export function GameIntroPage({ item: raw, height, onStart }: Props) {
         <View style={styles.statsRow}>
           <Stat value={modeHint(item, t)} label={t("statPlay")} color={colors.lime} />
           <Stat value={modeLabel(item, t)} label={t("statMode")} color={colors.pink} />
-          <Stat value={t("percentile")} label={t("statScore")} color={colors.paper} />
+          {secs != null ? (
+            <Stat value={fill(t("secondsEach"), { count: secs })} label={t("statTime")} color={colors.paper} />
+          ) : (
+            <Stat value={t("percentile")} label={t("statScore")} color={colors.paper} />
+          )}
         </View>
         <PrimaryButton
           label={t("joinGame")}
@@ -114,7 +163,28 @@ export function GameIntroPage({ item: raw, height, onStart }: Props) {
           variant="success"
           style={{ marginTop: spacing.xl }}
         />
+        {onChallengeStart ? (
+          <PrimaryButton
+            label={t("challengeFriend")}
+            variant="secondary"
+            icon="flash-outline"
+            onPress={() => {
+              void refreshFriends();
+              setPickerOpen(true);
+            }}
+            style={{ marginTop: spacing.sm }}
+          />
+        ) : null}
       </View>
+      <FriendPickerModal
+        visible={pickerOpen}
+        friends={friends}
+        signedIn={isSignedIn}
+        busyUserId={busyFriend}
+        onClose={() => setPickerOpen(false)}
+        onSignIn={onSignIn}
+        onSelect={(f) => void challengeFriend(f.userId, f.displayName)}
+      />
     </View>
   );
 }

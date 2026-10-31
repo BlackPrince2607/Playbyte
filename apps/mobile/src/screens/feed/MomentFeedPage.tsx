@@ -7,7 +7,6 @@ import { ActionRail } from "../../components/ActionRail";
 import { AnswerButton } from "../../components/AnswerButton";
 import { CommentsSheet } from "../../components/CommentsSheet";
 import { LivePill } from "../../components/MajaLogo";
-import { ScreenLoading } from "../../components/ScreenLoading";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { displayCopy } from "../../lib/displayLang";
@@ -37,7 +36,7 @@ type Props = {
 
 export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const { t, language, fonts: ui } = useLanguage();
-  const { respond, isResponding, engagementFor, updateEngagement } = useApp();
+  const { respond, engagementFor, updateEngagement } = useApp();
   const { isSignedIn } = useAuth();
   const mounted = useMountedRef();
   const engagement = engagementFor(item);
@@ -50,7 +49,6 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const [sharing, setSharing] = useState(false);
   const shareInflight = useRef(false);
   const answered = Boolean(local.myOptionId);
-  const submitting = isResponding(item.id);
   const crowd = withSeededCrowd(local);
   const total = crowd.totalResponses;
   const isQuiz = local.tags?.some((t) => t.slug === "quiz") ?? local.scoringMode === "correct_option";
@@ -104,7 +102,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   }, [isActive, answered, item.id, mounted]);
 
   async function pick(optionId: string) {
-    if (answered || submitting) return;
+    if (answered) return;
     setRespondError("");
     // Paint results immediately; server sync + coins land in the background.
     setLocal((prev) => scoreLocalVote(prev, optionId));
@@ -239,7 +237,6 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           imageUrl={o.imageUrl}
           tile={tile}
           compact={local.options.length > 4}
-          disabled={submitting}
           onPress={() => void pick(o.id)}
         />
       );
@@ -332,11 +329,6 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           ) : (
             <View style={styles.list}>{local.options.map((o) => renderOption(o, false))}</View>
           )}
-          {submitting && !answered ? (
-            <View style={styles.submitOverlay}>
-              <ScreenLoading label={t("submitting")} style={{ flex: 0, backgroundColor: "transparent" }} />
-            </View>
-          ) : null}
         </View>
 
         <ActionRail
@@ -401,12 +393,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cardCentered: { justifyContent: "center" },
-  submitOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(21,14,43,0.55)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   cardGlow: {
     position: "absolute",
     top: -40,

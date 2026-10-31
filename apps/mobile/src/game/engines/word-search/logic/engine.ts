@@ -1,4 +1,5 @@
 import { selectItems } from "../../../content/query";
+import { samplePreferFresh, seedUsedFromRecent } from "../../../content/recent";
 import type { ContentItem } from "../../../content/types";
 import type { GameDefinition } from "../../../core/definition";
 import type { EngineMeta, GameEngine } from "../../../core/engine";
@@ -96,19 +97,21 @@ export function createWordSearchEngine(meta: EngineMeta): GameEngine<WordSearchS
 
     init(ctx, rng) {
       const items = selectItems(ctx.content, { types: ["word_group"], categories: categoriesOf(ctx.def) });
-      const pool = rng.sample(items.map(themeFromItem).filter((t): t is ThemeEntry => t !== null), 60);
+      const mapped = items.map(themeFromItem).filter((t): t is ThemeEntry => t !== null);
+      const pool = samplePreferFresh(mapped, ctx.avoidIds ?? [], rng, 60);
       const v = vOf(ctx.def.variation);
+      const total = Math.min(rounds(ctx.def), Math.max(1, pool.length));
       return {
         v: 1,
         variation: ctx.def.variation,
-        total: Math.min(rounds(ctx.def), Math.max(1, pool.length)),
+        total,
         round: 0,
         score: 0,
         streak: 0,
         correct: 0,
         attempts: 0,
         pool,
-        used: [],
+        used: seedUsedFromRecent(pool.map((t) => t.id), ctx.avoidIds ?? [], total),
         theme: "",
         grid: [],
         words: [],

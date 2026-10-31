@@ -49,6 +49,12 @@ export type EngineInitContext = {
   content: ContentBundle;
   /** Session clock time (active ms, excludes backgrounded time). */
   now: number;
+  /**
+   * Content ids seen in recent solo sessions for this engine/variation.
+   * Engines should prefer other items so Play Again feels fresh. Omitted for
+   * challenges and restores so shared/resumed seeds stay reproducible.
+   */
+  avoidIds?: readonly string[];
 };
 
 export type RoundContext<Params> = {

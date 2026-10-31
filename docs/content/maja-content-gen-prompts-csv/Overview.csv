@@ -1,0 +1,15 @@
+﻿Section,Detail
+Purpose,Reference for how Maja generates polls/quizzes every ~4 hours
+Source code,backend/scripts/content_gen/agent.py + catalog.py
+Publisher,scripts/refresh_feed_content.py (GitHub Actions)
+Model,OPENAI_MODEL default gpt-4o-mini (OpenRouter if key starts with sk-or-)
+Languages,English prompt/label + Gen-Z Hinglish Devanagari promptHi/labelHi
+Batch size,~20 cards per onboarding category per refresh
+Card TTL,~4 hours; previous live moments retired after new batch
+Active categories,"cricket, movies, music, pop-culture, food, gaming, sports, news, tech, personality-vibe, fashion, health, kpop, puzzles, logical-reasoning, math-numbers"
+Event brief categories,"cricket, kpop, movies, music, news, pop-culture, sports, tech"
+Trend poll types,"debate, hot, opinion"
+Trend quiz types,"trivia, which, who"
+Event poll types,"challenge, debate, opinion, prediction"
+Event quiz types,"stat, which, who"
+How to read this workbook,Agent System Prompt = LLM system message. Agent User Payload = JSON user message schema. Shared Rules = rules[] sent every category. Category Scope/Rules = sports vs cricket extras. Evergreen Polls/Quizzes = bank templates. Brief Templates = verified event cards. Meme Pack = memegen image polls. Hindi Localize = second-pass prompt.

@@ -5,11 +5,19 @@ from datetime import UTC, datetime
 import pytest
 
 from scripts.content_gen.agent import (
+    EN_SYSTEM,
     MissingOpenAIKey,
+    _apply_hi_row,
+    _messages,
+    discard_localization_fields,
     ensure_language_split,
     fill_evergreen,
+    lazy_poll_issue,
+    localization_preserves_mechanics,
     localize_hi,
     near_duplicate_prompt,
+    normalize_verified_trends,
+    off_category_topic_issue,
     past_outcome_issue,
     require_key,
     resolve_chat_endpoint,
@@ -17,6 +25,7 @@ from scripts.content_gen.agent import (
     verify_quiz_facts,
     volatile_fact_issue,
 )
+from scripts.content_gen.hi_localize_prompt import HI_LOCALIZE_SYSTEM
 from scripts.content_gen.catalog import (
     MIN_LIVE,
     ONBOARDING_SLUGS,
@@ -217,9 +226,10 @@ def test_english_fields_strip_mixed_devanagari() -> None:
     assert len(cards) == 1
     assert "आज" not in cards[0].prompt
     assert cards[0].prompt.startswith("Who wins tonight")
-    assert cards[0].prompt_hi == "आज रात कौन जीतेगा?"
+    # Accidental Hindi from the English agent is discarded — localize_hi owns HI fields.
+    assert cards[0].prompt_hi is None
     assert cards[0].options[0]["label"] == "India"
-    assert cards[0].options[0]["labelHi"] == "भारत"
+    assert "labelHi" not in cards[0].options[0]
 
 
 def test_trend_quiz_allows_freeform_well_known_trivia() -> None:
@@ -246,6 +256,83 @@ def test_trend_quiz_allows_freeform_well_known_trivia() -> None:
     assert cards[0].format == "quiz"
     assert cards[0].scoring_mode == "correct_option"
     assert cards[0].question_type == "trivia"
+
+
+def test_sports_rejects_cricket_prompts() -> None:
+    """Sports (Non-Cricket) must not ship cricket takes — they belong under cricket."""
+    prompt = "How do you feel about the current state of Indian cricket?"
+    assert off_category_topic_issue("sports", prompt) == "cricket-in-sports"
+    assert off_category_topic_issue("cricket", prompt) is None
+    assert off_category_topic_issue("sports", "Big football derby night. Couch or stands?") is None
+
+    now = datetime(2026, 10, 30, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "sports",
+                "questionType": "debate",
+                "type": "predict",
+                "prompt": prompt,
+                "options": [
+                    {"label": "Optimistic about the future", "isCorrect": False},
+                    {"label": "Concerned about performance", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "poll",
+                "category": "sports",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "ISL final weekend. Who are you backing?",
+                "options": [
+                    {"label": "The home side", "isCorrect": False},
+                    {"label": "Whoever plays open football", "isCorrect": False},
+                ],
+            },
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "sports", [], now=now)
+    assert any(item.endswith(":cricket-in-sports") for item in dropped)
+    assert [card.prompt for card in cards] == ["ISL final weekend. Who are you backing?"]
+
+
+def test_cricket_rejects_non_cricket_sport_as_main_topic() -> None:
+    assert off_category_topic_issue("cricket", "Who wins the football derby tonight?") == "non-cricket-in-cricket"
+    assert off_category_topic_issue("cricket", "How many balls in a cricket over?") is None
+    assert off_category_topic_issue("sports", "Who wins the football derby tonight?") is None
+
+    now = datetime(2026, 10, 30, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "debate",
+                "type": "predict",
+                "prompt": "NBA finals night — LeBron or the underdog?",
+                "options": [
+                    {"label": "LeBron", "isCorrect": False},
+                    {"label": "The underdog", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "quiz",
+                "category": "cricket",
+                "questionType": "trivia",
+                "type": "pulse",
+                "prompt": "How many balls are there in a standard over?",
+                "options": [
+                    {"label": "6", "isCorrect": True},
+                    {"label": "8", "isCorrect": False},
+                    {"label": "4", "isCorrect": False},
+                ],
+            },
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "cricket", [], now=now)
+    assert any(item.endswith(":non-cricket-in-cricket") for item in dropped)
+    assert [card.prompt for card in cards] == ["How many balls are there in a standard over?"]
 
 
 def test_volatile_current_office_quiz_is_rejected_without_brief() -> None:
@@ -377,7 +464,7 @@ def test_openrouter_key_uses_gpt4o_mini(monkeypatch: pytest.MonkeyPatch) -> None
     assert model == "openai/gpt-4o-mini"
 
 
-def test_validate_candidates_keeps_hindi_fields() -> None:
+def test_validate_candidates_discards_hindi_fields_from_english_agent() -> None:
     now = datetime(2026, 10, 29, tzinfo=UTC)
     raw = {
         "candidates": [
@@ -398,9 +485,12 @@ def test_validate_candidates_keeps_hindi_fields() -> None:
     cards, dropped = validate_candidates(raw, "kpop", [], now=now)
     assert dropped == []
     assert len(cards) == 1
-    assert cards[0].prompt_hi == "पहले MV देखोगे या कोरस सीखोगे?"
-    assert cards[0].options[0]["labelHi"] == "पहले MV"
-    assert not cards[0].needs_hi()
+    assert cards[0].prompt_hi is None
+    assert "labelHi" not in cards[0].options[0]
+    assert cards[0].needs_hi()
+    discarded = discard_localization_fields(raw["candidates"][0])
+    assert "promptHi" not in discarded
+    assert "labelHi" not in discarded["options"][0]
 
 
 def test_ensure_language_split_separates_en_and_hi() -> None:
@@ -434,6 +524,10 @@ def test_prefer_devanagari_and_strip() -> None:
 
     assert strip_devanagari("India / भारत") == "India"
     assert prefer_devanagari("Excited! / बहुत ज़्यादा!") == "बहुत ज़्यादा!"
+    # Hinglish Hindi may keep short Latin acronyms/brands; drop English leftovers only.
+    assert prefer_devanagari("पहले MV देखोगे?") == "पहले MV देखोगे?"
+    assert prefer_devanagari("घर की Maggi") == "घर की Maggi"
+    assert prefer_devanagari("कितने एक्साइटेड हो?") == "कितने एक्साइटेड हो?"
     assert has_hinglish_latin("Kitne excited ho for the match?")
     assert has_hinglish_latin("Kya scene hai tonight?")
     assert not has_hinglish_latin("How excited are you for the match?")
@@ -453,7 +547,8 @@ def test_localize_hi_fills_missing_fields(monkeypatch: pytest.MonkeyPatch) -> No
     )
     assert card.needs_hi()
 
-    def fake_openai(_messages: list[dict[str, str]]) -> dict:
+    def fake_openai(messages: list[dict[str, str]]) -> dict:
+        assert "Maja Hindi Localization Expert" in messages[0]["content"]
         return {
             "translations": [
                 {
@@ -470,6 +565,45 @@ def test_localize_hi_fills_missing_fields(monkeypatch: pytest.MonkeyPatch) -> No
     assert filled[0].prompt_hi == "चाय या कॉफ़ी?"
     assert filled[0].options[0]["labelHi"] == "चाय"
     assert filled[0].options[1]["labelHi"] == "कॉफ़ी"
+
+
+def test_localize_hi_rewrite_replaces_draft(monkeypatch: pytest.MonkeyPatch) -> None:
+    card = Card(
+        type="predict",
+        category_slug="movies",
+        format="poll",
+        question_type="opinion",
+        prompt="What's your vibe for the next big Bollywood music release?",
+        options=[
+            {"label": "Excited!", "isCorrect": False, "labelHi": "एक्साइटेड"},
+            {"label": "Cautiously skeptical", "isCorrect": False, "labelHi": "संदेह"},
+        ],
+        scoring_mode="none",
+        tags=["poll"],
+        prompt_hi="आपका वाइब क्या है?",
+    )
+    assert not card.needs_hi()
+
+    def fake_openai(messages: list[dict[str, str]]) -> dict:
+        assert "Maja Hindi Localization Expert" in messages[0]["content"]
+        return {
+            "translations": [
+                {
+                    "id": "0",
+                    "promptHi": "अगली बड़ी बॉलीवुड फ़िल्म को लेकर कितने एक्साइटेड हो?",
+                    "optionsHi": ["बहुत ज़्यादा! 🔥", "ट्रेलर आने दो पहले 👀"],
+                }
+            ]
+        }
+
+    monkeypatch.setattr("scripts.content_gen.agent.call_openai", fake_openai)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    filled = localize_hi([card], rewrite=True)
+    assert filled[0].prompt_hi == "अगली बड़ी बॉलीवुड फ़िल्म को लेकर कितने एक्साइटेड हो?"
+    assert filled[0].options[0]["labelHi"] == "बहुत ज़्यादा! 🔥"
+
+    skipped = localize_hi([card], rewrite=False)
+    assert skipped[0].prompt_hi == "आपका वाइब क्या है?"
 
 
 def test_localize_hi_skips_without_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -642,3 +776,328 @@ def test_past_brief_keeps_only_forward_looking_predictions() -> None:
     }
     closed_kinds = {card.question_type for card in cards_from_brief(closed, now=now)}
     assert "prediction" not in closed_kinds
+
+
+def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
+    lowered = EN_SYSTEM.lower()
+    assert "english only" in lowered or "natural english only" in lowered
+    assert "hindi" in lowered
+    assert "devanagari" in lowered
+    assert "hinglish" in lowered
+    assert "prompthi" in lowered
+    assert "labelhi" in lowered
+    assert "separate hindi localization" in lowered
+    msgs = _messages("food", 4, [], avoid_prompts=[], insights={})
+    assert msgs[0]["content"] == EN_SYSTEM
+    payload = msgs[1]["content"]
+    assert "promptHi" in payload  # forbidden in rules text
+    assert "Never generate" in EN_SYSTEM or "never generate" in lowered
+    assert "verifiedTrends" in payload
+    assert "hindiGood" not in payload
+
+
+def test_normalize_verified_trends_marks_completed_events() -> None:
+    brief = next(row for row in load_briefs() if row["id"] == "ind-nz-t20-2026-10-22")
+    trends = normalize_verified_trends([brief], today=datetime(2026, 10, 30, tzinfo=UTC).date())
+    assert len(trends) == 1
+    assert trends[0]["eventStatus"] == "completed"
+    assert trends[0]["allowPrediction"] is False
+    assert "prediction" not in trends[0]["allowedAngles"]
+
+
+def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:
+    assert lazy_poll_issue("poll", "Who is your favourite actor?") == "lazy-poll"
+    assert lazy_poll_issue("poll", "Worth the hype or overrated?") is None
+    now = datetime(2026, 10, 30, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "movies",
+                "questionType": "opinion",
+                "type": "predict",
+                "prompt": "Who is your favourite actor?",
+                "options": [
+                    {"label": "Star A", "isCorrect": False},
+                    {"label": "Star B", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "quiz",
+                "category": "movies",
+                "questionType": "trivia",
+                "type": "pulse",
+                "prompt": "What is the short break mid-film in Indian theatres called?",
+                "options": [
+                    {"label": "Interval", "isCorrect": True},
+                    {"label": "Encore", "isCorrect": True},
+                    {"label": "Overture", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "poll",
+                "category": "movies",
+                "questionType": "debate",
+                "type": "predict",
+                "prompt": "Theatre opening or wait for OTT?",
+                "options": [
+                    {"label": "Theatre opening", "isCorrect": True},
+                    {"label": "Wait for OTT", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "quiz",
+                "category": "movies",
+                "questionType": "trivia",
+                "type": "pulse",
+                "prompt": "What does OTT stand for in streaming?",
+                "options": [
+                    {"label": "Over The Top", "isCorrect": True},
+                    {"label": "On The Table", "isCorrect": False},
+                    {"label": "Open Title Track", "isCorrect": False},
+                ],
+            },
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "movies", [], now=now)
+    assert any(item.endswith(":lazy-poll") for item in dropped)
+    assert any(item.endswith(":quiz-correct") for item in dropped)
+    assert any(item.endswith(":poll-correct") for item in dropped)
+    assert [c.prompt for c in cards] == ["What does OTT stand for in streaming?"]
+
+
+def test_semantic_duplicate_against_avoid_prompts() -> None:
+    now = datetime(2026, 10, 30, tzinfo=UTC)
+    assert near_duplicate_prompt(
+        "Who is your favourite actor?",
+        "Which actor do you love the most?",
+        threshold=0.4,
+    ) or lazy_poll_issue("poll", "Which actor do you love the most?") == "lazy-poll"
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "debate",
+                "type": "predict",
+                "prompt": "Who should captain — Kohli or Rohit?",
+                "options": [
+                    {"label": "Kohli", "isCorrect": False},
+                    {"label": "Rohit", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "poll",
+                "category": "movies",
+                "questionType": "opinion",
+                "type": "predict",
+                "prompt": "Which actor do you love the most?",
+                "options": [
+                    {"label": "Star A", "isCorrect": False},
+                    {"label": "Star B", "isCorrect": False},
+                ],
+            },
+        ]
+    }
+    cricket_cards, cricket_dropped = validate_candidates(
+        {"candidates": [raw["candidates"][0]]},
+        "cricket",
+        [],
+        now=now,
+        avoid_prompts=["Kohli or Rohit for captain?"],
+    )
+    assert cricket_cards == []
+    assert any(item.endswith(":avoid-near-duplicate") for item in cricket_dropped)
+
+    movie_cards, movie_dropped = validate_candidates(
+        {"candidates": [raw["candidates"][1]]},
+        "movies",
+        [],
+        now=now,
+    )
+    assert movie_cards == []
+    assert any(item.endswith(":lazy-poll") for item in movie_dropped)
+
+
+def test_upcoming_prediction_accepted_completed_rejected() -> None:
+    briefs = load_briefs()
+    brief = next(row for row in briefs if row["id"] == "movies-weekend-window")
+    now = datetime(2026, 10, 23, tzinfo=UTC)  # before eventDate 2026-10-24
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "movies",
+                "questionType": "prediction",
+                "type": "predict",
+                "briefId": brief["id"],
+                "prompt": "Prediction: will you watch during opening weekend?",
+                "options": [
+                    {"label": "yes, in a theatre", "isCorrect": False},
+                    {"label": "no, later at home", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "movies", briefs, now=now)
+    assert dropped == []
+    assert len(cards) == 1
+
+    # Closed season outcome prediction without a forward-looking brief cue.
+    closed_raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "Who will win IPL 2026?",
+                "options": [
+                    {"label": "Mumbai", "isCorrect": False},
+                    {"label": "Chennai", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    closed_cards, closed_dropped = validate_candidates(
+        closed_raw, "cricket", [], now=datetime(2026, 10, 30, tzinfo=UTC)
+    )
+    assert closed_cards == []
+    assert any(item.endswith(":past-outcome") for item in closed_dropped)
+
+
+def test_brief_supported_fact_accepted_unsupported_rejected() -> None:
+    briefs = load_briefs()
+    now = datetime(2026, 10, 29, tzinfo=UTC)
+    ok = {
+        "candidates": [
+            {
+                "format": "quiz",
+                "category": "cricket",
+                "questionType": "stat",
+                "type": "pulse",
+                "briefId": "ind-nz-t20-2026-10-22",
+                "prompt": "How many runs did Sanju Samson score?",
+                "options": [
+                    {"label": "67", "isCorrect": True},
+                    {"label": "33", "isCorrect": False},
+                    {"label": "102", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    cards, dropped = validate_candidates(ok, "cricket", briefs, now=now)
+    assert dropped == []
+    assert len(cards) == 1
+
+    bad = {
+        "candidates": [
+            {
+                "format": "quiz",
+                "category": "cricket",
+                "questionType": "stat",
+                "type": "pulse",
+                "briefId": "ind-nz-t20-2026-10-22",
+                "prompt": "How many runs did Virat Kohli score?",
+                "options": [
+                    {"label": "82", "isCorrect": True},
+                    {"label": "67", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    bad_cards, bad_dropped = validate_candidates(bad, "cricket", briefs, now=now)
+    assert bad_cards == []
+    assert bad_dropped
+
+
+def test_localization_preserves_mechanics_and_uses_hi_system(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    card = Card(
+        type="pulse",
+        category_slug="cricket",
+        format="quiz",
+        question_type="trivia",
+        prompt="How many balls are there in a standard over?",
+        options=[
+            {"label": "6", "isCorrect": True},
+            {"label": "8", "isCorrect": False},
+            {"label": "4", "isCorrect": False},
+        ],
+        scoring_mode="correct_option",
+        tags=["quiz"],
+        brief_id="brief-x",
+    )
+
+    def fake_openai(messages: list[dict[str, str]]) -> dict:
+        assert messages[0]["content"] == HI_LOCALIZE_SYSTEM
+        return {
+            "translations": [
+                {
+                    "id": "0",
+                    "promptHi": "एक ओवर में कितनी गेंदें होती हैं?",
+                    "options": [
+                        {"id": "0", "labelHi": "६"},
+                        {"id": "1", "labelHi": "८"},
+                        {"id": "2", "labelHi": "४"},
+                    ],
+                }
+            ]
+        }
+
+    monkeypatch.setattr("scripts.content_gen.agent.call_openai", fake_openai)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    filled = localize_hi([card])
+    assert filled[0].prompt == card.prompt
+    assert filled[0].brief_id == "brief-x"
+    assert filled[0].question_type == "trivia"
+    assert [bool(o["isCorrect"]) for o in filled[0].options] == [True, False, False]
+    assert [o["label"] for o in filled[0].options] == ["6", "8", "4"]
+    assert filled[0].prompt_hi == "एक ओवर में कितनी गेंदें होती हैं?"
+    assert filled[0].options[0]["labelHi"] == "६"
+    assert localization_preserves_mechanics(card, filled[0])
+    assert filled[0].has_complete_hi()
+
+    # Tampered localization that would rewrite English must be rejected by merge safeguards.
+    tampered = _apply_hi_row(
+        card,
+        {"promptHi": "बदला हुआ?", "optionsHi": ["६", "८", "४"]},
+    )
+    # _apply_hi_row itself keeps English; simulate a broken after-state:
+    broken = Card(
+        type=card.type,
+        category_slug=card.category_slug,
+        format=card.format,
+        question_type="opinion",  # changed
+        prompt="Changed prompt",
+        options=card.options,
+        scoring_mode=card.scoring_mode,
+        tags=card.tags,
+        brief_id=card.brief_id,
+        prompt_hi="बदला हुआ?",
+    )
+    assert not localization_preserves_mechanics(card, broken)
+    assert localization_preserves_mechanics(card, tampered)
+
+
+def test_hinglish_latin_rejected_in_english_validation() -> None:
+    now = datetime(2026, 10, 30, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "food",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "Kya scene hai for midnight Maggi?",
+                "options": [
+                    {"label": "Full on", "isCorrect": False},
+                    {"label": "Skip", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "food", [], now=now)
+    assert cards == []
+    assert any("english-hinglish" in item for item in dropped)

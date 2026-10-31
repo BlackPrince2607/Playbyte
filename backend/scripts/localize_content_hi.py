@@ -24,9 +24,10 @@ from scripts.import_content import DEFAULT_DIR, load_pack_file
 
 HI_LOCALE = "hi-IN"
 HI_STYLE = (
-    "Everyday spoken Hindi (bolchal) in Devanagari. "
-    "Keep common English loanwords people say. Keep proper names and numbers. "
-    "Avoid stiff textbook Hindi. Do not invent facts."
+    "Gen-Z Hinglish bolchal in Devanagari — spoken Hindi with English loanwords people say "
+    "(गेम, क्विज़, वाइब, एक्साइटेड, स्किप, ट्रेंड, सीन). "
+    "Keep proper names and numbers. Avoid stiff textbook Hindi and Latin-script Hinglish. "
+    "Do not invent facts."
 )
 
 

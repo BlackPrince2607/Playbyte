@@ -1,0 +1,14 @@
+﻿Field,Rule
+format,poll or quiz
+category,Must equal requested category slug
+questionType,From pollQuestionTypes / quizQuestionTypes for that category
+type,predict (2 options) or pulse (3–4 options)
+prompt,Natural English only; Latin script; no Hinglish
+promptHi,Gen-Z Hinglish Devanagari; required
+options[].label,English only
+options[].labelHi,Devanagari Hinglish; required
+options[].isCorrect,Exactly one true for quiz; all false for poll
+briefId,null unless card uses a verified brief
+prediction,Prompt must contain word Prediction + open brief
+bank quizzes,Non-trend types must copy evergreen bank prompt/options
+gates,"Near-duplicate, past prediction, volatile officeholder quiz, off-category, Hinglish-in-English, empty Hindi → dropped"

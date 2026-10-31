@@ -6,6 +6,7 @@
  * from aggregated `choice_pick` events, so the crowd a player sees is the real one.
  */
 import { selectItems } from "../../../content/query";
+import { samplePreferFresh, seedUsedFromRecent } from "../../../content/recent";
 import type { ContentItem } from "../../../content/types";
 import type { GameDefinition } from "../../../core/definition";
 import type { EngineMeta, GameEngine, ReduceResult } from "../../../core/engine";
@@ -192,12 +193,13 @@ export function createChoiceEngine(spec: ChoiceEngineSpec): GameEngine<ChoiceSta
       const items = selectItems(ctx.content, { types: ["choice_pair"], categories: categoriesFor(ctx.def) });
       let pairs = items.map(pairFromItem).filter((p): p is ChoicePair => p !== null);
       if (v.mode === "predict") pairs = pairs.map((p) => ({ ...p, difficulty: splitDifficulty(p.split) }));
-      const pool = rng.sample(pairs, poolCap);
+      const pool = samplePreferFresh(pairs, ctx.avoidIds ?? [], rng, poolCap);
+      const total = Math.min(rounds(ctx.def), Math.max(1, pool.length));
       return {
         v: 1,
         variation: ctx.def.variation,
         mode: v.mode,
-        total: Math.min(rounds(ctx.def), Math.max(1, pool.length)),
+        total,
         round: 0,
         score: 0,
         streak: 0,
@@ -205,7 +207,7 @@ export function createChoiceEngine(spec: ChoiceEngineSpec): GameEngine<ChoiceSta
         attempts: 0,
         lives: v.mode === "predict" ? ctx.def.lives ?? null : null,
         pool,
-        used: [],
+        used: seedUsedFromRecent(pool.map((p) => p.id), ctx.avoidIds ?? [], total),
         q: null,
         pick: null,
         roundStart: ctx.now,

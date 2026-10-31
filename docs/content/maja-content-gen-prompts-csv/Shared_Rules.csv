@@ -1,0 +1,49 @@
+﻿#,Rule
+1,Return JSON with a candidates array.
+2,Every candidate category must equal the requested category.
+3,Stay inside categoryScope — never write a card that belongs in a different onboarding category.
+4,Today is 2026-10-31. Every card must feel current — what India is talking about in this category right now.
+5,MIX (critical): about 12 QUIZZES and 8 polls. Quizzes should dominate.
+6,Prefer trivia / who / which quizzes with one clear correct answer over soft opinion polls.
+7,"BAD batch: ten similar preference polls ('How do you watch movies?', 'Favourite snack?', 'Happy ending or cliffhanger?')."
+8,"GOOD batch: mix of fact trivia, who/which quizzes, and a few sharp debate polls on DIFFERENT topics."
+9,Write brand-new prompts. Never reuse or lightly rephrase anything in avoidPrompts.
+10,UNIQUENESS (critical): each candidate must cover a DIFFERENT topic/angle — not the same question with new wording.
+11,NAME DIVERSITY (critical): do not reuse the same player/celebrity/team focus across multiple cards in one batch.
+12,"Knowledge trivia is encouraged: rules, formats, history, records, definitions — not only 'who is hot today' opinion polls."
+13,BAD uniqueness: 'Theatre or OTT?' and 'How do you prefer to watch films?'.
+14,"Vary subjects, stakes, formats, and questionType across the batch so consecutive cards feel different."
+15,Do not lean on the same names that already appear in avoidPrompts / avoidNames.
+16,"Prioritize India trends that are LIVE or UPCOMING for THIS category only (fixtures, releases, drops, slang, debates Indians care about). Skip party politics."
+17,"CLOSED / PAST EVENTS (critical): NEVER ask users to predict the outcome of a match, tournament, season, election, award, or final that has already concluded as of today."
+18,BAD past prediction: 'Who will win IPL 2026?' when IPL 2026 is already over by 2026-10-31.
+19,BAD past prediction: 'Prediction: who wins the final?' for a final that already happened.
+20,"OK on past events: opinion/debate only ('Fair Player of the Match?', 'Was that the right call?')."
+21,OK predictions: only UPCOMING fixtures (tonight / this weekend / next match) that have not started — and only with briefId when questionType is prediction.
+22,"If unsure whether an event is still open, write an opinion/debate/hot poll instead of a prediction."
+23,"Learn from engagementInsights: copy the energy of hits (format, length, debate heat); do not clone miss prompts; follow lessons."
+24,TWO LANGUAGE LAYERS (critical): English and Hindi are separate fields — never put both in one string.
+25,"ENGLISH (prompt + option.label): natural English only. Short, second-person, swipeable. Latin script only."
+26,"NO Hinglish in English fields: never use Hindi words or Latin transliteration (yaar, kya, kitna, bahut, nahi, scene hai, full on, etc.)."
+27,English must read like English a fluent speaker would write — not Hindi written in Latin letters.
+28,HINDI (promptHi + option.labelHi): Gen-Z Hinglish bolchal in Devanagari — how friends actually text.
+29,"Put the Hinglish energy ONLY in Hindi fields: क्या सीन है, कितने एक्साइटेड हो, वाइब, स्किप, ट्रेंड, फुल ऑन."
+30,Hindi is NOT a word-for-word translation of the English line — rewrite the same idea with spoken Hinglish voice.
+31,"Hindi fields: Devanagari script. Keep loanwords people say (फ़िल्म, ट्रेलर, मैच, क्विज़, पोल, गेम, स्कोर, वाइब, एक्साइटेड, सीन, स्किप, रील्स, ट्रेंड, लाइक, शेयर). Do not force stiff pure-Hindi."
+32,"Never put Latin-script Hinglish or English sentences into Hindi fields (no 'Kitne excited ho', no 'Excited! / एक्साइटेड')."
+33,"Short Latin acronyms/names OK inside Hindi when people keep them that way (MV, OTT, DRS, IPL)."
+34,Not formal survey speak. Not essays. Spicy but friendly.
+35,"Polls use questionType opinion, debate, or hot for freeform India-trend options."
+36,"Trend quizzes use questionType trivia, who, or which with STABLE well-known facts only (rules, definitions, permanent records)."
+37,"NEVER write a freeform quiz about who currently holds an office (CM, PM, president, captain, coach, CEO) — those need a verified briefId."
+38,BAD freeform quiz: 'Who is the current Chief Minister of Delhi?' / 'Who is India's PM right now?'.
+39,OK freeform quiz: stable rules/definitions for THIS category (e.g. 'What does OTT stand for?' for movies/tech).
+40,Time-sensitive politics/news facts belong in briefs — or write an opinion/debate poll instead of a quiz.
+41,"A prediction prompt must contain the word Prediction, set briefId, and the brief must allow it."
+42,Bank quizzes (evergreen types not in trendQuizTypes) must copy prompt and options from the evergreen bank.
+43,Event copy may use only names and numbers that appear in that brief.
+44,A quiz has exactly one correct option. Polls must set isCorrect false on every option.
+45,Two options use type predict. Three or four use type pulse.
+46,Do not use gambling words.
+47,Every candidate MUST include promptHi and labelHi on every option. Never leave Hindi empty.
+48,Return about 20 candidates — fill the feed; quantity with quality.

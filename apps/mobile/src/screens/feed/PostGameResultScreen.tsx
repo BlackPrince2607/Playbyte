@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CoinIcon } from "../../components/CoinIcon";
+import { FriendPickerModal } from "../../components/FriendPickerModal";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { ResultBar } from "../../components/StitchPrimitives";
 import { prefersReducedMotion } from "../../game/ui/feedback";
 import { Confetti } from "../../game/ui/motion";
 import { fakeBeatenCount, resultHeadline, scoreRows, statRows } from "../../game/ui/resultSummary";
-import type { SaveState } from "../../game/session/submitQueue";
+import type { ChallengeResultSummary, SaveState } from "../../game/session/submitQueue";
 import type { RoundRecord } from "../../game/session/types";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
@@ -15,7 +16,9 @@ import { useLanguage } from "../../context/LanguageContext";
 import { localizeChrome } from "../../i18n/chrome";
 import { fill } from "../../i18n/strings";
 import { capture } from "../../lib/analytics";
+import { createChallenge } from "../../lib/challenges";
 import { APP_SHARE_URL } from "../../lib/links";
+import { isApiError } from "../../api";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
@@ -41,6 +44,10 @@ type Props = {
   rounds?: RoundRecord[];
   scoreBreakdown?: Record<string, number>;
   coinsEarned?: number;
+  playId?: string;
+  playSeed?: string;
+  challengeSummary?: ChallengeResultSummary;
+  onSignIn?: () => void;
 };
 
 const BAR_MAX_HEIGHT = 72;
@@ -156,6 +163,10 @@ export function PostGameResultScreen({
   rounds,
   scoreBreakdown,
   coinsEarned = 0,
+  playId,
+  playSeed,
+  challengeSummary,
+  onSignIn,
 }: Props) {
   const insets = useSafeAreaInsets();
   const beaten = fakeBeatenCount(percentile, score);
@@ -167,11 +178,13 @@ export function PostGameResultScreen({
   const shownScore = useCountUp(score);
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [busyFriend, setBusyFriend] = useState<string | null>(null);
   const showAccuracy = attempts !== undefined && attempts > 0 && correct !== undefined;
   const accuracyPct = showAccuracy ? Math.round((correct / attempts) * 100) : 0;
   const { t, language, fonts: ui } = useLanguage();
   const { isSignedIn } = useAuth();
-  const { wallet } = useApp();
+  const { wallet, friends, refreshFriends } = useApp();
   const sharePrompt = fill(celebrate ? t("resultSharePrompt") : t("resultSharePromptSoft"), { score });
   const beatenLabel = beaten.count.toLocaleString(language === "hi" ? "hi-IN" : "en-IN");
   const hitGameCap =
@@ -181,18 +194,34 @@ export function PostGameResultScreen({
     !!wallet &&
     wallet.gamesRewarded >= wallet.gamesRewardCap;
 
+  const myChallengeScore = challengeSummary?.myScore ?? score;
+  const theirChallengeScore = challengeSummary?.theirScore;
+  const vsOutcome =
+    challengeSummary?.status === "completed" &&
+    theirChallengeScore != null &&
+    challengeSummary.opponentName
+      ? myChallengeScore === theirChallengeScore
+        ? t("challengeTie")
+        : myChallengeScore > theirChallengeScore
+          ? t("challengeYouWon")
+          : t("challengeYouLost")
+      : null;
+  const vsLabel =
+    theirChallengeScore != null && challengeSummary?.opponentName
+      ? fill(t("vsScore"), {
+          my: myChallengeScore,
+          their: theirChallengeScore,
+          name: challengeSummary.opponentName,
+        })
+      : null;
+
   async function shareScore() {
     capture("share_clicked", {
       button_location: "game_result",
       share_medium: "native_share",
       user_id: null,
     });
-    capture("result_action_clicked", { action: "challenge" });
-    capture("challenge_shared", {
-      game_id: gameKey ?? null,
-      score,
-      share_method: "native_share",
-    });
+    capture("result_action_clicked", { action: "share" });
     setSharing(true);
     setShareError("");
     const brag = fill(t("shareBeat"), { score, title: gameTitle, count: beatenLabel, pct: beaten.pct });
@@ -205,7 +234,27 @@ export function PostGameResultScreen({
     }
   }
 
-  const shareLabel = sharing ? t("openingShare") : shareError ? t("retryShare") : t("challengeFriend");
+  async function sendChallenge(friendUserId: string, friendName: string) {
+    if (!gameKey) return;
+    setBusyFriend(friendUserId);
+    try {
+      await createChallenge({
+        opponentUserId: friendUserId,
+        gameKey,
+        playId: saveState === "saved" ? playId : undefined,
+        seed: playSeed,
+      });
+      capture("result_action_clicked", { action: "challenge" });
+      setPickerOpen(false);
+      Alert.alert(t("challengeFriend"), fill(t("challengeSent"), { name: friendName }));
+    } catch (e) {
+      Alert.alert(t("challengeFriend"), isApiError(e) ? e.userMessage : t("challengeSendFailed"));
+    } finally {
+      setBusyFriend(null);
+    }
+  }
+
+  const shareLabel = sharing ? t("openingShare") : shareError ? t("retryShare") : t("shareScoreInstead");
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.ink }}>
@@ -251,6 +300,20 @@ export function PostGameResultScreen({
         </View>
 
         <Text style={[type.bodyLg, styles.sharePrompt, { fontFamily: ui.body }]}>{sharePrompt}</Text>
+        {vsOutcome || vsLabel ? (
+          <View style={{ alignItems: "center", gap: 4, marginBottom: spacing.sm }}>
+            {vsOutcome ? (
+              <Text style={[type.bodyLg, { color: colors.lime, textAlign: "center", fontFamily: ui.bodyBold }]}>
+                {vsOutcome}
+              </Text>
+            ) : null}
+            {vsLabel ? (
+              <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center", fontFamily: ui.body }]}>
+                {vsLabel}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
 
         {saveState !== "saved" ? (
           <View
@@ -276,11 +339,22 @@ export function PostGameResultScreen({
         ) : null}
 
         <View style={styles.actions}>
+          {gameKey ? (
+            <PrimaryButton
+              label={t("challengeFriend")}
+              onPress={() => {
+                void refreshFriends();
+                setPickerOpen(true);
+              }}
+              icon="flash-outline"
+            />
+          ) : null}
           {enableShare ? (
             <PrimaryButton
               label={shareLabel}
               onPress={() => void shareScore()}
               busy={sharing}
+              variant="secondary"
               icon="share-outline"
             />
           ) : null}
@@ -358,6 +432,15 @@ export function PostGameResultScreen({
         ) : null}
       </ScrollView>
       <Confetti active={celebrate} />
+      <FriendPickerModal
+        visible={pickerOpen}
+        friends={friends}
+        signedIn={isSignedIn}
+        busyUserId={busyFriend}
+        onClose={() => setPickerOpen(false)}
+        onSignIn={onSignIn}
+        onSelect={(f) => void sendChallenge(f.userId, f.displayName)}
+      />
     </View>
   );
 }

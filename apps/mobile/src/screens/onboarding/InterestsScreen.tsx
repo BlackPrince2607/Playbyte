@@ -47,29 +47,58 @@ const FALLBACK: Category[] = [
   { id: "math-numbers", name: "Math & Numbers", slug: "math-numbers" },
 ];
 
-const ICONS: [string, string][] = [
+/** Prefer exact slug/id so short keys like "pop" don't steal "kpop". */
+const ICONS_BY_SLUG: Record<string, string> = {
+  cricket: "🏏",
+  movies: "🍿",
+  bollywood: "🍿",
+  entertainment: "🍿",
+  music: "🎵",
+  "pop-culture": "😂",
+  food: "🍔",
+  gaming: "🎮",
+  game: "🎮",
+  sports: "⚽",
+  news: "📰",
+  tech: "💻",
+  science: "🔬",
+  "personality-vibe": "🎯",
+  social: "🎯",
+  quiz: "🎯",
+  fashion: "🛍️",
+  health: "💪",
+  kpop: "🎤",
+  "k-drama": "📺",
+  puzzles: "🧩",
+  "logical-reasoning": "🧠",
+  "math-numbers": "🧮",
+  weather: "⛅",
+  politics: "🏛️",
+  casual: "✨",
+};
+
+const ICONS_FUZZY: [string, string][] = [
   ["cricket", "🏏"],
-  ["movie", "🍿"],
   ["bollywood", "🍿"],
+  ["movie", "🍿"],
   ["music", "🎵"],
-  ["pop", "😂"],
+  ["kpop", "🎤"],
+  ["k-pop", "🎤"],
+  ["k-drama", "📺"],
   ["meme", "😂"],
+  ["pop culture", "😂"],
+  ["pop-culture", "😂"],
   ["food", "🍔"],
   ["gaming", "🎮"],
-  ["game", "🎮"],
   ["sport", "⚽"],
   ["news", "📰"],
   ["tech", "💻"],
-  ["science", "💻"],
+  ["science", "🔬"],
   ["personality", "🎯"],
-  ["vibe", "🎯"],
   ["fashion", "🛍️"],
   ["beauty", "🛍️"],
   ["health", "💪"],
   ["fitness", "💪"],
-  ["kpop", "📺"],
-  ["k-drama", "📺"],
-  ["drama", "📺"],
   ["puzzle", "🧩"],
   ["logical", "🧠"],
   ["math", "🧮"],
@@ -77,8 +106,11 @@ const ICONS: [string, string][] = [
 ];
 
 function iconFor(c: Category): string {
+  const slug = (c.slug ?? c.id).toLowerCase();
+  if (ICONS_BY_SLUG[slug]) return ICONS_BY_SLUG[slug];
+  if (ICONS_BY_SLUG[c.id.toLowerCase()]) return ICONS_BY_SLUG[c.id.toLowerCase()];
   const hay = `${c.id} ${c.slug ?? ""} ${c.name}`.toLowerCase();
-  return ICONS.find(([k]) => hay.includes(k))?.[1] ?? "✨";
+  return ICONS_FUZZY.find(([k]) => hay.includes(k))?.[1] ?? "✨";
 }
 
 export function InterestsScreen({ onDone, onBack, mode = "onboarding" }: Props) {

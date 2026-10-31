@@ -1,8 +1,19 @@
 # Category polls and quizzes
 
-Every onboarding category has a poll catalog and a matching quiz catalog. Merged picks: K-Pop & K-Drama, Technology (+ science), Personality & Quizzes (+ social), Bollywood (movies only). Sports, cricket, and Bollywood also read verified event briefs.
+Every onboarding category has a poll catalog and a matching quiz catalog. Merged picks: K-Pop & K-Drama, Technology (+ science), Personality & Quizzes (+ social), Bollywood (movies only). Sports, cricket, and Bollywood also read verified event briefs. `sports` is Sports (Non-Cricket): the agent prompt and publish gate reject cricket/IPL copy there so it stays in the `cricket` category.
 
-The OpenAI agent **fills** a fresh batch for every category on each refresh (~20 cards by default). It reads engagement insights (what got answers, likes, comments, shares) and biases the next prompts toward India trends that performed. Cards expire in ~4 hours. After the new batch is live, the job retires **all** previous live moments so nothing repeats. Freeform opinion/hot polls and trend trivia (`trivia` / `who` / `which`) are allowed; evergreen bank quizzes remain a fallback. Each card also gets everyday spoken Hindi (`promptHi` / `labelHi`); evergreen and meme cards go through a `localize_hi` pass. `OPENAI_API_KEY` is required. Set it in `.env` locally and as a GitHub secret for the refresh job. Do not commit the key. `OPENAI_MODEL` defaults to `gpt-4o-mini`. A key that starts with `sk-or-` is sent to OpenRouter, and a model name without a slash becomes `openai/gpt-4o-mini`. Set `OPENAI_BASE_URL` to override the host.
+## Two language stages (one card)
+
+MAJA content generation uses two language stages.
+
+1. **English Content Agent** (`agent.py` → `_messages` / `EN_SYSTEM`): Generates and validates all game content in English only (`prompt`, `options[].label`). It must never generate final Hindi fields (`promptHi` / `labelHi`).
+2. **Hindi Localization Agent** (`hi_localize_prompt.py` → `HI_LOCALIZE_SYSTEM` / `localize_hi`): Generates `promptHi` and `labelHi` after English content is finalized. It must never change game mechanics (`format`, `category`, `questionType`, `type`, `briefId`, option count/order, `isCorrect`).
+
+Both language layers belong to the same underlying card. The app language switch selects display fields; votes, correctness, and analytics stay on one card ID.
+
+Pipeline: verified trends/briefs → English agent → English validation → fact/category gates → dedupe/diversity → evergreen top-up → Hindi localization → final validation → publish.
+
+The OpenAI agent **fills** a fresh batch for every category on each refresh (~20 cards by default). It reads engagement insights (what got answers, likes, comments, shares) and biases toward patterns that performed — not cloned wording. Cards expire in ~4 hours. After the new batch is live, the job retires **all** previous live moments so nothing repeats. Freeform opinion/hot polls and trend trivia (`trivia` / `who` / `which`) are allowed; evergreen bank quizzes remain a fallback. `OPENAI_API_KEY` is required. Set it in `.env` locally and as a GitHub secret for the refresh job. Do not commit the key. `OPENAI_MODEL` defaults to `gpt-4o-mini`. A key that starts with `sk-or-` is sent to OpenRouter, and a model name without a slash becomes `openai/gpt-4o-mini`. Set `OPENAI_BASE_URL` to override the host. Both agents may share the same key/model; separation is about responsibility, not infrastructure.
 
 Game content packs: `python -m scripts.localize_content_hi` upserts `hi-IN` items (id suffix `.hi`) from the English pack JSON.
 

@@ -1,0 +1,51 @@
+﻿slug,kind,text
+cricket,label,Cricket
+cricket,include,IPL
+cricket,include,international cricket
+cricket,include,T20 / ODI / Tests
+cricket,include,players
+cricket,include,rules
+cricket,include,formats
+cricket,include,upcoming fixtures
+cricket,exclude,football and other non-cricket sports as the main topic
+cricket,rule,"SCOPE: this is the cricket category — IPL, internationals, formats, rules, and debate takes."
+cricket,rule,BAD name spam: three cards all about Sanju Samson / Kohli / Rohit. Rotate subjects or ask knowledge questions with no star name.
+cricket,rule,"GOOD cricket mix: 'How many balls in an over?', 'What does DRS stand for?', one debate poll, one upcoming-match take — different angles."
+cricket,rule,OK freeform quiz: 'How many players take the field for one side in cricket?'.
+movies,label,movies
+music,label,music
+pop-culture,label,pop-culture
+food,label,food
+gaming,label,gaming
+sports,label,Sports (Non-Cricket)
+sports,include,football/soccer
+sports,include,hockey
+sports,include,badminton
+sports,include,tennis
+sports,include,kabaddi
+sports,include,athletics
+sports,include,F1
+sports,include,NBA / Olympics topics Indians follow
+sports,include,chess
+sports,exclude,cricket
+sports,exclude,IPL
+sports,exclude,T20
+sports,exclude,ODI
+sports,exclude,BCCI
+sports,exclude,wickets
+sports,exclude,batting/bowling cricket terms
+sports,exclude,cricket players or Indian cricket takes
+sports,note,Cricket has its own category slug 'cricket'. Never write cricket cards for sports.
+sports,rule,SCOPE (critical): category sports means Sports (Non-Cricket) ONLY.
+sports,rule,"NEVER mention cricket, IPL, T20, ODI, BCCI, wickets, batting, bowling, or cricket players."
+sports,rule,BAD sports card: 'How do you feel about the current state of Indian cricket?'.
+sports,rule,"GOOD sports mix: football derby takes, kabaddi, badminton, hockey, F1, Olympics, chess puzzles."
+news,label,news
+tech,label,tech
+personality-vibe,label,personality-vibe
+fashion,label,fashion
+health,label,health
+kpop,label,kpop
+puzzles,label,puzzles
+logical-reasoning,label,logical-reasoning
+math-numbers,label,math-numbers

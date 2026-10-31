@@ -28,7 +28,9 @@ import { engineRegistry } from "../engines";
 import { registerEngines } from "../engines/manifest";
 import { LEGACY_REPLACEMENTS } from "../engines/replacements";
 import { loadContent, resolveAsset } from "../platform/content";
-import { gameBus, levelStore, newSessionId, sessionStore } from "../platform/services";
+import { awaitEnginePrefetch, isEngineWarm, markEngineWarm } from "../platform/prefetchGame";
+import { usedIdsFromState } from "../content/recent";
+import { gameBus, levelStore, newSessionId, recentIdsStore, sessionStore } from "../platform/services";
 import { SessionRunner } from "../session/runner";
 import { CompletedPlay, GameSession } from "../session/types";
 import { feedback } from "./feedback";
@@ -44,6 +46,10 @@ type Props = {
   onExit: () => void;
   /** A recovered session to continue instead of starting fresh. */
   restore?: GameSession;
+  /** Session seed (fresh each play, or shared duel seed in challenge mode). Ignored when restoring. */
+  seed?: string;
+  /** Skip recent-content avoidance (challenge duels must stay seed-identical). */
+  sharedSeed?: boolean;
 };
 
 /** Android back leaves the game (screens without their own pause menu). */
@@ -59,7 +65,7 @@ function useBackToExit(onExit: () => void, enabled = true) {
 }
 
 /** Plays any game card through the session runner of its engine. */
-export function GameHost({ card, onComplete, onExit, restore }: Props) {
+export function GameHost({ card, onComplete, onExit, restore, seed, sharedSeed }: Props) {
   registerEngines();
   const { language } = useLanguage();
   const title = localizeGame(card, language).title;
@@ -78,12 +84,14 @@ export function GameHost({ card, onComplete, onExit, restore }: Props) {
   }
 
   return (
-    <GameErrorBoundary key={`${card.key}:${restore?.sessionId ?? "new"}`} gameKey={card.key} onExit={onExit}>
+    <GameErrorBoundary key={`${card.key}:${restore?.sessionId ?? seed ?? "new"}`} gameKey={card.key} onExit={onExit}>
       <SdkSession
         gameKey={card.key}
         title={title}
         definition={resolved.definition}
         restore={restore}
+        seed={seed}
+        sharedSeed={sharedSeed}
         onComplete={onComplete}
         onExit={onExit}
       />
@@ -140,6 +148,8 @@ type Ready = {
   clock: SessionClock;
   content: ContentBundle;
   definition: GameDefinition;
+  /** Prefetched on the intro card — skip the long countdown. */
+  quickStart: boolean;
 };
 
 type Boot = { phase: "loading" } | { phase: "error"; message: string } | ({ phase: "ready" } & Ready);
@@ -149,11 +159,13 @@ type SessionProps = {
   title: string;
   definition: GameDefinition;
   restore?: GameSession;
+  seed?: string;
+  sharedSeed?: boolean;
   onComplete: (play: CompletedPlay) => void;
   onExit: () => void;
 };
 
-function SdkSession({ gameKey, title, definition, restore, onComplete, onExit }: SessionProps) {
+function SdkSession({ gameKey, title, definition, restore, seed, sharedSeed, onComplete, onExit }: SessionProps) {
   const { t } = useLanguage();
   const [boot, setBoot] = useState<Boot>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -163,14 +175,23 @@ function SdkSession({ gameKey, title, definition, restore, onComplete, onExit }:
     let cancelled = false;
     setBoot({ phase: "loading" });
     (async () => {
+      // Finish any intro-card warm so Play rarely hits a cold pack/engine load.
+      await awaitEnginePrefetch(definition.engine, definition.variation);
       const mod = await engineRegistry.load(definition.engine);
       const checked = mod.engine.checkDefinition(definition);
       if (!checked.ok) throw new Error(checked.error);
       const def = checked.value;
       const needs = mod.engine.contentNeeds(def);
-      const content = await loadContent(needs, def);
+      const warmed = isEngineWarm(def.engine, def.variation);
+      const content = await loadContent(needs, def, { assetBudgetMs: warmed ? 0 : 400 });
       if (missingContent(content, needs)) throw new Error("content_unavailable");
+      markEngineWarm(def.engine, def.variation);
       const startLevel = restore ? undefined : await levelStore.get(def.engine, def.variation).catch(() => undefined);
+      // Solo plays avoid recently seen content; challenges/restores stay seed-faithful.
+      const avoidIds =
+        restore || sharedSeed
+          ? undefined
+          : await recentIdsStore.get(def.engine, def.variation).catch(() => [] as string[]);
       const clock = createClock({ paused: true, elapsedMs: restore?.activeElapsedMs });
       const runner = new SessionRunner({
         engine: mod.engine,
@@ -178,14 +199,15 @@ function SdkSession({ gameKey, title, definition, restore, onComplete, onExit }:
         content,
         gameKey,
         sessionId: restore?.sessionId ?? newSessionId(),
-        seed: restore?.seed ?? randomSeed(),
+        seed: restore?.seed ?? seed ?? randomSeed(),
         clock,
         bus: gameBus,
         startLevel,
         targetResponseMs: mod.targetResponseMs,
+        avoidIds,
         restore,
       });
-      if (!cancelled) setBoot({ phase: "ready", mod, runner, clock, content, definition: def });
+      if (!cancelled) setBoot({ phase: "ready", mod, runner, clock, content, definition: def, quickStart: warmed });
     })().catch((e: unknown) => {
       if (cancelled) return;
       const msg = e instanceof Error ? e.message : String(e);
@@ -199,7 +221,7 @@ function SdkSession({ gameKey, title, definition, restore, onComplete, onExit }:
     return () => {
       cancelled = true;
     };
-  }, [attempt, definition, gameKey, restore]);
+  }, [attempt, definition, gameKey, restore, seed, sharedSeed]);
 
   if (boot.phase === "loading") {
     return <ScreenLoading label={t("loadingGame")} />;
@@ -226,12 +248,15 @@ type ActiveProps = Ready & {
   onExit: () => void;
 };
 
-function ActiveSession({ mod, runner, clock, content, definition, gameKey, title, restored, onComplete, onExit }: ActiveProps) {
+function ActiveSession({ mod, runner, clock, content, definition, gameKey, title, restored, quickStart, onComplete, onExit }: ActiveProps) {
   const { t, fonts: ui } = useLanguage();
   const { isSignedIn } = useAuth();
   const { wallet, applyWallet } = useApp();
   const snap = useSyncExternalStore(runner.subscribe, runner.getSnapshot);
-  const [counting, setCounting] = useState(snap.status === "ready");
+  const HowTo = mod.HowTo;
+  const needsHowTo = !!HowTo && !restored && snap.status === "ready";
+  const [howtoOpen, setHowtoOpen] = useState(needsHowTo);
+  const [counting, setCounting] = useState(snap.status === "ready" && !quickStart && !needsHowTo);
   const [menuOpen, setMenuOpen] = useState(restored && snap.status === "paused");
   const [levelUp, setLevelUp] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
@@ -243,6 +268,18 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
   const { meta } = mod.engine;
   const View_ = mod.View;
   const now = useCallback(() => clock.now(), [clock]);
+
+  // Prefetched games skip the 3-2-1 and start on the first frame — after any how-to.
+  useEffect(() => {
+    if (howtoOpen || !quickStart || snap.status !== "ready") return;
+    runner.start();
+  }, [howtoOpen, quickStart, snap.status, runner]);
+
+  const finishHowTo = useCallback(() => {
+    setHowtoOpen(false);
+    if (quickStart) runner.start();
+    else setCounting(true);
+  }, [quickStart, runner]);
 
   useEffect(() => {
     if (isSignedIn) return;
@@ -303,7 +340,7 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
     prevLevel.current = snap.level;
   }, [snap.level]);
 
-  // Completion: persist level, clear the saved session, celebrate, hand the play to the app.
+  // Completion: persist level, remember used content, clear the saved session, celebrate, hand the play to the app.
   useEffect(() => {
     if (snap.status !== "completed") return;
     if (!finished.current) {
@@ -311,6 +348,10 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
       feedback("complete");
       void sessionStore.clear().catch(() => {});
       void levelStore.set(definition.engine, definition.variation, snap.level).catch(() => {});
+      const seen = usedIdsFromState(snap.state);
+      if (seen.length) {
+        void recentIdsStore.record(definition.engine, definition.variation, seen).catch(() => {});
+      }
     }
     const r = snap.result;
     const play: CompletedPlay = {
@@ -501,6 +542,7 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
           <Text style={[type.button, { color: colors.ink, fontFamily: ui.bodyBold }]}>{t("levelUp")}</Text>
         </View>
       ) : null}
+      {howtoOpen && HowTo ? <HowTo onDone={finishHowTo} title={title} /> : null}
       {counting ? (
         <Countdown
           onDone={() => {

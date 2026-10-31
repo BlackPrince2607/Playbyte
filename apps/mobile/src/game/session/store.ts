@@ -64,3 +64,40 @@ export function createLevelStore(kv: KeyValueStore): LevelStore {
     },
   };
 }
+
+const RECENT_PREFIX = "maja.game.recent.";
+const RECENT_CAP = 48;
+
+/** Recently seen content ids per engine/variation so Play Again draws a different set. */
+export type RecentIdsStore = {
+  get(engine: string, variation: string): Promise<string[]>;
+  record(engine: string, variation: string, ids: readonly string[]): Promise<void>;
+};
+
+export function createRecentIdsStore(kv: KeyValueStore, cap = RECENT_CAP): RecentIdsStore {
+  const key = (e: string, v: string) => `${RECENT_PREFIX}${e}.${v}`;
+  const read = async (engine: string, variation: string): Promise<string[]> => {
+    const raw = await kv.getItem(key(engine, variation));
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((id): id is string => typeof id === "string" && id.length > 0).slice(-cap);
+    } catch {
+      return [];
+    }
+  };
+  return {
+    get: read,
+    async record(engine, variation, ids) {
+      if (!ids.length) return;
+      const incoming = [...new Set(ids.filter((id) => typeof id === "string" && id.length > 0))];
+      if (!incoming.length) return;
+      const drop = new Set(incoming);
+      // Re-append so the newest play wins; drop oldest when over the cap.
+      const next = [...(await read(engine, variation)).filter((id) => !drop.has(id)), ...incoming];
+      const trimmed = next.length > cap ? next.slice(next.length - cap) : next;
+      await kv.setItem(key(engine, variation), JSON.stringify(trimmed));
+    },
+  };
+}

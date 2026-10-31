@@ -49,8 +49,10 @@ export const BLOCK_MS = 1000;
 /** Fastest plausible tap, and the smallest board, used only to cap the theoretical score. */
 const MIN_TAP_MS = 120;
 const MIN_BOARD_ARROWS = 8;
+/** Soft ceiling for maxScore: skilled runs clear many boards with a fresh clock each time. */
+const MAX_SCORE_BOARDS = 20;
 
-export type ArrowVariation = { durationMs: number };
+export type ArrowVariation = { /** Per-board clock; resets when a board is cleared. */ durationMs: number };
 
 const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
 
@@ -68,8 +70,8 @@ function isArrowState(x: unknown): x is ArrowState {
   return isObj(x.breakdown);
 }
 
-export function maxArrowScore(durationMs: number): number {
-  const taps = Math.floor(durationMs / MIN_TAP_MS);
+export function maxArrowScore(perBoardMs: number): number {
+  const taps = Math.floor((perBoardMs * MAX_SCORE_BOARDS) / MIN_TAP_MS);
   const per = applyPct(ARROW_POINTS + STREAK_CAP, difficultyMultiplier(1));
   const boards = Math.ceil(taps / MIN_BOARD_ARROWS);
   return taps * per + boards * BOARD_BONUS;
@@ -215,6 +217,10 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
       const breakdown = addBreakdown(s.breakdown, { base, streak: streakPts, ...(boardBonus ? { clear: boardBonus } : {}) });
       const events: EngineEvent[] = [{ name: "arrow_clear", props: { index: a.index, dir } }];
       if (boardBonus) events.push({ name: "arrow_board", props: { boards } });
+      // Fresh board → fresh clock (same as quiz/choice per-screen timers).
+      const nextClock = boardBonus
+        ? { roundStart: now, roundEnd: now + s.limitMs, roundLimitMs: s.limitMs }
+        : {};
       return {
         state: {
           ...s,
@@ -231,6 +237,7 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
           lastAt: now,
           flash: { index: a.index, ok: true },
           breakdown,
+          ...nextClock,
         },
         outcome: { correct: true, responseMs: Math.max(0, now - s.lastAt), points },
         events,

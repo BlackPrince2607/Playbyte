@@ -22,6 +22,7 @@ import { useLanguage } from "./context/LanguageContext";
 import { localizeGame } from "./i18n/games";
 import { nextGame } from "./game/discovery";
 import { startGameAnalytics } from "./game/platform/analytics";
+import { randomSeed } from "./game/core/rng";
 import { sessionStore, submitQueue } from "./game/platform/services";
 import { savePlay as submitAndDescribe, type SaveOutcome } from "./game/session/submitQueue";
 import type { CompletedPlay, GameSession } from "./game/session/types";
@@ -48,6 +49,7 @@ import { useFriendInvite } from "./lib/useFriendInvite";
 import { colors, spacing } from "./theme/colors";
 import { type } from "./theme/typography";
 
+type ActiveChallenge = { id: string; seed: string };
 type GameResult = SaveOutcome & { game: FeedGame; play: CompletedPlay };
 
 function BootLoading({ onRetry }: { onRetry: () => void }) {
@@ -97,6 +99,9 @@ export function MainShell() {
   const { googleAvailable, signInWithGoogle, isSignedIn, user } = useAuth();
   const { t, language, fonts: ui } = useLanguage();
   const [playing, setPlaying] = useState<FeedGame | null>(null);
+  /** Fresh each solo start so remounts and procedural generators never reuse the prior set. */
+  const [playSeed, setPlaySeed] = useState<string | undefined>(undefined);
+  const [activeChallenge, setActiveChallenge] = useState<ActiveChallenge | null>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [retryingSave, setRetryingSave] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
@@ -126,12 +131,17 @@ export function MainShell() {
   useEffect(() => {
     if (!ready || !onboardingDone) return;
     startGameAnalytics();
-    void submitQueue.flush().catch(() => {});
+    void submitQueue
+      .flush()
+      .then((sent) => {
+        if (sent > 0) void refreshWallet();
+      })
+      .catch(() => {});
     void sessionStore
       .load()
       .then(setResumable)
       .catch(() => {});
-  }, [ready, onboardingDone]);
+  }, [ready, onboardingDone, refreshWallet]);
 
   const dismissOverlays = useCallback(() => {
     setShowSignIn(false);
@@ -142,6 +152,7 @@ export function MainShell() {
     setShowRecap(false);
     setShowStreak(false);
     setPlaying(null);
+    setActiveChallenge(null);
     setRestoring(undefined);
     setGameResult(null);
   }, []);
@@ -188,22 +199,33 @@ export function MainShell() {
     await resumeOnboarding("profile");
   }, [resumeOnboarding]);
 
-  const startGame = useCallback((game: FeedGame, source: "feed" | "replay" | "next" | "resume" = "feed") => {
-    setGameResult(null);
-    setRestoring(undefined);
-    setResumable(null);
-    void sessionStore.clear().catch(() => {});
-    capture("game_started", {
-      game_id: game.key,
-      game_type: game.engine ?? game.key,
-      source,
-    });
-    setPlaying(game);
-  }, []);
+  const startGame = useCallback(
+    (
+      game: FeedGame,
+      source: "feed" | "replay" | "next" | "resume" | "challenge" = "feed",
+      challenge?: ActiveChallenge | null,
+    ) => {
+      setGameResult(null);
+      setRestoring(undefined);
+      setResumable(null);
+      setActiveChallenge(challenge ?? null);
+      setPlaySeed(challenge?.seed ?? randomSeed());
+      void sessionStore.clear().catch(() => {});
+      capture("game_started", {
+        game_id: game.key,
+        game_type: game.engine ?? game.key,
+        source,
+      });
+      setPlaying(game);
+    },
+    [],
+  );
 
   const resumeGame = useCallback((session: GameSession) => {
     const def = session.definition;
     setResumable(null);
+    setActiveChallenge(null);
+    setPlaySeed(session.seed);
     setRestoring(session);
     capture("game_started", {
       game_id: session.gameKey,
@@ -228,6 +250,8 @@ export function MainShell() {
 
   const cancelGame = useCallback(() => {
     setPlaying(null);
+    setPlaySeed(undefined);
+    setActiveChallenge(null);
     setRestoring(undefined);
     setGameSubmitting(false);
   }, []);
@@ -244,25 +268,44 @@ export function MainShell() {
     [setPromptSave],
   );
 
+  const finishPlay = useCallback(
+    async (game: FeedGame, play: CompletedPlay, challenge?: ActiveChallenge | null) => {
+      const tagged = challenge && !play.challengeId ? { ...play, challengeId: challenge.id } : play;
+      setGameSubmitting(true);
+      const outcome = await savePlay(tagged);
+      capture("game_completed", {
+        game_id: game.key,
+        score: tagged.score,
+        duration_seconds: Math.round(tagged.durationMs / 1000),
+      });
+      // Result screen before clearing submitting so inline Guess never flashes the feed.
+      setGameResult({ ...outcome, game, play: tagged });
+      setPlaying(null);
+      setPlaySeed(undefined);
+      setActiveChallenge(null);
+      setRestoring(undefined);
+      setGameSubmitting(false);
+      noteEarn(outcome.balance, outcome.coinsEarned ?? 0, "game", {
+        gameId: game.key,
+        playId: tagged.sessionId,
+      });
+    },
+    [savePlay, noteEarn],
+  );
+
   const submitGamePlay = useCallback(
     async (play: CompletedPlay) => {
       if (!playing) return;
-      const game = playing;
-      setGameSubmitting(true);
-      const outcome = await savePlay(play);
-      setPlaying(null);
-      setRestoring(undefined);
-      setGameSubmitting(false);
-      capture("game_completed", {
-        game_id: game.key,
-        score: play.score,
-        duration_seconds: Math.round(play.durationMs / 1000),
-      });
-      // Credit after the result screen mounts so the toast is visible over it.
-      setGameResult({ ...outcome, game, play });
-      noteEarn(outcome.balance, outcome.coinsEarned ?? 0, "game", { gameId: game.key });
+      await finishPlay(playing, play, activeChallenge);
     },
-    [playing, savePlay, noteEarn],
+    [playing, activeChallenge, finishPlay],
+  );
+
+  const submitInlineGuess = useCallback(
+    async (game: FeedGame, play: CompletedPlay) => {
+      await finishPlay(game, play, null);
+    },
+    [finishPlay],
   );
 
   const retrySave = useCallback(async () => {
@@ -270,8 +313,19 @@ export function MainShell() {
     const { sessionId } = gameResult.play;
     setRetryingSave(true);
     const outcome = await savePlay(gameResult.play);
-    setGameResult((r) => (r && r.play.sessionId === sessionId ? { ...r, ...outcome } : r));
-    noteEarn(outcome.balance, outcome.coinsEarned ?? 0, "game", { gameId: gameResult.game.key });
+    setGameResult((r) => {
+      if (!r || r.play.sessionId !== sessionId) return r;
+      return {
+        ...r,
+        ...outcome,
+        // Keep the first successful "+N coins" badge if a replay returns 0.
+        coinsEarned: outcome.coinsEarned || r.coinsEarned,
+      };
+    });
+    noteEarn(outcome.balance, outcome.coinsEarned ?? 0, "game", {
+      gameId: gameResult.game.key,
+      playId: sessionId,
+    });
     setRetryingSave(false);
   }, [gameResult, retryingSave, savePlay, noteEarn]);
 
@@ -535,6 +589,8 @@ export function MainShell() {
         <GameHost
           card={playing}
           restore={restoring}
+          seed={playSeed}
+          sharedSeed={!!activeChallenge}
           onComplete={(play) => void submitGamePlay(play)}
           onExit={cancelGame}
         />
@@ -543,6 +599,14 @@ export function MainShell() {
             <ScreenLoading label={t("savingScore")} style={{ flex: 0, backgroundColor: "transparent" }} />
           </View>
         ) : null}
+      </View>
+    );
+  }
+
+  if (gameSubmitting) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.ink }}>
+        <ScreenLoading label={t("savingScore")} />
       </View>
     );
   }
@@ -566,6 +630,9 @@ export function MainShell() {
           coinsEarned={gameResult.coinsEarned}
           saveState={gameResult.saveState}
           saveMessage={gameResult.saveMessage}
+          playId={gameResult.playId}
+          playSeed={gameResult.play.seed}
+          challengeSummary={gameResult.challenge}
           onRetrySave={() => void retrySave()}
           retryingSave={retryingSave}
           onPlayAgain={() => startGame(gameResult.game, "replay")}
@@ -574,6 +641,7 @@ export function MainShell() {
             setGameResult(null);
             void refreshWallet();
           }}
+          onSignIn={() => setShowSignIn(true)}
           enableShare
         />
       </View>
@@ -639,6 +707,8 @@ export function MainShell() {
         <View style={[styles.tabPane, tab !== "feed" && styles.hidden]}>
           <FeedScreen
             onPlayGame={startGame}
+            onChallengeGame={(game, challenge) => startGame(game, "challenge", challenge)}
+            onGuessComplete={(game, play) => void submitInlineGuess(game, play)}
             onOpenProfile={() => setTab("vault")}
             onOpenStreak={() => setShowStreak(true)}
             onOpenWallet={() => setShowWallet(true)}
@@ -652,6 +722,10 @@ export function MainShell() {
           <FriendsScreen
             onSignIn={() => setShowSignIn(true)}
             onOpenLeaderboard={() => setShowLeaderboard(true)}
+            onPlayChallenge={(game, challenge) => {
+              setTab("feed");
+              startGame(game, "challenge", challenge);
+            }}
           />
         </View>
         <View style={[styles.tabPane, tab !== "vault" && styles.hidden]}>

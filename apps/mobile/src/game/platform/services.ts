@@ -5,7 +5,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { submitPlay, type SubmitPlayResponse } from "./submit";
 import { createEventBus } from "../analytics/bus";
-import { createLevelStore, createSessionStore } from "../session/store";
+import { createLevelStore, createRecentIdsStore, createSessionStore } from "../session/store";
 import { createSubmitQueue } from "../session/submitQueue";
 import { randomSeed } from "../core/rng";
 
@@ -15,6 +15,7 @@ export const gameBus = createEventBus((e) => {
 
 export const sessionStore = createSessionStore(AsyncStorage);
 export const levelStore = createLevelStore(AsyncStorage);
+export const recentIdsStore = createRecentIdsStore(AsyncStorage);
 export const submitQueue = createSubmitQueue<SubmitPlayResponse>(AsyncStorage, submitPlay);
 
 export function newSessionId(): string {
