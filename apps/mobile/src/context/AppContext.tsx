@@ -23,7 +23,7 @@ import {
   RespondResult,
 } from "../api";
 import { isPlayable } from "../game/discovery";
-import { appendFeedPage, FEED_PREFETCH_AHEAD } from "../lib/feedPages";
+import { appendFeedPage, continueFeedRefresh, FEED_PREFETCH_AHEAD } from "../lib/feedPages";
 import { readFeedSnapshot, writeFeedSnapshot } from "../lib/feedCache";
 import type { CoinCredit, CoinCreditReason, WalletSnapshot } from "../lib/economy";
 import {
@@ -79,7 +79,8 @@ type AppState = {
   feedError: string;
   streak: number;
   promptSave: boolean;
-  refreshFeed: (force?: boolean) => Promise<void>;
+  /** Soft-continues by default so a content refresh stitches new cards onto the end. Pass `replace` to jump to a fresh first page. */
+  refreshFeed: (force?: boolean, opts?: { replace?: boolean }) => Promise<void>;
   loadMoreFeed: (viewerIndex?: number) => Promise<void>;
   retryBoot: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
@@ -450,6 +451,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const stitchFeedPage = useCallback((page: FeedItem[], cursor: string | null, localAnswers: Record<string, string>) => {
+    const hydrated = withLocalAnswers(page, localAnswers);
+    const continued = continueFeedRefresh(itemsRef.current, hydrated);
+    if (!continued) return false;
+    feedGeneration.current += 1;
+    feedCursor.current = cursor;
+    setItems(continued);
+    itemsRef.current = continued;
+    hasLoadedFeed.current = true;
+    for (const item of page) {
+      if (item.type !== "moment" || item.myOptionId) continue;
+      const optionId = localAnswers[item.id];
+      if (optionId) void respondRef.current(item.id, optionId);
+    }
+    return true;
+  }, []);
+
   const hydrateFeedFromCache = useCallback(async (forLang?: string): Promise<boolean> => {
     const lang = forLang ?? languageRef.current;
     const [snap, localAnswers] = await Promise.all([
@@ -465,9 +483,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, [applyFeedPage]);
 
-  const loadFeed = useCallback(async (opts?: { force?: boolean; refreshing?: boolean }) => {
+  const loadFeed = useCallback(async (opts?: { force?: boolean; refreshing?: boolean; replace?: boolean }) => {
     const force = opts?.force ?? false;
     const refreshing = opts?.refreshing ?? false;
+    const replace = opts?.replace ?? false;
 
     if (feedInflight.current && !force) return feedInflight.current;
 
@@ -486,12 +505,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ]);
         if (requestId !== feedRequestId.current || languageRef.current !== requestedLang) return;
         const page = feed.items.filter(isShowable);
-        applyFeedPage(page, feed.cursor, localAnswers);
-        void writeFeedSnapshot({
-          lang: requestedLang,
-          items: page,
-          cursor: feed.cursor,
-        });
+        const soft = !replace && hasLoadedFeed.current && itemsRef.current.length > 0;
+        if (soft && stitchFeedPage(page, feed.cursor, localAnswers)) {
+          void writeFeedSnapshot({
+            lang: requestedLang,
+            items: itemsRef.current,
+            cursor: feed.cursor,
+          });
+        } else if (soft) {
+          // Keep the in-progress feed when the server briefly has no moments.
+          void writeFeedSnapshot({
+            lang: requestedLang,
+            items: itemsRef.current,
+            cursor: feedCursor.current,
+          });
+        } else {
+          applyFeedPage(page, feed.cursor, localAnswers);
+          void writeFeedSnapshot({
+            lang: requestedLang,
+            items: page,
+            cursor: feed.cursor,
+          });
+        }
       } catch (e) {
         if (requestId !== feedRequestId.current || languageRef.current !== requestedLang) return;
         const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : tRef.current("couldNotLoadFeed");
@@ -511,11 +546,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
       if (feedInflight.current === run) feedInflight.current = null;
     }
-  }, [applyFeedPage]);
+  }, [applyFeedPage, stitchFeedPage]);
 
   const refreshFeed = useCallback(
-    async (force = false) => {
-      await loadFeed({ force, refreshing: hasLoadedFeed.current });
+    async (force = false, opts?: { replace?: boolean }) => {
+      await loadFeed({ force, refreshing: hasLoadedFeed.current, replace: opts?.replace });
     },
     [loadFeed],
   );
@@ -596,7 +631,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } else {
       clearUserScopedState();
     }
-    void refreshFeed(true);
+    void refreshFeed(true, { replace: true });
   }, [authReady, isSignedIn, refreshFriends, refreshFriendRequests, clearUserScopedState, refreshFeed]);
 
   const boot = useCallback(async () => {
@@ -678,7 +713,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const away = Date.now() - backgroundedAt;
       backgroundedAt = null;
       if (away < REOPEN_REFRESH_AFTER_MS) return;
-      refreshFeed(true).then(
+      refreshFeed(true, { replace: true }).then(
         () => setFeedIndex(0),
         () => {},
       );
@@ -707,7 +742,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOnboardingStepState("language");
     setBootError("");
     try {
-      await refreshFeed(true);
+      await refreshFeed(true, { replace: true });
     } catch {
       // feedError already set — main app can retry; do not leave onboarding incomplete
     }

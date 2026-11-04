@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import type { FeedGame, FeedItem, FeedMoment } from "../api";
-import { MOMENT_REPEAT_GAP, appendFeedPage, feedKeys } from "./feedPages";
+import { MOMENT_REPEAT_GAP, appendFeedPage, continueFeedRefresh, feedKeys } from "./feedPages";
 
 const moment = (id: string) => ({ type: "moment", id }) as FeedMoment;
 const game = (key: string) => ({ type: "mini_game", key }) as FeedGame;
@@ -41,5 +41,14 @@ describe("feed pages", () => {
     assert.deepEqual(feedKeys(first), ["g:tap", "m:a", "g:tap:1"]);
     const more = appendFeedPage(first, [moment("b"), game("tap")]);
     assert.deepEqual(feedKeys(more), ["g:tap", "m:a", "g:tap:1", "m:b", "g:tap:2"]);
+  });
+
+  it("soft refresh stitches new moments onto the end without wiping the current feed", () => {
+    const next = continueFeedRefresh([moment("old"), game("tap")], [moment("new"), game("maze")]);
+    assert.deepEqual(ids(next!), ["old", "tap", "new", "maze"]);
+  });
+
+  it("soft refresh refuses to collapse a moment feed into games-only", () => {
+    assert.equal(continueFeedRefresh([moment("a"), game("tap")], [game("maze"), game("tap")]), null);
   });
 });

@@ -39,7 +39,20 @@ describe("withSeededCrowd", () => {
       result: { totalResponses: 3, optionCounts: { o2: 3 }, correctOptionId: "o2" },
     });
     assert.equal(real.totalResponses, empty.totalResponses + 3);
-    assert.equal(real.optionCounts.o2, empty.optionCounts.o2 + 3);
     assert.equal(real.correctOptionId, "o2");
+  });
+
+  it("gives the correct quiz option a clear majority of the seeded crowd", () => {
+    for (let i = 0; i < 200; i++) {
+      const crowd = withSeededCrowd({
+        id: `quiz-${i}`,
+        options,
+        result: { totalResponses: 0, optionCounts: {}, correctOptionId: "o2" },
+      });
+      const correct = crowd.optionCounts.o2 ?? 0;
+      const others = (crowd.optionCounts.o1 ?? 0) + (crowd.optionCounts.o3 ?? 0);
+      assert.ok(correct > others, `quiz-${i}: correct ${correct} should beat others ${others}`);
+      assert.ok(correct / crowd.totalResponses >= 0.55);
+    }
   });
 });

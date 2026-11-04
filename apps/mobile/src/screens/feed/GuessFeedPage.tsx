@@ -12,6 +12,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import type { ContentBundle } from "../../game/content/types";
 import { missingContent } from "../../game/content/query";
+import { usedIdsFromState } from "../../game/content/recent";
 import { createClock, type SessionClock } from "../../game/core/clock";
 import type { GameDefinition } from "../../game/core/definition";
 import { resolveGame } from "../../game/core/resolve";
@@ -23,7 +24,7 @@ import type { QuizAction, QuizState } from "../../game/engines/quiz/logic/types"
 import { QuizView } from "../../game/engines/quiz/ui/QuizView";
 import { loadContent, resolveAsset } from "../../game/platform/content";
 import { awaitEnginePrefetch, isEngineWarm, markEngineWarm, prefetchGame } from "../../game/platform/prefetchGame";
-import { gameBus, levelStore, newSessionId } from "../../game/platform/services";
+import { gameBus, levelStore, newSessionId, recentIdsStore } from "../../game/platform/services";
 import { SessionRunner } from "../../game/session/runner";
 import type { CompletedPlay } from "../../game/session/types";
 import { feedback } from "../../game/ui/feedback";
@@ -146,6 +147,8 @@ export function GuessFeedPage({
       if (missingContent(content, needs)) throw new Error("content");
       markEngineWarm(definition.engine, definition.variation);
       const startLevel = await levelStore.get(definition.engine, definition.variation).catch(() => undefined);
+      // Same recent-ids avoidance as GameHost so in-feed Play Again / restarts skip the last set.
+      const avoidIds = await recentIdsStore.get(definition.engine, definition.variation).catch(() => [] as string[]);
       if (cancelled) return;
 
       const clock = createClock({ paused: true });
@@ -160,6 +163,7 @@ export function GuessFeedPage({
         bus: gameBus,
         startLevel,
         targetResponseMs: mod.targetResponseMs,
+        avoidIds,
       }) as SessionRunner<QuizState, QuizAction, unknown>;
 
       setBoot({ phase: "ready", mod, runner, clock, content, definition, sessionKey });
@@ -323,6 +327,11 @@ function ActiveGuess({
     if (snap.status !== "completed" || finished.current) return;
     finished.current = true;
     feedback("complete");
+    void levelStore.set(definition.engine, definition.variation, snap.level).catch(() => {});
+    const seen = usedIdsFromState(snap.state);
+    if (seen.length) {
+      void recentIdsStore.record(definition.engine, definition.variation, seen).catch(() => {});
+    }
     const r = snap.result;
     const serialized = runner.serialize();
     const play: CompletedPlay = {
@@ -342,7 +351,7 @@ function ActiveGuess({
     };
     const id = setTimeout(() => onComplete(play), 900);
     return () => clearTimeout(id);
-  }, [snap.status, snap.score, snap.level, snap.result, runner, mod, definition.variation, gameKey, onComplete]);
+  }, [snap.status, snap.score, snap.level, snap.result, snap.state, runner, mod, definition.engine, definition.variation, gameKey, onComplete]);
 
   const startPlay = useCallback(() => {
     if (runner.getSnapshot().status !== "ready") return;

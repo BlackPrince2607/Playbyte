@@ -25,6 +25,19 @@ export function appendFeedPage(current: FeedItem[], page: FeedItem[]): FeedItem[
   return added.length ? [...current, ...added] : current;
 }
 
+/**
+ * Soft refresh: keep the in-progress feed and stitch the new page onto the end so fresh
+ * questions appear after a swipe or two. Returns null when the server has no moments but
+ * the viewer still does — never collapse an active feed to games-only.
+ */
+export function continueFeedRefresh(current: FeedItem[], page: FeedItem[]): FeedItem[] | null {
+  if (!current.length) return null;
+  const pageHasMoments = page.some((i) => i.type === "moment");
+  const currentHasMoments = current.some((i) => i.type === "moment");
+  if (!pageHasMoments && currentHasMoments) return null;
+  return appendFeedPage(current, page);
+}
+
 /** List keys that stay stable as pages are appended, even though games repeat across pages. */
 export function feedKeys(items: FeedItem[]): string[] {
   const seen = new Map<string, number>();

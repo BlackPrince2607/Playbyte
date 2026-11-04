@@ -1,0 +1,18 @@
+category,file,active_topics,raw_count,active_count,allowedAngles,facts_preview
+OPS NOTE,backend/scripts/content_gen/trends/{slug}.json,Fill before refresh; expired expiresAt rows are ignored,0,0,"(schema: trendId, topic, trendScore, freshness, indiaRelevance, eventStatus, facts, allowedAngles, sourceConfidence, expiresAt)",Never invent trending/viral claims without a matching verifiedTrends row or brief
+cricket,backend/scripts/content_gen/trends/cricket.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+movies,backend/scripts/content_gen/trends/movies.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+music,backend/scripts/content_gen/trends/music.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+pop-culture,backend/scripts/content_gen/trends/pop-culture.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+food,backend/scripts/content_gen/trends/food.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+gaming,backend/scripts/content_gen/trends/gaming.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+sports,backend/scripts/content_gen/trends/sports.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+news,backend/scripts/content_gen/trends/news.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+tech,backend/scripts/content_gen/trends/tech.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+personality-vibe,backend/scripts/content_gen/trends/personality-vibe.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+fashion,backend/scripts/content_gen/trends/fashion.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+health,backend/scripts/content_gen/trends/health.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+kpop,backend/scripts/content_gen/trends/kpop.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+puzzles,backend/scripts/content_gen/trends/puzzles.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+logical-reasoning,backend/scripts/content_gen/trends/logical-reasoning.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,
+math-numbers,backend/scripts/content_gen/trends/math-numbers.json,"(empty — use evergreen PLAY: scenarios, recognition, sharp debates; no viral framing)",0,0,,

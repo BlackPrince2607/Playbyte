@@ -2,7 +2,7 @@ name: Refresh feed content
 
 on:
   schedule:
-    # Every 4 hours — matches card TTL so the whole feed expires and turns over
+    # Every 4 hours — publish a fresh batch, then retire the previous live set
     - cron: "0 */4 * * *"
   workflow_dispatch:
 

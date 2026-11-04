@@ -31,13 +31,31 @@ export function withSeededCrowd(moment: Pick<FeedMoment, "id" | "options" | "res
   const real = moment.result;
   const base = seededCount(moment.id, "responses");
   const optionCounts: Record<string, number> = { ...real?.optionCounts };
+  const options = moment.options;
+  const correctId = real?.correctOptionId ?? null;
+  const correctIdx = correctId ? options.findIndex((o) => o.id === correctId) : -1;
 
-  if (moment.options.length) {
-    const weights = moment.options.map((o) => 1 + 4 * unit(`${moment.id}:${o.id}`));
-    const sum = weights.reduce((a, b) => a + b, 0);
-    const seeded = weights.map((w) => Math.floor((base * w) / sum));
-    seeded[0] += base - seeded.reduce((a, b) => a + b, 0);
-    moment.options.forEach((o, i) => {
+  if (options.length) {
+    let seeded: number[];
+
+    if (correctIdx >= 0 && options.length >= 2) {
+      // Quizzes: keep the correct answer looking like the crowd favorite (~55–78%).
+      const correctShare = 0.55 + 0.23 * unit(`${moment.id}:correct-share`);
+      const correctCount = Math.max(1, Math.floor(base * correctShare));
+      const remainder = Math.max(0, base - correctCount);
+      const otherWeights = options.map((o, i) => (i === correctIdx ? 0 : 1 + 4 * unit(`${moment.id}:${o.id}`)));
+      const otherSum = otherWeights.reduce((a, b) => a + b, 0) || 1;
+      seeded = otherWeights.map((w) => Math.floor((remainder * w) / otherSum));
+      seeded[correctIdx] = correctCount;
+      seeded[correctIdx] += base - seeded.reduce((a, b) => a + b, 0);
+    } else {
+      const weights = options.map((o) => 1 + 4 * unit(`${moment.id}:${o.id}`));
+      const sum = weights.reduce((a, b) => a + b, 0);
+      seeded = weights.map((w) => Math.floor((base * w) / sum));
+      seeded[0] += base - seeded.reduce((a, b) => a + b, 0);
+    }
+
+    options.forEach((o, i) => {
       optionCounts[o.id] = (real?.optionCounts?.[o.id] ?? 0) + seeded[i];
     });
   }

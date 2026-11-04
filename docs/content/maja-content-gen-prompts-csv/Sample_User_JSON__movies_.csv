@@ -1,21 +1,46 @@
-﻿JSON
+JSON
 "{
   ""category"": ""movies"",
   ""categoryScope"": {
-    ""label"": ""movies""
+    ""label"": ""Movies / Bollywood & Indian cinema"",
+    ""include"": [
+      ""theatrical releases"",
+      ""trailers"",
+      ""OTT"",
+      ""interval culture"",
+      ""stars"",
+      ""rewatches""
+    ],
+    ""exclude"": [
+      ""non-film TV news dumps""
+    ],
+    ""goodAngles"": [
+      ""friend-says-must-watch dilemma"",
+      ""interval / theatre stakes"",
+      ""trailer hype vs wait"",
+      ""film recognition or surprising familiar fact""
+    ]
   },
   ""need"": 20,
-  ""today"": ""2026-10-31"",
+  ""today"": ""2026-11-02"",
   ""mix"": {
     ""quizzes"": 12,
     ""polls"": 8,
+    ""quizShare"": 0.6,
+    ""pollShare"": 0.3,
+    ""predictionsMaxShare"": 0.1,
     ""preferQuizTypes"": [
       ""trivia"",
       ""who"",
       ""which""
+    ],
+    ""preferPollTypes"": [
+      ""debate"",
+      ""hot"",
+      ""opinion""
     ]
   },
-  ""market"": ""India (two layers: clean English + Gen-Z Hinglish Hindi in Devanagari; metros + Tier-2)"",
+  ""market"": ""India English feed for Gen-Z (metros + Tier-2). Fast swipe interactions: trivia proves knowledge; polls create debate. Hindi/Hinglish is a separate localization stage."",
   ""pollQuestionTypes"": [
     ""challenge"",
     ""company"",
@@ -51,6 +76,29 @@
     ""who""
   ],
   ""evergreenBank"": ""Friday night. Where do you watch?\nTheatre — big screen only\nCouch and a stream\nWhat keeps you in the seat?\nAn interval twist\nA slow burn that earns the end\nA sequel is announced. You…\nBook early\nWait for reviews\nProtect the original\nInterval snack. Your move?\nAlways popcorn\nSneak your own\nSkip food\nHow do you watch?\nHindi original\nDubbed, subtitles on\nWho is in the next seat?\nThe group chat, all of them\nOne friend who will not talk\nTonight is for…\nA new Hindi release\nA rewatch of a classic\nSomeone starts a spoiler. You…\nCover your ears\nTell them to finish\nYou rewatch because…\nIt feels like home\nYou forgot the plot\nThe interval song. You…\nSing along\nWait for the story\nYou pick a film for…\nThe lead pair\nThe director\nThe credits roll. You…\nSit through them\nAre already discussing the end\nThe short break in the middle of a theatrical film in India is called the…\nInterval\nEncore\nOverture\nA film you leave the house to see on a large shared screen is a…\nTheatre screening\nDub\nSequel\nTelling the ending before someone has watched is a…\nSpoiler\nChorus\nHeadline\nPlaying a film you have already finished is a…\nRewatch\nDebut\nToss"",
+  ""verifiedTrends"": [
+    {
+      ""trendId"": ""movies-weekend-window"",
+      ""topic"": ""Weekend theatre release"",
+      ""category"": ""movies"",
+      ""freshness"": ""recent"",
+      ""eventStatus"": ""completed"",
+      ""eventDate"": ""2026-10-24"",
+      ""facts"": [
+        ""opening weekend"",
+        ""interval twist"",
+        ""bookings opened Thursday""
+      ],
+      ""allowedAngles"": [
+        ""relatable consequence""
+      ],
+      ""allowPrediction"": false,
+      ""sourceConfidence"": ""high"",
+      ""context"": ""This weekend's theatre release"",
+      ""source"": ""brief"",
+      ""briefId"": ""movies-weekend-window""
+    }
+  ],
   ""briefs"": [
     {
       ""id"": ""movies-weekend-window"",
@@ -108,110 +156,91 @@
   ""voiceExamples"": {
     ""englishGood"": [
       ""Midnight craving hits. Street food or Maggi at home?"",
-      ""New trailer just dropped. Watch now or wait for friends?"",
-      ""Rain mid-commute. Grab a cab or tough it out?""
+      ""Your friend cancels movie plans last minute. Relieved or disappointed?"",
+      ""How many balls are there in a standard over?"",
+      ""DRS reviews left. Burn one now or save it?"",
+      ""Worth the hype or overrated — this weekend's release?"",
+      ""What does OTT stand for in streaming?"",
+      ""You can keep only ONE forever: biryani, dosa, chole bhature, or momos?""
     ],
     ""englishBad"": [
       ""Kya scene hai for the release?"",
       ""Kitne excited ho for the match?"",
       ""What's your vibe yaar?"",
-      ""What is your preferred late-night dining option?""
-    ],
-    ""hindiGood"": [
-      {
-        ""promptHi"": ""रात को भूख लगी — स्ट्रीट फूड या घर की मैगी?"",
-        ""optionsHi"": [
-          ""स्ट्रीट फूड 🔥"",
-          ""घर की मैगी""
-        ]
-      },
-      {
-        ""promptHi"": ""नया ट्रेलर आया — क्या सीन है, अभी देखोगे?"",
-        ""optionsHi"": [
-          ""अभी स्किप मत करो"",
-          ""दोस्तों के साथ बाद में""
-        ]
-      },
-      {
-        ""promptHi"": ""मैच को लेकर कितने एक्साइटेड हो?"",
-        ""optionsHi"": [
-          ""फुल ऑन! 🔥"",
-          ""अभी नॉर्मल हूँ""
-        ]
-      }
-    ],
-    ""hindiBad"": [
-      {
-        ""promptHi"": ""What's your vibe for the trailer?"",
-        ""optionsHi"": [
-          ""Excited!"",
-          ""Wait and see""
-        ]
-      },
-      {
-        ""promptHi"": ""Excited! / कितने एक्साइटेड हो?"",
-        ""optionsHi"": [
-          ""Very much"",
-          ""बहुत ज़्यादा""
-        ]
-      },
-      {
-        ""promptHi"": ""Kitne excited ho for the match?"",
-        ""optionsHi"": [
-          ""Full on"",
-          ""Thoda sa""
-        ]
-      }
+      ""What is your preferred late-night dining option?"",
+      ""Who is your favourite actor?"",
+      ""Do you like cricket?"",
+      ""Which do you prefer?"",
+      ""Chai or coffee?"",
+      ""Sweet or spicy?"",
+      ""This is trending everywhere in India right now — guess why?""
     ]
   },
   ""rules"": [
-    ""Return JSON with a candidates array."",
+    ""Return JSON with a candidates array. English fields only — never promptHi, labelHi, or optionsHi."",
     ""Every candidate category must equal the requested category."",
     ""Stay inside categoryScope — never write a card that belongs in a different onboarding category."",
-    ""Today is 2026-10-31. Every card must feel current — what India is talking about in this category right now."",
-    ""MIX (critical): about 12 QUIZZES and 8 polls. Quizzes should dominate."",
-    ""Prefer trivia / who / which quizzes with one clear correct answer over soft opinion polls."",
+    ""Today is 2026-11-02. Prefer verified live/upcoming India context from verifiedTrends when present."",
+    ""Never invent a trend. Never claim something is trending/viral without a matching verifiedTrends row."",
+    ""MIX (soft target): about 12 QUIZZES (~60% knowable play) and 8 polls (~debate/hot/opinion). Quality beats quotas — fewer strong cards beat weak fill."",
+    ""Quiz-first: most cards should be knowable quizzes with one clear correct answer; polls add debate heat."",
+    ""Predictions: at most ~10% of the batch, only for upcoming verifiedTrends/briefs with briefId when required."",
+    ""If verifiedTrends is empty: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — without viral/trending wording. Evergreen is not a synonym for boring trivia."",
+    ""Not formal survey speak. Not essays. Spicy but friendly. Understandable in ~3 seconds."",
+    ""A quiz has exactly one correct option. Polls must set isCorrect false on every option."",
+    ""Incorrect quiz options must be plausible — no absurd distractors, no 'All/None of the above'."",
+    ""Two options use type predict. Three or four use type pulse."",
+    ""Do not use gambling words."",
+    ""ENGAGEMENT MECHANISM (critical): each card needs a primary hook — recognition, curiosity, challenge, identity, debate, prediction, social_comparison, nostalgia, humour, competition, or surprise. Vary hooks across the batch."",
+    ""INTERACTION DIVERSITY (critical): vary patterns — recognition quiz, misconception trivia, who/which, situational poll, A vs B with stakes, hot take, upcoming prediction (only if valid), nostalgia, odd-one-out, category-specific formats. Do not repeat the same interaction pattern."",
+    ""Prefer specific situations over abstract preferences. Prefer real trade-offs over obvious choices."",
     ""BAD batch: ten similar preference polls ('How do you watch movies?', 'Favourite snack?', 'Happy ending or cliffhanger?')."",
-    ""GOOD batch: mix of fact trivia, who/which quizzes, and a few sharp debate polls on DIFFERENT topics."",
+    ""BAD lazy polls: 'Who is your favourite…?', 'Do you like X?', 'Which do you prefer?', bare 'chai or coffee?', 'sweet or spicy?', 'Android or iPhone?', bare 'theatre or OTT?' — unless framed as a vivid situation with stakes."",
+    ""GOOD polls create tension, identity, disagreement, or a meaningful choice (friend cancels plans — relieved or disappointed?; worth the hype?; keep only one forever)."",
+    ""GOOD quizzes reward recognition, a surprising-but-fair fact, a common misconception, or a clear rule — not capital/date exam recall."",
+    ""GOOD batch: mix of recognition/trivia quizzes, who/which, and a few sharp debate polls on DIFFERENT topics."",
+    ""One verified trend should normally produce ONE strong angle — not five paraphrases."",
+    ""Possible angles when using a trend: FACT, CHOICE, DEBATE, REACTION, CONTEXT, IDENTIFY, PREDICTION (upcoming only)."",
     ""Write brand-new prompts. Never reuse or lightly rephrase anything in avoidPrompts."",
     ""UNIQUENESS (critical): each candidate must cover a DIFFERENT topic/angle — not the same question with new wording."",
-    ""NAME DIVERSITY (critical): do not reuse the same player/celebrity/team focus across multiple cards in one batch."",
-    ""Knowledge trivia is encouraged: rules, formats, history, records, definitions — not only 'who is hot today' opinion polls."",
+    ""NAME DIVERSITY (critical): do not reuse the same player/celebrity/team/franchise focus across multiple cards in one batch."",
+    ""Treat avoidNames as a strong exclusion signal for opinion/debate focus."",
+    ""Knowledge trivia is encouraged: rules, formats, history, records, definitions — not only celebrity preference polls."",
     ""BAD uniqueness: 'Theatre or OTT?' and 'How do you prefer to watch films?'."",
     ""Vary subjects, stakes, formats, and questionType across the batch so consecutive cards feel different."",
-    ""Do not lean on the same names that already appear in avoidPrompts / avoidNames."",
-    ""Prioritize India trends that are LIVE or UPCOMING for THIS category only (fixtures, releases, drops, slang, debates Indians care about). Skip party politics."",
+    ""Learn from engagementInsights: copy the PATTERN of hits (format, length, debate heat); never clone exact wording; follow lessons."",
+    ""Prioritize verifiedTrends that are LIVE or UPCOMING for THIS category (manual India trends JSON + briefs). Skip party politics."",
+    ""One verified trend → normally ONE strong interaction angle (trivia OR debate OR prediction), not five paraphrases."",
     ""CLOSED / PAST EVENTS (critical): NEVER ask users to predict the outcome of a match, tournament, season, election, award, or final that has already concluded as of today."",
-    ""BAD past prediction: 'Who will win IPL 2026?' when IPL 2026 is already over by 2026-10-31."",
+    ""BAD past prediction: 'Who will win IPL 2026?' when IPL 2026 is already over by 2026-11-02."",
     ""BAD past prediction: 'Prediction: who wins the final?' for a final that already happened."",
     ""OK on past events: opinion/debate only ('Fair Player of the Match?', 'Was that the right call?')."",
     ""OK predictions: only UPCOMING fixtures (tonight / this weekend / next match) that have not started — and only with briefId when questionType is prediction."",
     ""If unsure whether an event is still open, write an opinion/debate/hot poll instead of a prediction."",
-    ""Learn from engagementInsights: copy the energy of hits (format, length, debate heat); do not clone miss prompts; follow lessons."",
-    ""TWO LANGUAGE LAYERS (critical): English and Hindi are separate fields — never put both in one string."",
-    ""ENGLISH (prompt + option.label): natural English only. Short, second-person, swipeable. Latin script only."",
-    ""NO Hinglish in English fields: never use Hindi words or Latin transliteration (yaar, kya, kitna, bahut, nahi, scene hai, full on, etc.)."",
-    ""English must read like English a fluent speaker would write — not Hindi written in Latin letters."",
-    ""HINDI (promptHi + option.labelHi): Gen-Z Hinglish bolchal in Devanagari — how friends actually text."",
-    ""Put the Hinglish energy ONLY in Hindi fields: क्या सीन है, कितने एक्साइटेड हो, वाइब, स्किप, ट्रेंड, फुल ऑन."",
-    ""Hindi is NOT a word-for-word translation of the English line — rewrite the same idea with spoken Hinglish voice."",
-    ""Hindi fields: Devanagari script. Keep loanwords people say (फ़िल्म, ट्रेलर, मैच, क्विज़, पोल, गेम, स्कोर, वाइब, एक्साइटेड, सीन, स्किप, रील्स, ट्रेंड, लाइक, शेयर). Do not force stiff pure-Hindi."",
-    ""Never put Latin-script Hinglish or English sentences into Hindi fields (no 'Kitne excited ho', no 'Excited! / एक्साइटेड')."",
-    ""Short Latin acronyms/names OK inside Hindi when people keep them that way (MV, OTT, DRS, IPL)."",
-    ""Not formal survey speak. Not essays. Spicy but friendly."",
     ""Polls use questionType opinion, debate, or hot for freeform India-trend options."",
-    ""Trend quizzes use questionType trivia, who, or which with STABLE well-known facts only (rules, definitions, permanent records)."",
+    ""Trend quizzes use questionType trivia, who, or which with STABLE well-known facts only (rules, definitions, permanent records) OR facts listed on a verifiedTrends row."",
     ""NEVER write a freeform quiz about who currently holds an office (CM, PM, president, captain, coach, CEO) — those need a verified briefId."",
     ""BAD freeform quiz: 'Who is the current Chief Minister of Delhi?' / 'Who is India's PM right now?'."",
     ""OK freeform quiz: stable rules/definitions for THIS category (e.g. 'What does OTT stand for?' for movies/tech)."",
-    ""Time-sensitive politics/news facts belong in briefs — or write an opinion/debate poll instead of a quiz."",
+    ""Time-sensitive politics/news facts belong in briefs/verifiedTrends — or write an opinion/debate poll instead of a quiz."",
     ""A prediction prompt must contain the word Prediction, set briefId, and the brief must allow it."",
     ""Bank quizzes (evergreen types not in trendQuizTypes) must copy prompt and options from the evergreen bank."",
-    ""Event copy may use only names and numbers that appear in that brief."",
-    ""A quiz has exactly one correct option. Polls must set isCorrect false on every option."",
-    ""Two options use type predict. Three or four use type pulse."",
-    ""Do not use gambling words."",
-    ""Every candidate MUST include promptHi and labelHi on every option. Never leave Hindi empty."",
-    ""Return about 20 candidates — fill the feed; quantity with quality.""
+    ""Event/brief copy may use only names and numbers that appear in that brief / verified trend facts."",
+    ""Do NOT say trending/viral/everyone's talking unless the topic matches a verifiedTrends entry."",
+    ""ENGLISH ONLY (critical): prompt and option.label must be natural English. Latin script only."",
+    ""Never generate Hindi, Hinglish, Devanagari, Hindi transliteration, promptHi, labelHi, or optionsHi."",
+    ""NO Hinglish in English fields: never use Hindi words or Latin transliteration (yaar, kya, kitna, bahut, nahi, scene hai, full on, etc.)."",
+    ""English must read like English a fluent speaker would write — not Hindi written in Latin letters."",
+    ""Indian names, brand names, movie titles, and proper nouns in English are fine."",
+    ""A separate Hindi localization agent will create promptHi / labelHi after validation."",
+    ""Output schema per candidate: format, category, questionType, type, prompt, options[{label,isCorrect}], briefId."",
+    ""Do NOT include promptHi, labelHi, or optionsHi — they are forbidden in this stage."",
+    ""Aim for about 20 strong candidates. Quality over quantity — return fewer rather than pad with weak cards."",
+    ""Pass an internal swipe-feed check before including a card: clear in ~3s, reason to tap, specific not generic."",
+    ""Stay inside categoryScope for this slug only."",
+    ""If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."",
+    ""Every card needs a clear engagement mechanism — not just category fit."",
+    ""GOOD: friend cancels / must-watch dilemma, interval stakes, trailer hype vs wait, film recognition."",
+    ""BAD: endless 'who is your favourite actor?' or bare 'theatre or OTT?' with no situation.""
   ]
 }"

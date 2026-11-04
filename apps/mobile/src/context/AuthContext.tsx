@@ -39,7 +39,30 @@ const Ctx = createContext<AuthState | null>(null);
 
 const AUTH_INIT_BUDGET_MS = 6_000;
 const GET_SESSION_MS = 4_000;
+const REFRESH_SESSION_MS = 12_000;
 const ID_TOKEN_SIGNIN_MS = 15_000;
+/** Refresh when access token is already expired or within this window. */
+const REFRESH_SKEW_MS = 60_000;
+
+function isRefreshTokenDead(error: unknown): boolean {
+  const msg =
+    error && typeof error === "object" && "message" in error
+      ? String((error as { message?: unknown }).message ?? "").toLowerCase()
+      : error instanceof Error
+        ? error.message.toLowerCase()
+        : "";
+  return (
+    msg.includes("invalid refresh") ||
+    msg.includes("refresh token not found") ||
+    msg.includes("session not found") ||
+    msg.includes("already used")
+  );
+}
+
+function sessionNeedsRefresh(expiresAtSec: number | undefined): boolean {
+  if (!expiresAtSec) return true;
+  return expiresAtSec * 1000 < Date.now() + REFRESH_SKEW_MS;
+}
 
 export function mapAuthError(error: unknown): string {
   if (error && typeof error === "object" && "message" in error) {
@@ -103,12 +126,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const authInitId = useRef(0);
   const readyOnce = useRef(false);
-  const recoverTriedRefresh = useRef(false);
+  /** Coalesce concurrent 401 recoveries onto one refresh (avoids refresh-token rotation races). */
+  const recoverInflight = useRef<Promise<boolean> | null>(null);
+  /** Access token we last applied via 401 recovery — a second 401 with the same token demotes. */
+  const recoverAppliedToken = useRef<string | null>(null);
 
   const markReady = useCallback(() => {
     if (readyOnce.current) return;
     readyOnce.current = true;
     setReady(true);
+  }, []);
+
+  const demoteToGuest = useCallback(async (): Promise<boolean> => {
+    await clearLocalSupabaseSession();
+    setUserAccessToken(null);
+    setUser(null);
+    recoverAppliedToken.current = null;
+    try {
+      clearGuestToken();
+      await ensureGuest({ forceNew: true });
+      return true;
+    } catch {
+      return false;
+    }
   }, []);
 
   const recoverFrom401 = useCallback(async (): Promise<boolean> => {
@@ -122,40 +162,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
     }
-    try {
-      const sb = getSupabase();
-      const { data, error } = await withTimeout(sb.auth.refreshSession(), 8_000, "refreshSession");
-      if (!error && data.session?.access_token) {
-        // Only keep the refreshed session if we have not already tried this path.
-        // A second 401 means the backend still rejects the JWT — demote to guest.
-        if (!recoverTriedRefresh.current) {
-          recoverTriedRefresh.current = true;
-          setUserAccessToken(data.session.access_token);
+
+    if (recoverInflight.current) return recoverInflight.current;
+
+    recoverInflight.current = (async () => {
+      try {
+        const before = getUserAccessToken();
+        // Same token already refreshed for a prior 401 in this wave → backend still rejects JWT.
+        if (before && recoverAppliedToken.current === before) {
+          console.warn("[auth] 401 after refresh — demoting to guest");
+          return demoteToGuest();
+        }
+
+        const sb = getSupabase();
+        const { data, error } = await withTimeout(
+          sb.auth.refreshSession(),
+          REFRESH_SESSION_MS,
+          "refreshSession",
+        );
+
+        if (!error && data.session?.access_token) {
+          const next = data.session.access_token;
+          setUserAccessToken(next);
           setUser(data.session.user);
+          recoverAppliedToken.current = next;
           return true;
         }
-      }
-      await clearLocalSupabaseSession();
-      setUserAccessToken(null);
-      setUser(null);
-      clearGuestToken();
-      await ensureGuest({ forceNew: true });
-      recoverTriedRefresh.current = false;
-      return true;
-    } catch {
-      await clearLocalSupabaseSession();
-      setUserAccessToken(null);
-      setUser(null);
-      try {
-        clearGuestToken();
-        await ensureGuest({ forceNew: true });
-        recoverTriedRefresh.current = false;
-        return true;
-      } catch {
+
+        if (isRefreshTokenDead(error)) {
+          // Rotation race: another refresh may have already persisted a new session.
+          try {
+            const { data: existing } = await sb.auth.getSession();
+            const token = sessionAccessToken(existing.session);
+            if (token && token !== before) {
+              setUserAccessToken(token);
+              setUser(existing.session?.user ?? null);
+              recoverAppliedToken.current = token;
+              return true;
+            }
+          } catch {
+            /* fall through to demote */
+          }
+          console.warn("[auth] refresh token unusable — demoting to guest", error);
+          return demoteToGuest();
+        }
+
+        // Network / unknown refresh failure — keep persisted session; fail this request.
+        console.warn("[auth] refreshSession failed transiently — keeping session", error);
         return false;
+      } catch (e) {
+        // Timeout / offline — never wipe the refresh token on a flaky launch.
+        console.warn("[auth] refreshSession error — keeping session", e);
+        return false;
+      } finally {
+        recoverInflight.current = null;
       }
-    }
-  }, []);
+    })();
+
+    return recoverInflight.current;
+  }, [demoteToGuest]);
 
   useEffect(() => {
     setUnauthorizedHandler(recoverFrom401);
@@ -186,9 +251,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const next = sessionAccessToken(session);
             setUserAccessToken(next);
             setUser(session?.user ?? null);
+            if (event === "SIGNED_IN") recoverAppliedToken.current = null;
             if (next && (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED")) {
               deferAuthSideEffect(convertGuestIfNeeded);
             } else if (!next && event === "SIGNED_OUT") {
+              recoverAppliedToken.current = null;
               deferAuthSideEffect(async () => {
                 await ensureGuest();
               });
@@ -199,15 +266,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const { data } = await withTimeout(sb.auth.getSession(), GET_SESSION_MS, "getSession");
             if (initId !== authInitId.current) return;
-            const token = sessionAccessToken(data.session);
-            setUserAccessToken(token);
-            setUser(data.session?.user ?? null);
+            let session = data.session;
+            setUserAccessToken(sessionAccessToken(session));
+            setUser(session?.user ?? null);
+
+            // After hours idle the access JWT is expired; refresh before API traffic starts.
+            if (session?.refresh_token && sessionNeedsRefresh(session.expires_at)) {
+              try {
+                const refreshed = await withTimeout(
+                  sb.auth.refreshSession(),
+                  REFRESH_SESSION_MS,
+                  "refreshSession",
+                );
+                if (initId !== authInitId.current) return;
+                if (!refreshed.error && refreshed.data.session) {
+                  session = refreshed.data.session;
+                  setUserAccessToken(sessionAccessToken(session));
+                  setUser(session.user);
+                  recoverAppliedToken.current = null;
+                } else if (isRefreshTokenDead(refreshed.error)) {
+                  console.warn("[auth] stored refresh token dead on boot", refreshed.error);
+                  await clearLocalSupabaseSession();
+                  if (initId !== authInitId.current) return;
+                  setUserAccessToken(null);
+                  setUser(null);
+                }
+              } catch (e) {
+                console.warn("[auth] proactive refresh failed — keeping stored session", e);
+              }
+            }
           } catch (e) {
-            console.warn("[auth] getSession failed — clearing local session", e);
-            await clearLocalSupabaseSession();
-            if (initId !== authInitId.current) return;
-            setUserAccessToken(null);
-            setUser(null);
+            // Timeout/hang must not delete the persisted refresh token — that was logging users out.
+            console.warn("[auth] getSession failed — keeping persisted session", e);
           }
         }
       } catch (e) {
@@ -267,7 +357,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       setUserAccessToken(data.session?.access_token ?? null);
       setUser(data.user);
-      recoverTriedRefresh.current = false;
+      recoverAppliedToken.current = null;
       await convertGuestIfNeeded();
     } catch (e) {
       if (isGoogleNativeError(e)) throw new Error(mapGoogleSignInError(e));
@@ -286,7 +376,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUserAccessToken(null);
     setUser(null);
-    recoverTriedRefresh.current = false;
+    recoverAppliedToken.current = null;
     resetAnalytics();
     await ensureGuest({ forceNew: true });
     const guest = getGuestToken();

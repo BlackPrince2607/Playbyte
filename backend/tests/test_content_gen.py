@@ -1,5 +1,6 @@
 """Catalog, brief, and agent-gate tests. They do not call OpenAI."""
 
+import json
 from datetime import UTC, datetime
 
 import pytest
@@ -9,6 +10,7 @@ from scripts.content_gen.agent import (
     MissingOpenAIKey,
     _apply_hi_row,
     _messages,
+    agent_candidates,
     discard_localization_fields,
     ensure_language_split,
     fill_evergreen,
@@ -784,7 +786,7 @@ def test_past_brief_keeps_only_forward_looking_predictions() -> None:
 
 def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     lowered = EN_SYSTEM.lower()
-    assert "english only" in lowered or "natural english only" in lowered
+    assert "english" in lowered
     assert "hindi" in lowered
     assert "devanagari" in lowered
     assert "hinglish" in lowered
@@ -793,7 +795,9 @@ def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     assert "separate hindi localization" in lowered
     assert "swipe" in lowered
     assert "never invent a trend" in lowered
-    assert "trivia" in lowered
+    assert "engagement mechanism" in lowered
+    assert "quiz vs poll" in lowered or "quiz vs poll" in EN_SYSTEM.lower()
+    assert "quality beats quantity" in lowered
     msgs = _messages("food", 4, [], avoid_prompts=[], insights={})
     assert msgs[0]["content"] == EN_SYSTEM
     payload = msgs[1]["content"]
@@ -802,6 +806,27 @@ def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     assert "verifiedTrends" in payload
     assert "hindiGood" not in payload
     assert "quizShare" in payload
+    assert "categoryScope" in payload
+    assert "engagement mechanism" in payload.lower()
+    food_scope = json.loads(payload)["categoryScope"]
+    assert any("trade-off" in a.lower() or "dilemma" in a.lower() for a in food_scope.get("goodAngles", []))
+
+
+def test_agent_candidates_requests_about_2x_need(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen_need: list[int] = []
+
+    def fake_openai(messages: list[dict[str, str]]) -> dict:
+        payload = json.loads(messages[1]["content"])
+        seen_need.append(int(payload["need"]))
+        return {"candidates": []}
+
+    monkeypatch.setattr("scripts.content_gen.agent.call_openai", fake_openai)
+    monkeypatch.setattr("scripts.content_gen.agent.verify_quiz_facts", lambda cards, **_: (cards, []))
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    out = agent_candidates("food", 10, briefs=[])
+    assert out == []
+    assert seen_need
+    assert seen_need[0] == 20
 
 
 def test_normalize_verified_trends_marks_completed_events() -> None:
@@ -815,7 +840,15 @@ def test_normalize_verified_trends_marks_completed_events() -> None:
 
 def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:
     assert lazy_poll_issue("poll", "Who is your favourite actor?") == "lazy-poll"
+    assert lazy_poll_issue("poll", "Chai or coffee?") == "lazy-poll"
+    assert lazy_poll_issue("poll", "Sweet or spicy?") == "lazy-poll"
+    assert lazy_poll_issue("poll", "Android or iPhone?") == "lazy-poll"
+    assert lazy_poll_issue("poll", "Theatre or OTT?") == "lazy-poll"
     assert lazy_poll_issue("poll", "Worth the hype or overrated?") is None
+    assert (
+        lazy_poll_issue("poll", "Midnight craving hits. Street food or Maggi at home?")
+        is None
+    )
     now = datetime(2026, 10, 30, tzinfo=UTC)
     raw = {
         "candidates": [

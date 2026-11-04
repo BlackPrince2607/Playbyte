@@ -233,6 +233,7 @@ async def feed_page(
         patch("app.modules.feed.service.interest_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.active_window_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=moments)),
+        patch("app.modules.feed.service.ensure_feed_has_moments", AsyncMock(return_value=0)),
         patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=answered)) as answered_ids,
         patch("app.modules.feed.service.my_option_ids", AsyncMock(return_value={})),
         patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
@@ -268,6 +269,7 @@ async def test_build_feed_keeps_only_the_selected_category() -> None:
         patch("app.modules.feed.service.interest_ids", AsyncMock(return_value={kpop_id})),
         patch("app.modules.feed.service.active_window_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.load_live_moments", AsyncMock(return_value=[kpop, sports])),
+        patch("app.modules.feed.service.ensure_feed_has_moments", AsyncMock(return_value=0)),
         patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=set())),
         patch("app.modules.feed.service.my_option_ids", AsyncMock(return_value={})),
         patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
@@ -311,7 +313,10 @@ async def test_build_feed_mixes_selected_categories() -> None:
 
 @pytest.mark.asyncio
 async def test_build_feed_leads_with_unanswered_then_recycles() -> None:
+    cat = uuid4()
     moments = [moment(i) for i in range(6)]
+    for m in moments:
+        m.category_id = cat
     answered = {moments[0].id, moments[3].id}
     unanswered = [str(m.id) for m in moments if m.id not in answered]
     ids = await feed_moment_ids(moments, answered, seed=1, user_id=uuid4())
@@ -348,7 +353,10 @@ async def test_build_feed_cursor_pages_through_every_moment_then_starts_over() -
 
 @pytest.mark.asyncio
 async def test_build_feed_cursor_prefers_still_unanswered_on_next_page() -> None:
+    cat = uuid4()
     moments = [moment(i) for i in range(12)]
+    for m in moments:
+        m.category_id = cat
     first = await feed_page(moments, set(), 1, limit=4)
     rest = [m for m in moments if str(m.id) not in moment_ids_of(first)]
     answered_now = {m.id for m in rest[:4]}
@@ -374,6 +382,30 @@ async def test_build_feed_recycles_answered_moments_instead_of_games_only() -> N
 async def test_build_feed_ends_only_when_there_is_nothing_to_show() -> None:
     page = await feed_page([], set(), 1)
     assert page == {"items": [], "cursor": None}
+
+
+@pytest.mark.asyncio
+async def test_build_feed_revives_empty_moment_pool_before_games_only() -> None:
+    """When every live card is past ends_at, revive/stock before filling the page with games."""
+    revived = [moment(i) for i in range(4)]
+    session = AsyncMock()
+    session.scalars = AsyncMock(side_effect=[[], []])
+    load = AsyncMock(side_effect=[[], revived])
+    ensure = AsyncMock(return_value=4)
+    with (
+        patch("app.modules.feed.service.interest_ids", AsyncMock(return_value=set())),
+        patch("app.modules.feed.service.active_window_ids", AsyncMock(return_value=set())),
+        patch("app.modules.feed.service.load_live_moments", load),
+        patch("app.modules.feed.service.ensure_feed_has_moments", ensure),
+        patch("app.modules.feed.service.answered_moment_ids", AsyncMock(return_value=set())),
+        patch("app.modules.feed.service.my_option_ids", AsyncMock(return_value={})),
+        patch("app.modules.feed.service.tags_for_moments", AsyncMock(return_value={})),
+        patch("app.modules.feed.service.engagement_for", AsyncMock(return_value={})),
+    ):
+        page = await build_feed(session, user_id=None, guest_id=uuid4(), limit=10, rng=random.Random(1))
+    ensure.assert_awaited_once()
+    assert load.await_count == 2
+    assert sum(1 for i in page["items"] if i["type"] == "moment") == 4
 
 
 @pytest.mark.asyncio

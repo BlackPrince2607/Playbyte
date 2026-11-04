@@ -24,6 +24,7 @@ from app.infrastructure.postgres.models import (
 from app.infrastructure.storage.objects import get_object_storage
 from app.modules.crowd.volume import volume_state
 from app.modules.feed.ranking import FeedCursor, RankedItem, fill_page, moment_score, rotate_games
+from app.modules.feed.stock import ensure_feed_has_moments
 from app.modules.social.service import EMPTY_ENGAGEMENT, engagement_for
 
 # Random score added per request: reshuffles moments within the same tier (interest match is +100,
@@ -165,6 +166,10 @@ async def build_feed(
     interests = await interest_ids(session, user_id, guest_id)
     windows = await active_window_ids(session)
     loaded = await load_live_moments(session)
+    if not loaded:
+        # Missed refresh / short endsAt used to empty the moment pool while games stayed enabled.
+        await ensure_feed_has_moments(session, user_id)
+        loaded = await load_live_moments(session)
     answered = await answered_moment_ids(session, [m.id for m in loaded], user_id, guest_id)
     # Preference picks are the pool. If those categories have nothing live yet, widen so the feed works.
     moments = [m for m in loaded if m.category_id in interests] if interests else loaded

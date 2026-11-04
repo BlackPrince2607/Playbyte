@@ -1,4 +1,4 @@
-﻿category,format,question_type,prompt,options,correct_index,correct_label
+category,format,question_type,prompt,options,correct_index,correct_label
 cricket,quiz,format,A batter scores a hundred runs in one innings. What is that score called?,A century | A duck | A maiden,0,A century
 cricket,quiz,powerplay,The fielding side is limited in how many fielders can be outside the circle at the start of a T20. What is that phase called?,The powerplay | The death | The toss,0,The powerplay
 movies,quiz,interval,The short break in the middle of a theatrical film in India is called the…,Interval | Encore | Overture,0,Interval

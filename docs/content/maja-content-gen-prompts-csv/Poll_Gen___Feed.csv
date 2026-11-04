@@ -1,0 +1,47 @@
+Topic,Detail
+What is a poll?,"A moment card with scoringMode=none, tag poll, and isCorrect=false on every option. No right answer — pick a side / debate."
+Poll vs quiz,Quiz uses scoringMode=correct_option and exactly one isCorrect=true. Poll never reveals a correct option after answer.
+Card type,predict = 2 options (A vs B). pulse = 3–4 options.
+Shared poll questionTypes,"debate, hot, opinion (opinion / debate / hot for freeform India-trend polls)"
+Event poll questionTypes,"challenge, debate, opinion, prediction when category has verified briefs"
+Category bank polls,Each onboarding category also has evergreen poll templates in catalog.py (see Evergreen Polls sheet).
+,
+GENERATE — step 1,"GitHub Actions / refresh job loads engagement insights (hits, misses, avoidPrompts) from GET /v1/admin/moments/insights."
+GENERATE — step 2,English Content Agent invents English-only quiz/poll cards for one category (EN_SYSTEM engagement standard + categoryScope). Never writes promptHi/labelHi. Overgenerates ~2x then ranks.
+GENERATE — step 3,"Validate: schema, category scope (sports≠cricket), lazy-poll reject, near-duplicates, avoidNames, past-outcome predictions, English purity."
+GENERATE — step 4,Rank/diversify batch; evergreen bank top-up if still short; attach verified brief event cards when available.
+GENERATE — step 5,"Hindi Localization Agent writes promptHi + labelHi only. Must not change format, options, isCorrect, or briefId."
+GENERATE — step 6,Publish via POST /v1/admin/moments then transition ready → live. No short TTL — previous live moments retired only after the new batch is up.
+Content sources,1) Agent freeform trend/opinion polls  2) Evergreen bank polls  3) Verified event briefs  4) Optional meme/image spice
+Soft mix target,"~55–65% quizzes, ~25–35% polls, ≤~10% predictions when upcoming events exist. Quality beats quotas."
+Strong poll patterns,"A vs B, pick your side, worth the hype?, underrated/overrated, keep or skip, which one wins, best comeback"
+Rejected lazy polls,Who is your favourite…? / Do you like X? / Which do you prefer? (unless timely + specific)
+,
+FEED — API,App calls GET /v1/feed?limit=20&lang=en|hi
+FEED — pool,Only status=live moments within startsAt/endsAt. Prefer user's interest categories; widen if those are empty.
+FEED — ranking,Unanswered boosted. Categories shuffled; quiz vs poll alternated so the swipe feed does not feel samey. Mini-games interleaved.
+FEED — language,"One card, two display layers. lang=en → prompt + label. lang=hi → promptHi + labelHi when present. Same card ID, votes, analytics."
+FEED — UI,MomentFeedPage shows prompt + option buttons. Tap → POST /v1/moments/{id}/responses. Then crowd % split / friends; no correct reveal for polls.
+FEED — client cleanup,displayCopy() strips leaked Devanagari in English mode (and Latin leftovers in Hindi mode) as a final safety net.
+,
+Publish script,scripts/refresh_feed_content.py (plan_agent_batch → localize_hi → publish_moment)
+English agent,backend/scripts/content_gen/agent.py → EN_SYSTEM / _messages / agent_candidates
+Hindi agent,backend/scripts/content_gen/hi_localize_prompt.py → HI_LOCALIZE_SYSTEM; localize_hi()
+Feed ranking,backend/app/modules/feed/service.py → build_feed / serialize_moment
+Mobile render,apps/mobile/src/screens/feed/MomentFeedPage.tsx + lib/displayLang.ts
+Category polls — cricket,"6 evergreen bank polls; allowed questionTypes: captaincy, challenge, death, debate, format, hot, opinion, powerplay, prediction, toss, watch"
+Category polls — movies,"12 evergreen bank polls; allowed questionTypes: challenge, company, debate, end, hot, interval, language, night, opinion, prediction, rewatch, screen, sequel, snack, song, spoiler, star"
+Category polls — music,"6 evergreen bank polls; allowed questionTypes: challenge, debate, discovery, hot, live, memory, opinion, playlist, prediction, tickets, volume"
+Category polls — pop-culture,"6 evergreen bank polls; allowed questionTypes: audio, challenge, creator, debate, fandom, hot, meme, opinion, prediction, quote, trend"
+Category polls — food,"6 evergreen bank polls; allowed questionTypes: chai, craving, debate, hot, loyalty, opinion, plan, spice, sweet"
+Category polls — gaming,"6 evergreen bank polls; allowed questionTypes: debate, device, genre, hot, opinion, session, spend, squad, tilt"
+Category polls — sports,"6 evergreen bank polls; allowed questionTypes: challenge, debate, derby, fantasy, hot, loyalty, opinion, prediction, ritual, take, watch"
+Category polls — news,"6 evergreen bank polls; allowed questionTypes: alerts, challenge, check, debate, depth, habit, hot, opinion, prediction, share, time"
+Category polls — tech,"12 evergreen bank polls; allowed questionTypes: apps, challenge, class, debate, experiment, fact, future, hot, hype, opinion, os, phone, prediction, privacy, read, wonder, work"
+Category polls — personality-vibe,"18 evergreen bank polls; allowed questionTypes: birthday, cancel, debate, drama, everyday, fitness, friendship, hot, intro, opinion, plans, seen, social, travel, work"
+Category polls — fashion,"6 evergreen bank polls; allowed questionTypes: colour, debate, event, fit, hot, opinion, shoes, shop, trend"
+Category polls — health,"6 evergreen bank polls; allowed questionTypes: check, debate, food, hot, morning, move, opinion, sleep, stress"
+Category polls — kpop,"12 evergreen bank polls; allowed questionTypes: bias, binge, challenge, comeback, concept, debate, end, hot, lead, lightstick, opinion, ost, pace, playlist, prediction, sub"
+Category polls — puzzles,"6 evergreen bank polls; allowed questionTypes: debate, hint, hot, opinion, pace, share, style, timer, type"
+Category polls — logical-reasoning,"6 evergreen bank polls; allowed questionTypes: debate, fail, hot, opinion, pattern, speed, style, type"
+Category polls — math-numbers,"6 evergreen bank polls; allowed questionTypes: calc, debate, feel, hot, opinion, real, school, speed, topic"

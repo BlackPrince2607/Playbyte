@@ -15,8 +15,22 @@ function bindAppStateRefresh(sb: ReturnType<typeof createClient>) {
   // Expo / RN: refresh only while foregrounded (Supabase RN quickstart pattern).
   sb.auth.startAutoRefresh();
   AppState.addEventListener("change", (state: AppStateStatus) => {
-    if (state === "active") sb.auth.startAutoRefresh();
-    else sb.auth.stopAutoRefresh();
+    if (state === "active") {
+      sb.auth.startAutoRefresh();
+      // Cold resume after hours: access JWT is often already expired. Kick a refresh
+      // immediately so API calls do not race an expired Bearer token.
+      void sb.auth.getSession().then(({ data }) => {
+        const expiresAt = data.session?.expires_at ?? 0;
+        if (!data.session?.refresh_token) return;
+        if (!expiresAt || expiresAt * 1000 < Date.now() + 60_000) {
+          void sb.auth.refreshSession().catch((e) => {
+            console.warn("[auth] foreground refreshSession failed", e);
+          });
+        }
+      });
+    } else {
+      sb.auth.stopAutoRefresh();
+    }
   });
 }
 

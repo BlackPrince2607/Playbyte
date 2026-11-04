@@ -13,11 +13,15 @@ import { capture } from "../../lib/analytics";
 import { prefetchGame } from "../../game/platform/prefetchGame";
 import type { CompletedPlay } from "../../game/session/types";
 import { FEED_PREFETCH_AHEAD, feedKeys } from "../../lib/feedPages";
+import { prefetchMomentImages } from "../../lib/prefetchMomentImages";
 import { isSwipeHintPending, markSwipeHintSeen } from "../../lib/storage";
 import { colors } from "../../theme/colors";
 import { GameIntroPage } from "./GameIntroPage";
 import { GuessFeedPage, isInlineGuessGame } from "./GuessFeedPage";
 import { MomentFeedPage } from "./MomentFeedPage";
+
+/** How many cards ahead of the viewer to warm (games + poll images). */
+const FEED_WARM_AHEAD = 3;
 
 type Props = {
   onPlayGame: (game: FeedGame) => void;
@@ -88,11 +92,12 @@ export function FeedScreen({
     if (swipeHintFrom !== null && feedIndex !== swipeHintFrom) dismissSwipeHint();
   }, [feedIndex, swipeHintFrom, dismissSwipeHint]);
 
-  // Warm the next game cards ahead of the viewer so Join never waits on packs.
+  // Warm upcoming games + poll images so the next swipe is already cached.
   useEffect(() => {
-    for (let i = feedIndex; i < Math.min(items.length, feedIndex + 3); i++) {
+    for (let i = feedIndex; i < Math.min(items.length, feedIndex + FEED_WARM_AHEAD); i++) {
       const item = items[i];
       if (item?.type === "mini_game") prefetchGame(item);
+      else if (item?.type === "moment") prefetchMomentImages(item);
     }
   }, [feedIndex, items]);
 
@@ -221,9 +226,9 @@ export function FeedScreen({
           pagingEnabled
           decelerationRate="fast"
           showsVerticalScrollIndicator={false}
-          initialNumToRender={2}
-          maxToRenderPerBatch={2}
-          windowSize={3}
+          initialNumToRender={3}
+          maxToRenderPerBatch={3}
+          windowSize={5}
           viewabilityConfig={VIEWABILITY}
           onViewableItemsChanged={onViewableItemsChanged}
           onScrollEndDrag={onScrollEndDrag}

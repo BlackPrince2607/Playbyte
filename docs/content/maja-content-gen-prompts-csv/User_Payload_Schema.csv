@@ -1,18 +1,19 @@
-﻿Key,Meaning
+Key,Meaning
 category,Requested onboarding slug
 categoryScope,What the category covers (critical for sports vs cricket)
 need,How many candidates to return
 today,UTC date ISO — used for freshness / closed-event rules
 mix,Target quiz vs poll counts + preferQuizTypes
-market,India two-layer language brief
+market,India English feed brief (Hindi is a later localization stage)
 pollQuestionTypes,Allowed poll questionType values for this category
 quizQuestionTypes,Allowed quiz questionType values for this category
 trendQuizTypes,Freeform trivia types not locked to evergreen bank
 evergreenBank,Concatenated bank prompts/options the model may copy for bank quizzes
+verifiedTrends,Merged manual India trends JSON + brief-derived trends (never invent trends)
 briefs,Verified event briefs for this category (if any)
 avoidPrompts,Prompts already live / recent — do not reuse
 avoidNames,Proper names extracted from avoidPrompts
 engagementInsights,Hit/miss lessons from GET /v1/admin/moments/insights
-voiceExamples,Good/bad English and Hindi examples
+voiceExamples,Good/bad English-only examples
 rules,Full rule list (shared + category SCOPE rules)
-candidate schema,"format, category, questionType, type, prompt, promptHi, options[{label,labelHi,isCorrect}], briefId"
+candidate schema,"format, category, questionType, type, prompt, options[{label,isCorrect}], briefId (NO promptHi/labelHi — Hindi localization agent owns those)"

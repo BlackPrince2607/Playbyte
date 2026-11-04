@@ -1,7 +1,8 @@
 """Publish a fresh agent batch via the admin API, then retire the previous live feed.
 
 Every successful run fills the feed with India-trend polls/quizzes (engagement-aware),
-gives them a short endsAt window, and retires all prior live moments so nothing repeats.
+goes live first, then retires the prior batch. Cards stay live until retired (no short
+endsAt TTL), so the feed never collapses to games-only while the cron catches up.
 
 Usage:
   python scripts/refresh_feed_content.py --dry-run
@@ -237,7 +238,6 @@ def publish_moment(
     category_id: str,
     moment: dict[str, Any],
     starts: datetime,
-    ends: datetime,
     dry_run: bool,
 ) -> bool:
     prompt = str(moment["prompt"]).strip()
@@ -254,10 +254,8 @@ def publish_moment(
     prompt_hi = moment.get("promptHi") or moment.get("prompt_hi")
     if prompt_hi:
         body["promptHi"] = str(prompt_hi).strip()
-    if "endsAt" in moment:
+    if moment.get("endsAt"):
         body["endsAt"] = moment["endsAt"]
-    else:
-        body["endsAt"] = ends.isoformat().replace("+00:00", "Z")
     if moment.get("promptImageKey"):
         body["promptImageKey"] = moment["promptImageKey"]
 
@@ -383,7 +381,8 @@ def plan_agent_batch(
             is_event = bool(card.brief_id)
             if not is_event and added >= need:
                 continue
-            ends = card.ends_at or window_ends
+            # Evergreen cards stay live until the next successful run retires them.
+            # Only event/brief cards carry an endsAt so they drop when the event is over.
             row: dict[str, Any] = {
                 "categorySlug": card.category_slug,
                 "type": card.type,
@@ -391,8 +390,12 @@ def plan_agent_batch(
                 "scoringMode": card.scoring_mode,
                 "prompt": card.prompt,
                 "options": card.options,
-                "endsAt": ends.isoformat().replace("+00:00", "Z"),
             }
+            ends = card.ends_at
+            if ends is None and is_event:
+                ends = window_ends
+            if ends is not None:
+                row["endsAt"] = ends.isoformat().replace("+00:00", "Z")
             if card.prompt_hi:
                 row["promptHi"] = card.prompt_hi
             planned.append(row)
@@ -410,7 +413,12 @@ def main() -> int:
     parser.add_argument("--admin-key", default="dev-admin-key")
     parser.add_argument("--count", type=int, default=12, help="Optional meme/image moments (agent fills the feed)")
     parser.add_argument("--per-category", type=int, default=20, help="Fresh agent cards per category (fills the live feed)")
-    parser.add_argument("--window-hours", type=float, default=4.0, help="Card TTL; match refresh cadence so the feed expires")
+    parser.add_argument(
+        "--window-hours",
+        type=float,
+        default=4.0,
+        help="Agent freshness horizon and default endsAt for timed event cards (not a live-feed TTL)",
+    )
     parser.add_argument("--include-images", dest="include_images", action="store_true", default=True)
     parser.add_argument("--no-images", dest="include_images", action="store_false")
     parser.add_argument("--dry-run", action="store_true")
@@ -488,10 +496,6 @@ def main() -> int:
                 continue
             moment = hydrated
 
-        # Every published card expires with the refresh window so the next run can replace it.
-        if not moment.get("endsAt"):
-            moment = {**moment, "endsAt": ends.isoformat().replace("+00:00", "Z")}
-
         tags = set(moment.get("tags") or [])
         is_quiz = "quiz" in tags or moment.get("scoringMode") == "correct_option"
         if is_quiz and not moment.get("briefId"):
@@ -508,7 +512,6 @@ def main() -> int:
             category_id=cat_id,
             moment=moment,
             starts=starts,
-            ends=ends,
             dry_run=args.dry_run,
         )
         if ok:

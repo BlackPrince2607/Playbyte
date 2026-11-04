@@ -1,0 +1,41 @@
+# Keep EAS upload small; cloud/local prebuild regenerates native projects as needed.
+node_modules/
+.expo/
+dist/
+web-build/
+.size-report/
+
+# Native build outputs (source android/ may still be needed for config plugins;
+# exclude only generated artifacts).
+android/.gradle/
+android/build/
+android/app/build/
+android/app/.cxx/
+ios/Pods/
+ios/build/
+
+# Local secrets & signing material (EAS uses remote credentials)
+.env
+.env.*
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+credentials.json
+
+# Local release artifacts & logs
+*.apk
+*.aab
+*.log
+apk-build*.log
+pnpm-hoist-install.log
+
+# Misc
+.DS_Store
+*.tsbuildinfo
+coverage/
+__tests__/
+**/*.test.ts
+**/*.test.tsx

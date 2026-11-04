@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CoinIcon } from "../../components/CoinIcon";
 import { FriendPickerModal } from "../../components/FriendPickerModal";
@@ -373,37 +373,25 @@ export function PostGameResultScreen({
             <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{shareError}</Text>
           ) : null}
           {onNextGame ? (
-            <Pressable
+            <PrimaryButton
+              label={t("nextGame")}
+              variant="secondary"
               onPress={() => {
                 capture("result_action_clicked", { action: "next game" });
                 onNextGame();
               }}
-              accessibilityRole="button"
-              hitSlop={8}
-              style={styles.feedLink}
-            >
-              <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.bodyBold }]}>
-                {t("nextGame")} →
-              </Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={() => {
-                capture("result_action_clicked", { action: "feed" });
-                onBackToFeed();
-              }}
-              accessibilityRole="button"
-              hitSlop={8}
-              style={styles.feedLink}
-            >
-              <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.bodyBold }]}>{t("backToFeed")}</Text>
-            </Pressable>
-          )}
-          {onNextGame ? (
-            <Pressable onPress={onBackToFeed} accessibilityRole="button" hitSlop={8} style={styles.feedLinkSubtle}>
-              <Text style={[type.micro, { color: colors.lilac, fontFamily: ui.body }]}>{t("onFeed")}</Text>
-            </Pressable>
+              trailingIcon="arrow-forward"
+            />
           ) : null}
+          <PrimaryButton
+            label={t("backToFeed")}
+            variant="secondary"
+            onPress={() => {
+              capture("result_action_clicked", { action: "feed" });
+              onBackToFeed();
+            }}
+            icon="home-outline"
+          />
         </View>
 
         {showAccuracy || (rounds && rounds.length > 0) ? (
@@ -533,8 +521,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardAlt,
   },
   actions: { width: "100%", gap: spacing.sm, marginTop: spacing.md },
-  feedLink: { alignSelf: "center", paddingVertical: spacing.sm },
-  feedLinkSubtle: { alignSelf: "center", paddingBottom: spacing.xs },
   saveBanner: {
     width: "100%",
     marginTop: spacing.sm,

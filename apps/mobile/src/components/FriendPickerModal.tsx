@@ -2,9 +2,11 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Friend } from "../api";
 import { useLanguage } from "../context/LanguageContext";
+import { shareAppInvite } from "../lib/shareInvite";
 import { colors, radius, spacing } from "../theme/colors";
 import { type } from "../theme/typography";
 import { AvatarImage } from "./AvatarImage";
+import { CloseButton } from "./CloseButton";
 import { PrimaryButton } from "./PrimaryButton";
 
 type Props = {
@@ -37,9 +39,14 @@ export function FriendPickerModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityRole="button" accessibilityLabel={t("cancel")} />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.md }]}>
-        <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display, fontSize: 22 }]}>
-          {title ?? t("challengeFriend")}
-        </Text>
+        <View style={styles.header}>
+          <Text
+            style={[type.screenTitle, styles.title, { color: colors.paper, fontFamily: ui.display, fontSize: 22 }]}
+          >
+            {title ?? t("challengeFriend")}
+          </Text>
+          <CloseButton onPress={onClose} color={colors.paper} />
+        </View>
         {!signedIn ? (
           <View style={styles.empty}>
             <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>{t("signInToChallenge")}</Text>
@@ -75,7 +82,14 @@ export function FriendPickerModal({
             ))}
           </ScrollView>
         )}
-        <PrimaryButton label={t("cancel")} variant="secondary" onPress={onClose} style={{ marginTop: spacing.md }} />
+        {signedIn ? (
+          <PrimaryButton
+            label={t("invite")}
+            icon="person-add-outline"
+            onPress={() => void shareAppInvite(undefined, "friend_picker")}
+            style={{ marginTop: spacing.md }}
+          />
+        ) : null}
       </View>
     </Modal>
   );
@@ -98,6 +112,13 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     maxHeight: "70%",
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  title: { flex: 1 },
   list: { marginTop: spacing.md },
   row: {
     flexDirection: "row",

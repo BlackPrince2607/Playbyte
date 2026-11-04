@@ -1,4 +1,4 @@
-﻿slug,kind,text
+slug,kind,text
 cricket,label,Cricket
 cricket,include,IPL
 cricket,include,international cricket
@@ -8,15 +8,66 @@ cricket,include,rules
 cricket,include,formats
 cricket,include,upcoming fixtures
 cricket,exclude,football and other non-cricket sports as the main topic
-cricket,rule,"SCOPE: this is the cricket category — IPL, internationals, formats, rules, and debate takes."
-cricket,rule,BAD name spam: three cards all about Sanju Samson / Kohli / Rohit. Rotate subjects or ask knowledge questions with no star name.
-cricket,rule,"GOOD cricket mix: 'How many balls in an over?', 'What does DRS stand for?', one debate poll, one upcoming-match take — different angles."
-cricket,rule,OK freeform quiz: 'How many players take the field for one side in cricket?'.
-movies,label,movies
-music,label,music
-pop-culture,label,pop-culture
-food,label,food
-gaming,label,gaming
+cricket,rule,Stay inside categoryScope for this slug only.
+cricket,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+cricket,rule,Every card needs a clear engagement mechanism — not just category fit.
+cricket,rule,"SCOPE: IPL, internationals, formats, rules, debates — not football/NBA/F1 as the main topic."
+cricket,rule,BAD name spam: three cards all about Kohli / Rohit / Dhoni. Rotate or ask nameless knowledge questions.
+cricket,rule,"GOOD: 'How many balls in an over?', 'What does DRS stand for?', one debate, one upcoming take if verified."
+movies,label,Movies / Bollywood & Indian cinema
+movies,include,theatrical releases
+movies,include,trailers
+movies,include,OTT
+movies,include,interval culture
+movies,include,stars
+movies,include,rewatches
+movies,exclude,non-film TV news dumps
+movies,rule,Stay inside categoryScope for this slug only.
+movies,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+movies,rule,Every card needs a clear engagement mechanism — not just category fit.
+movies,rule,"GOOD: friend cancels / must-watch dilemma, interval stakes, trailer hype vs wait, film recognition."
+movies,rule,BAD: endless 'who is your favourite actor?' or bare 'theatre or OTT?' with no situation.
+music,label,Music
+music,include,Bollywood songs
+music,include,indie
+music,include,hip-hop
+music,include,concerts
+music,include,playlists
+music,rule,Stay inside categoryScope for this slug only.
+music,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+music,rule,Every card needs a clear engagement mechanism — not just category fit.
+music,rule,"GOOD: live vs studio trade-off, playlist identity, song recognition."
+music,rule,BAD: generic 'best singer' surveys with no angle.
+pop-culture,label,Pop culture
+pop-culture,include,memes
+pop-culture,include,viral audio
+pop-culture,include,creator drama
+pop-culture,include,fandom fights
+pop-culture,rule,Stay inside categoryScope for this slug only.
+pop-culture,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+pop-culture,rule,Every card needs a clear engagement mechanism — not just category fit.
+pop-culture,rule,"GOOD: meme recognition, fandom side-picking, verified viral reactions only."
+pop-culture,rule,BAD: inventing that something is viral without verifiedTrends.
+food,label,Food
+food,include,street food
+food,include,chai/coffee
+food,include,biryani loyalty
+food,include,late-night cravings
+food,rule,Stay inside categoryScope for this slug only.
+food,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+food,rule,Every card needs a clear engagement mechanism — not just category fit.
+food,rule,"GOOD: late-night dilemma with stakes, city loyalty, keep-only-one forever, familiar-food surprise fact."
+food,rule,"BAD: bare 'chai or coffee?', 'sweet or spicy?', or formal dining-survey language."
+gaming,label,Gaming
+gaming,include,mobile esports
+gaming,include,ranked vs casual
+gaming,include,battle pass
+gaming,include,PC/console
+gaming,rule,Stay inside categoryScope for this slug only.
+gaming,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+gaming,rule,Every card needs a clear engagement mechanism — not just category fit.
+gaming,rule,"GOOD: ranked vs chill with stakes, tilt decisions, mode/device trivia."
+gaming,rule,BAD: vague 'do you like gaming?' cards.
 sports,label,Sports (Non-Cricket)
 sports,include,football/soccer
 sports,include,hockey
@@ -36,16 +87,100 @@ sports,exclude,wickets
 sports,exclude,batting/bowling cricket terms
 sports,exclude,cricket players or Indian cricket takes
 sports,note,Cricket has its own category slug 'cricket'. Never write cricket cards for sports.
-sports,rule,SCOPE (critical): category sports means Sports (Non-Cricket) ONLY.
+sports,rule,Stay inside categoryScope for this slug only.
+sports,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+sports,rule,Every card needs a clear engagement mechanism — not just category fit.
+sports,rule,SCOPE (critical): sports means Sports (Non-Cricket) ONLY.
 sports,rule,"NEVER mention cricket, IPL, T20, ODI, BCCI, wickets, batting, bowling, or cricket players."
-sports,rule,BAD sports card: 'How do you feel about the current state of Indian cricket?'.
-sports,rule,"GOOD sports mix: football derby takes, kabaddi, badminton, hockey, F1, Olympics, chess puzzles."
-news,label,news
-tech,label,tech
-personality-vibe,label,personality-vibe
-fashion,label,fashion
-health,label,health
-kpop,label,kpop
-puzzles,label,puzzles
-logical-reasoning,label,logical-reasoning
-math-numbers,label,math-numbers
+sports,rule,BAD: 'How do you feel about the current state of Indian cricket?'.
+sports,rule,"GOOD: football derby identity, kabaddi heat, badminton, hockey, F1, Olympics, chess — rotate sports."
+news,label,News literacy (not party politics spam)
+news,include,fact-check habits
+news,include,headline literacy
+news,include,viral claim skepticism
+news,exclude,partisan campaigning
+news,exclude,invented breaking news
+news,rule,Stay inside categoryScope for this slug only.
+news,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+news,rule,Every card needs a clear engagement mechanism — not just category fit.
+news,rule,GOOD: fact-check literacy quizzes and share-or-verify debates.
+news,rule,BAD: partisan propaganda or inventing breaking headlines.
+tech,label,Tech
+tech,include,phones
+tech,include,AI tools
+tech,include,privacy
+tech,include,startups Indians use
+tech,rule,Stay inside categoryScope for this slug only.
+tech,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+tech,rule,Every card needs a clear engagement mechanism — not just category fit.
+tech,rule,"GOOD: everyday permission dilemmas, hype vs wait, misconception quizzes."
+tech,rule,BAD: speculative product rumors without verifiedTrends/briefs; bare 'Android or iPhone?'.
+personality-vibe,label,Personality & vibe
+personality-vibe,include,weekend energy
+personality-vibe,include,plans
+personality-vibe,include,friendship habits
+personality-vibe,include,work style
+personality-vibe,rule,Stay inside categoryScope for this slug only.
+personality-vibe,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+personality-vibe,rule,Every card needs a clear engagement mechanism — not just category fit.
+personality-vibe,rule,GOOD: vivid social scenario that reveals identity; quizzes that map a behavior to a vibe.
+personality-vibe,rule,BAD: bland personality inventories.
+fashion,label,Fashion
+fashion,include,fits
+fashion,include,trends
+fashion,include,wedding fits
+fashion,include,comfort vs drip
+fashion,rule,Stay inside categoryScope for this slug only.
+fashion,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+fashion,rule,Every card needs a clear engagement mechanism — not just category fit.
+fashion,rule,"GOOD: keep-or-skip trend takes, comfort vs drip for a real event, wedding-fit debates."
+fashion,rule,BAD: generic 'favourite color' filler.
+health,label,Health habits
+health,include,sleep
+health,include,movement
+health,include,stress
+health,include,eating well
+health,exclude,medical diagnosis advice
+health,rule,Stay inside categoryScope for this slug only.
+health,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+health,rule,Every card needs a clear engagement mechanism — not just category fit.
+health,rule,GOOD: habit choices with self-expression and light knowledge checks. Never give medical advice.
+health,rule,BAD: diagnosis or treatment prompts.
+kpop,label,K-Pop & K-drama adjacent fandom
+kpop,include,comebacks
+kpop,include,biases
+kpop,include,lightsticks
+kpop,include,OST
+kpop,include,binge habits
+kpop,rule,Stay inside categoryScope for this slug only.
+kpop,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+kpop,rule,Every card needs a clear engagement mechanism — not just category fit.
+kpop,rule,"GOOD: concept/comeback debates, fandom rituals, recognition trivia."
+kpop,rule,BAD: repeating the same bias poll with different names.
+puzzles,label,Puzzles
+puzzles,include,word/number/visual puzzle vibes
+puzzles,include,hints vs no hints
+puzzles,rule,Stay inside categoryScope for this slug only.
+puzzles,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+puzzles,rule,Every card needs a clear engagement mechanism — not just category fit.
+puzzles,rule,GOOD: hint vs no-hint debates plus fair quick-solve challenges.
+puzzles,rule,BAD: unsolvable riddles as polls.
+logical-reasoning,label,Logical reasoning
+logical-reasoning,include,patterns
+logical-reasoning,include,odd one out
+logical-reasoning,include,if-then
+logical-reasoning,rule,Stay inside categoryScope for this slug only.
+logical-reasoning,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+logical-reasoning,rule,Every card needs a clear engagement mechanism — not just category fit.
+logical-reasoning,rule,GOOD: short fair logic quizzes; odd-one-out with one clear rule; speed vs accuracy debates.
+logical-reasoning,rule,BAD: ambiguous trick questions with multiple valid answers.
+math-numbers,label,Math & numbers
+math-numbers,include,mental maths
+math-numbers,include,percentages
+math-numbers,include,sequences
+math-numbers,include,everyday numbers
+math-numbers,rule,Stay inside categoryScope for this slug only.
+math-numbers,rule,"If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."
+math-numbers,rule,Every card needs a clear engagement mechanism — not just category fit.
+math-numbers,rule,GOOD: fast answerable everyday number quizzes; light school-memory debates.
+math-numbers,rule,BAD: opaque multi-step exam problems.

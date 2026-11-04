@@ -1,4 +1,4 @@
-﻿category,type,tags,prompt,option_labels,memegen_templates,caption_lines,attribution
+category,type,tags,prompt,option_labels,memegen_templates,caption_lines,attribution
 personality-vibe,pulse,poll,Which Monday energy are you?,Meetings | Sleep,"prompt:drake, drake, drake",prompt: Meetings all day / More sleep || Meetings /  ||  / More sleep,Meme frames generated with https://api.memegen.link/ (open-source memegen).
 pop-culture,pulse,poll,"When a new meme drops, you…",Repost instantly | Already tired,"buzz, fine",New meme / Repost everywhere || This is fine / Already tired of it,Meme frames generated with https://api.memegen.link/ (open-source memegen).
 food,predict,poll,Chai vs coffee - pick a side (visually).,Chai | Coffee,"success, grumpycat",Chai / Always wins || Coffee / Or I perish,Meme frames generated with https://api.memegen.link/ (open-source memegen).
