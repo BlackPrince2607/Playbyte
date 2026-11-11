@@ -20,6 +20,7 @@ import { factFakeEngine } from "./fact-fake/logic/engine";
 import { guessEngine } from "./guess/logic/engine";
 import { engineRegistry } from "./index";
 import { registerEngines } from "./manifest";
+import { mathRushEngine } from "./math-rush/logic/engine";
 import { mazeEngine } from "./maze/logic/mazeEngine";
 import { oddOneOutEngine } from "./odd-one-out/logic/engine";
 import { LEGACY_REPLACEMENTS } from "./replacements";
@@ -49,6 +50,7 @@ const ENGINES: GameEngine<any, any, any>[] = [
   mazeEngine,
   connectDotsEngine,
   arrowEngine,
+  mathRushEngine,
 ];
 
 const packsDir = path.join(__dirname, "..", "content", "packs");
