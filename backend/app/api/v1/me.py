@@ -32,8 +32,8 @@ from app.modules.avatars.service import (
     store_avatar,
 )
 from app.modules.challenges.service import list_challenges, serialize_challenge
-from app.modules.matchmaking import service as matchmaking
 from app.modules.feed.stock import ensure_category_stock
+from app.modules.matchmaking import service as matchmaking
 from app.modules.privacy.service import export_download_url
 from app.modules.recap.service import weekly_recap
 
