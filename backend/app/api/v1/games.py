@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.auth import Actor, get_actor
+from app.common.errors import AppError
 from app.infrastructure.postgres.db import get_session
 from app.infrastructure.postgres.models import MiniGame
 from app.modules.economy.rules import parse_local_date
@@ -32,6 +33,7 @@ class PlayIn(BaseModel):
     level: float | None = Field(default=None, ge=0, le=1)
     summary: PlaySummary | None = None
     challengeId: UUID | None = None
+    matchId: UUID | None = None
 
     def meta(self) -> dict | None:
         if not self.engine:
@@ -86,6 +88,8 @@ async def post_play(
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     x_local_date: str | None = Header(default=None, alias="X-Local-Date"),
 ) -> dict:
+    if body.challengeId is not None and body.matchId is not None:
+        raise AppError("invalid", "Use challengeId or matchId, not both.", 422)
     return await submit_play(
         session,
         actor,
@@ -96,4 +100,5 @@ async def post_play(
         meta=body.meta(),
         local_day=parse_local_date(x_local_date),
         challenge_id=body.challengeId,
+        match_id=body.matchId,
     )

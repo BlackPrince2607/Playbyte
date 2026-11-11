@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     rate_limit_social_per_minute: int = 60
     rate_limit_comments_per_minute: int = 6
 
+    # Kill switch for online Quick Match / live sync (M11–M12).
+    online_matchmaking_enabled: bool = True
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

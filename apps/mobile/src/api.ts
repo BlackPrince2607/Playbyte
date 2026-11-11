@@ -291,6 +291,50 @@ export type ChallengeCreated = {
   expiresAt: string | null;
 };
 
+export type MatchStatus = "ready" | "playing" | "completed" | "cancelled" | "forfeit" | "expired";
+export type MatchmakingTicketStatus = "searching" | "matched" | "cancelled" | "expired";
+
+export type MatchPlayer = {
+  userId: string;
+  displayName: string;
+  avatarKey: string | null;
+};
+
+export type OnlineMatch = {
+  id: string;
+  status: MatchStatus;
+  gameKey: string;
+  gameTitle: string;
+  seed: string;
+  foundAt: string | null;
+  readyAt: string | null;
+  playDeadlineAt: string | null;
+  completedAt: string | null;
+  countdownSeconds: number;
+  playerA: MatchPlayer;
+  playerB: MatchPlayer;
+  scoreA: number | null;
+  scoreB: number | null;
+  rematchOfId: string | null;
+  role?: "a" | "b";
+  opponent?: MatchPlayer;
+  myScore?: number | null;
+  theirScore?: number | null;
+  iHavePlayed?: boolean;
+  theyHavePlayed?: boolean;
+};
+
+export type MatchmakingTicket = {
+  id: string;
+  status: MatchmakingTicketStatus;
+  gameKey: string | null;
+  createdAt: string | null;
+  expiresAt: string | null;
+  matchId: string | null;
+  code: string | null;
+  match?: OnlineMatch;
+};
+
 export type MeProfile = {
   id: string;
   displayName: string;

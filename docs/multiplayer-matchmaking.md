@@ -1,6 +1,7 @@
 # Online multiplayer matchmaking — end-to-end plan
 
-**Status:** Proposed planning doc  
+**Status:** M11 + M12 implemented (see code); M13 soft skill bands still open  
+
 **ADR:** [0003-online-matchmaking](adr/0003-online-matchmaking.md)  
 **Product constraint:** Opt-in duels stay **out of the main feed** (PRD §8.1.3). Skill ladders stay deferred until density exists.
 

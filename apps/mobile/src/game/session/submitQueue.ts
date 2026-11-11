@@ -27,6 +27,14 @@ export type ChallengeResultSummary = {
   opponentName?: string;
 };
 
+export type MatchResultSummary = {
+  id: string;
+  status: string;
+  myScore?: number | null;
+  theirScore?: number | null;
+  opponentName?: string;
+};
+
 export type SaveOutcome = {
   score: number;
   percentile: number | null;
@@ -37,6 +45,7 @@ export type SaveOutcome = {
   balance?: number | null;
   playId?: string;
   challenge?: ChallengeResultSummary;
+  match?: MatchResultSummary;
 };
 
 /**
@@ -59,6 +68,13 @@ export async function savePlay(
       challenger?: { displayName: string };
       opponent?: { displayName: string };
       role?: "challenger" | "opponent";
+    };
+    match?: {
+      id: string;
+      status: string;
+      myScore?: number | null;
+      theirScore?: number | null;
+      opponent?: { displayName: string };
     };
   }>,
   play: CompletedPlay,
@@ -87,6 +103,15 @@ export async function savePlay(
         myScore: res.challenge.myScore,
         theirScore: res.challenge.theirScore,
         opponentName: opp,
+      };
+    }
+    if (res.match) {
+      outcome.match = {
+        id: res.match.id,
+        status: res.match.status,
+        myScore: res.match.myScore,
+        theirScore: res.match.theirScore,
+        opponentName: res.match.opponent?.displayName,
       };
     }
     return outcome;

@@ -12,6 +12,8 @@ from app.api.v1 import (
     games,
     guest,
     leaderboards,
+    matchmaking,
+    matches,
     me,
     moments,
     reports,
@@ -25,6 +27,8 @@ api_router.include_router(games.router)
 api_router.include_router(me.router)
 api_router.include_router(friends.router)
 api_router.include_router(challenges.router)
+api_router.include_router(matchmaking.router)
+api_router.include_router(matches.router)
 api_router.include_router(leaderboards.router)
 api_router.include_router(reports.router)
 api_router.include_router(admin.router)

@@ -8,7 +8,7 @@ import { ResultBar } from "../../components/StitchPrimitives";
 import { prefersReducedMotion } from "../../game/ui/feedback";
 import { Confetti } from "../../game/ui/motion";
 import { fakeBeatenCount, resultHeadline, scoreRows, statRows } from "../../game/ui/resultSummary";
-import type { ChallengeResultSummary, SaveState } from "../../game/session/submitQueue";
+import type { ChallengeResultSummary, MatchResultSummary, SaveState } from "../../game/session/submitQueue";
 import type { RoundRecord } from "../../game/session/types";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
@@ -47,6 +47,9 @@ type Props = {
   playId?: string;
   playSeed?: string;
   challengeSummary?: ChallengeResultSummary;
+  matchSummary?: MatchResultSummary;
+  onPlayOnline?: () => void;
+  onRematch?: () => void | Promise<void>;
   onSignIn?: () => void;
 };
 
@@ -166,6 +169,9 @@ export function PostGameResultScreen({
   playId,
   playSeed,
   challengeSummary,
+  matchSummary,
+  onPlayOnline,
+  onRematch,
   onSignIn,
 }: Props) {
   const insets = useSafeAreaInsets();
@@ -180,6 +186,7 @@ export function PostGameResultScreen({
   const [shareError, setShareError] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [busyFriend, setBusyFriend] = useState<string | null>(null);
+  const [rematchBusy, setRematchBusy] = useState(false);
   const showAccuracy = attempts !== undefined && attempts > 0 && correct !== undefined;
   const accuracyPct = showAccuracy ? Math.round((correct / attempts) * 100) : 0;
   const { t, language, fonts: ui } = useLanguage();
@@ -194,24 +201,29 @@ export function PostGameResultScreen({
     !!wallet &&
     wallet.gamesRewarded >= wallet.gamesRewardCap;
 
-  const myChallengeScore = challengeSummary?.myScore ?? score;
-  const theirChallengeScore = challengeSummary?.theirScore;
+  const duel = matchSummary ?? challengeSummary;
+  const myChallengeScore = duel?.myScore ?? score;
+  const theirChallengeScore = duel?.theirScore;
+  const waitingOnOpponent =
+    !!matchSummary && matchSummary.theirScore == null && matchSummary.status !== "forfeit" && matchSummary.status !== "expired";
   const vsOutcome =
-    challengeSummary?.status === "completed" &&
+    duel?.status === "completed" &&
     theirChallengeScore != null &&
-    challengeSummary.opponentName
+    duel.opponentName
       ? myChallengeScore === theirChallengeScore
         ? t("challengeTie")
         : myChallengeScore > theirChallengeScore
           ? t("challengeYouWon")
           : t("challengeYouLost")
-      : null;
+      : waitingOnOpponent && duel?.opponentName
+        ? fill(t("waitingForOpponent"), { name: duel.opponentName })
+        : null;
   const vsLabel =
-    theirChallengeScore != null && challengeSummary?.opponentName
+    theirChallengeScore != null && duel?.opponentName
       ? fill(t("vsScore"), {
           my: myChallengeScore,
           their: theirChallengeScore,
-          name: challengeSummary.opponentName,
+          name: duel.opponentName,
         })
       : null;
 
@@ -339,6 +351,31 @@ export function PostGameResultScreen({
         ) : null}
 
         <View style={styles.actions}>
+          {gameKey && onPlayOnline ? (
+            <PrimaryButton
+              label={t("playOnline")}
+              onPress={() => {
+                capture("result_action_clicked", { action: "play_online" });
+                onPlayOnline();
+              }}
+              icon="globe-outline"
+            />
+          ) : null}
+          {onRematch ? (
+            <PrimaryButton
+              label={rematchBusy ? t("sendingChallenge") : t("rematch")}
+              busy={rematchBusy}
+              onPress={() => {
+                setRematchBusy(true);
+                void Promise.resolve(onRematch())
+                  .catch((e) => {
+                    Alert.alert(t("rematch"), isApiError(e) ? e.userMessage : t("rematchFailed"));
+                  })
+                  .finally(() => setRematchBusy(false));
+              }}
+              icon="refresh-circle-outline"
+            />
+          ) : null}
           {gameKey ? (
             <PrimaryButton
               label={t("challengeFriend")}
@@ -347,6 +384,7 @@ export function PostGameResultScreen({
                 setPickerOpen(true);
               }}
               icon="flash-outline"
+              variant={onPlayOnline ? "secondary" : "primary"}
             />
           ) : null}
           {enableShare ? (

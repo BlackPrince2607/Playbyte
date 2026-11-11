@@ -64,6 +64,8 @@ export type CompletedPlay = {
   rounds?: RoundRecord[];
   /** When set, the server attaches this play to an async friend challenge. */
   challengeId?: string;
+  /** When set, the server attaches this play to an online match. */
+  matchId?: string;
 };
 
 /** Minimal async key-value interface (AsyncStorage-compatible) so persistence stays testable. */

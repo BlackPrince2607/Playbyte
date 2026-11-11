@@ -32,6 +32,7 @@ from app.modules.avatars.service import (
     store_avatar,
 )
 from app.modules.challenges.service import list_challenges, serialize_challenge
+from app.modules.matchmaking import service as matchmaking
 from app.modules.feed.stock import ensure_category_stock
 from app.modules.privacy.service import export_download_url
 from app.modules.recap.service import weekly_recap
@@ -109,6 +110,19 @@ async def get_my_challenges(
     return {
         "challenges": [
             await serialize_challenge(session, row, viewer_id=actor.user_id) for row in rows
+        ]
+    }
+
+
+@router.get("/matches")
+async def get_my_matches(
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(require_user),
+) -> dict:
+    rows = await matchmaking.list_matches(session, actor.user_id)
+    return {
+        "matches": [
+            await matchmaking.serialize_match(session, row, viewer_id=actor.user_id) for row in rows
         ]
     }
 

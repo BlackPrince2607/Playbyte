@@ -31,17 +31,19 @@ Errors: `{ "code", "message", "requestId" }`
 | POST | /me/convert-guest | user | Preserve history |
 | * | /admin/* | admin | CMS |
 
-## Planned — online matchmaking
+## Online matchmaking (M11–M12)
 
-See [multiplayer-matchmaking.md](multiplayer-matchmaking.md). Behind feature flag; signed-in only.
+See [multiplayer-matchmaking.md](multiplayer-matchmaking.md). Kill switch: `ONLINE_MATCHMAKING_ENABLED`. Signed-in only.
 
 | Method | Path | Notes |
 | ------ | ---- | ----- |
-| POST | /matchmaking/tickets | Enqueue Quick Match |
+| POST | /matchmaking/tickets | Enqueue Quick Match (`Idempotency-Key`) |
 | DELETE | /matchmaking/tickets/:id | Cancel search |
 | GET | /matchmaking/tickets/:id | Poll ticket / match stub |
-| GET | /matches/:id | Match + scores |
+| POST | /matchmaking/heartbeat | Keep searching ticket alive |
+| GET | /matches/:id | Match + scores + countdown |
 | POST | /matches/:id/forfeit | Leave after matched |
+| POST | /matches/:id/rematch | New ready match vs same opponent |
 | GET | /me/matches | Recent online matches |
 
-`POST /games/:key/plays` gains optional `matchId` (mutually exclusive with `challengeId`).
+`POST /games/:key/plays` accepts optional `matchId` (mutually exclusive with `challengeId`).

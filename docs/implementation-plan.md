@@ -19,8 +19,8 @@ Product: hybrid swipe feed (live moments + mini-games). Backend: FastAPI. UI: St
 | M8 | Friends, share, push, recap, GDPR | `[x]` |
 | M9 | Tests / hardening | `[x]` |
 | M10 | CI/CD and production docs | `[x]` |
-| M11 | Online Quick Match (stranger same-seed duels) | `[ ]` |
-| M12 | Live sync lobby + deadlines + rematch | `[ ]` |
+| M11 | Online Quick Match (stranger same-seed duels) | `[x]` |
+| M12 | Live sync lobby + deadlines + rematch | `[x]` |
 | M13 | Soft skill bands for matchmaking (optional) | `[ ]` |
 
 ## Engineering decisions
@@ -46,8 +46,8 @@ Product: hybrid swipe feed (live moments + mini-games). Backend: FastAPI. UI: St
 - [x] M8-T1 P1 APIs + screens
 - [x] M9-T1 pytest + CI
 - [x] M10-T1 Deploy/runbooks
-- [ ] M11-T1 Matchmaking schema + enqueue/pair/cancel APIs + play `matchId`
-- [ ] M11-T2 Mobile Play online CTA, searching UI, GameHost `matchId`, result reuse
+- [x] M11-T1 Matchmaking schema + enqueue/pair/cancel APIs + play `matchId`
+- [x] M11-T2 Mobile Play online CTA, searching UI, GameHost `matchId`, result reuse
 - [ ] M11-T3 Staging two-client soak + feature flag
-- [ ] M12-T1 Presence heartbeats, countdown, play deadlines, rematch
+- [x] M12-T1 Presence heartbeats, countdown, play deadlines, rematch
 - [ ] M13-T1 Soft skill buckets + queue metrics (optional)

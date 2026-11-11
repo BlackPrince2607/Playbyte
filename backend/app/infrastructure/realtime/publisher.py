@@ -4,9 +4,14 @@ from typing import Protocol
 class RealtimePublisher(Protocol):
     async def publish_crowd_snapshot(self, moment_id: str, payload: dict) -> None: ...
 
+    async def publish_user_event(self, user_id: str, event: str, payload: dict) -> None: ...
+
 
 class NoopRealtimePublisher:
     async def publish_crowd_snapshot(self, moment_id: str, payload: dict) -> None:
+        return None
+
+    async def publish_user_event(self, user_id: str, event: str, payload: dict) -> None:
         return None
 
 
@@ -15,7 +20,7 @@ class SupabaseBroadcastPublisher:
         self._url = url.rstrip("/")
         self._key = service_key
 
-    async def publish_crowd_snapshot(self, moment_id: str, payload: dict) -> None:
+    async def _broadcast(self, topic: str, event: str, payload: dict) -> None:
         if not self._url or not self._key:
             return
         import httpx
@@ -33,8 +38,8 @@ class SupabaseBroadcastPublisher:
                     json={
                         "messages": [
                             {
-                                "topic": f"moment:{moment_id}",
-                                "event": "crowd.snapshot",
+                                "topic": topic,
+                                "event": event,
                                 "payload": payload,
                             }
                         ]
@@ -42,3 +47,9 @@ class SupabaseBroadcastPublisher:
                 )
         except Exception:
             return
+
+    async def publish_crowd_snapshot(self, moment_id: str, payload: dict) -> None:
+        await self._broadcast(f"moment:{moment_id}", "crowd.snapshot", payload)
+
+    async def publish_user_event(self, user_id: str, event: str, payload: dict) -> None:
+        await self._broadcast(f"user:{user_id}", event, payload)

@@ -18,6 +18,13 @@ export type SubmitPlayResponse = {
     opponent?: { displayName: string };
     role?: "challenger" | "opponent";
   };
+  match?: {
+    id: string;
+    status: string;
+    myScore?: number | null;
+    theirScore?: number | null;
+    opponent?: { displayName: string };
+  };
 };
 
 export async function submitPlay(play: PendingPlay) {
@@ -39,6 +46,7 @@ export async function submitPlay(play: PendingPlay) {
         level: play.level,
         summary,
         challengeId: play.challengeId,
+        matchId: play.matchId,
       }),
     });
   } catch (e) {

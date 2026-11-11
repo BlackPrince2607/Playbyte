@@ -38,6 +38,12 @@ friendship_status = _pg_enum("pending", "accepted", "blocked", name="friendship_
 challenge_status = _pg_enum(
     "pending", "active", "completed", "declined", "expired", name="challenge_status"
 )
+matchmaking_ticket_status = _pg_enum(
+    "searching", "matched", "cancelled", "expired", name="matchmaking_ticket_status"
+)
+match_status = _pg_enum(
+    "ready", "playing", "completed", "cancelled", "forfeit", "expired", name="match_status"
+)
 game_status = _pg_enum("enabled", "disabled", name="game_status")
 window_status = _pg_enum("draft", "active", "ended", name="window_status")
 outbox_status = _pg_enum("pending", "processing", "done", "dead", name="outbox_status")
@@ -242,6 +248,57 @@ class Challenge(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class MatchmakingTicket(Base):
+    __tablename__ = "matchmaking_tickets"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
+    game_key: Mapped[str | None] = mapped_column(Text, ForeignKey("mini_games.key"))
+    status: Mapped[str] = mapped_column(matchmaking_ticket_status, default="searching")
+    region: Mapped[str | None] = mapped_column(Text)
+    skill_bucket: Mapped[int | None] = mapped_column(Integer)
+    preferred_opponent_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
+    match_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("matches.id"))
+    idempotency_key: Mapped[str | None] = mapped_column(Text)
+    last_heartbeat_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Match(Base):
+    __tablename__ = "matches"
+    __table_args__ = (CheckConstraint("player_a_id <> player_b_id"),)
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    game_key: Mapped[str] = mapped_column(Text, ForeignKey("mini_games.key"))
+    seed: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(match_status, default="ready")
+    player_a_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
+    player_b_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))
+    play_a_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("game_plays.id"))
+    play_b_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("game_plays.id"))
+    ticket_a_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("matchmaking_tickets.id"))
+    ticket_b_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("matchmaking_tickets.id"))
+    found_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    ready_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    play_deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rematch_of_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("matches.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class MatchEvent(Base):
+    __tablename__ = "match_events"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    match_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("matches.id"))
+    kind: Mapped[str] = mapped_column(Text)
+    payload: Mapped[dict] = mapped_column(JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class ResponseVisibility(Base):
     __tablename__ = "response_visibility"
 
@@ -292,6 +349,7 @@ class GamePlay(Base):
     config_version: Mapped[int | None] = mapped_column(Integer)
     summary: Mapped[dict | None] = mapped_column(JSONB)
     challenge_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("challenges.id"))
+    match_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("matches.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

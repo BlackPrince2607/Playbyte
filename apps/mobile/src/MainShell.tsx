@@ -14,6 +14,7 @@ import { CloseButton } from "./components/CloseButton";
 import { CoinToast } from "./components/CoinToast";
 import { ErrorState } from "./components/ErrorState";
 import { MajaLogo } from "./components/MajaLogo";
+import { MatchmakingSheet } from "./components/MatchmakingSheet";
 import { PrimaryButton } from "./components/PrimaryButton";
 import { ScreenLoading } from "./components/ScreenLoading";
 import { WalletSheet } from "./components/WalletSheet";
@@ -50,6 +51,7 @@ import { colors, spacing } from "./theme/colors";
 import { type } from "./theme/typography";
 
 type ActiveChallenge = { id: string; seed: string };
+type ActiveMatch = { id: string; seed: string };
 type GameResult = SaveOutcome & { game: FeedGame; play: CompletedPlay };
 
 function BootLoading({ onRetry }: { onRetry: () => void }) {
@@ -102,6 +104,8 @@ export function MainShell() {
   /** Fresh each solo start so remounts and procedural generators never reuse the prior set. */
   const [playSeed, setPlaySeed] = useState<string | undefined>(undefined);
   const [activeChallenge, setActiveChallenge] = useState<ActiveChallenge | null>(null);
+  const [activeMatch, setActiveMatch] = useState<ActiveMatch | null>(null);
+  const [onlineSearchGame, setOnlineSearchGame] = useState<FeedGame | null>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [retryingSave, setRetryingSave] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
@@ -153,6 +157,8 @@ export function MainShell() {
     setShowStreak(false);
     setPlaying(null);
     setActiveChallenge(null);
+    setActiveMatch(null);
+    setOnlineSearchGame(null);
     setRestoring(undefined);
     setGameResult(null);
   }, []);
@@ -202,14 +208,16 @@ export function MainShell() {
   const startGame = useCallback(
     (
       game: FeedGame,
-      source: "feed" | "replay" | "next" | "resume" | "challenge" = "feed",
+      source: "feed" | "replay" | "next" | "resume" | "challenge" | "online" = "feed",
       challenge?: ActiveChallenge | null,
+      match?: ActiveMatch | null,
     ) => {
       setGameResult(null);
       setRestoring(undefined);
       setResumable(null);
       setActiveChallenge(challenge ?? null);
-      setPlaySeed(challenge?.seed ?? randomSeed());
+      setActiveMatch(match ?? null);
+      setPlaySeed(match?.seed ?? challenge?.seed ?? randomSeed());
       void sessionStore.clear().catch(() => {});
       capture("game_started", {
         game_id: game.key,
@@ -225,6 +233,7 @@ export function MainShell() {
     const def = session.definition;
     setResumable(null);
     setActiveChallenge(null);
+    setActiveMatch(null);
     setPlaySeed(session.seed);
     setRestoring(session);
     capture("game_started", {
@@ -252,6 +261,7 @@ export function MainShell() {
     setPlaying(null);
     setPlaySeed(undefined);
     setActiveChallenge(null);
+    setActiveMatch(null);
     setRestoring(undefined);
     setGameSubmitting(false);
   }, []);
@@ -269,8 +279,15 @@ export function MainShell() {
   );
 
   const finishPlay = useCallback(
-    async (game: FeedGame, play: CompletedPlay, challenge?: ActiveChallenge | null) => {
-      const tagged = challenge && !play.challengeId ? { ...play, challengeId: challenge.id } : play;
+    async (
+      game: FeedGame,
+      play: CompletedPlay,
+      challenge?: ActiveChallenge | null,
+      match?: ActiveMatch | null,
+    ) => {
+      let tagged = play;
+      if (challenge && !tagged.challengeId) tagged = { ...tagged, challengeId: challenge.id };
+      if (match && !tagged.matchId) tagged = { ...tagged, matchId: match.id };
       setGameSubmitting(true);
       const outcome = await savePlay(tagged);
       capture("game_completed", {
@@ -283,6 +300,7 @@ export function MainShell() {
       setPlaying(null);
       setPlaySeed(undefined);
       setActiveChallenge(null);
+      setActiveMatch(null);
       setRestoring(undefined);
       setGameSubmitting(false);
       noteEarn(outcome.balance, outcome.coinsEarned ?? 0, "game", {
@@ -296,9 +314,9 @@ export function MainShell() {
   const submitGamePlay = useCallback(
     async (play: CompletedPlay) => {
       if (!playing) return;
-      await finishPlay(playing, play, activeChallenge);
+      await finishPlay(playing, play, activeChallenge, activeMatch);
     },
-    [playing, activeChallenge, finishPlay],
+    [playing, activeChallenge, activeMatch, finishPlay],
   );
 
   const submitInlineGuess = useCallback(
@@ -590,7 +608,7 @@ export function MainShell() {
           card={playing}
           restore={restoring}
           seed={playSeed}
-          sharedSeed={!!activeChallenge}
+          sharedSeed={!!activeChallenge || !!activeMatch}
           onComplete={(play) => void submitGamePlay(play)}
           onExit={cancelGame}
         />
@@ -633,9 +651,20 @@ export function MainShell() {
           playId={gameResult.playId}
           playSeed={gameResult.play.seed}
           challengeSummary={gameResult.challenge}
+          matchSummary={gameResult.match}
           onRetrySave={() => void retrySave()}
           retryingSave={retryingSave}
           onPlayAgain={() => startGame(gameResult.game, "replay")}
+          onPlayOnline={() => setOnlineSearchGame(gameResult.game)}
+          onRematch={
+            gameResult.match
+              ? async () => {
+                  const { rematch } = await import("./lib/matchmaking");
+                  const m = await rematch(gameResult.match!.id);
+                  startGame(gameResult.game, "online", null, { id: m.id, seed: m.seed });
+                }
+              : undefined
+          }
           onNextGame={upNext ? () => startGame(upNext, "next") : undefined}
           onBackToFeed={() => {
             setGameResult(null);
@@ -643,6 +672,20 @@ export function MainShell() {
           }}
           onSignIn={() => setShowSignIn(true)}
           enableShare
+        />
+        <MatchmakingSheet
+          visible={!!onlineSearchGame}
+          gameKey={onlineSearchGame?.key ?? gameResult.game.key}
+          gameTitle={localizeGame(onlineSearchGame ?? gameResult.game, language).title}
+          signedIn={isSignedIn}
+          onNeedSignIn={() => setShowSignIn(true)}
+          onClose={() => setOnlineSearchGame(null)}
+          onMatched={(match) => {
+            const game = onlineSearchGame ?? gameResult.game;
+            setOnlineSearchGame(null);
+            setGameResult(null);
+            startGame(game, "online", null, { id: match.id, seed: match.seed });
+          }}
         />
       </View>
     );
@@ -725,6 +768,10 @@ export function MainShell() {
             onPlayChallenge={(game, challenge) => {
               setTab("feed");
               startGame(game, "challenge", challenge);
+            }}
+            onPlayOnlineMatch={(game, match) => {
+              setTab("feed");
+              startGame(game, "online", null, match);
             }}
           />
         </View>
