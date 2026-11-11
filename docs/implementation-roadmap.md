@@ -66,6 +66,16 @@
 
 ---
 
+## P4 — Online multiplayer (planned)
+
+Full plan: [multiplayer-matchmaking.md](multiplayer-matchmaking.md) · ADR: [0003](adr/0003-online-matchmaking.md).
+
+| Task | Description | Effort |
+|------|-------------|--------|
+| Quick Match vertical slice | Tickets + matches + worker pair + mobile CTA/result | Complex |
+| Live sync lobby | Heartbeats, countdown, deadlines, rematch | Large |
+| Soft skill bands | Percentile buckets once density exists | Large |
+
 ## Intentionally deferred (document, do not fake)
 
 - Public leaderboards  
@@ -74,4 +84,6 @@
 - Friend remove  
 - Feed pagination  
 - Billing  
-- XP / global ranks as product systems
+- XP / global ranks as product systems  
+- Shared-board lockstep multiplayer  
+- Ranked ladders / seasons (until after soft skill bands)

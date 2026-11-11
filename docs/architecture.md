@@ -27,3 +27,7 @@ Expo / Next.js admin
 ## Non-negotiables (Architecture §24)
 
 Postgres is source of truth. No privileged client writes. No Postgres Changes for crowd fanout. Versioned crowd snapshots. Idempotent responses. Server-side authorization. Retry-safe async work.
+
+## Online multiplayer (planned)
+
+Friend challenges are async same-seed duels. Online play with strangers is planned as **opt-in Quick Match** on the same seed/play contract, with a Postgres matchmaking queue and extended `RealtimePublisher` user events — see [ADR 0003](adr/0003-online-matchmaking.md) and [multiplayer-matchmaking.md](multiplayer-matchmaking.md). Not injected into the main feed.

@@ -30,3 +30,18 @@ Errors: `{ "code", "message", "requestId" }`
 | GET | /me/data-requests/:id | user | `downloadUrl` (1 hour) once an export is complete |
 | POST | /me/convert-guest | user | Preserve history |
 | * | /admin/* | admin | CMS |
+
+## Planned — online matchmaking
+
+See [multiplayer-matchmaking.md](multiplayer-matchmaking.md). Behind feature flag; signed-in only.
+
+| Method | Path | Notes |
+| ------ | ---- | ----- |
+| POST | /matchmaking/tickets | Enqueue Quick Match |
+| DELETE | /matchmaking/tickets/:id | Cancel search |
+| GET | /matchmaking/tickets/:id | Poll ticket / match stub |
+| GET | /matches/:id | Match + scores |
+| POST | /matches/:id/forfeit | Leave after matched |
+| GET | /me/matches | Recent online matches |
+
+`POST /games/:key/plays` gains optional `matchId` (mutually exclusive with `challengeId`).
