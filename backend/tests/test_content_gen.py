@@ -29,7 +29,6 @@ from scripts.content_gen.agent import (
     verify_quiz_facts,
     volatile_fact_issue,
 )
-from scripts.content_gen.hi_localize_prompt import HI_LOCALIZE_SYSTEM
 from scripts.content_gen.catalog import (
     MIN_LIVE,
     ONBOARDING_SLUGS,
@@ -47,6 +46,7 @@ from scripts.content_gen.catalog import (
     strip_devanagari,
     trends_for,
 )
+from scripts.content_gen.hi_localize_prompt import HI_LOCALIZE_SYSTEM
 
 
 def test_every_category_has_polls_and_quizzes() -> None:

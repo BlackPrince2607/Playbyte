@@ -76,7 +76,7 @@ export function ArrowHowTo({ onDone, title }: { onDone: () => void; title?: stri
 
 const styles = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(28, 20, 48, 0.72)",
     justifyContent: "center",
     paddingHorizontal: 20,

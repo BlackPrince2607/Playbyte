@@ -1,7 +1,7 @@
 import type { Rng } from "../../../core/rng";
 import type { QuizParams, QuizQuestion } from "../../quiz/logic/types";
 
-export type Op = "+" | "-" | "×" | "÷";
+export type Op = "+" | "−" | "×" | "÷";
 
 type Problem = {
   expression: string;
