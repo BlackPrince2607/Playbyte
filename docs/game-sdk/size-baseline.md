@@ -15,6 +15,8 @@ Measured 2026-09-29, before the Game Engine SDK refactor.
 | Hermes JS bundle, all 11 SDK engines + legacy adapter (end of Phase 11) | 4.48 MB (4590 KB) | same |
 | Hermes JS bundle, legacy games removed (Phase 12) | **4.43 MB** (4533 KB) | same |
 | Hermes JS bundle, Meta SDK + ATT + moment social + new onboarding (2026-10-11) | **4.57 MB** (4680 KB) | same |
+| Hermes JS bundle, Math Rush + Hindi fonts + economy/coin UI (2026-11-11) | **7.50 MB** (7678 KB) | same |
+| Bundled assets after coin.png resize to 192px (2026-11-11) | **~2.7 MB**, 9 fonts, 2 images | same |
 
 The preview APK was a universal build (armeabi-v7a, arm64-v8a, x86, x86_64) with R8 and resource
 shrinking disabled, so native libraries dominated it. `@shopify/react-native-skia` alone ships roughly
@@ -44,10 +46,10 @@ Enforced in CI by `pnpm --filter @maja/mobile size:check` against `apps/mobile/s
 
 | Metric | Budget | Rationale |
 |---|---|---|
-| JS bundle (Hermes) | 4.75 MiB | Raised from 4.5 MiB on 2026-10-11 for `react-native-fbsdk-next`, `expo-tracking-transparency`, moment likes/shares/comments and the new onboarding flow (+147 KB); ~6% headroom |
-| Bundled assets | 2.4 MiB | Six fonts plus music and sound effects; engines must not add bundled images |
-| Font files | 6 | Current set; new weights need a justification |
-| Bundled images | 300 KB | Tiny UI glyphs only; game content images are remote |
+| JS bundle (Hermes) | 8.0 MiB | Rebased 2026-11-11 after Math Rush, challenges UI, and related SDK growth (measured 7.50 MB); further growth still needs a PR note |
+| Bundled assets | 3.0 MiB | Eight app fonts + Ionicons, music/SFX, wordmark, and compressed coin glyph |
+| Font files | 9 | Inter×3, Space Grotesk, JetBrains Mono, Noto Devanagari×3, Ionicons |
+| Bundled images | 300 KB | Tiny UI glyphs only; game content images are remote. `coin.png` resized to 192×192 (~48 KB) |
 | Bundled audio | 600 KB | Four music loops (~410 KB) and seven sound effects (~40 KB), mono AAC from `scripts/generate-audio.mjs` |
 
 Per engine: aim for at most ~150 KB of JS. Bundled fallback content (all engines together) should stay
