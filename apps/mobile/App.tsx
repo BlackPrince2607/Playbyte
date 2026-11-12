@@ -14,6 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { setMusicScene, startSound } from "./src/audio/sound";
+import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { AppProvider } from "./src/context/AppContext";
 import { AuthProvider } from "./src/context/AuthContext";
 import { LanguageProvider } from "./src/context/LanguageContext";
@@ -61,16 +62,18 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AnalyticsRoot>
-        <AuthProvider>
-          <LanguageProvider>
-            <AppProvider>
-              <StatusBar style="light" />
-              <MainShell />
-            </AppProvider>
-          </LanguageProvider>
-        </AuthProvider>
-      </AnalyticsRoot>
+      <ErrorBoundary>
+        <AnalyticsRoot>
+          <AuthProvider>
+            <LanguageProvider>
+              <AppProvider>
+                <StatusBar style="light" />
+                <MainShell />
+              </AppProvider>
+            </LanguageProvider>
+          </AuthProvider>
+        </AnalyticsRoot>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }
