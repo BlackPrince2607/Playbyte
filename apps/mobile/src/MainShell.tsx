@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import {
   BackHandler,
   Pressable,
@@ -8,13 +8,12 @@ import {
 } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { api, FeedGame, isApiError } from "./api";
+import { api, FeedGame, isApiError, type OnlineMatch } from "./api";
 import { BottomNav, TabKey } from "./components/BottomNav";
 import { CloseButton } from "./components/CloseButton";
 import { CoinToast } from "./components/CoinToast";
 import { ErrorState } from "./components/ErrorState";
 import { MajaLogo } from "./components/MajaLogo";
-import { MatchmakingSheet } from "./components/MatchmakingSheet";
 import { PrimaryButton } from "./components/PrimaryButton";
 import { ScreenLoading } from "./components/ScreenLoading";
 import { WalletSheet } from "./components/WalletSheet";
@@ -53,6 +52,35 @@ import { type } from "./theme/typography";
 type ActiveChallenge = { id: string; seed: string };
 type ActiveMatch = { id: string; seed: string };
 type GameResult = SaveOutcome & { game: FeedGame; play: CompletedPlay };
+
+type MatchmakingSheetProps = {
+  visible: boolean;
+  gameKey: string;
+  gameTitle: string;
+  signedIn: boolean;
+  onNeedSignIn: () => void;
+  onClose: () => void;
+  onMatched: (match: OnlineMatch) => void;
+};
+
+/** Lazy so a matchmaking module fault cannot take down cold start. */
+function LazyMatchmakingSheet(props: MatchmakingSheetProps) {
+  const [Sheet, setSheet] = useState<ComponentType<MatchmakingSheetProps> | null>(null);
+  useEffect(() => {
+    if (!props.visible || Sheet) return;
+    let alive = true;
+    void import("./components/MatchmakingSheet")
+      .then((m) => {
+        if (alive) setSheet(() => m.MatchmakingSheet);
+      })
+      .catch((e) => console.error("MatchmakingSheet load failed", e));
+    return () => {
+      alive = false;
+    };
+  }, [props.visible, Sheet]);
+  if (!Sheet) return null;
+  return <Sheet {...props} />;
+}
 
 function BootLoading({ onRetry }: { onRetry: () => void }) {
   const [showRetry, setShowRetry] = useState(false);
@@ -673,7 +701,7 @@ export function MainShell() {
           onSignIn={() => setShowSignIn(true)}
           enableShare
         />
-        <MatchmakingSheet
+        <LazyMatchmakingSheet
           visible={!!onlineSearchGame}
           gameKey={onlineSearchGame?.key ?? gameResult.game.key}
           gameTitle={localizeGame(onlineSearchGame ?? gameResult.game, language).title}
@@ -873,7 +901,11 @@ const styles = StyleSheet.create({
   resumeBanner: { flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1, borderColor: colors.lime },
   inviteBanner: { flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1 },
   submitOverlay: {
-    ...StyleSheet.absoluteFill,
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     backgroundColor: "rgba(21,14,43,0.85)",
     alignItems: "center",
     justifyContent: "center",
