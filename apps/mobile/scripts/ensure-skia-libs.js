@@ -49,13 +49,22 @@ function copyAndroidLibs(skiaRoot) {
   return androidReady(skiaRoot);
 }
 
+console.log(
+  "[ensure-skia-libs] cwd=",
+  process.cwd(),
+  "script=",
+  __filename
+);
+
 const skiaRoot = findPkgRoot("@shopify/react-native-skia");
 if (!skiaRoot) {
-  console.warn(
-    "[ensure-skia-libs] @shopify/react-native-skia not found; skipping"
+  console.error(
+    "[ensure-skia-libs] @shopify/react-native-skia not found from",
+    process.cwd()
   );
-  process.exit(0);
+  process.exit(1);
 }
+console.log("[ensure-skia-libs] skiaRoot=", skiaRoot);
 
 if (androidReady(skiaRoot)) {
   console.log("[ensure-skia-libs] Skia Android libs already present");

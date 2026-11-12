@@ -8,7 +8,8 @@
     "test": "pnpm -r --if-present test",
     "build": "pnpm -r --if-present build",
     "admin:dev": "pnpm --filter @maja/admin dev",
-    "mobile:start": "pnpm --filter @maja/mobile start"
+    "mobile:start": "pnpm --filter @maja/mobile start",
+    "eas-build-post-install": "node apps/mobile/scripts/ensure-skia-libs.js"
   },
   "engines": {
     "node": ">=20"
