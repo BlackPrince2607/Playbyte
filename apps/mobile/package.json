@@ -64,6 +64,7 @@
     "size": "node scripts/size-report.mjs",
     "size:check": "node scripts/size-report.mjs --check",
     "postinstall": "node ./scripts/ensure-skia-libs.js",
+    "eas-build-pre-install": "node -e \"console.log('[maja] eas-build-pre-install ok')\"",
     "eas-build-post-install": "node ./scripts/ensure-skia-libs.js"
   },
   "private": true

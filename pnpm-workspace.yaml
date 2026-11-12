@@ -1,3 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# pnpm 10+: allowlist dependency build scripts (package.json "pnpm" field is ignored).
+onlyBuiltDependencies:
+  - "@shopify/react-native-skia"

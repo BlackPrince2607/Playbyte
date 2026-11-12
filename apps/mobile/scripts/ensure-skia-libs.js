@@ -50,7 +50,7 @@ if (!fs.existsSync(installer)) {
   process.exit(1);
 }
 
-console.log("[ensure-skia-libs] Running Skia install-libs…");
+console.log("[ensure-skia-libs] Running Skia install-libs…", installer);
 const result = spawnSync(process.execPath, [installer], {
   cwd: skiaRoot,
   stdio: "inherit",
@@ -58,7 +58,20 @@ const result = spawnSync(process.execPath, [installer], {
 });
 
 if (result.status !== 0) {
-  process.exit(result.status ?? 1);
+  console.error(
+    "[ensure-skia-libs] install-libs exited",
+    result.status,
+    result.error || ""
+  );
+  // Fall back to the package's CLI helper when the direct script fails on EAS/pnpm layouts.
+  const fallback = spawnSync(
+    process.platform === "win32" ? "npx.cmd" : "npx",
+    ["--yes", "install-skia"],
+    { cwd: skiaRoot, stdio: "inherit", env: process.env, shell: true }
+  );
+  if (fallback.status !== 0) {
+    process.exit(fallback.status ?? result.status ?? 1);
+  }
 }
 
 if (!libsReady(skiaRoot)) {
