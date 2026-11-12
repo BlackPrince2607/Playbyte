@@ -38,6 +38,16 @@ node_modules/
 **/.env
 **/.env.*
 
+# Local native build outputs (were bloating the archive to ~287MB and breaking install).
+apps/mobile/android/app/build/
+apps/mobile/android/build/
+apps/mobile/android/.gradle/
+apps/mobile/android/.cxx/
+**/android/**/build/
+**/android/.gradle/
+**/ios/build/
+**/ios/Pods/
+
 # Build caches
 **/.expo/
 **/dist/
@@ -45,3 +55,5 @@ node_modules/
 **/.size-report/
 **/coverage/
 **/*.tsbuildinfo
+package-lock.json
+**/package-lock.json
