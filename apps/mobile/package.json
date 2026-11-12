@@ -64,7 +64,7 @@
     "size": "node scripts/size-report.mjs",
     "size:check": "node scripts/size-report.mjs --check",
     "postinstall": "node ./scripts/ensure-skia-libs.js || echo \"[maja] skia postinstall deferred to eas-build-post-install\"",
-    "eas-build-post-install": "node ./scripts/ensure-skia-libs.js || node ../../apps/mobile/scripts/ensure-skia-libs.js || echo \"[maja] skia ensure soft-failed\""
+    "eas-build-post-install": "node ./scripts/ensure-skia-libs.js || node ../../apps/mobile/scripts/ensure-skia-libs.js"
   },
   "private": true
 }

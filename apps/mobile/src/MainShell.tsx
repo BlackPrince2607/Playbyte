@@ -34,7 +34,6 @@ import { FriendsScreen } from "./screens/friends/FriendsScreen";
 import { LeaderboardScreen } from "./screens/friends/LeaderboardScreen";
 import { LiveNowScreen } from "./screens/live/LiveNowScreen";
 import { InterestsScreen } from "./screens/onboarding/InterestsScreen";
-import { IntroSlidesScreen } from "./screens/onboarding/IntroSlidesScreen";
 import { LanguageScreen } from "./screens/onboarding/LanguageScreen";
 import { ProfileSetupScreen } from "./screens/onboarding/ProfileSetupScreen";
 import { WelcomeScreen } from "./screens/onboarding/WelcomeScreen";
@@ -80,6 +79,37 @@ function LazyMatchmakingSheet(props: MatchmakingSheetProps) {
   }, [props.visible, Sheet]);
   if (!Sheet) return null;
   return <Sheet {...props} />;
+}
+
+type IntroSlidesProps = {
+  page: number;
+  onPageChange: (page: number) => void;
+  onBack: () => void;
+  onNext: () => void;
+};
+
+/** Defers Skia-heavy preview cards until the intro step actually opens. */
+function LazyIntroSlides(props: IntroSlidesProps) {
+  const [Screen, setScreen] = useState<ComponentType<IntroSlidesProps> | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void import("./screens/onboarding/IntroSlidesScreen")
+      .then((m) => {
+        if (alive) setScreen(() => m.IntroSlidesScreen);
+      })
+      .catch((e) => console.error("IntroSlidesScreen load failed", e));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  if (!Screen) {
+    return (
+      <View style={styles.center}>
+        <ScreenLoading style={{ flex: 0 }} />
+      </View>
+    );
+  }
+  return <Screen {...props} />;
 }
 
 function BootLoading({ onRetry }: { onRetry: () => void }) {
@@ -581,7 +611,7 @@ export function MainShell() {
       );
     } else if (onboardingStep === "intro") {
       screen = (
-        <IntroSlidesScreen
+        <LazyIntroSlides
           page={introPage}
           onPageChange={setIntroPage}
           onBack={goBackOnboarding}
