@@ -63,8 +63,7 @@
     "test": "tsx --test \"src/**/*.test.ts\"",
     "size": "node scripts/size-report.mjs",
     "size:check": "node scripts/size-report.mjs --check",
-    "postinstall": "node ./scripts/ensure-skia-libs.js",
-    "eas-build-pre-install": "node -e \"console.log('[maja] eas-build-pre-install ok')\"",
+    "postinstall": "node ./scripts/ensure-skia-libs.js || echo \"[maja] skia postinstall deferred to eas-build-post-install\"",
     "eas-build-post-install": "node ./scripts/ensure-skia-libs.js"
   },
   "private": true
