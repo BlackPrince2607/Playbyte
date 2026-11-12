@@ -10,8 +10,14 @@ tmp-maja.apk
 *.apk
 *.aab
 
-# Other apps / backend are not needed for the mobile native build.
-apps/admin/
+# Keep apps/admin package.json for pnpm workspace resolution, but drop its build junk.
+apps/admin/node_modules/
+apps/admin/.next/
+apps/admin/dist/
+apps/admin/out/
+apps/admin/.turbo/
+
+# Backend / docs are not needed for the mobile native build.
 backend/
 docs/
 load-tests/
