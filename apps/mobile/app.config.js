@@ -33,7 +33,9 @@ module.exports = ({ config }) => {
   }
 
   const facebookAppId = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID?.trim();
-  const facebookClientToken = process.env.FACEBOOK_CLIENT_TOKEN?.trim();
+  // Prefer the EAS secret; fall back to the Expo-public copy so local/dev prebuild works too.
+  const facebookClientToken =
+    process.env.FACEBOOK_CLIENT_TOKEN?.trim() || process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN?.trim();
   if (facebookAppId && facebookClientToken) {
     plugins = [
       ...plugins,

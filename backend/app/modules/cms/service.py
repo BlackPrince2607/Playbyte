@@ -32,6 +32,7 @@ async def create_moment(
     scoring_mode: str = "none",
     tag_slugs: list[str] | None = None,
     prompt_hi: str | None = None,
+    content_lang: str = "en",
 ) -> Moment:
     normalized: list[dict] = []
     for i, opt in enumerate(options):
@@ -84,11 +85,15 @@ async def create_moment(
         raise AppError("invalid", "Prediction copy cannot use gambling language.", 422)
 
     hi = (prompt_hi or "").strip() or None
+    lang = (content_lang or "en").strip().lower()
+    if lang not in {"en", "hi"}:
+        raise AppError("invalid", "content_lang must be en or hi.", 422)
     m = Moment(
         type=moment_type,
         category_id=category_id,
         prompt=prompt,
         prompt_hi=hi,
+        content_lang=lang,
         prompt_image_key=prompt_image_key,
         scoring_mode=scoring_mode,
         restricted_topic=restricted_topic,

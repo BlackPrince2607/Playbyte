@@ -4,9 +4,9 @@ category,Must equal requested category slug
 questionType,From pollQuestionTypes / quizQuestionTypes for that category
 type,predict (2 options) or pulse (3–4 options)
 prompt,Natural English only; Latin script; no Hinglish (English agent)
-promptHi,Written ONLY by Hindi localization agent after English finalization
+promptHi,Obsolete for new feed publishes — Hindi-native cards use prompt with content_lang=hi
 options[].label,English only (English agent)
-options[].labelHi,Devanagari Hinglish via localization agent only
+options[].labelHi,Obsolete for new feed publishes — Hindi-native cards use options[].label with content_lang=hi
 options[].isCorrect,Exactly one true for quiz; all false for poll
 briefId,null unless card uses a verified brief
 prediction,Prompt must contain word Prediction + open brief

@@ -453,6 +453,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const stitchFeedPage = useCallback((page: FeedItem[], cursor: string | null, localAnswers: Record<string, string>) => {
     const hydrated = withLocalAnswers(page, localAnswers);
+    const wasGamesOnly = !itemsRef.current.some((i) => i.type === "moment");
     const continued = continueFeedRefresh(itemsRef.current, hydrated);
     if (!continued) return false;
     feedGeneration.current += 1;
@@ -460,6 +461,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setItems(continued);
     itemsRef.current = continued;
     hasLoadedFeed.current = true;
+    // Recovering from games-only replaces the list — jump back to the first card (a poll).
+    if (wasGamesOnly && continued.some((i) => i.type === "moment")) setFeedIndex(0);
     for (const item of page) {
       if (item.type !== "moment" || item.myOptionId) continue;
       const optionId = localAnswers[item.id];
@@ -477,7 +480,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (languageRef.current !== lang) return false;
     if (!snap?.items.length) return false;
     const page = snap.items.filter(isShowable);
-    if (!page.length) return false;
+    // Ignore games-only cache (readFeedSnapshot already drops these; keep the guard local too).
+    if (!page.length || !page.some((i) => i.type === "moment")) return false;
     applyFeedPage(page, snap.cursor, localAnswers);
     setFeedLoading(false);
     return true;

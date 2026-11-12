@@ -37,7 +37,7 @@ type Props = {
 export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const { t, language, fonts: ui } = useLanguage();
   const { respond, engagementFor, updateEngagement } = useApp();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, user } = useAuth();
   const mounted = useMountedRef();
   const engagement = engagementFor(item);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -159,7 +159,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
     capture("share_clicked", {
       button_location: "moment_feed",
       share_medium: "image_card",
-      user_id: null,
+      user_id: user?.id ?? null,
     });
     shareInflight.current = true;
     setSharing(true);
@@ -286,36 +286,38 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
 
         <View style={[styles.card, !imageOptions && styles.cardCentered]}>
           {answered ? <View style={styles.cardGlow} /> : null}
-          {local.category ? (
-            <Text style={[type.metadata, styles.categoryHint, { fontFamily: ui.bodyMedium }]}>
-              {categoryName(local.category.slug, local.category.name, language).toUpperCase()}
-            </Text>
-          ) : null}
-          {local.promptImageUrl ? (
-            <Image
-              source={{ uri: local.promptImageUrl }}
-              style={[styles.promptImage, (imageOptions || local.options.length > 3) && styles.promptImageCompact]}
-              resizeMode="contain"
-            />
-          ) : null}
-          <Text
-            style={[type.gameQuestion, styles.prompt, promptStyle, { fontFamily: ui.display }]}
-            numberOfLines={PROMPT_LINES}
-            adjustsFontSizeToFit
-            minimumFontScale={0.85}
-          >
-            {prompt}
-          </Text>
-          <View style={styles.status}>
-            {status ? (
-              <Text
-                style={[type.bodyLg, styles.statusText, { color: STATUS_COLOR[status.tone], fontFamily: ui.body }]}
-                numberOfLines={2}
-                accessibilityRole={status.tone === "error" ? "alert" : undefined}
-              >
-                {status.text}
+          <View style={styles.promptBlock}>
+            {local.category ? (
+              <Text style={[type.metadata, styles.categoryHint, { fontFamily: ui.bodyMedium }]}>
+                {categoryName(local.category.slug, local.category.name, language).toUpperCase()}
               </Text>
             ) : null}
+            {local.promptImageUrl ? (
+              <Image
+                source={{ uri: local.promptImageUrl }}
+                style={[styles.promptImage, (imageOptions || local.options.length > 3) && styles.promptImageCompact]}
+                resizeMode="contain"
+              />
+            ) : null}
+            <Text
+              style={[type.gameQuestion, styles.prompt, promptStyle, { fontFamily: ui.display }]}
+              numberOfLines={PROMPT_LINES}
+              adjustsFontSizeToFit
+              minimumFontScale={0.9}
+            >
+              {prompt}
+            </Text>
+            <View style={styles.status}>
+              {status ? (
+                <Text
+                  style={[type.bodyLg, styles.statusText, { color: STATUS_COLOR[status.tone], fontFamily: ui.body }]}
+                  numberOfLines={2}
+                  accessibilityRole={status.tone === "error" ? "alert" : undefined}
+                >
+                  {status.text}
+                </Text>
+              ) : null}
+            </View>
           </View>
           {imageOptions ? (
             <View style={styles.grid}>
@@ -402,6 +404,8 @@ const styles = StyleSheet.create({
     borderRadius: 64,
     backgroundColor: "rgba(255,77,141,0.12)",
   },
+  // Prompt/status can yield space; answer rows keep a fixed readable size.
+  promptBlock: { flexShrink: 1, minHeight: 0 },
   promptImage: {
     width: "100%",
     height: 160,
@@ -413,10 +417,10 @@ const styles = StyleSheet.create({
   },
   promptImageCompact: { height: 110 },
   prompt: { color: colors.paper, textAlign: "center" },
-  status: { minHeight: 48, justifyContent: "center", marginVertical: spacing.xs },
+  status: { minHeight: 44, justifyContent: "center", marginVertical: spacing.xs, flexShrink: 0 },
   statusText: { textAlign: "center" },
-  grid: { flex: 1, minHeight: 0, gap: spacing.sm },
-  gridRow: { flex: 1, minHeight: 0, flexDirection: "row", gap: spacing.sm },
+  grid: { flexGrow: 0, flexShrink: 0, gap: spacing.sm },
+  gridRow: { flexDirection: "row", gap: spacing.sm, minHeight: 56 },
   gridSpacer: { flex: 1 },
-  list: { flexShrink: 1, minHeight: 0 },
+  list: { flexGrow: 0, flexShrink: 0 },
 });

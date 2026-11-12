@@ -19,6 +19,10 @@ function isFeedItem(v: unknown): v is FeedItem {
   return t === "moment" || t === "mini_game";
 }
 
+function hasMoments(items: FeedItem[]): boolean {
+  return items.some((i) => i.type === "moment");
+}
+
 export async function readFeedSnapshot(lang: string): Promise<FeedSnapshot | null> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
@@ -27,7 +31,11 @@ export async function readFeedSnapshot(lang: string): Promise<FeedSnapshot | nul
     if (parsed.lang !== lang) return null;
     if (!Array.isArray(parsed.items) || !parsed.items.length) return null;
     const items = parsed.items.filter(isFeedItem).slice(0, MAX_ITEMS);
-    if (!items.length) return null;
+    // Games-only leftovers from an empty moment pool must not boot the app into that state.
+    if (!items.length || !hasMoments(items)) {
+      if (items.length && !hasMoments(items)) await AsyncStorage.removeItem(KEY);
+      return null;
+    }
     return {
       lang: parsed.lang,
       items,
@@ -41,9 +49,15 @@ export async function readFeedSnapshot(lang: string): Promise<FeedSnapshot | nul
 
 export async function writeFeedSnapshot(snap: Omit<FeedSnapshot, "savedAt">): Promise<void> {
   try {
+    const items = snap.items.slice(0, MAX_ITEMS);
+    // Never persist a games-only feed — cold start would look like polls vanished.
+    if (!hasMoments(items)) {
+      await AsyncStorage.removeItem(KEY);
+      return;
+    }
     const payload: FeedSnapshot = {
       lang: snap.lang,
-      items: snap.items.slice(0, MAX_ITEMS),
+      items,
       cursor: snap.cursor,
       savedAt: Date.now(),
     };

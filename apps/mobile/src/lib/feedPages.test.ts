@@ -51,4 +51,9 @@ describe("feed pages", () => {
   it("soft refresh refuses to collapse a moment feed into games-only", () => {
     assert.equal(continueFeedRefresh([moment("a"), game("tap")], [game("maze"), game("tap")]), null);
   });
+
+  it("soft refresh replaces a stuck games-only feed when moments return", () => {
+    const next = continueFeedRefresh([game("tap"), game("maze")], [moment("a"), game("tap")]);
+    assert.deepEqual(ids(next!), ["a", "tap"]);
+  });
 });

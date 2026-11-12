@@ -10,6 +10,7 @@ from scripts.content_gen.agent import (
     MissingOpenAIKey,
     _apply_hi_row,
     _messages,
+    _messages_hi,
     agent_candidates,
     discard_localization_fields,
     ensure_language_split,
@@ -46,6 +47,7 @@ from scripts.content_gen.catalog import (
     strip_devanagari,
     trends_for,
 )
+from scripts.content_gen.hi_generate_prompt import HI_GENERATE_SYSTEM
 from scripts.content_gen.hi_localize_prompt import HI_LOCALIZE_SYSTEM
 
 
@@ -57,10 +59,6 @@ def test_every_category_has_polls_and_quizzes() -> None:
         assert any(card.format == "quiz" for card in cards), slug
         assert all(card.ends_at is None for card in cards), slug
         assert all(card.category_slug == slug for card in cards)
-        for card in cards:
-            blob = (card.prompt + " " + " ".join(card.option_labels())).lower()
-            for word in ("odds", "payout", "bet", "stake", "wager"):
-                assert word not in blob, (slug, card.prompt, word)
         for card in cards:
             blob = (card.prompt + " " + " ".join(card.option_labels())).lower()
             for word in ("odds", "payout", "bet", "stake", "wager"):
@@ -499,6 +497,102 @@ def test_validate_candidates_discards_hindi_fields_from_english_agent() -> None:
     assert "labelHi" not in discarded["options"][0]
 
 
+def test_validate_candidates_hi_accepts_devanagari_and_rejects_english() -> None:
+    now = datetime(2026, 10, 29, tzinfo=UTC)
+    good = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "food",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "रात को भूख लगी — स्ट्रीट फूड या घर की मैगी?",
+                "options": [
+                    {"label": "स्ट्रीट फूड", "isCorrect": False},
+                    {"label": "घर की मैगी", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    cards, dropped = validate_candidates(good, "food", [], now=now, content_lang="hi")
+    assert dropped == []
+    assert len(cards) == 1
+    assert "मैगी" in cards[0].prompt
+    assert cards[0].prompt_hi is None
+
+    english_only = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "food",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "Street food or Maggi at home?",
+                "options": [
+                    {"label": "Street food", "isCorrect": False},
+                    {"label": "Maggi at home", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    bad_cards, bad_dropped = validate_candidates(english_only, "food", [], now=now, content_lang="hi")
+    assert bad_cards == []
+    assert any("hindi-script" in d for d in bad_dropped)
+
+    mixed = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "food",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "Excited! / रात को भूख लगी?",
+                "options": [
+                    {"label": "Street / स्ट्रीट", "isCorrect": False},
+                    {"label": "घर की मैगी", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    # prefer_devanagari may salvage some rows; anything left Latin-only on a label fails.
+    mix_cards, mix_dropped = validate_candidates(mixed, "food", [], now=now, content_lang="hi")
+    assert len(mix_cards) + len(mix_dropped) == 1
+
+
+def test_english_agent_rejects_devanagari_in_prompt() -> None:
+    now = datetime(2026, 10, 29, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "food",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "रात को भूख लगी?",
+                "options": [
+                    {"label": "स्ट्रीट", "isCorrect": False},
+                    {"label": "मैगी", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "food", [], now=now, content_lang="en")
+    # Strip leaves empty / invalid → dropped (english-script or prompt/options).
+    assert cards == []
+    assert dropped
+
+
+def test_hi_generate_system_is_generation_not_localization() -> None:
+    assert "Hindi Content Generation Agent" in HI_GENERATE_SYSTEM
+    assert "NOT to translate" in HI_GENERATE_SYSTEM or "not translate" in HI_GENERATE_SYSTEM.lower()
+    assert "separate generation agent" in EN_SYSTEM.lower() or "Hindi Content Generation" in EN_SYSTEM
+    msgs = _messages_hi("food", 4, [])
+    assert msgs[0]["content"] == HI_GENERATE_SYSTEM
+    payload = json.loads(msgs[1]["content"])
+    assert payload["contentLang"] == "hi"
+    assert any("HINDI ONLY" in r for r in payload["rules"])
+
+
 def test_ensure_language_split_separates_en_and_hi() -> None:
     card = Card(
         type="predict",
@@ -792,7 +886,7 @@ def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     assert "hinglish" in lowered
     assert "prompthi" in lowered
     assert "labelhi" in lowered
-    assert "separate hindi localization" in lowered
+    assert "separate hindi content generation" in lowered or "hindi content generation agent" in lowered
     assert "swipe" in lowered
     assert "never invent a trend" in lowered
     assert "engagement mechanism" in lowered
@@ -836,6 +930,31 @@ def test_normalize_verified_trends_marks_completed_events() -> None:
     assert trends[0]["eventStatus"] == "completed"
     assert trends[0]["allowPrediction"] is False
     assert "prediction" not in trends[0]["allowedAngles"]
+
+
+def test_mobile_prompt_issue_rejects_unreadable_copy() -> None:
+    from scripts.content_gen.agent import mobile_prompt_issue
+
+    assert mobile_prompt_issue("Heat level. You…") == "cryptic-stub"
+    assert mobile_prompt_issue("App permissions. You…") == "cryptic-stub"
+    assert mobile_prompt_issue("How are you moving today?") is None
+    assert (
+        mobile_prompt_issue(
+            "Two local clubs play each other and the city splits. What is that match called?",
+            ["A derby", "A friendly", "A trial"],
+        )
+        is None
+    )
+    assert mobile_prompt_issue("Chai or coffee tonight?", ["Chai", "Coffee"]) is None
+    assert (
+        mobile_prompt_issue(
+            "Quick pick?",
+            ["Brainstorm with a team — whiteboard full of sticky notes forever"],
+        )
+        == "option-too-long"
+    )
+    long = " ".join(["word"] * 25)
+    assert mobile_prompt_issue(long) == "prompt-too-long"
 
 
 def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:

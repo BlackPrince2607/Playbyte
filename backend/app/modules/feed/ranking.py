@@ -124,6 +124,7 @@ def moment_score(
     starts_at: datetime | None,
     in_active_window: bool,
     interest_match: bool,
+    prompt_len: int = 0,
 ) -> float:
     score = 0.0
     if in_active_window:
@@ -133,4 +134,12 @@ def moment_score(
     if starts_at:
         age = (now - starts_at).total_seconds()
         score += max(0, 50 - age / 3600)
+    # Prefer mobile-readable prompts so long copy does not crowd answer rows.
+    if prompt_len:
+        if prompt_len <= 60:
+            score += 8
+        elif prompt_len <= 90:
+            score += 3
+        else:
+            score -= 12
     return score

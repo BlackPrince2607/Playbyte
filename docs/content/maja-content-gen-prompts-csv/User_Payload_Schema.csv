@@ -4,7 +4,7 @@ categoryScope,What the category covers (critical for sports vs cricket)
 need,How many candidates to return
 today,UTC date ISO — used for freshness / closed-event rules
 mix,Target quiz vs poll counts + preferQuizTypes
-market,India English feed brief (Hindi is a later localization stage)
+market,India English feed brief (Hindi is a separate generation agent / pool)
 pollQuestionTypes,Allowed poll questionType values for this category
 quizQuestionTypes,Allowed quiz questionType values for this category
 trendQuizTypes,Freeform trivia types not locked to evergreen bank
@@ -16,4 +16,4 @@ avoidNames,Proper names extracted from avoidPrompts
 engagementInsights,Hit/miss lessons from GET /v1/admin/moments/insights
 voiceExamples,Good/bad English-only examples
 rules,Full rule list (shared + category SCOPE rules)
-candidate schema,"format, category, questionType, type, prompt, options[{label,isCorrect}], briefId (NO promptHi/labelHi — Hindi localization agent owns those)"
+candidate schema,"format, category, questionType, type, prompt, options[{label,isCorrect}], briefId (NO promptHi/labelHi — Hindi agent invents its own cards in a separate pool)"

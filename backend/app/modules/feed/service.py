@@ -1,6 +1,7 @@
 import random
 import re
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import and_, or_, select
@@ -84,7 +85,26 @@ async def interest_ids(session: AsyncSession, user_id: UUID | None, guest_id: UU
     return set()
 
 
-async def load_live_moments(session: AsyncSession) -> list[Moment]:
+def _wants_hindi(lang: str | None) -> bool:
+    return bool(lang) and lang.lower().startswith("hi")
+
+
+def _moment_matches_lang(m: Moment, lang: str | None) -> bool:
+    """Keep English and Hindi moment pools separate.
+
+    - lang=hi → content_lang=hi, or legacy bilingual EN rows that still have prompt_hi
+    - lang=en / missing → content_lang=en only (never Hindi-native cards)
+    """
+    content_lang = (getattr(m, "content_lang", None) or "en").strip().lower()
+    if _wants_hindi(lang):
+        if content_lang == "hi":
+            return True
+        # Legacy one-card bilingual until the next refresh retires them.
+        return content_lang == "en" and bool((getattr(m, "prompt_hi", None) or "").strip())
+    return content_lang != "hi"
+
+
+async def load_live_moments(session: AsyncSession, *, lang: str | None = None) -> list[Moment]:
     now = datetime.now(UTC)
     stmt = (
         select(Moment)
@@ -93,7 +113,8 @@ async def load_live_moments(session: AsyncSession) -> list[Moment]:
         .where(or_(Moment.starts_at.is_(None), Moment.starts_at <= now))
         .where(or_(Moment.ends_at.is_(None), Moment.ends_at > now))
     )
-    return list(await session.scalars(stmt))
+    rows = list(await session.scalars(stmt))
+    return [m for m in rows if _moment_matches_lang(m, lang)]
 
 
 async def tags_for_moments(session: AsyncSession, moment_ids: list[UUID]) -> dict[UUID, list[dict]]:
@@ -144,10 +165,6 @@ async def my_option_ids(
     return {moment_id: option_id for moment_id, option_id in rows}
 
 
-def _wants_hindi(lang: str | None) -> bool:
-    return bool(lang) and lang.lower().startswith("hi")
-
-
 async def build_feed(
     session: AsyncSession,
     *,
@@ -165,11 +182,11 @@ async def build_feed(
     position = (cursor and FeedCursor.decode(cursor)) or FeedCursor(new_seed(), 0, new_seed(), 0)
     interests = await interest_ids(session, user_id, guest_id)
     windows = await active_window_ids(session)
-    loaded = await load_live_moments(session)
+    loaded = await load_live_moments(session, lang=lang)
     if not loaded:
         # Missed refresh / short endsAt used to empty the moment pool while games stayed enabled.
         await ensure_feed_has_moments(session, user_id)
-        loaded = await load_live_moments(session)
+        loaded = await load_live_moments(session, lang=lang)
     answered = await answered_moment_ids(session, [m.id for m in loaded], user_id, guest_id)
     # Preference picks are the pool. If those categories have nothing live yet, widen so the feed works.
     moments = [m for m in loaded if m.category_id in interests] if interests else loaded
@@ -183,6 +200,7 @@ async def build_feed(
             starts_at=m.starts_at,
             in_active_window=m.content_window_id in windows if m.content_window_id else False,
             interest_match=m.category_id in interests,
+            prompt_len=len((m.prompt or "").strip()),
         )
         + (0.0 if m.id in answered else UNANSWERED_BOOST)
         for m in sorted(moments, key=lambda m: str(m.id))
@@ -305,17 +323,34 @@ def serialize_moment(
                 correct_id = str(o.id)
                 break
     hindi = _wants_hindi(lang)
+    content_lang = (getattr(m, "content_lang", None) or "en").strip().lower()
     prompt_hi = getattr(m, "prompt_hi", None)
-    if hindi:
-        # Hindi settings: show Hindi layer only. Fall back to English only if hi is missing.
+
+    if content_lang == "hi":
+        # Hindi-native card: primary prompt/label are Devanagari — never Latinize.
+        prompt = _hindi_display(m.prompt) or m.prompt
+    elif hindi:
+        # Legacy bilingual EN card: prefer prompt_hi; fall back to English only if missing.
         hi_prompt = _hindi_display(prompt_hi)
         if hi_prompt and _DEVANAGARI_RE.search(hi_prompt):
             prompt = hi_prompt
         else:
             prompt = _latin_display(m.prompt) or m.prompt
     else:
-        # English settings: English layer only — never Devanagari.
+        # English settings / English-native card: Latin only — never Devanagari.
         prompt = _latin_display(m.prompt) or m.prompt
+
+    def _option_label(o: Any) -> str:
+        if content_lang == "hi":
+            return _hindi_display(o.label) or (o.label or "")
+        if hindi:
+            label_hi = getattr(o, "label_hi", None)
+            hi = _hindi_display(label_hi) if label_hi else ""
+            if hi and _DEVANAGARI_RE.search(hi):
+                return hi
+            return _latin_display(o.label) or o.label or ""
+        return _latin_display(o.label) or o.label or ""
+
     return {
         "type": "moment",
         "id": str(m.id),
@@ -331,21 +366,7 @@ def serialize_moment(
         "options": [
             {
                 "id": str(o.id),
-                "label": (
-                    (
-                        (
-                            _hindi_display(getattr(o, "label_hi", None))
-                            if getattr(o, "label_hi", None)
-                            and _DEVANAGARI_RE.search(str(getattr(o, "label_hi", None) or ""))
-                            else None
-                        )
-                        or _latin_display(o.label)
-                        or o.label
-                        or ""
-                    )
-                    if hindi
-                    else (_latin_display(o.label) or o.label)
-                ),
+                "label": _option_label(o),
                 "imageUrl": media_url(o.image_key),
                 "sortOrder": o.sort_order,
             }

@@ -54,7 +54,7 @@
 53,"NO Hinglish in English fields: never use Hindi words or Latin transliteration (yaar, kya, kitna, bahut, nahi, scene hai, full on, etc.)."
 54,English must read like English a fluent speaker would write — not Hindi written in Latin letters.
 55,"Indian names, brand names, movie titles, and proper nouns in English are fine."
-56,A separate Hindi localization agent will create promptHi / labelHi after validation.
+56,Hindi feed cards are invented by a separate Hindi generation agent — never mix languages.
 57,"Output schema per candidate: format, category, questionType, type, prompt, options[{label,isCorrect}], briefId."
 58,"Do NOT include promptHi, labelHi, or optionsHi — they are forbidden in this stage."
 59,Aim for about 20 strong candidates. Quality over quantity — return fewer rather than pad with weak cards.

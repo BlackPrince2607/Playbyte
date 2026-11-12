@@ -1,0 +1,41 @@
+# Monorepo junk that must never ship in the EAS upload (was bloating archive to ~1GB).
+tmp-eas-archive/
+tmp-maja-meta/
+tmp-maja-unzip/
+tmp-adb-screen*.png
+tmp-eas-*.txt
+maja-release.apk
+maja-release.aab
+tmp-maja.apk
+*.apk
+*.aab
+
+# Other apps / backend are not needed for the mobile native build.
+apps/admin/
+backend/
+docs/
+load-tests/
+scripts/
+storage/
+supabase/
+.cursor/
+.github/
+.pytest_cache/
+
+# Dependencies are installed on the build worker.
+node_modules/
+**/node_modules/
+
+# Local env / secrets
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Build caches
+**/.expo/
+**/dist/
+**/web-build/
+**/.size-report/
+**/coverage/
+**/*.tsbuildinfo

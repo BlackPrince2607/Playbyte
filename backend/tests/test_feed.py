@@ -32,10 +32,11 @@ def catalog_games() -> list[SimpleNamespace]:
 
 def moment(i: int) -> SimpleNamespace:
     return SimpleNamespace(
-        id=uuid4(), type="poll", prompt=f"Moment {i}", prompt_image_key=None, scoring_mode="crowd",
+        id=uuid4(), type="poll", prompt=f"Moment {i}", prompt_hi=None, content_lang="en",
+        prompt_image_key=None, scoring_mode="crowd",
         category_id=uuid4(), category=SimpleNamespace(slug="sports", name="Sports"), status="live",
         content_window_id=None, starts_at=datetime.now(UTC), ends_at=None,
-        options=[SimpleNamespace(id=uuid4(), label="A", sort_order=0, image_key=None, is_correct=False)],
+        options=[SimpleNamespace(id=uuid4(), label="A", label_hi=None, sort_order=0, image_key=None, is_correct=False)],
     )
 
 
@@ -91,6 +92,7 @@ def test_serialize_moment_includes_my_option_id() -> None:
         type="poll",
         prompt="Pick one",
         prompt_hi=None,
+        content_lang="en",
         prompt_image_key=None,
         scoring_mode="crowd",
         category=SimpleNamespace(slug="sports", name="Sports"),
@@ -113,6 +115,7 @@ def test_serialize_moment_uses_hindi_when_lang_hi() -> None:
         type="poll",
         prompt="Who wins tonight?",
         prompt_hi="आज रात कौन जीतेगा?",
+        content_lang="en",
         prompt_image_key=None,
         scoring_mode="crowd",
         category=SimpleNamespace(slug="sports", name="Sports"),
@@ -133,12 +136,36 @@ def test_serialize_moment_uses_hindi_when_lang_hi() -> None:
     assert en["options"][0]["label"] == "India"
 
 
+def test_serialize_moment_hindi_native_uses_primary_fields() -> None:
+    m = SimpleNamespace(
+        id=uuid4(),
+        type="poll",
+        prompt="आज रात कौन जीतेगा?",
+        prompt_hi=None,
+        content_lang="hi",
+        prompt_image_key=None,
+        scoring_mode="crowd",
+        category=SimpleNamespace(slug="sports", name="Sports"),
+        status="live",
+        starts_at=datetime.now(UTC),
+        ends_at=None,
+        options=[
+            SimpleNamespace(id=uuid4(), label="भारत", label_hi=None, sort_order=0, image_key=None, is_correct=False),
+            SimpleNamespace(id=uuid4(), label="ऑस्ट्रेलिया", label_hi=None, sort_order=1, image_key=None, is_correct=False),
+        ],
+    )
+    hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
+    assert hi["prompt"] == "आज रात कौन जीतेगा?"
+    assert hi["options"][0]["label"] == "भारत"
+
+
 def test_serialize_moment_hindi_falls_back_to_english_prompt() -> None:
     m = SimpleNamespace(
         id=uuid4(),
         type="poll",
         prompt="How often do you check news updates?",
         prompt_hi=None,
+        content_lang="en",
         prompt_image_key=None,
         scoring_mode="crowd",
         category=SimpleNamespace(slug="news", name="News"),
@@ -160,6 +187,7 @@ def test_serialize_moment_strips_devanagari_in_english_mode() -> None:
         type="poll",
         prompt="Who wins tonight? आज रात कौन जीतेगा?",
         prompt_hi="आज रात कौन जीतेगा?",
+        content_lang="en",
         prompt_image_key=None,
         scoring_mode="crowd",
         category=SimpleNamespace(slug="sports", name="Sports"),
@@ -190,6 +218,7 @@ def test_serialize_moment_strips_latin_from_hindi_fields() -> None:
         type="poll",
         prompt="What's your vibe?",
         prompt_hi="Excited! / कितने एक्साइटेड हो?",
+        content_lang="en",
         prompt_image_key=None,
         scoring_mode="crowd",
         category=SimpleNamespace(slug="cinema", name="Cinema"),
@@ -215,6 +244,19 @@ def test_serialize_moment_strips_latin_from_hindi_fields() -> None:
     en = serialize_moment(m, snap=None, my_option_id=None, lang="en")
     assert en["prompt"] == "What's your vibe?"
     assert en["options"][0]["label"] == "Excited!"
+
+
+def test_moment_matches_lang_keeps_pools_separate() -> None:
+    from app.modules.feed.service import _moment_matches_lang
+
+    en_only = SimpleNamespace(content_lang="en", prompt_hi=None)
+    en_legacy = SimpleNamespace(content_lang="en", prompt_hi="आज रात?")
+    hi_native = SimpleNamespace(content_lang="hi", prompt_hi=None)
+    assert _moment_matches_lang(en_only, "en")
+    assert not _moment_matches_lang(hi_native, "en")
+    assert _moment_matches_lang(hi_native, "hi")
+    assert _moment_matches_lang(en_legacy, "hi")
+    assert not _moment_matches_lang(en_only, "hi")
 
 
 async def feed_page(

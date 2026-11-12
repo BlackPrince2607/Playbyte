@@ -190,7 +190,7 @@ export function PostGameResultScreen({
   const showAccuracy = attempts !== undefined && attempts > 0 && correct !== undefined;
   const accuracyPct = showAccuracy ? Math.round((correct / attempts) * 100) : 0;
   const { t, language, fonts: ui } = useLanguage();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, user } = useAuth();
   const { wallet, friends, refreshFriends } = useApp();
   const sharePrompt = fill(celebrate ? t("resultSharePrompt") : t("resultSharePromptSoft"), { score });
   const beatenLabel = beaten.count.toLocaleString(language === "hi" ? "hi-IN" : "en-IN");
@@ -231,7 +231,7 @@ export function PostGameResultScreen({
     capture("share_clicked", {
       button_location: "game_result",
       share_medium: "native_share",
-      user_id: null,
+      user_id: user?.id ?? null,
     });
     capture("result_action_clicked", { action: "share" });
     setSharing(true);
@@ -255,6 +255,8 @@ export function PostGameResultScreen({
         gameKey,
         playId: saveState === "saved" ? playId : undefined,
         seed: playSeed,
+        score,
+        shareMethod: "in_app_friend",
       });
       capture("result_action_clicked", { action: "challenge" });
       setPickerOpen(false);

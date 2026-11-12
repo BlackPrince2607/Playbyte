@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.postgres.models import Category, Moment
 from app.modules.cms.service import create_moment, transition_moment
-from scripts.content_gen.agent import localize_hi
 from scripts.content_gen.catalog import MIN_LIVE, generate_stock
 
 
@@ -38,10 +37,11 @@ async def ensure_category_stock(
     category_ids: list[UUID],
     actor_id: UUID | None,
 ) -> int:
-    """Publish catalog cards until each selected category has MIN_LIVE live moments.
+    """Publish catalog cards until each selected category has MIN_LIVE live English moments.
 
-    Uses the category banks, not the model, so saving interests does not call OpenAI.
-    Stock cards stay live until the scheduled refresh retires them with the rest of the feed.
+    Uses the English category banks only (content_lang=en). No OpenAI and no Hindi localization —
+    Hindi stock comes from the Hindi generation agent on refresh. Counting is per content_lang
+    so English evergreen never fake-fills the Hindi pool.
     """
     if not category_ids:
         return 0
@@ -55,31 +55,44 @@ async def ensure_category_stock(
             .where(
                 Moment.category_id == cat.id,
                 Moment.status == "live",
+                Moment.content_lang == "en",
                 or_(Moment.ends_at.is_(None), Moment.ends_at > now),
             )
         )
         deficit = MIN_LIVE - int(live or 0)
         if deficit <= 0:
             continue
-        existing = set(await session.scalars(select(Moment.prompt).where(Moment.category_id == cat.id)))
-        # rewrite=False keeps any bank Hindi already present and skips OpenAI when nothing is missing.
-        cards = localize_hi(
-            [card for card in generate_stock(cat.slug) if card.prompt not in existing][:deficit],
-            rewrite=False,
+        existing = set(
+            await session.scalars(
+                select(Moment.prompt).where(
+                    Moment.category_id == cat.id,
+                    Moment.content_lang == "en",
+                )
+            )
         )
+        cards = [card for card in generate_stock(cat.slug) if card.prompt not in existing][:deficit]
         for card in cards:
+            # Strip any accidental Hindi fields from bank cards — EN pool stays English-only.
+            options = [
+                {
+                    "label": str(opt.get("label") or ""),
+                    "isCorrect": bool(opt.get("isCorrect")),
+                }
+                for opt in card.options
+            ]
             row = await create_moment(
                 session,
                 actor_id=actor_id,
                 moment_type=card.type,
                 category_id=cat.id,
                 prompt=card.prompt,
-                options=card.options,
+                options=options,
                 starts_at=now,
                 ends_at=card.ends_at,
                 scoring_mode=card.scoring_mode,
                 tag_slugs=list(card.tags),
-                prompt_hi=card.prompt_hi,
+                prompt_hi=None,
+                content_lang="en",
             )
             await transition_moment(session, row.id, "ready", actor_id)
             await transition_moment(session, row.id, "live", actor_id)

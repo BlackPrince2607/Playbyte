@@ -3,8 +3,8 @@ Purpose,Reference for how Maja generates polls/quizzes every ~4 hours
 Source code,backend/scripts/content_gen/agent.py + catalog.py
 Publisher,scripts/refresh_feed_content.py (GitHub Actions)
 Model,OPENAI_MODEL default gpt-4o-mini (OpenRouter if key starts with sk-or-)
-Languages,"Two stages, one card: (1) English Content Agent writes prompt/label only; (2) Hindi Localization Agent writes promptHi/labelHi after English is finalized"
-Batch size,~20 cards per onboarding category per refresh
+Languages,"Two agents, two pools: (1) English Content Agent invents EN cards (content_lang=en); (2) Hindi Content Agent invents original HI cards (content_lang=hi). Feed filters by lang. No EN→HI localization on publish."
+Batch size,~20 EN + ~20 HI cards per onboarding category per refresh
 Card TTL,No short TTL — previous live moments retired only after the new batch is live
 Active categories,"cricket, movies, music, pop-culture, food, gaming, sports, news, tech, personality-vibe, fashion, health, kpop, puzzles, logical-reasoning, math-numbers"
 Event brief categories,"cricket, kpop, movies, music, news, pop-culture, sports, tech"
@@ -12,5 +12,5 @@ Trend poll types,"debate, hot, opinion"
 Trend quiz types,"trivia, which, who"
 Event poll types,"challenge, debate, opinion, prediction"
 Event quiz types,"stat, which, who"
-How to read this workbook,Agent System Prompt = English-only LLM system message. Agent User Payload = JSON user message schema. Shared Rules = rules[] sent every category. Category Scope/Rules = sports vs cricket extras. Evergreen Polls/Quizzes = bank templates. Brief Templates = verified event cards. Meme Pack = memegen image polls. Hindi Localize = second-pass localization prompt (never invents cards). Poll Gen & Feed = how polls are created and shown in the swipe feed. Trends Input = ops-maintained India trends JSON per category.
+How to read this workbook,Agent System Prompt = English-only LLM system message. Hindi Generate = separate Hindi generation system message (invents original HI cards). Agent User Payload = JSON user message schema. Shared Rules = rules[] sent every category. Category Scope/Rules = sports vs cricket extras. Evergreen Polls/Quizzes = EN bank templates only. Brief Templates = verified event cards. Meme Pack = EN memegen image polls. Hindi Localize = obsolete for feed publish (kept for legacy tests). Poll Gen & Feed = how polls are created and shown. Trends Input = ops-maintained India trends JSON per category.
 India trends,Ops fill backend/scripts/content_gen/trends/{category}.json before refresh. Merged with briefs into verifiedTrends. Model must not invent trending claims.

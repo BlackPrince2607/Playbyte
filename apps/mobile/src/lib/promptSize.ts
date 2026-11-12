@@ -10,12 +10,13 @@ export function lineHeightFor(text: string, fontSize: number): number {
  * `crowded` drops a step when an image or many options compete for space.
  */
 /** Smallest prompt size that stays readable on a phone feed card. */
-const PROMPT_FLOOR = 18;
+const PROMPT_FLOOR = 20;
 
 export function promptTextStyle(text: string, opts: { max?: number; crowded?: boolean } = {}) {
   const max = opts.max ?? 30;
   const len = [...text.trim()].length;
-  let size = len <= 40 ? max : len <= 80 ? max - 4 : len <= 140 ? max - 8 : max - 10;
+  // Keep steps gentle — answer rows need space more than the question needs to grow.
+  let size = len <= 40 ? max : len <= 70 ? max - 2 : len <= 100 ? max - 4 : max - 6;
   if (opts.crowded) size -= 2;
   const fontSize = Math.max(PROMPT_FLOOR, size);
   return { fontSize, lineHeight: lineHeightFor(text, fontSize) };

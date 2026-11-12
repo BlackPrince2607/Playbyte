@@ -254,6 +254,8 @@ def publish_moment(
     prompt_hi = moment.get("promptHi") or moment.get("prompt_hi")
     if prompt_hi:
         body["promptHi"] = str(prompt_hi).strip()
+    content_lang = str(moment.get("contentLang") or moment.get("content_lang") or "en").strip().lower()
+    body["contentLang"] = "hi" if content_lang == "hi" else "en"
     if moment.get("endsAt"):
         body["endsAt"] = moment["endsAt"]
     if moment.get("promptImageKey"):
@@ -306,6 +308,59 @@ def build_batch(count: int, *, include_images: bool) -> list[dict[str, Any]]:
     return unique
 
 
+def _card_row(card: Any, *, content_lang: str, window_ends: datetime) -> dict[str, Any]:
+    """Publish payload for one language pool — no cross-language fields."""
+    is_event = bool(card.brief_id)
+    row: dict[str, Any] = {
+        "categorySlug": card.category_slug,
+        "type": card.type,
+        "tags": list(card.tags),
+        "scoringMode": card.scoring_mode,
+        "prompt": card.prompt,
+        "options": [
+            {
+                "label": str(opt.get("label") or ""),
+                "isCorrect": bool(opt.get("isCorrect")),
+                **(
+                    {"imageKey": opt["imageKey"]}
+                    if isinstance(opt, dict) and opt.get("imageKey")
+                    else {}
+                ),
+            }
+            for opt in card.options
+        ],
+        "contentLang": content_lang,
+    }
+    ends = card.ends_at
+    if ends is None and is_event:
+        ends = window_ends
+    if ends is not None:
+        row["endsAt"] = ends.isoformat().replace("+00:00", "Z")
+    return row
+
+
+def _en_pure(card: Any) -> bool:
+    from scripts.content_gen.catalog import has_devanagari, has_hinglish_latin
+
+    blob = card.prompt + "\n" + "\n".join(str(opt.get("label") or "") for opt in card.options)
+    return (
+        not has_devanagari(blob)
+        and not has_hinglish_latin(blob)
+        and all(str(opt.get("label") or "").strip() for opt in card.options)
+    )
+
+
+def _hi_pure(card: Any) -> bool:
+    from scripts.content_gen.catalog import has_devanagari
+
+    if not has_devanagari(card.prompt or ""):
+        return False
+    return all(
+        has_devanagari(str(opt.get("label") or "")) and str(opt.get("label") or "").strip()
+        for opt in card.options
+    )
+
+
 def plan_agent_batch(
     previous: list[dict[str, Any]],
     *,
@@ -314,27 +369,35 @@ def plan_agent_batch(
     window_hours: float,
     insights: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Fresh agent cards for every category (plus event briefs). Avoids all prior live prompts."""
-    from scripts.content_gen.agent import agent_candidates, fill_evergreen, localize_hi
-    from scripts.content_gen.catalog import (
-        MIN_LIVE,
-        ONBOARDING_SLUGS,
-        event_cards,
-        has_devanagari,
-        has_hinglish_latin,
-    )
+    """Fresh EN + HI agent cards per category. Separate pools — never localize EN into HI."""
+    from scripts.content_gen.agent import agent_candidates, agent_candidates_hi, fill_evergreen
+    from scripts.content_gen.catalog import MIN_LIVE, ONBOARDING_SLUGS, event_cards
 
     need = max(per_category, MIN_LIVE)
     freshness_hours = max(1, int(round(window_hours)))
     by_category = (insights or {}).get("byCategory") or {}
-    # Never re-show anything currently live, plus recent prompts from insights.
-    seen: set[str] = {str(moment.get("prompt") or "").strip() for moment in previous}
+
+    # Avoid sets stay language-local so EN/HI never dedupe against each other.
+    seen_en: set[str] = set()
+    seen_hi: set[str] = set()
+    for moment in previous:
+        prompt = str(moment.get("prompt") or "").strip()
+        if not prompt:
+            continue
+        lang = str(moment.get("contentLang") or moment.get("content_lang") or "en").lower()
+        if lang == "hi":
+            seen_hi.add(prompt)
+        else:
+            seen_en.add(prompt)
     for row in (insights or {}).get("moments") or []:
         prompt = str(row.get("prompt") or "").strip()
-        if prompt:
-            seen.add(prompt)
-    seen.discard("")
-    avoid = list(seen)
+        if not prompt:
+            continue
+        lang = str(row.get("contentLang") or row.get("content_lang") or "en").lower()
+        if lang == "hi":
+            seen_hi.add(prompt)
+        else:
+            seen_en.add(prompt)
 
     now = datetime.now(UTC)
     planned: list[dict[str, Any]] = []
@@ -342,68 +405,68 @@ def plan_agent_batch(
         cat_insights = by_category.get(slug) or {}
         for extra in cat_insights.get("avoidPrompts") or []:
             text = str(extra).strip()
-            if text and text not in seen:
-                seen.add(text)
-                avoid.append(text)
-        print(f"AGENT {slug}: requesting {need} cards…", flush=True)
-        proposed = agent_candidates(
+            if text:
+                # Insights historically EN-biased; keep out of both avoid lists safely.
+                seen_en.add(text)
+
+        # --- English pool ---
+        avoid_en = list(seen_en)
+        print(f"AGENT en/{slug}: requesting {need} cards…", flush=True)
+        proposed_en = agent_candidates(
             slug,
             need,
-            avoid_prompts=avoid,
+            avoid_prompts=avoid_en,
             insights=cat_insights,
             freshness_hours=freshness_hours,
         )
-        # Prefer model cards; evergreen is a last-resort top-up only.
-        proposed = fill_evergreen(slug, proposed, need)
-        proposed.extend(event_cards(slug, now=now))
-        proposed = localize_hi(proposed)
-        # Publish only clean English + complete Devanagari Hinglish Hindi (Hinglish stays in HI).
-        complete = []
-        for card in proposed:
-            en_blob = card.prompt + "\n" + "\n".join(str(opt.get("label") or "") for opt in card.options)
-            en_clean = (
-                not has_devanagari(en_blob)
-                and not has_hinglish_latin(en_blob)
-                and all(str(opt.get("label") or "").strip() for opt in card.options)
-            )
-            if en_clean and card.has_complete_hi():
-                complete.append(card)
-        if len(complete) < len(proposed):
+        proposed_en = fill_evergreen(slug, proposed_en, need)
+        proposed_en.extend(event_cards(slug, now=now))
+        clean_en = [c for c in proposed_en if _en_pure(c)]
+        if len(clean_en) < len(proposed_en):
             print(
-                f"WARN {slug}: dropped {len(proposed) - len(complete)} cards missing clean EN/HI split",
+                f"WARN en/{slug}: dropped {len(proposed_en) - len(clean_en)} impure English cards",
                 flush=True,
             )
-        proposed = complete
-        added = 0
-        for card in proposed:
-            if card.prompt in seen:
+        added_en = 0
+        for card in clean_en:
+            if card.prompt in seen_en:
                 continue
             is_event = bool(card.brief_id)
-            if not is_event and added >= need:
+            if not is_event and added_en >= need:
                 continue
-            # Evergreen cards stay live until the next successful run retires them.
-            # Only event/brief cards carry an endsAt so they drop when the event is over.
-            row: dict[str, Any] = {
-                "categorySlug": card.category_slug,
-                "type": card.type,
-                "tags": list(card.tags),
-                "scoringMode": card.scoring_mode,
-                "prompt": card.prompt,
-                "options": card.options,
-            }
-            ends = card.ends_at
-            if ends is None and is_event:
-                ends = window_ends
-            if ends is not None:
-                row["endsAt"] = ends.isoformat().replace("+00:00", "Z")
-            if card.prompt_hi:
-                row["promptHi"] = card.prompt_hi
-            planned.append(row)
-            seen.add(card.prompt)
-            avoid.append(card.prompt)
+            planned.append(_card_row(card, content_lang="en", window_ends=window_ends))
+            seen_en.add(card.prompt)
             if not is_event:
-                added += 1
-        print(f"AGENT {slug}: kept {added} (+events) of {len(proposed)} proposed", flush=True)
+                added_en += 1
+        print(f"AGENT en/{slug}: kept {added_en} (+events)", flush=True)
+
+        # --- Hindi pool (original generation — not localization) ---
+        avoid_hi = list(seen_hi)
+        print(f"AGENT hi/{slug}: requesting {need} cards…", flush=True)
+        proposed_hi = agent_candidates_hi(
+            slug,
+            need,
+            avoid_prompts=avoid_hi,
+            insights=cat_insights,
+            freshness_hours=freshness_hours,
+        )
+        # Do NOT fill_evergreen — English bank would mix into the Hindi pool.
+        clean_hi = [c for c in proposed_hi if _hi_pure(c)]
+        if len(clean_hi) < len(proposed_hi):
+            print(
+                f"WARN hi/{slug}: dropped {len(proposed_hi) - len(clean_hi)} impure Hindi cards",
+                flush=True,
+            )
+        added_hi = 0
+        for card in clean_hi:
+            if card.prompt in seen_hi:
+                continue
+            if added_hi >= need:
+                continue
+            planned.append(_card_row(card, content_lang="hi", window_ends=window_ends))
+            seen_hi.add(card.prompt)
+            added_hi += 1
+        print(f"AGENT hi/{slug}: kept {added_hi}", flush=True)
     return planned
 
 
@@ -467,10 +530,25 @@ def main() -> int:
         print(f"Agent generation failed: {exc}")
         return 1
 
-    from scripts.content_gen.agent import localize_hi_dicts, volatile_fact_issue
+    from scripts.content_gen.agent import volatile_fact_issue
 
-    # Agent batch is the feed; memes are light spice only.
-    meme_batch = localize_hi_dicts(build_batch(args.count, include_images=args.include_images))
+    # Agent batch is the feed (separate EN + HI pools). Memes stay English-only spice.
+    meme_batch = []
+    for raw in build_batch(args.count, include_images=args.include_images):
+        row = dict(raw)
+        row["contentLang"] = "en"
+        # Strip accidental Hindi fields so meme spice never mixes into EN cards.
+        row.pop("promptHi", None)
+        row.pop("prompt_hi", None)
+        options = []
+        for opt in row.get("options") or []:
+            if isinstance(opt, dict):
+                cleaned = {k: v for k, v in opt.items() if k not in {"labelHi", "label_hi"}}
+                options.append(cleaned)
+            else:
+                options.append(opt)
+        row["options"] = options
+        meme_batch.append(row)
     batch = agent_batch + meme_batch
 
     created = 0

@@ -29,12 +29,15 @@ export function appendFeedPage(current: FeedItem[], page: FeedItem[]): FeedItem[
  * Soft refresh: keep the in-progress feed and stitch the new page onto the end so fresh
  * questions appear after a swipe or two. Returns null when the server has no moments but
  * the viewer still does — never collapse an active feed to games-only.
+ * If the viewer is already stuck on games-only (stale cache / empty pool) and the server
+ * has moments again, replace with that page instead of burying polls behind a games pile.
  */
 export function continueFeedRefresh(current: FeedItem[], page: FeedItem[]): FeedItem[] | null {
   if (!current.length) return null;
   const pageHasMoments = page.some((i) => i.type === "moment");
   const currentHasMoments = current.some((i) => i.type === "moment");
   if (!pageHasMoments && currentHasMoments) return null;
+  if (!currentHasMoments && pageHasMoments) return page;
   return appendFeedPage(current, page);
 }
 

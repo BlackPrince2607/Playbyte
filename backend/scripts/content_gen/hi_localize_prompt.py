@@ -113,8 +113,9 @@ Options should be short, conversational, and unambiguous.
 - Do not switch randomly between आप and तुम within the same card.
 
 ## 8. Text Length and Formatting
-- Keep translations close to the original length when possible.
-- Prioritize clarity over exact word count.
+- Keep translations close to the original length when possible — never longer than needed.
+- Hard mobile limits: promptHi ≤ ~70 characters; each labelHi ≤ ~28 characters.
+- If a literal Hindi rendering is longer, rewrite shorter while keeping meaning (spoken Hindi wins over dictionary Hindi).
 - Preserve numbers, names, and meaning exactly.
 - Do not add explanations inside user-facing copy.
 - Avoid unnecessary punctuation, multiple exclamation marks, and excessive emojis.

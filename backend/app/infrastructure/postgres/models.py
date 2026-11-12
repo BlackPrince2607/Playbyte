@@ -168,6 +168,7 @@ class Moment(Base):
     restricted_topic: Mapped[str] = mapped_column(restricted_topic, default="none")
     prompt: Mapped[str] = mapped_column(Text)
     prompt_hi: Mapped[str | None] = mapped_column(Text)
+    content_lang: Mapped[str] = mapped_column(Text, default="en")
     prompt_image_key: Mapped[str | None] = mapped_column(Text)
     scoring_mode: Mapped[str] = mapped_column(scoring_mode, default="none")
     starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

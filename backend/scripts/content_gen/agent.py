@@ -1,12 +1,12 @@
-"""OpenAI agent that proposes poll and quiz cards. A gate drops anything the catalog cannot support.
+"""OpenAI agents that propose poll and quiz cards. A gate drops anything the catalog cannot support.
 
-MAJA content generation uses two language stages:
+MAJA content generation uses two separate language agents and two moment pools:
 
-1. English Content Agent — creates game content in English only (prompt / label).
-2. Hindi Localization Agent — writes promptHi / labelHi after English is finalized.
+1. English Content Agent — invents English-only cards (prompt / label). content_lang=en.
+2. Hindi Content Agent — invents original Devanagari Hindi cards (prompt / label). content_lang=hi.
 
-Both layers belong to one canonical card. The English agent must never own final Hindi fields.
-The Hindi agent must never change game mechanics (format, options, isCorrect, briefId, …).
+Pools never share questions. English must not contain Hindi; Hindi must not contain English leftovers.
+Localization (promptHi on the same card) is obsolete for new feed publishes.
 """
 
 from __future__ import annotations
@@ -39,6 +39,7 @@ from scripts.content_gen.catalog import (
     strip_devanagari,
     trends_for,
 )
+from scripts.content_gen.hi_generate_prompt import HI_GENERATE_SYSTEM
 from scripts.content_gen.hi_localize_prompt import HI_LOCALIZE_SYSTEM
 
 # Outcome-prediction wording about seasons/tournaments that are already closed.
@@ -164,8 +165,8 @@ EN_SYSTEM = (
     "- promptHi\n"
     "- labelHi\n"
     "- optionsHi\n\n"
-    "A separate Hindi localization agent creates all Hindi/Hinglish display fields after English "
-    "content has been validated. Do not translate or localize.\n\n"
+    "A separate Hindi Content Generation Agent invents its own Hindi cards for the Hindi feed. "
+    "Do not translate, localize, or mix Hindi into English fields.\n\n"
     "Follow existing enum values for format, category, questionType, and type — never invent enums.\n\n"
     "Reply with a JSON object only: {\"candidates\": [...]} . "
     "Each candidate has format, category, questionType, type, prompt, options, briefId. "
@@ -586,6 +587,9 @@ def build_shared_system_rules(today: str, quiz_target: int, poll_target: int) ->
         "If verifiedTrends is empty: ship strong evergreen PLAY (scenarios, recognition, sharp debates) "
         "— without viral/trending wording. Evergreen is not a synonym for boring trivia.",
         "Not formal survey speak. Not essays. Spicy but friendly. Understandable in ~3 seconds.",
+        "MOBILE READABILITY (critical): prompt max ~90 characters / ~18 words. Option labels max ~36 characters.",
+        "Write a complete readable question — never cryptic stubs like 'Heat level. You…' or 'Movement today is…'.",
+        "Avoid long dictionary definitions ('X is a…' with a paragraph). Keep quizzes punchy and scannable.",
         "A quiz has exactly one correct option. Polls must set isCorrect false on every option.",
         "Incorrect quiz options must be plausible — no absurd distractors, no 'All/None of the above'.",
         "Two options use type predict. Three or four use type pulse.",
@@ -662,7 +666,19 @@ def build_english_purity_rules() -> list[str]:
         "(yaar, kya, kitna, bahut, nahi, scene hai, full on, etc.).",
         "English must read like English a fluent speaker would write — not Hindi written in Latin letters.",
         "Indian names, brand names, movie titles, and proper nouns in English are fine.",
-        "A separate Hindi localization agent will create promptHi / labelHi after validation.",
+        "Hindi feed cards are invented by a separate Hindi generation agent — never mix languages.",
+    ]
+
+
+def build_hindi_purity_rules() -> list[str]:
+    return [
+        "HINDI ONLY (critical): prompt and option.label must be Devanagari Hindi/Hinglish.",
+        "Every prompt and every option label must contain Devanagari. Reject Latin-only copy.",
+        "Never write English-only sentences. Never write Latin-script Hinglish as the whole card "
+        "('Kya scene hai', 'Kitne excited ho').",
+        "No bilingual fields ('Excited! / एक्साइटेड'). No promptHi, labelHi, or optionsHi.",
+        "Short Latin brands/acronyms inside Hindi (IPL, OTT, DRS, Maggi) are OK; long English leftovers are not.",
+        "Invent ORIGINAL Hindi cards — do not translate or mirror English sibling prompts.",
     ]
 
 
@@ -709,7 +725,7 @@ def _messages(
         "market": (
             "India English feed for Gen-Z (metros + Tier-2). "
             "Fast swipe interactions: trivia proves knowledge; polls create debate. "
-            "Hindi/Hinglish is a separate localization stage."
+            "Hindi is a separate generation agent with its own card pool — never mix."
         ),
         "pollQuestionTypes": sorted(question_types(slug, "poll")),
         "quizQuestionTypes": sorted(question_types(slug, "quiz")),
@@ -759,6 +775,108 @@ def _messages(
     }
     return [
         {"role": "system", "content": EN_SYSTEM},
+        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+    ]
+
+
+def _messages_hi(
+    slug: str,
+    need: int,
+    briefs: list[dict[str, Any]],
+    avoid_prompts: list[str] | None = None,
+    insights: dict[str, Any] | None = None,
+    *,
+    manual_trends: list[dict[str, Any]] | None = None,
+    now: datetime | None = None,
+) -> list[dict[str, str]]:
+    """User/system messages for the Hindi Content Generation Agent (original HI cards)."""
+    now = now or datetime.now(UTC)
+    today = now.date().isoformat()
+    quiz_target = max(1, round(need * 0.6))
+    poll_target = max(1, need - quiz_target)
+    trends = merge_verified_trends(slug, briefs, manual_rows=manual_trends, now=now)
+    shared = [
+        r
+        for r in build_shared_system_rules(today, quiz_target, poll_target)
+        if "English fields only" not in r
+    ]
+    shared.insert(
+        0,
+        "Return JSON with a candidates array. Hindi Devanagari in prompt/label only — never promptHi/labelHi.",
+    )
+    hi_output = [
+        "Output schema per candidate: format, category, questionType, type, prompt, options[{label,isCorrect}], briefId.",
+        "prompt and options[].label are Devanagari Hindi. Do NOT include promptHi, labelHi, or optionsHi.",
+        f"Aim for about {need} strong candidates. Quality over quantity — return fewer rather than pad with weak cards.",
+        "Pass an internal swipe-feed check before including a card: clear in ~3s, reason to tap, specific not generic.",
+    ]
+    payload = {
+        "category": slug,
+        "categoryScope": _category_scope(slug),
+        "need": need,
+        "today": today,
+        "contentLang": "hi",
+        "mix": {
+            "quizzes": quiz_target,
+            "polls": poll_target,
+            "quizShare": 0.6,
+            "pollShare": 0.3,
+            "predictionsMaxShare": 0.1,
+            "preferQuizTypes": ["trivia", "who", "which"],
+            "preferPollTypes": sorted(TREND_POLL_TYPES),
+        },
+        "market": (
+            "India Hindi feed for Gen-Z (metros + Tier-2). "
+            "Invent original Devanagari Hinglish cards — not translations of English. "
+            "English is a separate generation agent with its own pool."
+        ),
+        "pollQuestionTypes": sorted(question_types(slug, "poll")),
+        "quizQuestionTypes": sorted(question_types(slug, "quiz")),
+        "trendQuizTypes": sorted(TREND_QUIZ_TYPES),
+        "evergreenBank": (
+            "English bank is topic reference only. Do NOT copy English bank prompts/labels. "
+            "Invent original Hindi freeform quizzes and polls (trivia/who/which/opinion/debate/hot)."
+        ),
+        "verifiedTrends": [{k: v for k, v in t.items() if k != "brief"} for t in trends],
+        "briefs": briefs,
+        "avoidPrompts": list(avoid_prompts or [])[:120],
+        "avoidNames": sorted(
+            {n for prompt in (avoid_prompts or []) for n in proper_names(str(prompt))}
+        )[:40],
+        "engagementInsights": insights or {},
+        "voiceExamples": {
+            "hindiGood": [
+                "रात को भूख लगी — स्ट्रीट फूड या घर की मैगी?",
+                "दोस्त ने मूवी प्लान कैंसल किया — राहत या गुस्सा?",
+                "एक ओवर में कितनी गेंदें होती हैं?",
+                "DRS बचा के रखोगे या अभी जला दोगे?",
+                "इस वीकेंड की रिलीज़ — हाइप के लायक या ओवररेटेड?",
+                "ओटीटी का मतलब क्या होता है?",
+                "ज़िंदगी भर सिर्फ़ एक: बिरयानी, डोसा, छोले भटूरे, या मोमोज?",
+            ],
+            "hindiBad": [
+                "What's your vibe for the release?",
+                "Kya scene hai for the match?",
+                "Kitne excited ho?",
+                "Excited! / कितने एक्साइटेड हो?",
+                "Who is your favourite actor?",
+                "This is trending everywhere — guess why?",
+            ],
+        },
+        "rules": [
+            *shared,
+            *build_interaction_rules(),
+            *build_uniqueness_rules(),
+            *build_event_fact_rules(today),
+            *build_hindi_purity_rules(),
+            *hi_output,
+            "Predictions: include प्रेडिक्शन or Prediction in the Hindi prompt when questionType is prediction.",
+            "Prefer freeform trend questionTypes (trivia/who/which/opinion/debate/hot) — do not copy English evergreen bank wording.",
+            *_category_rules(slug),
+        ],
+    }
+    return [
+        {"role": "system", "content": HI_GENERATE_SYSTEM},
         {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
     ]
 
@@ -927,6 +1045,30 @@ def lazy_poll_issue(fmt: str, prompt: str) -> str | None:
     return None
 
 
+# Feed cards must stay readable on a phone — long prompts crowd answer rows.
+_MAX_PROMPT_CHARS = 90
+_MAX_PROMPT_WORDS = 20
+_MAX_OPTION_CHARS = 48
+# Ultra-short unfinished stubs like "Heat level. You…" read as broken UI copy.
+_CRYPTIC_STUB_RE = re.compile(r"(?i)^\s*.{0,18}\byou\s*[.…]+?\s*$")
+
+
+def mobile_prompt_issue(prompt: str, labels: list[str] | None = None) -> str | None:
+    """Reject copy that will render unreadably small or cryptic on the feed card."""
+    text = (prompt or "").strip()
+    if not text:
+        return "empty-prompt"
+    words = len(text.split())
+    if len(text) > _MAX_PROMPT_CHARS or words > _MAX_PROMPT_WORDS:
+        return "prompt-too-long"
+    if _CRYPTIC_STUB_RE.search(text):
+        return "cryptic-stub"
+    for label in labels or []:
+        if len((label or "").strip()) > _MAX_OPTION_CHARS:
+            return "option-too-long"
+    return None
+
+
 def _trend_support_blob(trends: list[dict[str, Any]]) -> str:
     parts: list[str] = []
     for row in trends:
@@ -1012,10 +1154,12 @@ def score_candidate(
         score += 2.5
     prompt = card.prompt or ""
     words = len(prompt.split())
-    if 6 <= words <= 22:
+    if 6 <= words <= 18:
         score += 1.0
-    elif words > 28:
-        score -= 1.0
+    elif words > 22 or len(prompt) > _MAX_PROMPT_CHARS:
+        score -= 2.0
+    if mobile_prompt_issue(prompt, [str(o.get("label") or "") for o in card.options]):
+        score -= 5.0
     if lazy_poll_issue(card.format, prompt):
         score -= 5.0
     if _TREND_CLAIM_RE.search(prompt) and not card.brief_id:
@@ -1093,10 +1237,16 @@ def validate_candidates(
     freshness_hours: int = DEFAULT_FRESHNESS_HOURS,
     avoid_prompts: list[str] | None = None,
     verified_trends: list[dict[str, Any]] | None = None,
+    content_lang: str = "en",
 ) -> tuple[list[Card], list[str]]:
-    """Keep candidates that match the catalog. Drop the rest with a short reason."""
+    """Keep candidates that match the catalog. Drop the rest with a short reason.
+
+    content_lang=en strips Hindi and requires Latin English.
+    content_lang=hi requires Devanagari and strips English leftovers — never mixes pools.
+    """
     now = now or datetime.now(UTC)
     today = now.date()
+    lang = "hi" if content_lang == "hi" else "en"
     rows = briefs_for(slug, briefs if briefs is not None else load_briefs())
     by_id = {str(row["id"]): row for row in rows}
     allowed_bank = bank_text(slug)
@@ -1118,9 +1268,10 @@ def validate_candidates(
         if not isinstance(item, dict):
             dropped.append(f"{index}:shape")
             continue
-        # English stage must not trust accidental Hindi fields from the model.
-        cleaned = _english_only_fields(discard_localization_fields(item))
-        reason = _reject(cleaned, slug, by_id, allowed_bank, today=today)
+        # Never trust the other language's fields on either agent.
+        cleaned = discard_localization_fields(item)
+        cleaned = _hindi_only_fields(cleaned) if lang == "hi" else _english_only_fields(cleaned)
+        reason = _reject(cleaned, slug, by_id, allowed_bank, today=today, content_lang=lang)
         if reason:
             dropped.append(f"{index}:{reason}")
             continue
@@ -1131,6 +1282,15 @@ def validate_candidates(
             continue
         if lazy_poll_issue(fmt, prompt):
             dropped.append(f"{index}:lazy-poll")
+            continue
+        option_labels = [
+            str(opt.get("label") or "").strip()
+            for opt in (cleaned.get("options") or [])
+            if isinstance(opt, dict)
+        ]
+        mobile_issue = mobile_prompt_issue(prompt, option_labels)
+        if mobile_issue:
+            dropped.append(f"{index}:{mobile_issue}")
             continue
         brief_id = cleaned.get("briefId") or None
         if unverified_trend_claim_issue(
@@ -1204,6 +1364,25 @@ def _english_only_fields(item: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _hindi_only_fields(item: dict[str, Any]) -> dict[str, Any]:
+    """Copy a candidate with English leftovers stripped from Hindi prompt/label fields."""
+    out = dict(item)
+    out["prompt"] = prefer_devanagari(str(item.get("prompt") or ""))
+    mapped: list[Any] = []
+    for opt in item.get("options") or []:
+        if not isinstance(opt, dict):
+            mapped.append(opt)
+            continue
+        row = dict(opt)
+        row["label"] = prefer_devanagari(str(opt.get("label") or ""))
+        mapped.append(row)
+    out["options"] = mapped
+    return out
+
+
+_PREDICTION_HI_RE = re.compile(r"(?i)prediction|प्रेडिक्शन|भविष्यवाणी|अंदाज़ा|अंदाजा")
+
+
 def _reject(
     item: dict[str, Any],
     slug: str,
@@ -1211,6 +1390,7 @@ def _reject(
     allowed_bank: str,
     *,
     today: date | None = None,
+    content_lang: str = "en",
 ) -> str | None:
     if item.get("category") != slug:
         return "category"
@@ -1235,11 +1415,20 @@ def _reject(
     prompt = str(item.get("prompt") or "").strip()
     if not prompt:
         return "prompt"
-    # Guardrail if strip left junk / model ignored the language split.
-    if has_devanagari(prompt) or any(has_devanagari(label) for label in labels):
-        return "english-script"
-    if has_hinglish_latin(prompt) or any(has_hinglish_latin(label) for label in labels):
-        return "english-hinglish"
+    lang = "hi" if content_lang == "hi" else "en"
+    if lang == "en":
+        # English pool: no Devanagari, no Latin Hinglish.
+        if has_devanagari(prompt) or any(has_devanagari(label) for label in labels):
+            return "english-script"
+        if has_hinglish_latin(prompt) or any(has_hinglish_latin(label) for label in labels):
+            return "english-hinglish"
+    else:
+        # Hindi pool: every field must be Devanagari; reject English-only leftovers.
+        if not has_devanagari(prompt) or any(not has_devanagari(label) for label in labels):
+            return "hindi-script"
+        # Long Latin leftovers after prefer_devanagari still count as mixing.
+        if has_hinglish_latin(prompt) or any(has_hinglish_latin(label) for label in labels):
+            return "hindi-latin-mix"
     if any(not label for label in labels):
         return "options"
     topic_issue = off_category_topic_issue(slug, prompt, labels)
@@ -1258,10 +1447,13 @@ def _reject(
         if question_type == "prediction":
             if not prediction_brief_open(brief, prompt, today):
                 return "prediction-closed"
-            if "prediction" not in prompt.lower():
+            if lang == "en" and "prediction" not in prompt.lower():
+                return "prediction-label"
+            if lang == "hi" and not _PREDICTION_HI_RE.search(prompt):
                 return "prediction-label"
         allowed = json.dumps(brief)
-        issues = fact_issues(prompt, labels, allowed)
+        # Hindi freeform may keep names from briefs; entity check still OK on shared tokens.
+        issues = fact_issues(prompt, labels, allowed, check_entities=lang == "en")
         if issues:
             return issues[0]
         return None
@@ -1277,6 +1469,9 @@ def _reject(
             if issues:
                 return issues[0]
             return None
+        # Hindi agent must not copy the English evergreen bank.
+        if lang == "hi":
+            return "hindi-bank-forbidden"
         if question_type not in _evergreen_types(slug, fmt):
             return "brief"
         if not set(labels) <= bank_labels(slug, question_type):
@@ -1437,24 +1632,70 @@ def agent_candidates(
     insights: dict[str, Any] | None = None,
     freshness_hours: int = DEFAULT_FRESHNESS_HOURS,
 ) -> list[Card]:
-    """Ask OpenAI for one category. Raises MissingOpenAIKey when the key is absent.
+    """Ask OpenAI for English cards for one category. Raises MissingOpenAIKey when the key is absent.
 
-    Pipeline: English generation → validate → fact gate → rank/diversify.
-    Hindi localization is a separate later stage (localize_hi).
+    Pipeline: English generation → validate (EN purity) → fact gate → rank/diversify.
+    Hindi cards come from agent_candidates_hi — never from localization.
     """
+    return _agent_candidates_for_lang(
+        slug,
+        need,
+        briefs,
+        content_lang="en",
+        avoid_prompts=avoid_prompts,
+        insights=insights,
+        freshness_hours=freshness_hours,
+    )
+
+
+def agent_candidates_hi(
+    slug: str,
+    need: int,
+    briefs: list[dict[str, Any]] | None = None,
+    *,
+    avoid_prompts: list[str] | None = None,
+    insights: dict[str, Any] | None = None,
+    freshness_hours: int = DEFAULT_FRESHNESS_HOURS,
+) -> list[Card]:
+    """Ask OpenAI for original Hindi cards for one category.
+
+    Pipeline: Hindi generation → validate (HI purity) → fact gate → rank/diversify.
+    Does not top up from the English evergreen bank (that would mix languages).
+    """
+    return _agent_candidates_for_lang(
+        slug,
+        need,
+        briefs,
+        content_lang="hi",
+        avoid_prompts=avoid_prompts,
+        insights=insights,
+        freshness_hours=freshness_hours,
+    )
+
+
+def _agent_candidates_for_lang(
+    slug: str,
+    need: int,
+    briefs: list[dict[str, Any]] | None,
+    *,
+    content_lang: str,
+    avoid_prompts: list[str] | None = None,
+    insights: dict[str, Any] | None = None,
+    freshness_hours: int = DEFAULT_FRESHNESS_HOURS,
+) -> list[Card]:
     rows = briefs_for(slug, briefs)
-    # Overgenerate so validate/fact-gate/rank can keep the strongest ~need cards.
     request = max(need, int(need * 2.0))
     avoid = list(avoid_prompts or [])
-    cards: list[Card] = []
-    dropped: list[str] = []
-
+    lang = "hi" if content_lang == "hi" else "en"
     verified = merge_verified_trends(slug, rows)
 
     def _one_pass(extra_avoid: list[str], count: int) -> tuple[list[Card], list[str]]:
-        raw = call_openai(
-            _messages(slug, count, rows, avoid_prompts=extra_avoid, insights=insights)
+        messages = (
+            _messages_hi(slug, count, rows, avoid_prompts=extra_avoid, insights=insights)
+            if lang == "hi"
+            else _messages(slug, count, rows, avoid_prompts=extra_avoid, insights=insights)
         )
+        raw = call_openai(messages)
         batch, drop = validate_candidates(
             raw,
             slug,
@@ -1462,15 +1703,15 @@ def agent_candidates(
             freshness_hours=freshness_hours,
             avoid_prompts=extra_avoid,
             verified_trends=verified,
+            content_lang=lang,
         )
         batch, fact_drop = verify_quiz_facts(batch)
         if fact_drop:
             drop.extend(fact_drop)
-            print(f"FACT-GATE {slug}: dropped {len(fact_drop)} unverified quiz(es)")
+            print(f"FACT-GATE {lang}/{slug}: dropped {len(fact_drop)} unverified quiz(es)")
         return batch, drop
 
     cards, dropped = _one_pass(avoid, request)
-    # Targeted top-up only when the first pass is short — do not regenerate a full batch.
     if len(cards) < need:
         shortfall = need - len(cards)
         stronger_avoid = avoid + [c.prompt for c in cards]
@@ -1486,8 +1727,7 @@ def agent_candidates(
             have.add(card.prompt)
             if len(cards) >= need:
                 break
-    ranked = rank_and_diversify(cards, need, insights=insights)
-    return ranked
+    return rank_and_diversify(cards, need, insights=insights)
 
 
 # Kept as a short alias for tests / older imports; full brief lives in hi_localize_prompt.py.
@@ -1517,6 +1757,7 @@ def _localize_messages(cards: list[Card]) -> list[dict[str, str]]:
             "Do not change meaning, facts, names, numbers, option count, option order, or which answer is correct.",
             "Every promptHi and labelHi must be Devanagari Hinglish (loanwords OK).",
             "No bilingual English/Hindi in one field. No Latin-script Hinglish.",
+            "MOBILE: promptHi max ~70 characters; each labelHi max ~28 characters. Prefer short spoken Hindi over long literal translations.",
         ],
         "examples": [
             {

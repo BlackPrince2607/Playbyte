@@ -105,7 +105,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRec
 
   function chooseLanguage(id: string) {
     setAppLanguage(id);
-    capture("language_selected", { language: id });
+    capture("language_selected", { language: id, user_id: user?.id ?? null });
   }
 
   const applyProfile = useCallback((profile: MeProfile) => {

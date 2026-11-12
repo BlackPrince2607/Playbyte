@@ -60,11 +60,20 @@ function scrub(props?: AnalyticsProps): Record<string, string | number | boolean
   for (const [key, value] of Object.entries(props)) {
     if (value !== undefined) out[key] = value;
   }
-  return out;
+  return Object.keys(out).length ? out : undefined;
 }
 
 export function capture(event: AnalyticsEvent, props?: AnalyticsProps): void {
-  getPostHog()?.capture(event, scrub(props));
+  const cleaned = scrub(props);
+  getPostHog()?.capture(event, cleaned);
+  // Lazy: metaSdk pulls React Native / FBSDK, which must stay out of unit tests.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { logMetaEvent } = require("./metaSdk") as typeof import("./metaSdk");
+    logMetaEvent(event, cleaned);
+  } catch {
+    /* Expo Go / tests / builds without the native module */
+  }
 }
 
 export function identify(distinctId: string, traits?: AnalyticsProps): void {

@@ -36,7 +36,7 @@ Never generate:
 - labelHi
 - optionsHi
 
-A separate Hindi localization agent creates all Hindi/Hinglish display fields after English content has been validated. Do not translate or localize.
+A separate Hindi Content Generation Agent invents its own Hindi cards for the Hindi feed. Do not translate, localize, or mix Hindi into English fields.
 
 Follow existing enum values for format, category, questionType, and type — never invent enums.
 

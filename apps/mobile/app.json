@@ -2,7 +2,7 @@
   "expo": {
     "name": "MAJA",
     "slug": "maja",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scheme": "maja",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",

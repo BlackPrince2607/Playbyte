@@ -1,4 +1,5 @@
 import { api, type Challenge, type ChallengeCreated, type ChallengeStatus } from "../api";
+import { capture } from "./analytics";
 
 export async function createChallenge(input: {
   opponentUserId: string;
@@ -6,9 +7,12 @@ export async function createChallenge(input: {
   playId?: string;
   seed?: string;
   momentId?: string;
+  /** Optional score when challenging from a result screen. */
+  score?: number;
+  shareMethod?: string;
 }): Promise<ChallengeCreated> {
   const idem = `chal-${input.opponentUserId}-${input.gameKey}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  return api<ChallengeCreated>("/v1/challenges", {
+  const created = await api<ChallengeCreated>("/v1/challenges", {
     method: "POST",
     headers: { "Idempotency-Key": idem.slice(0, 128) },
     body: JSON.stringify({
@@ -19,6 +23,12 @@ export async function createChallenge(input: {
       momentId: input.momentId,
     }),
   });
+  capture("challenge_shared", {
+    game_id: input.gameKey,
+    score: input.score ?? null,
+    share_method: input.shareMethod ?? "in_app_friend",
+  });
+  return created;
 }
 
 export async function listChallenges(status?: ChallengeStatus): Promise<Challenge[]> {

@@ -52,6 +52,7 @@ class MomentCreateIn(BaseModel):
     categoryId: UUID
     prompt: str
     promptHi: str | None = None
+    contentLang: str = "en"
     options: list[Any]
     restrictedTopic: str = "none"
     contentWindowId: UUID | None = None
@@ -218,6 +219,7 @@ async def post_moment(
         scoring_mode=body.scoringMode,
         tag_slugs=body.tags,
         prompt_hi=body.promptHi,
+        content_lang=body.contentLang,
     )
     return {"id": str(m.id), "status": m.status}
 

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MajaLogo } from "../../components/MajaLogo";
+import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { appLang } from "../../i18n/lang";
 import { capture } from "../../lib/analytics";
@@ -18,6 +19,7 @@ const TITLE_SIZE = 32;
 
 export function LanguageScreen({ onNext, onBack }: Props) {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const { language, setAppLanguage, t, fonts: ui } = useLanguage();
   const [selected, setSelected] = useState(language);
   const trackedLanguage = useRef(false);
@@ -66,7 +68,7 @@ export function LanguageScreen({ onNext, onBack }: Props) {
                 const next = appLang(l.id);
                 setSelected(next);
                 setAppLanguage(l.id);
-                capture("language_selected", { language: next });
+                capture("language_selected", { language: next, user_id: user?.id ?? null });
                 trackedLanguage.current = true;
               }}
               accessibilityRole="radio"
@@ -132,7 +134,7 @@ export function LanguageScreen({ onNext, onBack }: Props) {
           onPress={() => {
             if (!trackedLanguage.current) {
               setAppLanguage(selected);
-              capture("language_selected", { language: selected });
+              capture("language_selected", { language: selected, user_id: user?.id ?? null });
               trackedLanguage.current = true;
             }
             onNext();

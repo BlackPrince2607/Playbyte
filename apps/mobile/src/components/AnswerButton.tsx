@@ -66,9 +66,8 @@ export function AnswerButton({
       <View style={styles.row}>
         <Text
           style={[tile ? type.bodyLg : type.button, styles.label, compact && styles.labelCompact, { fontFamily: fonts.bodyBold }]}
-          numberOfLines={tile ? 2 : 2}
-          adjustsFontSizeToFit
-          minimumFontScale={0.85}
+          numberOfLines={2}
+          ellipsizeMode="tail"
         >
           {emoji ? `${emoji} ` : ""}
           {label ?? ""}
@@ -96,16 +95,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.margin,
     overflow: "hidden",
     marginBottom: spacing.sm,
-    minHeight: 44,
-    flexShrink: 1,
+    // Never shrink below a tappable, readable answer row — flexShrink + adjustsFontSizeToFit
+    // was collapsing labels to unreadably tiny dots when the card got crowded.
+    minHeight: 52,
+    flexShrink: 0,
     justifyContent: "center",
   },
-  compact: { paddingVertical: 10 },
+  compact: { paddingVertical: 12, minHeight: 48 },
   tile: {
     flex: 1,
     marginBottom: 0,
     padding: spacing.sm,
     justifyContent: "flex-start",
+    minHeight: 56,
+    flexShrink: 1,
   },
   selected: { borderColor: colors.lime, borderWidth: 2 },
   incorrect: { borderColor: colors.pink, borderWidth: 2 },
