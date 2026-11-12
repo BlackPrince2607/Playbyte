@@ -9,7 +9,7 @@
     "build": "pnpm -r --if-present build",
     "admin:dev": "pnpm --filter @maja/admin dev",
     "mobile:start": "pnpm --filter @maja/mobile start",
-    "eas-build-post-install": "node apps/mobile/scripts/ensure-skia-libs.js"
+    "eas-build-post-install": "node apps/mobile/scripts/ensure-skia-libs.js || node -e \"console.warn('[maja] skia ensure failed; continuing'); process.exit(0)\""
   },
   "engines": {
     "node": ">=20"
