@@ -16,6 +16,9 @@
       "android": {
         "buildType": "apk"
       },
+      "cache": {
+        "disabled": true
+      },
       "env": {
         "EXPO_PUBLIC_APP_ENV": "staging",
         "EXPO_PUBLIC_API_URL": "https://majaa-production.up.railway.app",
