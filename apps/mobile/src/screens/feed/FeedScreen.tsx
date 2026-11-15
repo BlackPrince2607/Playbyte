@@ -136,10 +136,11 @@ export function FeedScreen({
 
   const onPull = useCallback(() => {
     setPulling(true);
-    refreshFeed(true)
+    refreshFeed(true, { replace: true })
+      .then(() => setFeedIndex(0))
       .catch(() => {})
       .finally(() => setPulling(false));
-  }, [refreshFeed]);
+  }, [refreshFeed, setFeedIndex]);
 
   const onLayout = (e: LayoutChangeEvent) => setPageH(Math.round(e.nativeEvent.layout.height));
 

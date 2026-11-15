@@ -32,7 +32,7 @@ import { PostGameResultScreen } from "./screens/feed/PostGameResultScreen";
 import { StreakScreen } from "./screens/feed/StreakScreen";
 import { FriendsScreen } from "./screens/friends/FriendsScreen";
 import { LeaderboardScreen } from "./screens/friends/LeaderboardScreen";
-import { LiveNowScreen } from "./screens/live/LiveNowScreen";
+import { BattleFlow } from "./screens/battle/BattleFlow";
 import { InterestsScreen } from "./screens/onboarding/InterestsScreen";
 import { LanguageScreen } from "./screens/onboarding/LanguageScreen";
 import { ProfileSetupScreen } from "./screens/onboarding/ProfileSetupScreen";
@@ -817,7 +817,15 @@ export function MainShell() {
           />
         </View>
         <View style={[styles.tabPane, tab !== "compete" && styles.hidden]}>
-          <LiveNowScreen onProfile={() => setTab("vault")} />
+          <BattleFlow
+            signedIn={isSignedIn}
+            onNeedSignIn={() => setShowSignIn(true)}
+            onProfile={() => setTab("vault")}
+            onChallengeFriend={() => setTab("friends")}
+            onStartMatch={(game, match) => {
+              startGame(game, "online", null, match);
+            }}
+          />
         </View>
         <View style={[styles.tabPane, tab !== "friends" && styles.hidden]}>
           <FriendsScreen

@@ -19,8 +19,10 @@ import { emojiGuessEngine } from "./emoji-guess/logic/engine";
 import { factFakeEngine } from "./fact-fake/logic/engine";
 import { guessEngine } from "./guess/logic/engine";
 import { engineRegistry } from "./index";
+import { laneDashEngine } from "./lane-dash/logic/engine";
 import { registerEngines } from "./manifest";
 import { mathRushEngine } from "./math-rush/logic/engine";
+import { memoryEngine } from "./memory/logic/engine";
 import { mazeEngine } from "./maze/logic/mazeEngine";
 import { oddOneOutEngine } from "./odd-one-out/logic/engine";
 import { LEGACY_REPLACEMENTS } from "./replacements";
@@ -51,6 +53,8 @@ const ENGINES: GameEngine<any, any, any>[] = [
   connectDotsEngine,
   arrowEngine,
   mathRushEngine,
+  memoryEngine,
+  laneDashEngine,
 ];
 
 const packsDir = path.join(__dirname, "..", "content", "packs");

@@ -67,7 +67,8 @@ Game card / Play Online
 | Case | Behavior |
 | ---- | -------- |
 | Cancel while searching | Ticket `cancelled`; not billed as a play |
-| No opponent in N seconds | Ticket `expired`; UI offers retry / friend challenge / solo |
+| No opponent in 5 seconds | Server fills with a bot opponent (indistinguishable in client UI) |
+| Heartbeat stale / fill failed | Ticket `expired`; UI offers retry / friend challenge / solo |
 | Opponent never plays | After `play_deadline_at`, match `forfeit`; you keep your play, no fake opponent score |
 | Double submit / retry | Idempotency on play + ticket keys (same as challenges) |
 | Guest taps Play online | Prompt sign-in (matchmaking is user-only) |
@@ -153,9 +154,10 @@ Worker or API transactional loop (Postgres):
 
 **Cold start policy (product default):**
 
-- Search window: **20s** default, client can extend once.
-- No bot opponents.
-- On expire: return `{ code: "no_opponent" }` and suggest friend challenge / solo.
+- Prefer a real opponent while searching.
+- After **5s** alone, fill with a seeded bot profile (`users.is_bot`) that looks like a normal player in API responses.
+- Bot plays are scheduled via outbox `match.bot_play` with a realistic delay and competitive score (~50/50 near the human).
+- Heartbeat-stale tickets still expire; clients only see `no_opponent` if fill cannot run (e.g. empty bot pool).
 
 ## 8. Realtime & presence
 
@@ -311,7 +313,7 @@ Alerts: queue depth high with time-to-match p95 > 20s; worker pairing lag.
 - Ranked ladders / seasons / trophies
 - Injecting match CTAs into the primary swipe feed
 - Guest matchmaking
-- Bot / NPC fillers as default opponents
+- Exposing bot opponents in client APIs / “vs AI” labels
 - Real-money or wagering framing
 
 ## 16. Rollout checklist
@@ -355,7 +357,7 @@ Client A                API / DB                 Worker              Client B
 
 | Question | Default in this plan |
 | -------- | -------------------- |
-| Search timeout | 20s + one client extend |
+| Search timeout | 5s then bot fill; heartbeat stale still expires |
 | Any-game queue | Allowed; resolve at pair time |
 | Rematch | Phase 2 |
 | Coins on duel play | Same as solo play, once |

@@ -94,6 +94,12 @@ async def process_once() -> int:
                             "match.ready",
                             event.payload,
                         )
+                elif event.type == "match.bot_play":
+                    from app.modules.matchmaking import service as mm
+
+                    match_id = event.payload.get("matchId")
+                    if match_id:
+                        await mm.execute_bot_play(session, UUID(match_id))
                 event.status = "done"
                 handled += 1
             except Exception:

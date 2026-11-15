@@ -1,6 +1,6 @@
 # Game platform — production deployment
 
-Scope: what the Game Engine SDK (12 engines, 44 game rows) needs from the backend, database and
+Scope: what the Game Engine SDK (15 engines, 50 game rows) needs from the backend, database and
 mobile build. General infrastructure lives in `docs/railway.md` and `docs/production-deployment.md`
 (`docs/deployment-runbook.md` still describes Fly.io; Railway is what is live).
 
@@ -51,22 +51,29 @@ replica until a shared limiter exists, or accept N× the configured limits.
 
 0006, 0007 and 0008 are idempotent and can be re-run.
 
-Then the seed: `supabase/seed/003_sdk_games.sql` (44 SDK rows enabled, 16 legacy keys disabled).
+Then the seed: `supabase/seed/003_sdk_games.sql` (50 SDK rows enabled, 15 legacy keys disabled).
 The seed must run **after** 0005 (it inserts into the new columns). It is idempotent (upserts).
+Includes `emoji_song`, `find_pair` (engine `memory`), and re-enabled `lane_dash`.
 
 Verification (read-only):
 
 ```sql
-select status, count(*) from mini_games group by status;          -- enabled 44, disabled 16
+select status, count(*) from mini_games group by status;          -- enabled 50, disabled 15
 select count(*) from mini_games where status='enabled' and engine is null;  -- 0
+select key, engine, variation, status from mini_games
+  where key in ('emoji_song','find_pair','lane_dash');            -- all enabled
 select count(*) from content_items;  select count(*) from content_packs;
 ```
 
 ## 3. Content import
 
-Bundled packs (`apps/mobile/src/game/content/packs/*.json`, 10 packs, 406 items) are the fallback
-shipped in the app. Importing them makes the same content available remotely so it can be edited
-without an app release.
+Bundled packs (`apps/mobile/src/game/content/packs/*.json`, including `emoji_song.json`) are the
+fallback shipped in the app. Importing them makes the same content available remotely so it can be
+edited without an app release. After adding packs, run:
+
+```bash
+cd backend && python -m scripts.import_content
+```
 
 ```bash
 cd backend

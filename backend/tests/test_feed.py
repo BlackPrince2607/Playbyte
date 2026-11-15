@@ -9,10 +9,11 @@ import pytest
 from app.modules.feed.ranking import FeedCursor, RankedItem, fill_page, rotate_games
 from app.modules.feed.service import build_feed, serialize_moment
 
-# Enabled games per engine, as seeded by supabase/seed/003_sdk_games.sql (44 rows, 12 engines).
+# Enabled games per engine, as seeded by supabase/seed/003_sdk_games.sql (50 rows, 15 engines).
 CATALOG = {
-    "guess": 4, "emoji_guess": 4, "odd_one_out": 4, "tap": 3, "word_search": 4, "spot_difference": 4,
+    "guess": 4, "emoji_guess": 5, "odd_one_out": 4, "tap": 3, "word_search": 4, "spot_difference": 4,
     "fact_fake": 5, "choice": 4, "tap_dont_tap": 3, "maze": 4, "connect_dots": 3, "arrow_puzzle": 2,
+    "math_rush": 3, "memory": 1, "lane_dash": 1,
 }
 
 
@@ -30,13 +31,13 @@ def catalog_games() -> list[SimpleNamespace]:
     return games
 
 
-def moment(i: int) -> SimpleNamespace:
+def moment(i: int, *, quiz: bool = False) -> SimpleNamespace:
     return SimpleNamespace(
-        id=uuid4(), type="poll", prompt=f"Moment {i}", prompt_hi=None, content_lang="en",
-        prompt_image_key=None, scoring_mode="crowd",
+        id=uuid4(), type="quiz" if quiz else "poll", prompt=f"Moment {i}", prompt_hi=None, content_lang="en",
+        prompt_image_key=None, scoring_mode="correct_option" if quiz else "crowd",
         category_id=uuid4(), category=SimpleNamespace(slug="sports", name="Sports"), status="live",
         content_window_id=None, starts_at=datetime.now(UTC), ends_at=None,
-        options=[SimpleNamespace(id=uuid4(), label="A", label_hi=None, sort_order=0, image_key=None, is_correct=False)],
+        options=[SimpleNamespace(id=uuid4(), label="A", label_hi=None, sort_order=0, image_key=None, is_correct=quiz)],
     )
 
 
@@ -80,8 +81,9 @@ async def test_build_feed_game_slots_span_distinct_engines() -> None:
         items = (await build_feed(session, user_id=None, guest_id=uuid4(), limit=20, rng=random.Random(3)))["items"]
     games = [i for i in items if i["type"] == "mini_game"]
     assert len(items) == 20
-    assert len(games) == 6
-    assert len({g["engine"] for g in games}) == 6
+    # Poll-only pool → cycle skips trivia slots → game, poll, game, poll…
+    assert len(games) == 10
+    assert len({g["engine"] for g in games}) == 10
 
 
 def test_serialize_moment_includes_my_option_id() -> None:
@@ -349,8 +351,9 @@ async def test_build_feed_mixes_selected_categories() -> None:
         page = await build_feed(session, user_id=uuid4(), guest_id=None, limit=12, rng=random.Random(2))
     slugs = [item["category"]["slug"] for item in page["items"] if item["type"] == "moment"]
     assert set(slugs) == {"cricket", "music", "food"}
-    # First three moment slots should cover three different picks when all have stock.
-    assert len(set(slugs[:3])) == 3
+    # Trivia and poll streams each round-robin categories (games slots sit between them), so the
+    # first handful of moment cards should still span every selected pick.
+    assert len(set(slugs[:6])) == 3
 
 
 @pytest.mark.asyncio
@@ -364,6 +367,21 @@ async def test_build_feed_leads_with_unanswered_then_recycles() -> None:
     ids = await feed_moment_ids(moments, answered, seed=1, user_id=uuid4())
     assert sorted(ids) == sorted(str(m.id) for m in moments)
     assert sorted(ids[: len(unanswered)]) == sorted(unanswered)
+
+
+@pytest.mark.asyncio
+async def test_build_feed_keeps_all_unanswered_ahead_across_categories() -> None:
+    """A fully-answered category must not jump ahead of unanswered cards in other categories."""
+    cat_a, cat_b = uuid4(), uuid4()
+    moments = [moment(i) for i in range(5)]
+    moments[0].category_id = moments[1].category_id = cat_a
+    moments[2].category_id = moments[3].category_id = moments[4].category_id = cat_b
+    # Cat A is fully answered; cat B still has open cards.
+    answered = {moments[0].id, moments[1].id, moments[2].id}
+    unanswered = {str(m.id) for m in moments if m.id not in answered}
+    ids = await feed_moment_ids(moments, answered, seed=3, user_id=uuid4())
+    assert set(ids[: len(unanswered)]) == unanswered
+    assert set(ids[len(unanswered) :]) == {str(m.id) for m in moments if m.id in answered}
 
 
 @pytest.mark.asyncio
@@ -466,23 +484,44 @@ async def test_build_feed_bad_cursor_starts_a_fresh_feed() -> None:
     assert sorted(moment_ids_of(page)) == sorted(str(m.id) for m in moments)
 
 
-def test_fill_page_hot_window_spaces_games_further_apart() -> None:
-    moments = [RankedItem("moment", str(i), 10) for i in range(8)]
+def test_fill_page_priority_mix_trivia_game_poll() -> None:
+    quizzes = [RankedItem("moment", f"q{i}", 10) for i in range(4)]
+    polls = [RankedItem("moment", f"p{i}", 10) for i in range(4)]
     games = [RankedItem("mini_game", f"g{i}", 1) for i in range(4)]
     page, _ = fill_page(
-        rank_moments=lambda _: moments,
+        rank_quizzes=lambda _: quizzes,
+        rank_polls=lambda _: polls,
         rank_games=lambda _: games,
-        cursor=FeedCursor(0, 0, 0, 0),
+        cursor=FeedCursor(0, 0, 0, 0, 0, 0),
         exclude=set(),
-        limit=10,
-        cadence=4,
+        limit=9,
         new_seed=lambda: 1,
     )
-    assert ["m" if i.kind == "moment" else "g" for i in page] == list("mmmmgmmmmg")
+    assert [i.id[0] for i in page] == list("qgpqgpqgp")
+
+
+@pytest.mark.asyncio
+async def test_build_feed_priority_mix_trivia_then_game_then_poll() -> None:
+    cat = uuid4()
+    moments = []
+    for i in range(6):
+        m = moment(i, quiz=(i % 2 == 0))
+        m.category_id = cat
+        moments.append(m)
+    page = await feed_page(moments, set(), seed=4, games=catalog_games()[:6], limit=9)
+    kinds = []
+    for item in page["items"]:
+        if item["type"] == "mini_game":
+            kinds.append("game")
+        elif item.get("scoringMode") == "correct_option":
+            kinds.append("trivia")
+        else:
+            kinds.append("poll")
+    assert kinds == ["trivia", "game", "poll", "trivia", "game", "poll", "trivia", "game", "poll"]
 
 
 def test_feed_cursor_round_trips_and_rejects_garbage() -> None:
-    c = FeedCursor(5, 12, 7, 3)
+    c = FeedCursor(5, 12, 7, 3, 9, 1)
     assert FeedCursor.decode(c.encode()) == c
-    for raw in ("", "1.2.3", "1.2.3.x", "1.-2.3.4"):
+    for raw in ("", "1.2.3", "1.2.3.4", "1.2.3.x.5.6", "1.-2.3.4.5.6"):
         assert FeedCursor.decode(raw) is None

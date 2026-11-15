@@ -51,6 +51,7 @@ def _match(**kwargs):
         play_deadline_at=now + timedelta(seconds=184),
         completed_at=None,
         rematch_of_id=None,
+        opponent_is_bot=False,
         created_at=now,
         updated_at=now,
     )

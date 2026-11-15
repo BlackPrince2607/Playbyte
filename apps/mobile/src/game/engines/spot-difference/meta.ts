@@ -8,9 +8,9 @@ export const spotMeta: EngineMeta = {
   scoreDirection: "higher_is_better",
   roundEndDelayMs: 2200,
   variations: [
-    { id: "shapes", title: "Shapes", description: "Neon shapes, tiny changes", categories: ["visual"] },
-    { id: "city", title: "City Night", description: "Windows, stars and skyscrapers", categories: ["visual"] },
-    { id: "garden", title: "Garden", description: "Flowers, clouds and butterflies", categories: ["visual"] },
-    { id: "space", title: "Space", description: "Planets, rings and rockets", categories: ["visual"] },
+    { id: "shapes", title: "Objects", description: "Real indoor scenes with sneaky edits", categories: ["shapes"] },
+    { id: "city", title: "City Night", description: "Real city photos — what changed?", categories: ["city"] },
+    { id: "garden", title: "Garden", description: "Parks and flowers with a few edits", categories: ["garden"] },
+    { id: "space", title: "Space", description: "Stars and nebulae — look carefully", categories: ["space"] },
   ],
 };

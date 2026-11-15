@@ -69,6 +69,7 @@ class User(Base):
     status: Mapped[str] = mapped_column(user_status, default="active")
     date_of_birth: Mapped[date | None] = mapped_column(Date)
     age_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_bot: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -286,6 +287,7 @@ class Match(Base):
     play_deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     rematch_of_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("matches.id"))
+    opponent_is_bot: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

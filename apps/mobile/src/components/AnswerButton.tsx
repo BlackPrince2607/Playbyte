@@ -1,5 +1,14 @@
 import * as Haptics from "expo-haptics";
+import { useEffect } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { prefersReducedMotion } from "../game/ui/feedback";
 import { colors, radius, spacing } from "../theme/colors";
 import { fonts, type } from "../theme/typography";
 
@@ -36,51 +45,74 @@ export function AnswerButton({
 }: Props) {
   const fillColor = selected || correct ? colors.limeFill : colors.pinkFill;
   const borderSelected = selected || correct;
+  const scale = useSharedValue(1);
+  const fillWidth = useSharedValue(0);
+  const reduced = prefersReducedMotion();
+
+  useEffect(() => {
+    const target = percent != null && percent > 0 ? Math.min(100, percent) : selected || correct ? 100 : 0;
+    fillWidth.value = reduced ? target : withTiming(target, { duration: 420, easing: Easing.out(Easing.cubic) });
+  }, [percent, selected, correct, fillWidth, reduced]);
+
+  const pressStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const fillStyle = useAnimatedStyle(() => ({
+    width: `${fillWidth.value}%`,
+    backgroundColor: fillColor,
+  }));
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label ?? undefined}
       disabled={disabled}
+      onPressIn={() => {
+        if (disabled || reduced) return;
+        scale.value = withTiming(0.97, { duration: 70 });
+      }}
+      onPressOut={() => {
+        if (disabled || reduced) return;
+        scale.value = withSpring(1, { damping: 14, stiffness: 280 });
+      }}
       onPress={() => {
         if (disabled) return;
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         onPress?.();
       }}
-      style={({ pressed }) => [
-        styles.btn,
-        tile ? styles.tile : compact ? styles.compact : null,
-        borderSelected && styles.selected,
-        incorrect && styles.incorrect,
-        pressed && !disabled && { borderColor: colors.lime },
-      ]}
     >
-      {percent != null && percent > 0 ? (
-        <View style={[styles.fill, { width: `${Math.min(100, percent)}%`, backgroundColor: fillColor }]} />
-      ) : selected || correct ? (
-        <View style={[styles.fill, { width: "100%", backgroundColor: colors.limeFill }]} />
-      ) : null}
-      {imageUrl ? (
-        <Image source={{ uri: imageUrl }} style={tile ? styles.tileImage : styles.image} resizeMode="contain" />
-      ) : null}
-      <View style={styles.row}>
-        <Text
-          style={[tile ? type.bodyLg : type.button, styles.label, compact && styles.labelCompact, { fontFamily: fonts.bodyBold }]}
-          numberOfLines={2}
-          ellipsizeMode="tail"
-        >
-          {emoji ? `${emoji} ` : ""}
-          {label ?? ""}
-        </Text>
-        <View style={styles.trailing}>
-          {showCheck || selected || correct ? <Text style={styles.check}>✓</Text> : null}
-          {percent != null ? (
-            <Text style={[type.statsSm, { color: colors.lime, fontFamily: fonts.mono }]}>
-              {percent}%
-            </Text>
-          ) : null}
+      <Animated.View
+        style={[
+          styles.btn,
+          tile ? styles.tile : compact ? styles.compact : null,
+          borderSelected && styles.selected,
+          incorrect && styles.incorrect,
+          pressStyle,
+        ]}
+      >
+        {(percent != null && percent > 0) || selected || correct ? (
+          <Animated.View style={[styles.fill, fillStyle]} />
+        ) : null}
+        {imageUrl ? (
+          <Image source={{ uri: imageUrl }} style={tile ? styles.tileImage : styles.image} resizeMode="contain" />
+        ) : null}
+        <View style={styles.row}>
+          <Text
+            style={[tile ? type.bodyLg : type.button, styles.label, compact && styles.labelCompact, { fontFamily: fonts.bodyBold }]}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {emoji ? `${emoji} ` : ""}
+            {label ?? ""}
+          </Text>
+          <View style={styles.trailing}>
+            {showCheck || selected || correct ? <Text style={styles.check}>✓</Text> : null}
+            {percent != null ? (
+              <Text style={[type.statsSm, { color: colors.lime, fontFamily: fonts.mono }]}>
+                {percent}%
+              </Text>
+            ) : null}
+          </View>
         </View>
-      </View>
+      </Animated.View>
     </Pressable>
   );
 }
@@ -95,8 +127,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.margin,
     overflow: "hidden",
     marginBottom: spacing.sm,
-    // Never shrink below a tappable, readable answer row — flexShrink + adjustsFontSizeToFit
-    // was collapsing labels to unreadably tiny dots when the card got crowded.
     minHeight: 52,
     flexShrink: 0,
     justifyContent: "center",

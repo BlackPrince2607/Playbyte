@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { selectItems } from "../../../content/query";
 import { createRng } from "../../../core/rng";
-import { definition, playHeadless, runConformance } from "../../../testing/harness";
+import { definition, packBundle, playHeadless, runConformance } from "../../../testing/harness";
 import { spotMeta } from "../meta";
-import { MIN_REGION, inRegion, makeDifferences } from "./differences";
+import { MIN_REGION, inRegion, selectDiffs } from "./differences";
 import { SpotAction, SpotState, TOUCH_SLOP } from "./engine";
-import { ASPECT, THEMES, hexToHsl, hslToHex } from "./scene";
+import { pairFromItem } from "./pairs";
+import { ASPECT } from "./scene";
 import { spotEngine } from "./spot";
+
+const bundle = packBundle("spot_pair");
 
 const player = (s: SpotState, rng: { chance(p: number): boolean; pick<T>(x: readonly T[]): T; next(): number }): SpotAction | null => {
   if (s.roundOver) return null;
@@ -23,6 +27,7 @@ for (const v of spotMeta.variations) {
     name: `spot_difference/${v.id}`,
     engine: spotEngine,
     definition: definition({ engine: "spot_difference", variation: v.id }),
+    content: bundle,
     pickAction: player,
     stepMs: 2000,
     invalidAction: () => ({ type: "tap", x: 2, y: 0.1 }),
@@ -32,57 +37,63 @@ for (const v of spotMeta.variations) {
 
 const params = (lvl: number) => spotEngine.difficulty.paramsFor(lvl);
 
-describe("DifferenceGenerator", () => {
-  it("produces the requested number of separated, in-bounds differences for every theme and level", () => {
-    for (const theme of Object.keys(THEMES)) {
+describe("spot_pair content", () => {
+  it("every variation has enough pairs and every pair parses", () => {
+    for (const item of bundle.items) assert.ok(pairFromItem(item), item.id);
+    for (const v of spotMeta.variations) {
+      const [need] = spotEngine.contentNeeds(definition({ engine: "spot_difference", variation: v.id }));
+      assert.ok(selectItems(bundle, need).length >= 3, v.id);
+    }
+  });
+
+  it("rejects malformed pairs", () => {
+    const base = bundle.items[0];
+    assert.equal(pairFromItem({ ...base, media: [], attributes: { ...base.attributes, leftUrl: "", rightUrl: "" } }), null);
+    assert.equal(pairFromItem({ ...base, attributes: { ...base.attributes, diffs: [] } }), null);
+    assert.equal(
+      pairFromItem({
+        ...base,
+        attributes: {
+          ...base.attributes,
+          diffs: [
+            { id: "a", x: 0.2, y: 0.2, hw: 0.06, hh: 0.06 },
+            { id: "b", x: 0.21, y: 0.2, hw: 0.06, hh: 0.06 },
+            { id: "c", x: 0.8, y: 0.4, hw: 0.06, hh: 0.06 },
+          ],
+        },
+      }),
+      null,
+    );
+  });
+});
+
+describe("selectDiffs", () => {
+  it("returns the requested count of authored regions for every level", () => {
+    for (const item of bundle.items) {
+      const pair = pairFromItem(item)!;
       for (const lvl of [0, 0.5, 1]) {
-        let total = 0;
-        for (let i = 0; i < 15; i++) {
-          const rng = createRng(`${theme}-${lvl}-${i}`);
-          const p = params(lvl);
-          const { left, right, diffs } = makeDifferences(THEMES[theme](rng, p.shapeCount), p, rng);
-          total += diffs.length;
-          for (const d of diffs) {
-            assert.ok(d.hw >= MIN_REGION && d.hh >= MIN_REGION);
-            assert.ok(d.x >= 0 && d.x <= 1 && d.y >= 0 && d.y <= ASPECT);
-          }
-          for (let a = 0; a < diffs.length; a++)
-            for (let b = a + 1; b < diffs.length; b++) {
-              const [p, q] = [diffs[a], diffs[b]];
-              assert.ok(Math.abs(p.x - q.x) >= p.hw + q.hw - 1e-9 || Math.abs(p.y - q.y) >= p.hh + q.hh - 1e-9, `${theme} regions overlap`);
-            }
-          for (const sh of [...left.shapes, ...right.shapes]) {
-            assert.ok(sh.x - sh.hw >= -1e-9 && sh.x + sh.hw <= 1 + 1e-9, `${theme} shape out of bounds`);
-          }
+        const p = params(lvl);
+        const rng = createRng(`${item.id}-${lvl}`);
+        const diffs = selectDiffs(pair.diffs, p, rng);
+        assert.equal(diffs.length, Math.min(p.diffCount, pair.diffs.length));
+        for (const d of diffs) {
+          assert.ok(d.hw >= MIN_REGION && d.hh >= MIN_REGION);
+          assert.ok(d.x >= 0 && d.x <= 1 && d.y >= 0 && d.y <= ASPECT);
         }
-        assert.ok(total / 15 >= params(lvl).diffCount - 1, `${theme}@${lvl}: avg ${total / 15}`);
       }
-    }
-  });
-
-  it("the two pictures really differ where the regions are", () => {
-    const rng = createRng("real");
-    const p = params(0.5);
-    const { left, right, diffs } = makeDifferences(THEMES.shapes(rng, p.shapeCount), p, rng);
-    const sig = (s: { shapes: { id: number; x: number; y: number; hw: number; hh: number; rot: number; color: string; kind: string }[] }, id: number) =>
-      JSON.stringify(s.shapes.find((x) => x.id === id) ?? null);
-    for (const d of diffs) {
-      const id = Number(d.id.slice(1));
-      assert.notEqual(sig(left, id), sig(right, id), d.kind);
-    }
-  });
-
-  it("colour helpers round-trip", () => {
-    for (const hex of ["#ff4d8d", "#c6ff3d", "#1b1440", "#ffffff"]) {
-      const [h, s, l] = hexToHsl(hex);
-      assert.equal(hslToHex(h, s, l), hex);
     }
   });
 });
 
 describe("spot the difference rules", () => {
   const start = (extra: Record<string, unknown> = {}) =>
-    playHeadless({ engine: spotEngine, definition: definition({ engine: "spot_difference", variation: "shapes", ...extra }), pickAction: () => null, stopAfter: 0 });
+    playHeadless({
+      engine: spotEngine,
+      definition: definition({ engine: "spot_difference", variation: "shapes", ...extra }),
+      content: bundle,
+      pickAction: () => null,
+      stopAfter: 0,
+    });
 
   it("tapping inside a region finds it; tapping again is harmless", () => {
     const { runner } = start();
@@ -137,5 +148,14 @@ describe("spot the difference rules", () => {
     runner.tick();
     assert.equal(runner.getSnapshot().status, "roundOver");
     assert.equal(runner.getSnapshot().state.breakdown.clear, undefined);
+  });
+
+  it("rounds expose https photo urls and side overlays", () => {
+    const { runner } = start();
+    const s = runner.getSnapshot().state;
+    assert.match(s.leftUrl, /^https:\/\//);
+    assert.match(s.rightUrl, /^https:\/\//);
+    assert.ok(s.overlays.length >= 1);
+    assert.ok(s.overlays.every((o) => s.diffs.some((d) => d.id === o.id)));
   });
 });

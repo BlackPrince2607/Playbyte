@@ -1,6 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Children, Fragment, isValidElement, type ComponentProps } from "react";
+import { Children, Fragment, isValidElement, useEffect, type ComponentProps } from "react";
 import { Pressable, StyleSheet, Switch, Text, View, ViewStyle } from "react-native";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import { prefersReducedMotion } from "../game/ui/feedback";
 import { colors, radius, spacing } from "../theme/colors";
 import { fonts, type } from "../theme/typography";
 
@@ -131,22 +133,36 @@ export function ResultBar({
   label,
   percent,
   highlight,
+  delayMs = 0,
 }: {
   label: string;
   percent: number;
   highlight?: boolean;
+  /** Stagger entrance when rendering a list of bars. */
+  delayMs?: number;
 }) {
+  const width = useSharedValue(0);
+  const target = Math.min(100, Math.max(0, percent));
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      width.value = target;
+      return;
+    }
+    width.value = withDelay(
+      delayMs,
+      withTiming(target, { duration: 420, easing: Easing.out(Easing.cubic) }),
+    );
+  }, [target, delayMs, width]);
+
+  const fillStyle = useAnimatedStyle(() => ({
+    width: `${width.value}%`,
+    backgroundColor: highlight ? colors.pink : "rgba(65,48,52,0.9)",
+  }));
+
   return (
     <View style={styles.barTrack}>
-      <View
-        style={[
-          styles.barFill,
-          {
-            width: `${Math.min(100, Math.max(0, percent))}%`,
-            backgroundColor: highlight ? colors.pink : "rgba(65,48,52,0.9)",
-          },
-        ]}
-      />
+      <Animated.View style={[styles.barFill, fillStyle]} />
       <View style={styles.barLabels}>
         <Text
           style={[

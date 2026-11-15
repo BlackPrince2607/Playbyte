@@ -8,6 +8,21 @@ export const MOMENT_REPEAT_GAP = 20;
 /** Cards kept loaded ahead of the viewer; a feed page takes a few swipes to arrive, so fetching starts this early. */
 export const FEED_PREFETCH_AHEAD = 8;
 
+/**
+ * Push polls/quizzes the viewer already answered to the end so reopen / cache paint
+ * leads with fresh cards. Games stay with the unanswered block (relative order kept).
+ */
+export function prioritizeUnansweredFeed(items: FeedItem[]): FeedItem[] {
+  const head: FeedItem[] = [];
+  const answered: FeedItem[] = [];
+  for (const item of items) {
+    if (item.type === "moment" && item.myOptionId) answered.push(item);
+    else head.push(item);
+  }
+  if (!answered.length) return items;
+  return [...head, ...answered];
+}
+
 /** Appends the next feed page: moments shown within the last few items are skipped, and a game never follows itself. */
 export function appendFeedPage(current: FeedItem[], page: FeedItem[]): FeedItem[] {
   const seenMoments = new Set(

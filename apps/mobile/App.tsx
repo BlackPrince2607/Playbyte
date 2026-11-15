@@ -35,9 +35,14 @@ function AnalyticsRoot({ children }: { children: ReactNode }) {
 
 export default function App() {
   useEffect(() => {
-    void initMetaSdk();
+    // Defer Meta until after first paint so Android FacebookInitProvider can finish
+    // sdkInitialize before react-native-fbsdk-next is required (see metaSdk.ts).
+    const t = setTimeout(() => {
+      void initMetaSdk();
+    }, 0);
     setMusicScene("home");
     void startSound();
+    return () => clearTimeout(t);
   }, []);
 
   const [loaded, error] = useFonts({

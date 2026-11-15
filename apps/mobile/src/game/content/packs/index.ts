@@ -1,5 +1,5 @@
 /**
- * Bundled fallback packs (text/emoji only, ≤300 KB total) so games work offline and on first launch.
+ * Bundled fallback packs (JSON only — media stays on https URLs) so games work on first launch.
  * Loaded lazily; the same JSON files seed the backend via backend/scripts/import_content.py.
  */
 type PackModule = { items?: unknown; default?: { items?: unknown } };
@@ -13,7 +13,9 @@ export const FALLBACK_PACKS: Record<string, () => Promise<unknown>> = {
   emoji_movie: () => import("./emoji_movie.json").then(items),
   emoji_phrase: () => import("./emoji_phrase.json").then(items),
   emoji_word: () => import("./emoji_word.json").then(items),
+  emoji_song: () => import("./emoji_song.json").then(items),
   word_group: () => import("./word_group.json").then(items),
   fact: () => import("./fact.json").then(items),
   choice_pair: () => import("./choice_pair.json").then(items),
+  spot_pair: () => import("./spot_pair.json").then(items),
 };

@@ -1,7 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import * as Haptics from "expo-haptics";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLanguage } from "../context/LanguageContext";
+import { prefersReducedMotion } from "../game/ui/feedback";
 import type { StringKey } from "../i18n/strings";
 import { colors, radius, spacing } from "../theme/colors";
 import { type } from "../theme/typography";
@@ -38,9 +40,17 @@ export function BottomNav({ active, onChange }: Props) {
             key={tab.key}
             accessibilityRole="button"
             accessibilityState={{ selected: on }}
-            onPress={() => onChange(tab.key)}
-            style={[styles.tab, on && styles.tabOn]}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onChange(tab.key);
+            }}
+            style={({ pressed }) => [
+              styles.tab,
+              on && styles.tabOn,
+              pressed && !prefersReducedMotion() && { transform: [{ scale: 0.94 }], opacity: 0.92 },
+            ]}
           >
+            {on ? <View style={styles.activeBar} /> : null}
             <Ionicons name={on ? tab.iconOn : tab.icon} size={22} color={on ? colors.lime : colors.lilac} />
             <Text
               style={[
@@ -76,6 +86,17 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: radius.md,
+    position: "relative",
+    overflow: "hidden",
   },
   tabOn: { backgroundColor: colors.cardAlt },
+  activeBar: {
+    position: "absolute",
+    top: 0,
+    left: 18,
+    right: 18,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: colors.lime,
+  },
 });

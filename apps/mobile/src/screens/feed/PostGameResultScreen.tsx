@@ -453,8 +453,8 @@ export function PostGameResultScreen({
         {optionBreakdown && optionBreakdown.length > 0 ? (
           <View style={styles.panel}>
             <Text style={[styles.panelTitle, { fontFamily: ui.bodyBold }]}>{t("howCrowdVoted")}</Text>
-            {optionBreakdown.map((o) => (
-              <ResultBar key={o.label} label={o.label} percent={o.percent} highlight={o.highlight} />
+            {optionBreakdown.map((o, i) => (
+              <ResultBar key={o.label} label={o.label} percent={o.percent} highlight={o.highlight} delayMs={i * 60} />
             ))}
           </View>
         ) : null}

@@ -1,4 +1,13 @@
+import { useEffect } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+import { prefersReducedMotion } from "../game/ui/feedback";
 import { colors } from "../theme/colors";
 import { type } from "../theme/typography";
 
@@ -22,9 +31,25 @@ export function MajaLogo({ size = "md" }: { size?: keyof typeof HEIGHTS }) {
 }
 
 export function LivePill({ count, label }: { count?: number; label?: string }) {
+  const pulse = useSharedValue(1);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    pulse.value = withRepeat(
+      withSequence(withTiming(0.45, { duration: 700 }), withTiming(1, { duration: 700 })),
+      -1,
+      false,
+    );
+  }, [pulse]);
+
+  const dotStyle = useAnimatedStyle(() => ({
+    opacity: pulse.value,
+    transform: [{ scale: 0.85 + pulse.value * 0.15 }],
+  }));
+
   return (
     <View style={styles.pill}>
-      <View style={styles.dot} />
+      <Animated.View style={[styles.dot, dotStyle]} />
       <Text style={[type.statsSm, { color: colors.lime, fontSize: 10, letterSpacing: 0.8 }]}>
         {label ?? (count !== undefined ? `${count} PLAYING NOW` : "LIVE")}
       </Text>

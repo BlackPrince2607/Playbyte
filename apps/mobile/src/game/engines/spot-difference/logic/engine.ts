@@ -1,3 +1,5 @@
+import { selectItems } from "../../../content/query";
+import { samplePreferFresh, seedUsedFromRecent } from "../../../content/recent";
 import type { GameDefinition } from "../../../core/definition";
 import type { EngineMeta, GameEngine, ReduceResult } from "../../../core/engine";
 import { Json, Result, err, invalid, ok, valid } from "../../../core/types";
@@ -12,8 +14,10 @@ import {
   scoreAnswer,
   timeRemainingBonus,
 } from "../../../scoring";
-import { Difference, SpotParams, inRegion, makeDifferences } from "./differences";
-import { ASPECT, Scene, THEMES } from "./scene";
+import { pickItem } from "../../quiz/logic/distractors";
+import { Difference, SpotParams, inRegion, selectDiffs } from "./differences";
+import { SpotOverlay, SpotPair, pairFromItem } from "./pairs";
+import { ASPECT } from "./scene";
 
 export const SPOT_DIMENSIONS: (DimensionSpec & { key: keyof SpotParams })[] = [
   { key: "diffCount", label: "Differences", easy: 3, hard: 6 },
@@ -28,10 +32,12 @@ export const CLEAR_BONUS = 50;
 /** Extra tolerance around each hit region for finger imprecision. */
 export const TOUCH_SLOP = 0.015;
 
+const POOL_CAP = 40;
+
 export type SpotAction = { type: "tap"; x: number; y: number };
 
 export type SpotState = {
-  v: 1;
+  v: 2;
   variation: string;
   total: number;
   round: number;
@@ -41,9 +47,14 @@ export type SpotState = {
   attempts: number;
   misses: number;
   lives: number | null;
-  left: Scene;
-  right: Scene;
+  pool: SpotPair[];
+  used: string[];
+  pairId: string | null;
+  leftUrl: string;
+  rightUrl: string;
+  aspect: number;
   diffs: Difference[];
+  overlays: SpotOverlay[];
   found: string[];
   revealed: string[];
   roundStart: number;
@@ -63,10 +74,26 @@ export type SpotState = {
 const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
 
 function isSpotState(x: unknown): x is SpotState {
-  if (!isObj(x) || x.v !== 1) return false;
-  const nums = ["total", "round", "score", "streak", "correct", "attempts", "misses", "roundStart", "roundEnd", "roundLimitMs", "level"];
+  if (!isObj(x) || x.v !== 2) return false;
+  const nums = ["total", "round", "score", "streak", "correct", "attempts", "misses", "roundStart", "roundEnd", "roundLimitMs", "level", "aspect"];
   if (!nums.every((k) => typeof x[k] === "number" && Number.isFinite(x[k] as number))) return false;
-  return isObj(x.left) && isObj(x.right) && Array.isArray(x.diffs) && Array.isArray(x.found) && isObj(x.cfg) && typeof x.roundOver === "boolean";
+  return (
+    typeof x.leftUrl === "string" &&
+    typeof x.rightUrl === "string" &&
+    Array.isArray(x.diffs) &&
+    Array.isArray(x.overlays) &&
+    Array.isArray(x.found) &&
+    Array.isArray(x.pool) &&
+    Array.isArray(x.used) &&
+    isObj(x.cfg) &&
+    typeof x.roundOver === "boolean"
+  );
+}
+
+function categoriesFor(def: GameDefinition, meta: EngineMeta): string[] | undefined {
+  if (def.content?.categories?.length) return def.content.categories;
+  if (def.category) return [def.category];
+  return meta.variations.find((v) => v.id === def.variation)?.categories;
 }
 
 export function createSpotEngine(meta: EngineMeta, defaultRounds = 3): GameEngine<SpotState, SpotAction, SpotParams> {
@@ -91,20 +118,23 @@ export function createSpotEngine(meta: EngineMeta, defaultRounds = 3): GameEngin
     difficulty,
 
     checkDefinition(def) {
-      if (!THEMES[def.variation] || !meta.variations.some((v) => v.id === def.variation)) return err(`spot_difference: unknown variation "${def.variation}"`);
+      if (!meta.variations.some((v) => v.id === def.variation)) return err(`spot_difference: unknown variation "${def.variation}"`);
       return ok(def);
     },
 
-    contentNeeds: () => [],
+    contentNeeds: (def) => [{ types: ["spot_pair"], categories: categoriesFor(def, meta), min: 3 }],
 
     maxScore: (def) => rounds(def) * (maxDiffs * maxAnswerPoints(cfgOf(def)) + CLEAR_BONUS),
 
-    init(ctx) {
-      const empty: Scene = { bg: "#000000", shapes: [] };
+    init(ctx, rng) {
+      const items = selectItems(ctx.content, { types: ["spot_pair"], categories: categoriesFor(ctx.def, meta) });
+      const pairs = items.map(pairFromItem).filter((p): p is SpotPair => p !== null);
+      const pool = samplePreferFresh(pairs, ctx.avoidIds ?? [], rng, POOL_CAP);
+      const total = Math.min(rounds(ctx.def), Math.max(1, pool.length));
       return {
-        v: 1,
+        v: 2,
         variation: ctx.def.variation,
-        total: rounds(ctx.def),
+        total,
         round: 0,
         score: 0,
         streak: 0,
@@ -112,9 +142,18 @@ export function createSpotEngine(meta: EngineMeta, defaultRounds = 3): GameEngin
         attempts: 0,
         misses: 0,
         lives: ctx.def.lives ?? null,
-        left: empty,
-        right: empty,
+        pool,
+        used: seedUsedFromRecent(
+          pool.map((p) => p.id),
+          ctx.avoidIds ?? [],
+          total,
+        ),
+        pairId: null,
+        leftUrl: "",
+        rightUrl: "",
+        aspect: ASPECT,
         diffs: [],
+        overlays: [],
         found: [],
         revealed: [],
         roundStart: ctx.now,
@@ -133,22 +172,30 @@ export function createSpotEngine(meta: EngineMeta, defaultRounds = 3): GameEngin
     },
 
     generateRound(s, { rng, params, level, now }) {
-      let best: ReturnType<typeof makeDifferences> | null = null;
-      for (let attempt = 0; attempt < 6; attempt++) {
-        const base = THEMES[s.variation](rng, params.shapeCount);
-        const made = makeDifferences(base, params, rng);
-        if (!best || made.diffs.length > best.diffs.length) best = made;
-        if (made.diffs.length >= params.diffCount) break;
-      }
+      if (!s.pool.length) throw new Error("spot_difference: no photo pairs in pool");
+      const picked = pickItem(
+        s.pool.map((p) => ({ id: p.id, answer: p.title, difficulty: p.difficulty, clues: [] })),
+        new Set(s.used),
+        level,
+        rng,
+      );
+      const pair = picked ? s.pool.find((p) => p.id === picked.id)! : rng.pick(s.pool);
+      const diffs = selectDiffs(pair.diffs, params, rng);
+      const active = new Set(diffs.map((d) => d.id));
+      const overlays = pair.overlays.filter((o) => active.has(o.id));
       const limit = params.timeLimitMs;
       return {
         ...s,
         round: s.round + 1,
-        left: best!.left,
-        right: best!.right,
-        diffs: best!.diffs,
+        pairId: pair.id,
+        leftUrl: pair.leftUrl,
+        rightUrl: pair.rightUrl,
+        aspect: pair.aspect,
+        diffs,
+        overlays,
         found: [],
         revealed: [],
+        used: [...s.used.filter((id) => id !== pair.id), pair.id].slice(-Math.max(1, s.pool.length - 1)),
         roundStart: now,
         roundEnd: now + limit,
         roundLimitMs: limit,
@@ -164,7 +211,8 @@ export function createSpotEngine(meta: EngineMeta, defaultRounds = 3): GameEngin
     validate(s, a) {
       if (s.roundOver) return invalid("round over");
       if (!a || a.type !== "tap" || typeof a.x !== "number" || typeof a.y !== "number") return invalid("bad action");
-      if (!Number.isFinite(a.x) || !Number.isFinite(a.y) || a.x < 0 || a.x > 1 || a.y < 0 || a.y > ASPECT) return invalid("outside picture");
+      const aspect = s.aspect || ASPECT;
+      if (!Number.isFinite(a.x) || !Number.isFinite(a.y) || a.x < 0 || a.x > 1 || a.y < 0 || a.y > aspect) return invalid("outside picture");
       return valid;
     },
 

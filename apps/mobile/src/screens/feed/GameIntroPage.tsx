@@ -1,6 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { FeedGame, isApiError } from "../../api";
 import { FriendPickerModal } from "../../components/FriendPickerModal";
 import { PrimaryButton } from "../../components/PrimaryButton";
@@ -8,6 +9,7 @@ import { LivePill } from "../../components/MajaLogo";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { prefersReducedMotion } from "../../game/ui/feedback";
 import { prefetchGame } from "../../game/platform/prefetchGame";
 import { localizeGame } from "../../i18n/games";
 import { fill } from "../../i18n/strings";
@@ -15,6 +17,19 @@ import { createChallenge } from "../../lib/challenges";
 import { lineHeightFor } from "../../lib/promptSize";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
+
+const TAG_EMOJI: Record<string, string> = {
+  ARCADE: "🎮",
+  PUZZLE: "🧩",
+  TRIVIA: "💡",
+  WORD: "🔤",
+  MOVIES: "🎬",
+  MUSIC: "🎵",
+  SOCIAL: "✨",
+  FOOD: "🍜",
+  SPORTS: "🏏",
+  GAME: "🎯",
+};
 
 type Props = {
   item: FeedGame;
@@ -83,7 +98,9 @@ export function GameIntroPage({ item: raw, height, onStart, onChallengeStart, on
   const [pickerOpen, setPickerOpen] = useState(false);
   const [busyFriend, setBusyFriend] = useState<string | null>(null);
   const item = localizeGame(raw, language);
-  const tag = tagFrom(item) === "GAME" ? t("gameTag") : tagFrom(item);
+  const rawTag = tagFrom(raw);
+  const tag = rawTag === "GAME" ? t("gameTag") : tagFrom(item);
+  const artEmoji = TAG_EMOJI[rawTag] ?? "🎯";
   const secs = timerSec(item);
   const titleSize = 28;
 
@@ -110,11 +127,19 @@ export function GameIntroPage({ item: raw, height, onStart, onChallengeStart, on
     <View style={[styles.page, { height }]}>
       <LinearGradient colors={["rgba(198,255,61,0.18)", "transparent", colors.ink]} style={StyleSheet.absoluteFill} />
       <View style={styles.glowOrb} />
-      <View style={styles.card}>
+      <Animated.View
+        entering={isActive && !prefersReducedMotion() ? FadeInDown.duration(280) : undefined}
+        style={styles.card}
+      >
         <View style={styles.artBand}>
-          <Text style={[type.hero, { color: colors.lime, fontSize: 42, opacity: 0.35 }]}>
-            {item.title.slice(0, 1).toUpperCase()}
-          </Text>
+          <LinearGradient
+            colors={["rgba(255,77,141,0.22)", "rgba(198,255,61,0.12)", "transparent"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={styles.artEmoji}>{artEmoji}</Text>
+          <Text style={[type.hero, styles.artInitial]}>{item.title.slice(0, 1).toUpperCase()}</Text>
         </View>
         <View style={styles.tagRow}>
           <View style={styles.tag}>
@@ -175,7 +200,7 @@ export function GameIntroPage({ item: raw, height, onStart, onChallengeStart, on
             style={{ marginTop: spacing.sm }}
           />
         ) : null}
-      </View>
+      </Animated.View>
       <FriendPickerModal
         visible={pickerOpen}
         friends={friends}
@@ -217,7 +242,7 @@ const styles = StyleSheet.create({
     maxHeight: "100%",
   },
   artBand: {
-    height: 88,
+    height: 96,
     marginHorizontal: -spacing.lg,
     marginTop: -spacing.lg,
     marginBottom: spacing.sm,
@@ -226,6 +251,16 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.line,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
+  },
+  artEmoji: { fontSize: 36, marginBottom: 2 },
+  artInitial: {
+    position: "absolute",
+    right: 18,
+    bottom: 8,
+    color: colors.lime,
+    fontSize: 48,
+    opacity: 0.18,
   },
   tagRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: spacing.sm },
   tag: {

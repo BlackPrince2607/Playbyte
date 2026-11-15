@@ -15,6 +15,8 @@ const ENGINE_MUSIC: Record<string, MusicKey> = {
   tap: "arcade",
   tap_dont_tap: "arcade",
   math_rush: "arcade",
+  memory: "think",
+  lane_dash: "arcade",
 };
 
 /** Background track for a game engine; unknown engines get the general game track. */

@@ -25,5 +25,5 @@ Players also want to **match with other online players** they do not know. The P
 
 - Friend challenges stay friend-gated; online matches are a sibling domain (`matches` / `matchmaking_tickets`) that can share serialization helpers with challenges.
 - Fairness inherits seed determinism + existing play plausibility checks; anti-cheat stays server-side score acceptance, not client trust.
-- Cold queues need a product policy (wait, expand game pool, or cancel) — bots/ghost opponents are **not** default.
+- Cold queues fill with seeded bot opponents after **5s** if no human pair is found. Bots are real `users` rows (`is_bot`) with normal profile fields; client match payloads never expose bot flags.
 - Participation stats / economy grants for matched plays must be product-gated so duel outcomes do not redefine the participation-first feed.

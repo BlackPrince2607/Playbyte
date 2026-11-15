@@ -175,11 +175,16 @@ async def build_feed(
     rng: random.Random | None = None,
     lang: str | None = None,
 ) -> dict:
-    """One page of the endless feed: live moments ranked with unanswered first, then recycled answered
-    cards, interleaved with games. The cursor continues (and reshuffles once every moment has been shown)."""
+    """One page of the endless feed in priority mix order: trivia → game → poll → repeat.
+
+    Live moments are ranked unanswered-first within each kind; categories round-robin so the feed
+    does not dump one topic then the next. The cursor continues (and reshuffles when a stream ends).
+    """
     rng = rng or random.Random()
     new_seed = lambda: rng.getrandbits(31)  # noqa: E731
-    position = (cursor and FeedCursor.decode(cursor)) or FeedCursor(new_seed(), 0, new_seed(), 0)
+    position = (cursor and FeedCursor.decode(cursor)) or FeedCursor(
+        new_seed(), 0, new_seed(), 0, new_seed(), 0
+    )
     interests = await interest_ids(session, user_id, guest_id)
     windows = await active_window_ids(session)
     loaded = await load_live_moments(session, lang=lang)
@@ -206,39 +211,47 @@ async def build_feed(
         for m in sorted(moments, key=lambda m: str(m.id))
     }
 
-    def rank_moments(seed: int) -> list[RankedItem]:
-        """Mix preference categories and card kinds (quiz vs poll) so the feed does not feel samey."""
+    def _moment_fmt(m: Moment) -> str:
+        return "quiz" if getattr(m, "scoring_mode", None) == "correct_option" else "poll"
+
+    def rank_format(seed: int, fmt: str) -> list[RankedItem]:
+        """Category round-robin for one card kind (quiz or poll).
+
+        Unanswered cards always form a full first pass; answered cards only appear after every
+        unanswered moment of this kind is queued. Jitter is assigned once per moment id (stable mid
+        order) so a mid-feed cursor stays coherent when the answered set grows between pages.
+        """
         jitter = random.Random(seed)
-        # category -> format -> ranked items
-        by_cat_fmt: dict[str, dict[str, list[RankedItem]]] = {}
-        for mid, base in base_scores.items():
-            m = by_id[UUID(mid)]
-            fmt = "quiz" if getattr(m, "scoring_mode", None) == "correct_option" else "poll"
-            item = RankedItem(
-                kind="moment",
-                id=mid,
-                score=base + jitter.uniform(0, MOMENT_JITTER),
-            )
-            by_cat_fmt.setdefault(str(m.category_id), {}).setdefault(fmt, []).append(item)
-        for formats in by_cat_fmt.values():
-            for rows in formats.values():
+        scored = [
+            RankedItem(kind="moment", id=mid, score=base + jitter.uniform(0, MOMENT_JITTER))
+            for mid, base in base_scores.items()
+            if _moment_fmt(by_id[UUID(mid)]) == fmt
+        ]
+
+        def interleave(pool: list[RankedItem]) -> list[RankedItem]:
+            if not pool:
+                return []
+            by_cat: dict[str, list[RankedItem]] = {}
+            for item in pool:
+                m = by_id[UUID(item.id)]
+                by_cat.setdefault(str(m.category_id), []).append(item)
+            for rows in by_cat.values():
                 rows.sort(key=lambda x: x.score, reverse=True)
-        cat_ids = list(by_cat_fmt.keys())
-        jitter.shuffle(cat_ids)
-        fmt_order = ["quiz", "poll"]
-        jitter.shuffle(fmt_order)
-        ranked: list[RankedItem] = []
-        # Outer: categories; inner: alternate quiz/poll so picks and kinds both rotate.
-        while any(any(rows) for formats in by_cat_fmt.values() for rows in formats.values()):
-            for c in cat_ids:
-                formats = by_cat_fmt.get(c) or {}
-                for fmt in fmt_order:
-                    rows = formats.get(fmt) or []
+            # Seed-only shuffle so tier size (answered vs not) does not reshuffle categories.
+            mix = random.Random(seed)
+            cat_ids = list(by_cat.keys())
+            mix.shuffle(cat_ids)
+            ranked: list[RankedItem] = []
+            while any(by_cat[c] for c in cat_ids):
+                for c in cat_ids:
+                    rows = by_cat[c]
                     if rows:
                         ranked.append(rows.pop(0))
-                        break
-            fmt_order.reverse()
-        return ranked
+            return ranked
+
+        unanswered = [item for item in scored if UUID(item.id) not in answered]
+        already = [item for item in scored if UUID(item.id) in answered]
+        return interleave(unanswered) + interleave(already)
 
     games = list(
         await session.scalars(
@@ -251,12 +264,12 @@ async def build_feed(
         return [RankedItem(kind="mini_game", id=g.key, score=float(100 - g.sort_order)) for g in rotated]
 
     ordered, next_cursor = fill_page(
-        rank_moments=rank_moments,
+        rank_quizzes=lambda s: rank_format(s, "quiz"),
+        rank_polls=lambda s: rank_format(s, "poll"),
         rank_games=rank_games,
         cursor=position,
         exclude=set(),
         limit=limit,
-        cadence=4 if windows else 2,
         new_seed=new_seed,
     )
 

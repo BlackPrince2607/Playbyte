@@ -2,13 +2,37 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import type { FeedGame, FeedItem, FeedMoment } from "../api";
-import { MOMENT_REPEAT_GAP, appendFeedPage, continueFeedRefresh, feedKeys } from "./feedPages";
+import {
+  MOMENT_REPEAT_GAP,
+  appendFeedPage,
+  continueFeedRefresh,
+  feedKeys,
+  prioritizeUnansweredFeed,
+} from "./feedPages";
 
-const moment = (id: string) => ({ type: "moment", id }) as FeedMoment;
+const moment = (id: string, myOptionId?: string) =>
+  ({ type: "moment", id, myOptionId: myOptionId ?? null }) as FeedMoment;
 const game = (key: string) => ({ type: "mini_game", key }) as FeedGame;
 const ids = (items: FeedItem[]) => items.map((i) => (i.type === "moment" ? i.id : i.key));
 
 describe("feed pages", () => {
+  it("sinks answered polls behind unanswered cards and games", () => {
+    const next = prioritizeUnansweredFeed([
+      moment("played-a", "opt"),
+      game("tap"),
+      moment("fresh"),
+      moment("played-b", "opt"),
+      game("maze"),
+      moment("fresh-2"),
+    ]);
+    assert.deepEqual(ids(next), ["tap", "fresh", "maze", "fresh-2", "played-a", "played-b"]);
+  });
+
+  it("leaves an all-unanswered feed unchanged", () => {
+    const items = [moment("a"), game("tap"), moment("b")];
+    assert.equal(prioritizeUnansweredFeed(items), items);
+  });
+
   it("appends new moments and games after the current page", () => {
     const next = appendFeedPage([moment("a"), game("tap")], [moment("b"), game("maze")]);
     assert.deepEqual(ids(next), ["a", "tap", "b", "maze"]);

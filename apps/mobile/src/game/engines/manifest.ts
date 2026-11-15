@@ -7,8 +7,10 @@ import { emojiGuessMeta } from "./emoji-guess/meta";
 import { factFakeMeta } from "./fact-fake/meta";
 import { guessMeta } from "./guess/meta";
 import { engineRegistry } from "./index";
+import { laneDashMeta } from "./lane-dash/meta";
 import { mathRushMeta } from "./math-rush/meta";
 import { mazeMeta } from "./maze/meta";
+import { memoryMeta } from "./memory/meta";
 import { oddOneOutMeta } from "./odd-one-out/meta";
 import { spotMeta } from "./spot-difference/meta";
 import { tapDontTapMeta } from "./tap-dont-tap/meta";
@@ -33,6 +35,8 @@ const ENGINES: { meta: EngineMeta; load: () => Promise<{ default: EngineModule }
   { meta: connectDotsMeta, load: () => import("./connect-dots") },
   { meta: arrowMeta, load: () => import("./arrow-puzzle") },
   { meta: mathRushMeta, load: () => import("./math-rush") },
+  { meta: memoryMeta, load: () => import("./memory") },
+  { meta: laneDashMeta, load: () => import("./lane-dash") },
 ];
 
 let registered = false;

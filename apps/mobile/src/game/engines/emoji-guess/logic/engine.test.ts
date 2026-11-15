@@ -25,9 +25,9 @@ for (const variation of LIVE) {
 }
 
 describe("emoji guess", () => {
-  it("ships movie, phrase and word; gates song, celebrity and brand", () => {
-    assert.deepEqual(LIVE, ["movie", "phrase", "word"]);
-    for (const v of ["song", "celebrity", "brand"]) {
+  it("ships movie, phrase, word and song; gates celebrity and brand", () => {
+    assert.deepEqual(LIVE, ["movie", "phrase", "word", "song"]);
+    for (const v of ["celebrity", "brand"]) {
       assert.equal(emojiGuessEngine.checkDefinition(definition({ engine: "emoji_guess", variation: v })).ok, false);
     }
   });

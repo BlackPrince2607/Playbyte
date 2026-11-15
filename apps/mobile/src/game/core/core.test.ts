@@ -106,7 +106,7 @@ describe("registry", () => {
 
 describe("resolveGame", () => {
   const deps = {
-    hasEngine: (id: string) => id === "guess",
+    hasEngine: (id: string) => id === "guess" || id === "lane_dash" || id === "memory",
     replacements: { flag_rush: { engine: "guess", variation: "flag", roundCount: 10 } },
   };
 
@@ -121,11 +121,23 @@ describe("resolveGame", () => {
     if (r.kind === "sdk") assert.equal(r.definition.variation, "flag");
   });
 
-  it("treats retired off-map games and unknown engines as unavailable", () => {
-    assert.equal(resolveGame({ key: "lane_dash", title: "t", blurb: "" }, deps).kind, "unavailable");
+  it("treats bare legacy keys and unknown engines as unavailable", () => {
+    assert.equal(resolveGame({ key: "triple_match", title: "t", blurb: "" }, deps).kind, "unavailable");
     assert.equal(resolveGame({ key: "nope", title: "t", blurb: "" }, deps).kind, "unavailable");
+    // maze is not in this stub's hasEngine list
     assert.equal(resolveGame({ key: "x", title: "t", blurb: "", engine: "maze", variation: "exit" }, deps).kind, "unavailable");
     assert.equal(resolveGame({ key: "x", title: "t", blurb: "", engine: "guess" }, deps).kind, "unavailable");
+  });
+
+  it("resolves lane_dash and memory when SDK engine fields are present", () => {
+    assert.equal(
+      resolveGame({ key: "lane_dash", title: "t", blurb: "", engine: "lane_dash", variation: "classic", config: { engine: "lane_dash", variation: "classic" } }, deps).kind,
+      "sdk",
+    );
+    assert.equal(
+      resolveGame({ key: "find_pair", title: "t", blurb: "", engine: "memory", variation: "pairs", config: { engine: "memory", variation: "pairs" } }, deps).kind,
+      "sdk",
+    );
   });
 
   it("every replacement is a valid SDK definition", () => {

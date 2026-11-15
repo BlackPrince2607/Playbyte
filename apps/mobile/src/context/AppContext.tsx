@@ -23,7 +23,12 @@ import {
   RespondResult,
 } from "../api";
 import { isPlayable } from "../game/discovery";
-import { appendFeedPage, continueFeedRefresh, FEED_PREFETCH_AHEAD } from "../lib/feedPages";
+import {
+  appendFeedPage,
+  continueFeedRefresh,
+  FEED_PREFETCH_AHEAD,
+  prioritizeUnansweredFeed,
+} from "../lib/feedPages";
 import { readFeedSnapshot, writeFeedSnapshot } from "../lib/feedCache";
 import type { CoinCredit, CoinCreditReason, WalletSnapshot } from "../lib/economy";
 import {
@@ -439,7 +444,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const applyFeedPage = useCallback((page: FeedItem[], cursor: string | null, localAnswers: Record<string, string>) => {
     feedGeneration.current += 1;
     feedCursor.current = cursor;
-    const hydrated = withLocalAnswers(page, localAnswers);
+    // Local answers can mark cards played before the server page does — sink those to the tail.
+    const hydrated = prioritizeUnansweredFeed(withLocalAnswers(page, localAnswers));
     setItems(hydrated);
     itemsRef.current = hydrated;
     setEngagement({});
@@ -527,7 +533,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           applyFeedPage(page, feed.cursor, localAnswers);
           void writeFeedSnapshot({
             lang: requestedLang,
-            items: page,
+            items: itemsRef.current,
             cursor: feed.cursor,
           });
         }
@@ -575,7 +581,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const cached = await hydrateFeedFromCache(lang).catch(() => false);
     if (languageRef.current !== lang) return;
     try {
-      await loadFeed({ force: true, refreshing: cached });
+      await loadFeed({ force: true, refreshing: cached, replace: true });
+      setFeedIndex(0);
     } catch {
       /* feedError set inside loadFeed when this request is still current */
     }
@@ -648,11 +655,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!done) {
         setOnboardingStepState(await getOnboardingStep());
       }
-      // Show last feed instantly when we have one; refresh in the background.
+      // Show last feed instantly (unplayed first via applyFeedPage); replace with a fresh
+      // unanswered-led server page so reopening never keeps played polls at the top.
       const cached = await hydrateFeedFromCache().catch(() => false);
       if (cached) {
         setReady(true);
-        void loadFeed({ refreshing: true }).catch(() => {});
+        void loadFeed({ refreshing: true, replace: true })
+          .then(() => setFeedIndex(0))
+          .catch(() => {});
         return;
       }
       try {

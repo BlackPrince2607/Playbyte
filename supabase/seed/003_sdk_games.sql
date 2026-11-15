@@ -41,13 +41,13 @@ INSERT INTO mini_games (key, title, blurb, status, sort_order, config, engine, v
    '{"engine": "word_search", "variation": "blitz", "maxScore": 2140, "genre": "word", "tag": "WORD"}', 'word_search', 'blitz', 1, 'higher_is_better'),
   ('word_search_mystery', 'Mystery Words', 'You get the theme and the lengths. Find the words.', 'enabled', 38,
    '{"engine": "word_search", "variation": "mystery", "maxScore": 1284, "genre": "word", "tag": "WORD"}', 'word_search', 'mystery', 1, 'higher_is_better'),
-  ('spot_shapes', 'Spot the Difference', 'Two neon pictures, a handful of changes. Find them all.', 'enabled', 39,
+  ('spot_shapes', 'Spot the Difference', 'Two real photos, a handful of changes. Find them all.', 'enabled', 39,
    '{"engine": "spot_difference", "variation": "shapes", "maxScore": 690, "genre": "puzzle", "tag": "PUZZLE"}', 'spot_difference', 'shapes', 1, 'higher_is_better'),
-  ('spot_city', 'Spot It: Night City', 'Windows, towers and the moon. What changed?', 'enabled', 40,
+  ('spot_city', 'Spot It: Night City', 'Real city photos. What changed?', 'enabled', 40,
    '{"engine": "spot_difference", "variation": "city", "maxScore": 690, "genre": "puzzle", "tag": "PUZZLE"}', 'spot_difference', 'city', 1, 'higher_is_better'),
-  ('spot_garden', 'Spot It: Garden', 'Flowers, clouds and butterflies with a few sneaky edits.', 'enabled', 41,
+  ('spot_garden', 'Spot It: Garden', 'Parks and flowers with a few sneaky edits.', 'enabled', 41,
    '{"engine": "spot_difference", "variation": "garden", "maxScore": 690, "genre": "puzzle", "tag": "PUZZLE"}', 'spot_difference', 'garden', 1, 'higher_is_better'),
-  ('spot_space', 'Spot It: Space', 'Planets, stars and a rocket. Compare carefully.', 'enabled', 42,
+  ('spot_space', 'Spot It: Space', 'Stars and nebulae. Compare carefully.', 'enabled', 42,
    '{"engine": "spot_difference", "variation": "space", "maxScore": 690, "genre": "puzzle", "tag": "PUZZLE"}', 'spot_difference', 'space', 1, 'higher_is_better'),
   ('fact_fake', 'Fact or Fake', 'Swipe right for fact, left for fake. Ten statements, no mercy.', 'enabled', 43,
    '{"engine": "fact_fake", "variation": "mixed", "roundCount": 10, "maxScore": 300, "genre": "trivia", "tag": "TRIVIA", "timerSec": 10}', 'fact_fake', 'mixed', 1, 'higher_is_better'),
@@ -96,7 +96,13 @@ INSERT INTO mini_games (key, title, blurb, status, sort_order, config, engine, v
   ('math_check', 'True or Trap', 'Is the equation right or a trap? Decide in a flash.', 'enabled', 65,
    '{"engine": "math_rush", "variation": "verify", "roundCount": 12, "maxScore": 360, "genre": "arcade", "tag": "ARCADE", "timerSec": 8}', 'math_rush', 'verify', 1, 'higher_is_better'),
   ('math_blitz', 'Math Blitz', 'Fifteen rapid-fire questions. Three lives. No mercy.', 'enabled', 66,
-   '{"engine": "math_rush", "variation": "blitz", "roundCount": 15, "lives": 3, "maxScore": 450, "genre": "arcade", "tag": "ARCADE", "timerSec": 8}', 'math_rush', 'blitz', 1, 'higher_is_better')
+   '{"engine": "math_rush", "variation": "blitz", "roundCount": 15, "lives": 3, "maxScore": 450, "genre": "arcade", "tag": "ARCADE", "timerSec": 8}', 'math_rush', 'blitz', 1, 'higher_is_better'),
+  ('emoji_song', 'Emoji Songs', 'Bollywood and global hits — decode the song from emoji.', 'enabled', 67,
+   '{"engine": "emoji_guess", "variation": "song", "roundCount": 10, "maxScore": 300, "genre": "word", "tag": "MUSIC", "timeLimitSec": 15}', 'emoji_guess', 'song', 1, 'higher_is_better'),
+  ('find_pair', 'Find the Pair', 'Eight cards, four pairs. Flip and match them all in one round.', 'enabled', 68,
+   '{"engine": "memory", "variation": "pairs", "roundCount": 1, "maxScore": 1200, "genre": "puzzle", "tag": "PUZZLE", "timeLimitSec": 45}', 'memory', 'pairs', 1, 'higher_is_better'),
+  ('lane_dash', 'Lane Dash', 'Dodge obstacles in three lanes. Three lives, about 40 seconds.', 'enabled', 69,
+   '{"engine": "lane_dash", "variation": "classic", "roundCount": 1, "lives": 3, "maxScore": 50000, "genre": "arcade", "tag": "ARCADE", "timeLimitSec": 40}', 'lane_dash', 'classic', 1, 'higher_is_better')
 ON CONFLICT (key) DO UPDATE SET
   title = EXCLUDED.title,
   blurb = EXCLUDED.blurb,
@@ -108,9 +114,10 @@ ON CONFLICT (key) DO UPDATE SET
   config_version = EXCLUDED.config_version,
   score_direction = EXCLUDED.score_direction;
 
--- Retired legacy games: the six with a replacement engine above, then the ten not on the MVP game map.
+-- Retired legacy games: the six with a replacement engine above, then keys not on the game map.
+-- lane_dash is re-enabled above as an SDK engine.
 UPDATE mini_games SET status = 'disabled' WHERE key IN (
   'flag_rush', 'emoji_decode', 'odd_one_out', 'frenzy_tap', 'traffic_light', 'grid_hunt',
   'higher_or_lower', 'memory_sequence', 'timer_stop', 'color_match', 'perfect_circle',
-  'bubble_burst', 'lane_dash', 'triple_match', 'word_scramble', 'word_blitz'
+  'bubble_burst', 'triple_match', 'word_scramble', 'word_blitz'
 );

@@ -1,9 +1,18 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Haptics from "expo-haptics";
 import type { ComponentProps } from "react";
+import { useEffect } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { formatCount } from "../api";
 import { useLanguage } from "../context/LanguageContext";
+import { prefersReducedMotion } from "../game/ui/feedback";
 import { shareAppInvite } from "../lib/shareInvite";
 import { colors, spacing } from "../theme/colors";
 import { type } from "../theme/typography";
@@ -45,6 +54,18 @@ export function ActionRail({
   shareLoading,
 }: Props) {
   const { t, fonts: ui } = useLanguage();
+  const heartScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (!liked || prefersReducedMotion()) return;
+    heartScale.value = withSequence(
+      withTiming(1.18, { duration: 90 }),
+      withSpring(1, { damping: 10, stiffness: 260 }),
+    );
+  }, [liked, heartScale]);
+
+  const heartStyle = useAnimatedStyle(() => ({ transform: [{ scale: heartScale.value }] }));
+
   const items: Item[] = [
     {
       key: "like",
@@ -85,7 +106,11 @@ export function ActionRail({
       {items.map((item) => (
         <Pressable
           key={item.key}
-          style={[styles.item, item.disabled && !item.loading && styles.itemDisabled]}
+          style={({ pressed }) => [
+            styles.item,
+            item.disabled && !item.loading && styles.itemDisabled,
+            pressed && !item.disabled && { transform: [{ scale: 0.92 }] },
+          ]}
           disabled={item.disabled}
           accessibilityRole="button"
           accessibilityState={{ disabled: Boolean(item.disabled), selected: item.selected }}
@@ -96,13 +121,19 @@ export function ActionRail({
             item.onPress?.();
           }}
         >
-          <View style={[styles.circle, item.selected && styles.circleSelected]}>
+          <Animated.View
+            style={[
+              styles.circle,
+              item.selected && styles.circleSelected,
+              item.key === "like" ? heartStyle : null,
+            ]}
+          >
             {item.loading ? (
               <ActivityIndicator color={colors.paper} size="small" />
             ) : (
               <Ionicons name={item.icon} size={20} color={item.iconColor ?? colors.paper} />
             )}
-          </View>
+          </Animated.View>
           <Text style={[type.micro, { color: colors.lilac, fontFamily: ui.bodyMedium }]}>{item.label}</Text>
         </Pressable>
       ))}

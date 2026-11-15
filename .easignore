@@ -21,7 +21,8 @@ apps/admin/.turbo/
 backend/
 docs/
 load-tests/
-scripts/
+# Only ignore repo-root helper scripts; keep apps/mobile/scripts for EAS hooks.
+/scripts/
 storage/
 supabase/
 .cursor/

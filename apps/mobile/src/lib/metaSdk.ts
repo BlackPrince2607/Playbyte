@@ -13,7 +13,9 @@ const pending: { event: string; props?: MetaProps }[] = [];
 function loadSdk(): Fbsdk | null {
   if (Platform.OS === "web" || !APP_ID) return null;
   try {
-    // Lazy require: touching FBAccessToken aborts launches built without a Facebook app ID.
+    // Native FacebookSdk must already be initialized (AndroidManifest AutoInitEnabled +
+    // ApplicationId). require() eagerly constructs FBAccessToken and fatally kills the
+    // process if sdkInitialize() has not run — a JS try/catch cannot catch that.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require("react-native-fbsdk-next") as Fbsdk;
   } catch {

@@ -3,15 +3,18 @@ import { engineRegistry } from "./engines";
 import { registerEngines } from "./engines/manifest";
 import { LEGACY_REPLACEMENTS } from "./engines/replacements";
 
-/** True when this app build has an engine that can play the card. */
+/** True when this app build has an engine + available variation that can play the card. */
 export function isPlayable(card: GameCard): boolean {
   registerEngines();
-  return (
-    resolveGame(card, {
-      hasEngine: (id) => engineRegistry.has(id),
-      replacements: LEGACY_REPLACEMENTS,
-    }).kind !== "unavailable"
-  );
+  const resolved = resolveGame(card, {
+    hasEngine: (id) => engineRegistry.has(id),
+    replacements: LEGACY_REPLACEMENTS,
+  });
+  if (resolved.kind !== "sdk") return false;
+  const meta = engineRegistry.meta(resolved.definition.engine);
+  if (!meta) return false;
+  const variation = meta.variations.find((v) => v.id === resolved.definition.variation);
+  return Boolean(variation && variation.available !== false);
 }
 
 /** The game after `key` in feed order, wrapping around; null when there is no other game. */

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 import secrets
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
@@ -19,12 +20,15 @@ from app.infrastructure.postgres.models import (
     MatchmakingTicket,
     MiniGame,
     Profile,
+    User,
 )
 from app.infrastructure.queue.outbox import enqueue
+from app.modules.matchmaking import bots as bot_ops
 
 SEARCH_TTL = timedelta(seconds=20)
 SEARCH_EXTEND = timedelta(seconds=20)
 HEARTBEAT_STALE = timedelta(seconds=15)
+BOT_FILL_AFTER = timedelta(seconds=5)
 COUNTDOWN = timedelta(seconds=4)
 PLAY_WINDOW = timedelta(seconds=180)
 OPEN_MATCH = ("ready", "playing")
@@ -178,7 +182,18 @@ async def expire_ticket_if_needed(session: AsyncSession, ticket: MatchmakingTick
         return
     now = datetime.now(UTC)
     stale = ticket.last_heartbeat_at and (now - ticket.last_heartbeat_at) > HEARTBEAT_STALE
-    if ticket.expires_at <= now or stale:
+    if stale:
+        ticket.status = "expired"
+        ticket.updated_at = now
+        await session.flush()
+        return
+    # Prefer bot fill over a cold-queue expire once the 5s window has passed.
+    if now - ticket.created_at >= BOT_FILL_AFTER:
+        filled = await fill_lonely_tickets_with_bots(session, ticket_ids={ticket.id})
+        if filled:
+            await session.refresh(ticket)
+            return
+    if ticket.expires_at <= now:
         ticket.status = "expired"
         ticket.updated_at = now
         await session.flush()
@@ -320,6 +335,30 @@ async def heartbeat(session: AsyncSession, user_id: UUID, ticket_id: UUID | None
     return {"ok": True, "updated": len(rows)}
 
 
+async def _schedule_bot_play(
+    session: AsyncSession,
+    match: Match,
+    *,
+    delay: timedelta | None = None,
+) -> None:
+    if not match.opponent_is_bot:
+        return
+    ready_at = match.ready_at or match.found_at or datetime.now(UTC)
+    if delay is None:
+        delay = timedelta(seconds=random.randint(18, 75))
+    run_at = ready_at + delay
+    # If the countdown already passed, schedule from now.
+    now = datetime.now(UTC)
+    if run_at < now:
+        run_at = now + delay
+    await enqueue(
+        session,
+        "match.bot_play",
+        {"matchId": str(match.id)},
+        run_at=run_at,
+    )
+
+
 async def _create_match(
     session: AsyncSession,
     a: MatchmakingTicket,
@@ -327,6 +366,7 @@ async def _create_match(
     game_key: str,
     *,
     rematch_of_id: UUID | None = None,
+    opponent_is_bot: bool = False,
 ) -> Match:
     now = datetime.now(UTC)
     ready_at = now + COUNTDOWN
@@ -343,6 +383,7 @@ async def _create_match(
         ready_at=ready_at,
         play_deadline_at=ready_at + PLAY_WINDOW,
         rematch_of_id=rematch_of_id,
+        opponent_is_bot=opponent_is_bot,
     )
     session.add(match)
     await session.flush()
@@ -354,7 +395,12 @@ async def _create_match(
         session,
         match.id,
         "found",
-        {"playerA": str(player_a), "playerB": str(player_b), "gameKey": game_key},
+        {
+            "playerA": str(player_a),
+            "playerB": str(player_b),
+            "gameKey": game_key,
+            "bot": opponent_is_bot,
+        },
     )
     await _notify_match(session, match, "match.found")
     await enqueue(
@@ -362,8 +408,126 @@ async def _create_match(
         "match.ready",
         {"matchId": str(match.id), "readyAt": _iso(ready_at)},
     )
+    if opponent_is_bot:
+        await _schedule_bot_play(session, match)
     await session.flush()
     return match
+
+
+async def _resolve_game_key(
+    session: AsyncSession,
+    ticket: MatchmakingTicket,
+    *,
+    popular: str | None = None,
+) -> str | None:
+    if ticket.game_key:
+        return ticket.game_key
+    if popular:
+        return popular
+    return await session.scalar(
+        select(MiniGame.key).where(MiniGame.status == "enabled").order_by(MiniGame.sort_order).limit(1)
+    )
+
+
+async def _create_bot_match(
+    session: AsyncSession,
+    ticket: MatchmakingTicket,
+    *,
+    game_key: str,
+) -> Match | None:
+    bot = await bot_ops.pick_bot_opponent(session, ticket.user_id)
+    if bot is None:
+        return None
+    now = datetime.now(UTC)
+    ready_at = now + COUNTDOWN
+    match = Match(
+        game_key=game_key,
+        seed=_new_seed(),
+        status="ready",
+        player_a_id=ticket.user_id,
+        player_b_id=bot.id,
+        ticket_a_id=ticket.id,
+        ticket_b_id=None,
+        found_at=now,
+        ready_at=ready_at,
+        play_deadline_at=ready_at + PLAY_WINDOW,
+        opponent_is_bot=True,
+    )
+    session.add(match)
+    await session.flush()
+    ticket.status = "matched"
+    ticket.match_id = match.id
+    ticket.updated_at = now
+    await _record_event(
+        session,
+        match.id,
+        "found",
+        {
+            "playerA": str(ticket.user_id),
+            "playerB": str(bot.id),
+            "gameKey": game_key,
+            "bot": True,
+        },
+    )
+    await _notify_match(session, match, "match.found")
+    await enqueue(
+        session,
+        "match.ready",
+        {"matchId": str(match.id), "readyAt": _iso(ready_at)},
+    )
+    await _schedule_bot_play(session, match)
+    await session.flush()
+    return match
+
+
+async def fill_lonely_tickets_with_bots(
+    session: AsyncSession,
+    *,
+    ticket_ids: set[UUID] | None = None,
+    limit: int = 40,
+) -> int:
+    """Match searching humans who waited BOT_FILL_AFTER with a bot opponent."""
+    if not get_settings().online_matchmaking_enabled:
+        return 0
+    now = datetime.now(UTC)
+    cutoff = now - BOT_FILL_AFTER
+    stmt = (
+        select(MatchmakingTicket)
+        .where(
+            MatchmakingTicket.status == "searching",
+            MatchmakingTicket.created_at <= cutoff,
+            MatchmakingTicket.last_heartbeat_at >= now - HEARTBEAT_STALE,
+        )
+        .order_by(MatchmakingTicket.created_at)
+        .with_for_update(skip_locked=True)
+        .limit(limit)
+    )
+    if ticket_ids is not None:
+        stmt = stmt.where(MatchmakingTicket.id.in_(ticket_ids))
+    rows = list(await session.scalars(stmt))
+    if not rows:
+        return 0
+
+    concrete_counts: dict[str, int] = defaultdict(int)
+    for t in rows:
+        if t.game_key:
+            concrete_counts[t.game_key] += 1
+    popular = max(concrete_counts, key=concrete_counts.get) if concrete_counts else None
+
+    filled = 0
+    for ticket in rows:
+        # Skip bots in the queue (synthetic fill tickets should already be matched).
+        user = await session.get(User, ticket.user_id)
+        if user and user.is_bot:
+            continue
+        game_key = await _resolve_game_key(session, ticket, popular=popular)
+        if not game_key:
+            continue
+        match = await _create_bot_match(session, ticket, game_key=game_key)
+        if match:
+            filled += 1
+    await session.flush()
+    return filled
 
 
 async def pair_searching_tickets(session: AsyncSession, *, limit: int = 40) -> int:
@@ -371,15 +535,12 @@ async def pair_searching_tickets(session: AsyncSession, *, limit: int = 40) -> i
     if not get_settings().online_matchmaking_enabled:
         return 0
     now = datetime.now(UTC)
-    # Drop stale / expired first (best-effort, not locked).
+    # Drop heartbeat-stale searchers only. Lonely tickets are bot-filled, not expired on TTL.
     stale = list(
         await session.scalars(
             select(MatchmakingTicket).where(
                 MatchmakingTicket.status == "searching",
-                or_(
-                    MatchmakingTicket.expires_at <= now,
-                    MatchmakingTicket.last_heartbeat_at < now - HEARTBEAT_STALE,
-                ),
+                MatchmakingTicket.last_heartbeat_at < now - HEARTBEAT_STALE,
             ).limit(100)
         )
     )
@@ -392,7 +553,6 @@ async def pair_searching_tickets(session: AsyncSession, *, limit: int = 40) -> i
             select(MatchmakingTicket)
             .where(
                 MatchmakingTicket.status == "searching",
-                MatchmakingTicket.expires_at > now,
                 MatchmakingTicket.last_heartbeat_at >= now - HEARTBEAT_STALE,
             )
             .order_by(MatchmakingTicket.created_at)
@@ -400,63 +560,64 @@ async def pair_searching_tickets(session: AsyncSession, *, limit: int = 40) -> i
             .limit(limit)
         )
     )
-    if len(rows) < 2:
-        await session.flush()
-        return 0
-
-    # Resolve any-game tickets to the most common concrete key among searchers.
-    concrete_counts: dict[str, int] = defaultdict(int)
-    for t in rows:
-        if t.game_key:
-            concrete_counts[t.game_key] += 1
-    popular = max(concrete_counts, key=concrete_counts.get) if concrete_counts else None
-    if popular is None:
-        enabled = await session.scalar(
-            select(MiniGame.key).where(MiniGame.status == "enabled").order_by(MiniGame.sort_order).limit(1)
-        )
-        popular = enabled
-
-    by_key: dict[str, list[MatchmakingTicket]] = defaultdict(list)
-    for t in rows:
-        key = t.game_key or popular
-        if not key:
-            continue
-        by_key[key].append(t)
 
     created = 0
-    used: set[UUID] = set()
-    for game_key, tickets in by_key.items():
-        # Prefer rematch / preferred opponent pairs first.
-        for i, a in enumerate(tickets):
-            if a.id in used:
+    if len(rows) >= 2:
+        concrete_counts: dict[str, int] = defaultdict(int)
+        for t in rows:
+            if t.game_key:
+                concrete_counts[t.game_key] += 1
+        popular = max(concrete_counts, key=concrete_counts.get) if concrete_counts else None
+        if popular is None:
+            enabled = await session.scalar(
+                select(MiniGame.key)
+                .where(MiniGame.status == "enabled")
+                .order_by(MiniGame.sort_order)
+                .limit(1)
+            )
+            popular = enabled
+
+        by_key: dict[str, list[MatchmakingTicket]] = defaultdict(list)
+        for t in rows:
+            key = t.game_key or popular
+            if not key:
                 continue
-            partner = None
-            for b in tickets[i + 1 :]:
-                if b.id in used or b.user_id == a.user_id:
+            by_key[key].append(t)
+
+        used: set[UUID] = set()
+        for game_key, tickets in by_key.items():
+            for i, a in enumerate(tickets):
+                if a.id in used:
                     continue
-                pref = (
-                    (a.preferred_opponent_id == b.user_id)
-                    or (b.preferred_opponent_id == a.user_id)
-                )
-                if pref:
-                    if await _blocked(session, a.user_id, b.user_id):
-                        continue
-                    partner = b
-                    break
-            if partner is None:
+                partner = None
                 for b in tickets[i + 1 :]:
                     if b.id in used or b.user_id == a.user_id:
                         continue
-                    if await _blocked(session, a.user_id, b.user_id):
-                        continue
-                    partner = b
-                    break
-            if partner is None:
-                continue
-            await _create_match(session, a, partner, game_key)
-            used.add(a.id)
-            used.add(partner.id)
-            created += 1
+                    pref = (
+                        (a.preferred_opponent_id == b.user_id)
+                        or (b.preferred_opponent_id == a.user_id)
+                    )
+                    if pref:
+                        if await _blocked(session, a.user_id, b.user_id):
+                            continue
+                        partner = b
+                        break
+                if partner is None:
+                    for b in tickets[i + 1 :]:
+                        if b.id in used or b.user_id == a.user_id:
+                            continue
+                        if await _blocked(session, a.user_id, b.user_id):
+                            continue
+                        partner = b
+                        break
+                if partner is None:
+                    continue
+                await _create_match(session, a, partner, game_key)
+                used.add(a.id)
+                used.add(partner.id)
+                created += 1
+
+    created += await fill_lonely_tickets_with_bots(session, limit=limit)
     await session.flush()
     return created
 
@@ -518,6 +679,9 @@ async def rematch(session: AsyncSession, match_id: UUID, user_id: UUID, *, idemp
     if existing and user_id in {existing.player_a_id, existing.player_b_id}:
         return existing
 
+    opponent_user = await session.get(User, opponent)
+    vs_bot = bool(prior.opponent_is_bot or (opponent_user and opponent_user.is_bot))
+
     now = datetime.now(UTC)
     ready_at = now + COUNTDOWN
     match = Match(
@@ -530,12 +694,20 @@ async def rematch(session: AsyncSession, match_id: UUID, user_id: UUID, *, idemp
         ready_at=ready_at,
         play_deadline_at=ready_at + PLAY_WINDOW,
         rematch_of_id=prior.id,
+        opponent_is_bot=vs_bot,
     )
     session.add(match)
     await session.flush()
-    await _record_event(session, match.id, "rematch", {"from": str(prior.id), "by": str(user_id)})
+    await _record_event(
+        session,
+        match.id,
+        "rematch",
+        {"from": str(prior.id), "by": str(user_id), "bot": vs_bot},
+    )
     await _notify_match(session, match, "match.found")
     await enqueue(session, "match.ready", {"matchId": str(match.id), "readyAt": _iso(ready_at)})
+    if vs_bot:
+        await _schedule_bot_play(session, match)
     # Keep idempotency_key referenced so callers can retry safely via rematch_of lookup.
     _ = idempotency_key
     return match
@@ -575,8 +747,112 @@ async def attach_play_to_match(
         match.status = "playing"
     match.updated_at = datetime.now(UTC)
     await session.flush()
+
+    # Human finished first vs bot → short delay then bot score (feels live).
+    if match.opponent_is_bot and match.status in OPEN_MATCH:
+        bot_id = await bot_ops.bot_user_id_for_match(session, match)
+        human_played = (user_id != bot_id) if bot_id else True
+        bot_play_id = (
+            match.play_a_id
+            if bot_id == match.player_a_id
+            else match.play_b_id
+            if bot_id
+            else None
+        )
+        if human_played and bot_play_id is None:
+            await _schedule_bot_play(
+                session,
+                match,
+                delay=timedelta(seconds=random.randint(2, 12)),
+            )
+
     await finalize_match_if_needed(session, match)
     return match
+
+
+async def execute_bot_play(session: AsyncSession, match_id: UUID) -> bool:
+    """Insert a plausible bot GamePlay and attach it. Returns True if a play was attached."""
+    if not get_settings().online_matchmaking_enabled:
+        return False
+    match = await session.get(Match, match_id)
+    if match is None or not match.opponent_is_bot or match.status not in OPEN_MATCH:
+        return False
+
+    bot_id = await bot_ops.bot_user_id_for_match(session, match)
+    if bot_id is None:
+        return False
+
+    if bot_id == match.player_a_id:
+        if match.play_a_id:
+            return False
+        human_play_id = match.play_b_id
+    else:
+        if match.play_b_id:
+            return False
+        human_play_id = match.play_a_id
+
+    human_score = None
+    human_duration = None
+    if human_play_id:
+        human_play = await session.get(GamePlay, human_play_id)
+        if human_play:
+            human_score = human_play.score
+            human_duration = human_play.duration_ms
+
+    direction, max_score = await bot_ops.resolve_game_scoring(session, match.game_key)
+    samples = await bot_ops.recent_scores(session, match.game_key) if human_score is None else []
+    score = bot_ops.competitive_score(
+        human_score=human_score,
+        samples=samples,
+        direction=direction,
+        max_score=max_score,
+    )
+    duration_ms = bot_ops.realistic_duration_ms(human_duration_ms=human_duration)
+
+    idem = f"bot-play-{match.id}"
+    existing = await session.scalar(
+        select(GamePlay).where(
+            GamePlay.user_id == bot_id,
+            GamePlay.idempotency_key == idem,
+        )
+    )
+    if existing is not None:
+        play = existing
+    else:
+        play = GamePlay(
+            game_key=match.game_key,
+            user_id=bot_id,
+            guest_session_id=None,
+            score=score,
+            duration_ms=duration_ms,
+            idempotency_key=idem,
+            seed=match.seed,
+            summary={"source": "matchmaking_fill"},
+            match_id=match.id,
+        )
+        session.add(play)
+        await session.flush()
+
+    # Attach without re-entering get_match auth for the bot path.
+    if bot_id == match.player_a_id:
+        match.play_a_id = play.id
+    else:
+        match.play_b_id = play.id
+    play.match_id = match.id
+    if play.seed is None:
+        play.seed = match.seed
+    if match.status == "ready":
+        match.status = "playing"
+    match.updated_at = datetime.now(UTC)
+    await session.flush()
+    await _record_event(
+        session,
+        match.id,
+        "bot_play",
+        {"userId": str(bot_id), "score": play.score, "durationMs": play.duration_ms},
+    )
+    await finalize_match_if_needed(session, match)
+    return True
 
 
 async def mark_ready_matches(session: AsyncSession) -> int:
