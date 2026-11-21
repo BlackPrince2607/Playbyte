@@ -28,7 +28,7 @@ import { pickAndUploadAvatar, removeAvatar } from "../../lib/avatarUpload";
 import { useLanguage } from "../../context/LanguageContext";
 import { capture } from "../../lib/analytics";
 import { APP_LANGUAGES } from "../../lib/languages";
-import { legalLinks, PLAY_STORE_URL, SUPPORT_PHONE, supportTel } from "../../lib/links";
+import { legalLinks, PLAY_STORE_URL, SUPPORT_PHONE, supportTel, WHATSAPP_GROUP_URL } from "../../lib/links";
 import { formatFriendCode, friendCodeFor } from "../../lib/friendCode";
 import {
   peekPrefs,
@@ -405,6 +405,30 @@ export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRec
     </SectionCard>
   );
 
+  const community = (
+    <SectionCard title={t("community")}>
+      <Pressable
+        onPress={() => openLink(WHATSAPP_GROUP_URL)}
+        accessibilityRole="button"
+        accessibilityLabel={t("joinWhatsAppGroup")}
+        style={({ pressed }) => [styles.whatsappCard, pressed && { opacity: 0.88 }]}
+      >
+        <View style={styles.whatsappIcon}>
+          <Ionicons name="logo-whatsapp" size={26} color="#25D366" />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={[type.bodyLg, { color: colors.paper, fontFamily: ui.bodyBold }]}>
+            {t("joinWhatsAppGroup")}
+          </Text>
+          <Text style={[type.metadata, { color: colors.lilac }]} numberOfLines={2}>
+            {t("whatsappGroupValue")}
+          </Text>
+        </View>
+        <Ionicons name="open-outline" size={18} color="#25D366" />
+      </Pressable>
+    </SectionCard>
+  );
+
   const support = (
     <SectionCard title={t("support")}>
       <SettingsRow label={t("reportProblem")} value={SUPPORT_PHONE} icon="call-outline" onPress={reportProblem} />
@@ -448,6 +472,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRec
             />
           </View>
           {preferences}
+          {community}
           {support}
         </>
       ) : loading && !me ? (
@@ -670,6 +695,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRec
           </SectionCard>
           {dataStatus ? <Text style={[type.bodySm, styles.dataStatus]}>{dataStatus}</Text> : null}
 
+          {community}
           {support}
 
           <Pressable
@@ -816,6 +842,23 @@ const styles = StyleSheet.create({
   segmentText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.lilac },
   segmentTextOn: { fontFamily: fonts.bodyBold, color: colors.ink },
   dataStatus: { color: colors.lime, marginTop: -spacing.sm, marginBottom: spacing.lg, paddingHorizontal: 4 },
+  whatsappCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 16,
+    minHeight: 72,
+    backgroundColor: "rgba(37, 211, 102, 0.1)",
+  },
+  whatsappIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(37, 211, 102, 0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   signOut: {
     flexDirection: "row",
     alignItems: "center",

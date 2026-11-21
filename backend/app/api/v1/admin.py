@@ -61,6 +61,8 @@ class MomentCreateIn(BaseModel):
     promptImageKey: str | None = None
     scoringMode: str = "none"
     tags: list[str] = Field(default_factory=list)
+    contentFormat: str | None = None
+    contentType: str | None = None
 
 
 class TransitionIn(BaseModel):
@@ -220,6 +222,8 @@ async def post_moment(
         tag_slugs=body.tags,
         prompt_hi=body.promptHi,
         content_lang=body.contentLang,
+        content_format=body.contentFormat,
+        content_type=body.contentType,
     )
     return {"id": str(m.id), "status": m.status}
 

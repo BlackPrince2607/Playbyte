@@ -51,8 +51,12 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const answered = Boolean(local.myOptionId);
   const crowd = withSeededCrowd(local);
   const total = crowd.totalResponses;
-  const isQuiz = local.tags?.some((t) => t.slug === "quiz") ?? local.scoringMode === "correct_option";
+  const isQuiz =
+    local.tags?.some((t) => t.slug === "quiz" || t.slug === "trivia") ??
+    local.scoringMode === "correct_option";
   const contentTag = local.tags?.[0];
+  const isTriviaTag =
+    contentTag?.slug === "trivia" || contentTag?.slug === "quiz" || (!contentTag && isQuiz);
   const myOption = local.options.find((o) => o.id === local.myOptionId);
 
   useEffect(() => {
@@ -276,9 +280,13 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
 
       <View style={styles.content}>
         <View style={styles.metaRow}>
-          <View style={[styles.hotTag, contentTag?.slug === "quiz" && styles.quizTag]}>
+          <View style={[styles.hotTag, isTriviaTag && styles.triviaTag]}>
             <Text style={[type.metadata, styles.hotTagText, { fontFamily: ui.bodyBold }]}>
-              {contentTag?.slug === "quiz" ? `📝 ${t("quizTag")}` : contentTag?.slug === "poll" ? `📊 ${t("pollTag")}` : `🔥 ${tagLabel}`}
+              {isTriviaTag
+                ? `🧠 ${t("triviaTag")}`
+                : contentTag?.slug === "poll"
+                  ? `📊 ${t("pollTag")}`
+                  : `🔥 ${tagLabel}`}
             </Text>
           </View>
           <LivePill count={total} label={fill(t("playingNow"), { count: formatCount(total) })} />
@@ -381,7 +389,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
-  quizTag: { backgroundColor: colors.cardAlt, borderWidth: 1, borderColor: colors.lime },
+  triviaTag: { backgroundColor: colors.cardAlt, borderWidth: 1, borderColor: colors.lime },
   hotTagText: { color: colors.paper, letterSpacing: 1 },
   categoryHint: { color: colors.lilac, textAlign: "center", letterSpacing: 1.5, marginBottom: spacing.sm },
   card: {
@@ -419,8 +427,8 @@ const styles = StyleSheet.create({
   prompt: { color: colors.paper, textAlign: "center" },
   status: { minHeight: 44, justifyContent: "center", marginVertical: spacing.xs, flexShrink: 0 },
   statusText: { textAlign: "center" },
-  grid: { flexGrow: 0, flexShrink: 0, gap: spacing.sm },
-  gridRow: { flexDirection: "row", gap: spacing.sm, minHeight: 56 },
+  grid: { flexGrow: 1, flexShrink: 1, minHeight: 0, gap: spacing.sm, justifyContent: "center" },
+  gridRow: { flexDirection: "row", gap: spacing.sm, minHeight: 140, alignItems: "stretch" },
   gridSpacer: { flex: 1 },
   list: { flexGrow: 0, flexShrink: 0 },
 });

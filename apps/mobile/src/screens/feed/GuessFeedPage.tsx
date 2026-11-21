@@ -1,7 +1,17 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, {
+  Easing,
+  FadeIn,
+  FadeOut,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { FeedGame, isApiError } from "../../api";
 import { FriendPickerModal } from "../../components/FriendPickerModal";
 import { LivePill } from "../../components/MajaLogo";
@@ -27,12 +37,12 @@ import { awaitEnginePrefetch, isEngineWarm, markEngineWarm, prefetchGame } from 
 import { gameBus, levelStore, newSessionId, recentIdsStore } from "../../game/platform/services";
 import { SessionRunner } from "../../game/session/runner";
 import type { CompletedPlay } from "../../game/session/types";
-import { feedback } from "../../game/ui/feedback";
+import { feedback, prefersReducedMotion } from "../../game/ui/feedback";
 import { Confetti, FlashOverlay, StreakBadge, TimerCountdown, usePop } from "../../game/ui/motion";
 import type { EngineModule } from "../../game/ui/types";
 import { localizeGame } from "../../i18n/games";
 import { fill } from "../../i18n/strings";
-import { capture } from "../../lib/analytics";
+import { capture, gamePlayProps } from "../../lib/analytics";
 import { createChallenge } from "../../lib/challenges";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
@@ -295,6 +305,7 @@ function ActiveGuess({
           game_id: gameKey,
           game_type: definition.engine,
           source: "feed_inline",
+          ...gamePlayProps(),
         });
         runner.start();
       }
@@ -355,10 +366,12 @@ function ActiveGuess({
 
   const startPlay = useCallback(() => {
     if (runner.getSnapshot().status !== "ready") return;
+    feedback("select");
     capture("game_started", {
       game_id: gameKey,
       game_type: definition.engine,
       source: "feed_inline",
+      ...gamePlayProps(),
     });
     runner.start();
   }, [runner, gameKey, definition.engine]);
@@ -416,36 +429,103 @@ function ActiveGuess({
           definition={definition}
           content={content}
           resolveAsset={resolveAsset}
-          allowReadyAnswer
           hideHints
           compact
         />
       </View>
 
       {idle ? (
-        <View style={styles.actionRow}>
-          {showChallenge ? (
-            <PrimaryButton
-              label={t("challenge")}
-              variant="secondary"
-              icon="flash-outline"
-              onPress={onOpenChallenge}
-              style={styles.actionBtn}
-            />
-          ) : null}
-          <PrimaryButton
-            label={t("playTrivia")}
-            variant="success"
-            trailingIcon="play"
-            onPress={startPlay}
-            style={styles.actionBtn}
-          />
-        </View>
+        <PlayGlassOverlay
+          onPlay={startPlay}
+          showChallenge={showChallenge}
+          onChallenge={onOpenChallenge}
+        />
       ) : null}
 
       <FlashOverlay seq={snap.lastOutcome?.seq} color={snap.lastOutcome?.correct ? colors.lime : colors.pink} />
       <Confetti active={snap.status === "completed"} />
     </View>
+  );
+}
+
+/** Green glass veil over the preview — tap anywhere to start the clock. */
+function PlayGlassOverlay({
+  onPlay,
+  showChallenge,
+  onChallenge,
+}: {
+  onPlay: () => void;
+  showChallenge: boolean;
+  onChallenge: () => void;
+}) {
+  const { t, fonts: ui, language } = useLanguage();
+  const pulse = useSharedValue(1);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    // Soft breathe — same rhythm as live pills / classic tap-to-start overlays.
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(0.72, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+      false,
+    );
+  }, [pulse]);
+
+  const playStyle = useAnimatedStyle(() => ({
+    opacity: pulse.value,
+    transform: [{ scale: 0.98 + pulse.value * 0.02 }],
+  }));
+
+  const label = language === "hi" ? t("playTrivia") : "PLAY!";
+
+  return (
+    <Animated.View
+      entering={FadeIn.duration(220)}
+      exiting={FadeOut.duration(160)}
+      style={styles.glassRoot}
+      pointerEvents="box-none"
+    >
+      <Pressable
+        onPress={onPlay}
+        accessibilityRole="button"
+        accessibilityLabel={t("playTrivia")}
+        accessibilityHint={t("tapAnswerToPlay")}
+        style={styles.glassHit}
+      >
+        <LinearGradient
+          colors={["rgba(87,225,91,0.28)", "rgba(198,255,61,0.18)", "rgba(21,14,43,0.55)"]}
+          locations={[0, 0.45, 1]}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View pointerEvents="none" style={styles.glassSheen} />
+        <View pointerEvents="none" style={styles.glassRim} />
+
+        <Animated.Text
+          pointerEvents="none"
+          style={[styles.playWord, { fontFamily: ui.display }, playStyle]}
+        >
+          {label}
+        </Animated.Text>
+      </Pressable>
+
+      {showChallenge ? (
+        <Pressable
+          onPress={onChallenge}
+          accessibilityRole="button"
+          accessibilityLabel={t("challenge")}
+          hitSlop={8}
+          style={({ pressed }) => [styles.challengeChip, pressed && { opacity: 0.85 }]}
+        >
+          <Ionicons name="flash-outline" size={14} color={colors.paper} />
+          <Text style={[type.micro, { color: colors.paper, fontFamily: ui.bodyMedium }]}>{t("challenge")}</Text>
+        </Pressable>
+      ) : null}
+    </Animated.View>
   );
 }
 
@@ -509,14 +589,57 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   playfield: { flex: 1, minHeight: 0 },
-  actionRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginTop: spacing.xs,
+  glassRoot: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: radius.md,
+    overflow: "hidden",
+    zIndex: 4,
   },
-  actionBtn: {
+  glassHit: {
     flex: 1,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  glassSheen: {
+    position: "absolute",
+    top: -40,
+    left: -20,
+    right: 40,
+    height: "55%",
+    borderRadius: radius.lg,
+    backgroundColor: "rgba(245,240,255,0.08)",
+    transform: [{ rotate: "-8deg" }],
+  },
+  glassRim: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: "rgba(198,255,61,0.45)",
+  },
+  playWord: {
+    color: colors.paper,
+    fontSize: 64,
+    lineHeight: 68,
+    letterSpacing: -1.5,
+    fontWeight: "700",
+    textAlign: "center",
+    textShadowColor: "rgba(21,14,43,0.7)",
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 12,
+  },
+  challengeChip: {
+    position: "absolute",
+    bottom: spacing.sm,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: "rgba(21,14,43,0.55)",
+    borderWidth: 1,
+    borderColor: "rgba(245,240,255,0.18)",
+    zIndex: 5,
   },
 });

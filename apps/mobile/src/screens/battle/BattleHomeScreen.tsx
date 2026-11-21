@@ -160,7 +160,7 @@ export function BattleHomeScreen({ onPlayRandom, onChallengeFriend, onHistory, o
           >
             <Ionicons name="time-outline" size={18} color={colors.lilac} />
             <Text style={[type.bodySm, { color: colors.lilac, fontFamily: fonts.bodyMedium }]}>
-              Battle History{me?.displayName ? ` · ${me.displayName}` : ""}
+              Battle History
             </Text>
             <Ionicons name="chevron-forward" size={16} color={colors.lilac} />
           </Pressable>

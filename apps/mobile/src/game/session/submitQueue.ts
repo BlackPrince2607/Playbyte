@@ -25,6 +25,7 @@ export type ChallengeResultSummary = {
   myScore?: number | null;
   theirScore?: number | null;
   opponentName?: string;
+  opponentAvatarKey?: string | null;
 };
 
 export type MatchResultSummary = {
@@ -33,6 +34,7 @@ export type MatchResultSummary = {
   myScore?: number | null;
   theirScore?: number | null;
   opponentName?: string;
+  opponentAvatarKey?: string | null;
 };
 
 export type SaveOutcome = {
@@ -65,8 +67,8 @@ export async function savePlay(
       status: string;
       myScore?: number | null;
       theirScore?: number | null;
-      challenger?: { displayName: string };
-      opponent?: { displayName: string };
+      challenger?: { displayName: string; avatarKey?: string | null };
+      opponent?: { displayName: string; avatarKey?: string | null };
       role?: "challenger" | "opponent";
     };
     match?: {
@@ -74,7 +76,7 @@ export async function savePlay(
       status: string;
       myScore?: number | null;
       theirScore?: number | null;
-      opponent?: { displayName: string };
+      opponent?: { displayName: string; avatarKey?: string | null };
     };
   }>,
   play: CompletedPlay,
@@ -93,16 +95,15 @@ export async function savePlay(
     if (typeof res.balance === "number") outcome.balance = res.balance;
     if (res.playId) outcome.playId = res.playId;
     if (res.challenge) {
-      const opp =
-        res.challenge.role === "challenger"
-          ? res.challenge.opponent?.displayName
-          : res.challenge.challenger?.displayName;
+      const rival =
+        res.challenge.role === "challenger" ? res.challenge.opponent : res.challenge.challenger;
       outcome.challenge = {
         id: res.challenge.id,
         status: res.challenge.status,
         myScore: res.challenge.myScore,
         theirScore: res.challenge.theirScore,
-        opponentName: opp,
+        opponentName: rival?.displayName,
+        opponentAvatarKey: rival?.avatarKey ?? null,
       };
     }
     if (res.match) {
@@ -112,6 +113,7 @@ export async function savePlay(
         myScore: res.match.myScore,
         theirScore: res.match.theirScore,
         opponentName: res.match.opponent?.displayName,
+        opponentAvatarKey: res.match.opponent?.avatarKey ?? null,
       };
     }
     return outcome;

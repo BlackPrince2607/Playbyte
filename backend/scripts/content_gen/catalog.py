@@ -9,34 +9,31 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-MIN_LIVE = 8
-
-ONBOARDING_SLUGS = (
-    "cricket",
-    "movies",
-    "music",
-    "pop-culture",
-    "food",
-    "gaming",
-    "sports",
-    "news",
-    "tech",
-    "personality-vibe",
-    "fashion",
-    "health",
-    "kpop",
-    "puzzles",
-    "logical-reasoning",
-    "math-numbers",
+from scripts.content_gen.taxonomy import (  # noqa: E402
+    EVENT_SLUGS,
+    FORMAT_FIND_THE_DIFFERENCE,
+    FORMAT_POLL,
+    FORMAT_QUIZ,
+    FORMAT_THIS_OR_THAT,
+    FORMAT_TRIVIA,
+    KNOWLEDGE_FORMATS,
+    ONBOARDING_SLUGS,
+    OPINION_FORMATS,
+    format_to_scoring_mode,
+    format_to_tags,
+    formats_for,
+    normalize_slug,
+    types_for,
 )
 
-EVENT_SLUGS = frozenset({"sports", "cricket", "movies", "music", "tech", "news", "pop-culture", "kpop"})
-EVENT_POLL_TYPES = frozenset({"opinion", "debate", "prediction", "challenge"})
-EVENT_QUIZ_TYPES = frozenset({"stat", "who", "which"})
+MIN_LIVE = 8
+
+EVENT_POLL_TYPES = frozenset({"opinion", "debate", "prediction", "challenge", "versus", "hypothetical"})
+EVENT_QUIZ_TYPES = frozenset({"stat", "who", "which", "facts", "records"})
 # Freeform trend polls for every onboarding category (not bound to the evergreen bank).
-TREND_POLL_TYPES = frozenset({"opinion", "debate", "hot"})
+TREND_POLL_TYPES = frozenset({"opinion", "debate", "hot", "versus", "hypothetical", "social_debate"})
 # Freeform India-trend trivia (well-known facts only — not locked to the evergreen bank).
-TREND_QUIZ_TYPES = frozenset({"trivia", "who", "which"})
+TREND_QUIZ_TYPES = frozenset({"trivia", "who", "which", "facts", "recognition"})
 
 GAMBLING_WORDS = ("odds", "payout", "bet", "stake", "wager")
 SMALL_WORDS = frozenset({"The", "A", "An", "It", "Who", "How", "What", "Which", "Prediction", "Fair"})
@@ -146,7 +143,7 @@ def _q(question_type: str, prompt: str, options: tuple[str, ...], correct: int) 
 
 
 POLLS: dict[str, tuple[Poll, ...]] = {
-    "personality-vibe": (
+    "boys-girls": (
         _p("travel", "Your ideal escape looks like…", "Beach person — sunsets and slow days", "Mountain person — cool air and quiet trails"),
         _p("travel", "How do you take a trip?", "Planned itinerary — every hour booked", "Spontaneous adventure — buy the ticket and go"),
         _p("fitness", "Your real workout looks like…", "Morning run — out the door before the city wakes", "Evening gym — weights after the day ends"),
@@ -180,7 +177,7 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("end", "Sad ending landed. Your reaction?", "Accept it", "Need a fan edit"),
         _p("sub", "How do you watch?", "Subtitles, original audio", "A dub if you are cooking"),
     ),
-    "sports": (
+    "football": (
         _p("watch", "Big match night. Where are you?", "On the couch with the stream", "In the stands if you can get a ticket"),
         _p("loyalty", "Your club loyalty looks like…", "Same colours every season", "You follow the players you love"),
         _p("fantasy", "Your fantasy move is…", "Safe captain and an early night", "A differential and a loud group chat"),
@@ -196,7 +193,7 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("watch", "India night. You watch with…", "Family and a running commentary", "Friends and a second screen"),
         _p("format", "Your format is…", "T20 — three hours and done", "Test — five days if it lasts"),
     ),
-    "movies": (
+    "bollywood": (
         _p("screen", "Friday night. Where do you watch?", "Theatre — big screen only", "Couch and a stream"),
         _p("interval", "What keeps you in the seat?", "An interval twist", "A slow burn that earns the end"),
         _p("sequel", "Sequel announced. Your move?", "Book early", "Wait for reviews", "Protect the original"),
@@ -218,7 +215,7 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("volume", "Your listening looks like…", "Headphones, world off", "Speaker, everyone hears it"),
         _p("memory", "A song sticks because…", "The chorus", "The memory attached to it"),
     ),
-    "food": (
+    "indian-foods": (
         _p("craving", "Late night. What wins?", "Street food", "Whatever is already at home"),
         _p("chai", "The cup in your hand is…", "Chai, extra hot", "Coffee, no debate in the cup"),
         _p("loyalty", "Biryani loyalty. You are…", "One city, one shop", "You will try every version"),
@@ -336,7 +333,7 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("device", "You mostly play on…", "Mobile", "PC or console"),
         _p("tilt", "After a loss streak you…", "One more game", "Close the app"),
     ),
-    "puzzles": (
+    "math-puzzles": (
         _p("pace", "Your puzzle mood is…", "One hard board, no hints", "Easy wins and a streak"),
         _p("type", "You open first…", "Word puzzles", "Number grids", "Visual spot-the-difference"),
         _p("hint", "Stuck for a minute. You…", "Take the hint", "Stare until it clicks"),
@@ -352,7 +349,7 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("type", "Your favourite is…", "Odd one out", "If-then scenarios"),
         _p("fail", "You miss one puzzle. Next?", "Read why and lock it in", "Skip the explanation"),
     ),
-    "math-numbers": (
+    "maths": (
         _p("feel", "Mental maths feels…", "Like a warm-up", "Like a trap"),
         _p("topic", "You prefer…", "Percentages and deals", "Sequences and patterns"),
         _p("calc", "A tough sum. You…", "Do it in your head", "Need a notepad"),
@@ -360,10 +357,46 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("school", "Maths class was…", "Actually fun", "A survival sport"),
         _p("real", "You notice numbers most in…", "Cricket scores", "Sale prices"),
     ),
+    "mythology": (
+        _p("ramayana", "Which quality of Hanuman would you most want?", "Courage", "Devotion", "Loyalty"),
+        _p("mahabharat", "Was Karna's loyalty his greatest…", "Strength", "Weakness"),
+        _p("versus", "Who would you choose as a mentor?", "Krishna", "Dronacharya"),
+        _p("morals", "Was Yudhishthira right to follow the dice rules?", "Yes — dharma first", "No — family first"),
+        _p("shiv", "What draws you more in Shiv stories?", "Ascetic calm", "Fierce power"),
+        _p("hypothetical", "If you were Vibhishan, would you leave Lanka?", "Leave for dharma", "Stay loyal to home"),
+    ),
+    "tv-serials": (
+        _p("plots", "A big twist drops mid-week. You…", "Rewatch immediately", "Wait for tonight's episode"),
+        _p("characters", "Which character type do you root for?", "The underdog", "The schemer"),
+        _p("endings", "How should a long-running serial end?", "Clean closure", "Open for a reboot"),
+        _p("nostalgia", "Peak TV nostalgia is…", "Early 2000s soaps", "Recent family dramas"),
+        _p("versus", "Who carries the show?", "Lead pair chemistry", "Supporting cast chaos"),
+        _p("prediction", "Next big leap will be…", "Time skip", "New villain entry"),
+    ),
+    "general-knowledge": (
+        _p("habits", "You learn something new mostly from…", "Short videos", "Long reads"),
+        _p("india", "India fact debates with friends feel…", "Fun and competitive", "Too nerdy"),
+        _p("versus", "What should schools emphasize more?", "Practical skills", "General knowledge"),
+        _p("internet", "Viral 'fact' lands. You…", "Verify first", "Share if it sounds right"),
+        _p("opinions", "Quiz nights are…", "Your comfort zone", "Only for specialists"),
+        _p("social_debate", "Is GK more useful than trending news?", "GK wins", "News wins"),
+    ),
+    "memory-games": (
+        _p("pairs", "Memory pair rounds should be…", "Fast and visual", "Slow and careful"),
+        _p("scenes", "Spot-the-difference is best with…", "Busy scenes", "Minimal props"),
+        _p("sequences", "You remember sequences better by…", "Rhythm", "Positions"),
+        _p("objects", "Harder memory challenge?", "More items", "Less time"),
+    ),
+    "word-puzzles": (
+        _p("anagrams", "Anagram rounds feel…", "Like a warm-up", "Like a boss fight"),
+        _p("riddles", "You prefer word puzzles that are…", "Clever riddles", "Straight definitions"),
+        _p("missing_letters", "Missing-letter grids should be…", "Blitz timed", "Unhurried"),
+        _p("synonyms", "Synonym races are…", "Your lane", "Where you slow down"),
+    ),
 }
 
 QUIZZES: dict[str, tuple[Quiz, ...]] = {
-    "personality-vibe": (
+    "boys-girls": (
         _q("travel", "Aarav books nothing and takes the first bus toward the hills. Which travel vibe is that?", ("Spontaneous adventure — buy the ticket and go", "Planned itinerary — every hour booked", "Beach person — sunsets and slow days"), 0),
         _q("fitness", "Meera lifts until the last set and skips the stretching mat. Which fitness vibe is that?", ("Heavy lifting — last set or it did not count", "Yoga and stretching — slow and steady", "Morning run — out the door before the city wakes"), 0),
         _q("social", "Two friends, one table, home before midnight. Which social vibe is that?", ("Two close friends — one table is enough", "Big friend group — the more the louder", "Weekend party — stay out with the group"), 0),
@@ -378,7 +411,7 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
         _q("ost", "The songs written for a series are the…", ("Soundtrack", "Toss", "Headline"), 0),
         _q("sub", "Translated lines on screen while you hear the original actors are…", ("Subtitles", "A derby", "A century"), 0),
     ),
-    "sports": (
+    "football": (
         _q("watch", "A sport uses a round ball and a goal, and outfield players may not handle the ball. Which sport is it?", ("Football", "Swimming", "Chess"), 0),
         _q("derby", "Two local clubs play each other and the city splits. What is that match called?", ("A derby", "A friendly", "A trial"), 0),
     ),
@@ -386,7 +419,7 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
         _q("format", "A batter scores a hundred runs in one innings. What is that score called?", ("A century", "A duck", "A maiden"), 0),
         _q("powerplay", "The fielding side is limited in how many fielders can be outside the circle at the start of a T20. What is that phase called?", ("The powerplay", "The death", "The toss"), 0),
     ),
-    "movies": (
+    "bollywood": (
         _q("interval", "The short break in the middle of a theatrical film in India is called the…", ("Interval", "Encore", "Overture"), 0),
         _q("screen", "A film you leave the house to see on a large shared screen is a…", ("Theatre screening", "Dub", "Sequel"), 0),
         _q("spoiler", "Telling the ending before someone has watched is a…", ("Spoiler", "Chorus", "Headline"), 0),
@@ -396,7 +429,7 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
         _q("live", "A recording made in front of an audience, wrong notes included, is a…", ("Live album", "Studio album", "Playlist"), 0),
         _q("playlist", "A short list of songs you queue on purpose is a…", ("Playlist", "Encore", "Ticket"), 0),
     ),
-    "food": (
+    "indian-foods": (
         _q("chai", "Milk, tea, and spice simmered together is…", ("Chai", "Black coffee", "A smoothie"), 0),
         _q("loyalty", "A spiced rice dish with meat or vegetables, claimed by many cities, is…", ("Biryani", "Toast", "Salad"), 0),
     ),
@@ -454,7 +487,7 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
         _q("genre", "A game built around shooting from a first-person view is often called…", ("An FPS", "A puzzle", "A rhythm game"), 0),
         _q("mode", "Playing against other people online is…", ("Multiplayer", "A cutscene", "A tutorial"), 0),
     ),
-    "puzzles": (
+    "math-puzzles": (
         _q("sudoku", "A number grid where each row and column uses 1–9 once is…", ("Sudoku", "Chess", "Ludo"), 0),
         _q("riddle", "A short question that hides the answer in wordplay is a…", ("Riddle", "Jersey", "Interval"), 0),
     ),
@@ -462,44 +495,81 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
         _q("pattern", "Finding what comes next in a sequence is…", ("Pattern recognition", "A spoiler", "A powerplay"), 0),
         _q("odd", "Picking the item that does not belong is finding the…", ("Odd one out", "Captain", "Encore"), 0),
     ),
-    "math-numbers": (
+    "maths": (
         _q("percent", "Half of 100 is…", ("50", "25", "75"), 0),
         _q("order", "The next even number after 8 is…", ("10", "9", "7"), 0),
+    ),
+    "mythology": (
+        _q("characters", "In the Ramayana, who is known for devotion and strength?", ("Hanuman", "Shakuni", "Duryodhana"), 0),
+        _q("events", "The Mahabharata war is set mainly around which place?", ("Kurukshetra", "Ayodhya", "Lanka"), 0),
+        _q("who", "Who is Sita's husband in the Ramayana?", ("Ram", "Lakshman", "Bharat"), 0),
+    ),
+    "tv-serials": (
+        _q("shows", "A long-running daily Indian family drama is often called a…", ("Soap / serial", "Short film", "News bulletin"), 0),
+        _q("cast", "The main romantic pair of a serial are usually called the…", ("Lead pair", "Guest anchors", "Umpires"), 0),
+        _q("which", "An episode that reveals a major secret is often called a…", ("Twist episode", "Friendly", "Interval"), 0),
+    ),
+    "general-knowledge": (
+        _q("india", "India's national animal is the…", ("Tiger", "Lion", "Elephant"), 0),
+        _q("world", "The largest ocean on Earth is the…", ("Pacific", "Atlantic", "Indian"), 0),
+        _q("science_lite", "Water freezes at…", ("0°C", "100°C", "50°C"), 0),
+    ),
+    "memory-games": (
+        _q("pairs", "Matching two identical cards in a grid is a…", ("Memory pair", "Century", "Spoiler"), 0),
+        _q("scenes", "Finding changes between two similar images is…", ("Spot the difference", "An anagram", "A toss"), 0),
+    ),
+    "word-puzzles": (
+        _q("anagrams", "Rearranging letters to form a new word is an…", ("Anagram", "Interval", "Derby"), 0),
+        _q("riddles", "A short question that hides the answer in wordplay is a…", ("Riddle", "Jersey", "Powerplay"), 0),
     ),
 }
 
 
 def question_types(slug: str, fmt: str) -> set[str]:
-    if fmt == "poll":
-        types = {row[0] for row in POLLS[slug]}
-        types |= set(TREND_POLL_TYPES)
-        if slug in EVENT_SLUGS:
-            types |= set(EVENT_POLL_TYPES)
-        return types
-    types = {row[0] for row in QUIZZES[slug]}
-    types |= set(TREND_QUIZ_TYPES)
-    if slug in EVENT_SLUGS:
-        types |= set(EVENT_QUIZ_TYPES)
-    return types
+    """Allowed content types for a category format (taxonomy + bank + trend extras)."""
+    key = normalize_slug(slug)
+    allowed = set(types_for(key, fmt))
+    if not allowed and fmt in formats_for(key):
+        allowed = set(types_for(key, fmt))
+    # Bank rows still contribute known evergreen types.
+    if fmt in OPINION_FORMATS or fmt == FORMAT_POLL:
+        allowed |= {row[0] for row in POLLS.get(key, ())}
+        allowed |= set(TREND_POLL_TYPES)
+        if key in EVENT_SLUGS:
+            allowed |= set(EVENT_POLL_TYPES)
+    if fmt in KNOWLEDGE_FORMATS or fmt == FORMAT_QUIZ:
+        allowed |= {row[0] for row in QUIZZES.get(key, ())}
+        allowed |= set(TREND_QUIZ_TYPES)
+        if key in EVENT_SLUGS:
+            allowed |= set(EVENT_QUIZ_TYPES)
+    if fmt == FORMAT_THIS_OR_THAT:
+        allowed |= set(TREND_POLL_TYPES)
+    if fmt == FORMAT_TRIVIA:
+        allowed |= set(TREND_QUIZ_TYPES)
+    if fmt == FORMAT_FIND_THE_DIFFERENCE:
+        allowed |= set(types_for(key, FORMAT_FIND_THE_DIFFERENCE)) or {"scenes", "objects"}
+    return allowed
 
 
 def bank_labels(slug: str, question_type: str | None = None) -> set[str]:
+    key = normalize_slug(slug)
     labels: set[str] = set()
-    for qtype, _prompt, options in POLLS[slug]:
+    for qtype, _prompt, options in POLLS.get(key, ()):
         if question_type is None or qtype == question_type:
             labels.update(options)
-    for qtype, _prompt, options, _correct in QUIZZES[slug]:
+    for qtype, _prompt, options, _correct in QUIZZES.get(key, ()):
         if question_type is None or qtype == question_type:
             labels.update(options)
     return labels
 
 
 def bank_text(slug: str) -> str:
+    key = normalize_slug(slug)
     parts: list[str] = []
-    for _qtype, prompt, options in POLLS[slug]:
+    for _qtype, prompt, options in POLLS.get(key, ()):
         parts.append(prompt)
         parts.extend(options)
-    for _qtype, prompt, options, _correct in QUIZZES[slug]:
+    for _qtype, prompt, options, _correct in QUIZZES.get(key, ()):
         parts.append(prompt)
         parts.extend(options)
     return "\n".join(parts)
@@ -511,12 +581,12 @@ def _card_from_poll(slug: str, row: Poll) -> Card:
     return Card(
         type=moment_type,
         category_slug=slug,
-        format="poll",
+        format=FORMAT_POLL,
         question_type=question_type,
         prompt=prompt,
         options=[{"label": label, "isCorrect": False} for label in options],
-        scoring_mode="none",
-        tags=["poll"],
+        scoring_mode=format_to_scoring_mode(FORMAT_POLL),
+        tags=format_to_tags(FORMAT_POLL),
     )
 
 
@@ -525,21 +595,24 @@ def _card_from_quiz(slug: str, row: Quiz) -> Card:
     return Card(
         type="pulse",
         category_slug=slug,
-        format="quiz",
+        format=FORMAT_QUIZ,
         question_type=question_type,
         prompt=prompt,
         options=[{"label": label, "isCorrect": i == correct} for i, label in enumerate(options)],
-        scoring_mode="correct_option",
-        tags=["quiz"],
+        scoring_mode=format_to_scoring_mode(FORMAT_QUIZ),
+        tags=format_to_tags(FORMAT_QUIZ),
     )
 
 
 def generate_stock(slug: str) -> list[Card]:
     """Evergreen polls and quizzes for one category. Empty if the slug is unknown."""
-    if slug not in POLLS or slug not in QUIZZES:
-        return []
-    cards = [_card_from_poll(slug, row) for row in POLLS[slug]]
-    cards.extend(_card_from_quiz(slug, row) for row in QUIZZES[slug])
+    key = normalize_slug(slug)
+    allowed = set(formats_for(key))
+    cards: list[Card] = []
+    if key in POLLS and (FORMAT_POLL in allowed or FORMAT_THIS_OR_THAT in allowed):
+        cards.extend(_card_from_poll(key, row) for row in POLLS[key])
+    if key in QUIZZES and (FORMAT_QUIZ in allowed or FORMAT_TRIVIA in allowed):
+        cards.extend(_card_from_quiz(key, row) for row in QUIZZES[key])
     return cards
 
 
@@ -644,14 +717,34 @@ def trends_for(
 ) -> list[dict[str, Any]]:
     """Active India trends for one category. Drops expired and wrong-category rows."""
     now = now or datetime.now(UTC)
+    key = normalize_slug(slug)
     if rows is None:
         all_rows = load_trends(folder)
-        rows = list(all_rows.get(slug) or [])
+        rows = list(all_rows.get(key) or [])
+        # Also pull legacy slug files that remapped onto this category.
+        for legacy, target in {
+            "movies": "bollywood",
+            "food": "indian-foods",
+            "sports": "football",
+            "personality-vibe": "boys-girls",
+            "math-numbers": "maths",
+            "puzzles": "math-puzzles",
+            "logical-reasoning": "math-puzzles",
+            "music": "bollywood",
+            "pop-culture": "general-knowledge",
+            "gaming": "general-knowledge",
+            "news": "general-knowledge",
+            "tech": "general-knowledge",
+            "fashion": "bollywood",
+            "health": "general-knowledge",
+        }.items():
+            if target == key:
+                rows.extend(all_rows.get(legacy) or [])
     active: list[dict[str, Any]] = []
     for row in rows:
-        cat = str(row.get("category") or "").strip()
+        cat = normalize_slug(str(row.get("category") or "").strip()) if row.get("category") else ""
         # Items may omit category when the file already scopes the slug.
-        if cat and cat != slug:
+        if cat and cat != key:
             continue
         expires = _parse_expires_at(str(row.get("expiresAt") or "") or None)
         if expires is not None and expires <= now:
@@ -734,7 +827,7 @@ def cards_from_brief(brief: dict[str, Any], now: datetime | None = None) -> list
     hours = int(brief.get("freshnessHours") or 24)
     ends = now + timedelta(hours=hours)
     context = str(brief.get("context") or "")
-    slug = str(brief["category"])
+    slug = normalize_slug(str(brief["category"]))
     event_date = str(brief.get("eventDate") or "")
     brief_id = str(brief["id"])
     specs: tuple[tuple[str, str, str, bool], ...] = (
@@ -767,13 +860,13 @@ def cards_from_brief(brief: dict[str, Any], now: datetime | None = None) -> list
                 continue
             opt_dicts = [{"label": label, "isCorrect": label == correct} for label in options]
             scoring = "correct_option"
-            tags = ["quiz"]
+            tags = format_to_tags(FORMAT_QUIZ if fmt == "quiz" else FORMAT_TRIVIA)
         else:
             if qtype == "prediction" and "prediction" not in prompt.lower():
                 continue
             opt_dicts = [{"label": label, "isCorrect": False} for label in options]
             scoring = "none"
-            tags = ["poll"]
+            tags = format_to_tags(FORMAT_POLL)
         if fact_issues(prompt, options, allowed):
             continue
         moment_type = "predict" if len(options) == 2 else "pulse"
@@ -798,7 +891,8 @@ def cards_from_brief(brief: dict[str, Any], now: datetime | None = None) -> list
 
 def briefs_for(slug: str, briefs: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     rows = load_briefs() if briefs is None else briefs
-    return [row for row in rows if row.get("category") == slug]
+    key = normalize_slug(slug)
+    return [row for row in rows if normalize_slug(str(row.get("category") or "")) == key]
 
 
 def event_cards(slug: str, now: datetime | None = None, briefs: list[dict[str, Any]] | None = None) -> list[Card]:

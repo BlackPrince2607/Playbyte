@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, Switch, Text, View } from "react-native";
 import { api, isApiError, NotificationPreferences } from "../../api";
 import { BackLink } from "../../components/BackLink";
 import { ErrorState } from "../../components/ErrorState";
@@ -8,6 +8,12 @@ import { ScreenLoading } from "../../components/ScreenLoading";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { peekPrefs, readPrefs, writePrefs } from "../../lib/profileCache";
+import { isStreakReminderEnabled, setStreakReminderEnabled } from "../../lib/retentionStorage";
+import {
+  disableStreakReminder,
+  enableStreakReminder,
+  getStreakReminderPermission,
+} from "../../lib/streakReminders";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
@@ -26,6 +32,9 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
   const [loadError, setLoadError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [updatingKeys, setUpdatingKeys] = useState<Set<PrefKey>>(new Set());
+  const [streakReminderOn, setStreakReminderOn] = useState(false);
+  const [streakBusy, setStreakBusy] = useState(false);
+  const [streakError, setStreakError] = useState("");
 
   const loadPrefs = useCallback(async () => {
     if (!isSignedIn || !user?.id) return;
@@ -54,6 +63,41 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
     else setPrefs(null);
   }, [isSignedIn, loadPrefs]);
 
+  useEffect(() => {
+    void (async () => {
+      const enabled = await isStreakReminderEnabled();
+      const permission = await getStreakReminderPermission();
+      setStreakReminderOn(enabled && permission === "granted");
+    })();
+  }, []);
+
+  async function toggleStreakReminder(next: boolean) {
+    if (streakBusy) return;
+    setStreakBusy(true);
+    setStreakError("");
+    setStreakReminderOn(next);
+    try {
+      if (next) {
+        const ok = await enableStreakReminder({
+          title: t("streakReminderTitle"),
+          body: t("day0Appointment"),
+        });
+        if (!ok) {
+          setStreakReminderOn(false);
+          await setStreakReminderEnabled(false);
+          setStreakError(t("reminderPermissionDenied"));
+        }
+      } else {
+        await disableStreakReminder();
+      }
+    } catch {
+      setStreakReminderOn(!next);
+      setStreakError(t("reminderPermissionDenied"));
+    } finally {
+      setStreakBusy(false);
+    }
+  }
+
   async function toggle(key: PrefKey, next: boolean) {
     if (!prefs || updatingKeys.has(key)) return;
     const prev = prefs[key];
@@ -80,11 +124,34 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
     }
   }
 
+  const streakRow = (
+    <View style={styles.row}>
+      <View style={{ flex: 1 }}>
+        <Text style={[type.bodyLg, { color: colors.paper, fontWeight: "600" }]}>
+          {t("streakReminderTitle")}
+        </Text>
+        <Text style={[type.metadata, { color: colors.lilac }]}>{t("streakReminderSub")}</Text>
+        {streakError ? (
+          <Text style={[type.metadata, { color: colors.pink, marginTop: 4 }]}>{streakError}</Text>
+        ) : null}
+      </View>
+      <Switch
+        value={streakReminderOn}
+        disabled={streakBusy}
+        onValueChange={(v) => void toggleStreakReminder(v)}
+        trackColor={{ true: colors.pink, false: colors.cardAlt }}
+        thumbColor={colors.paper}
+      />
+    </View>
+  );
+
   if (!isSignedIn) {
     return (
       <View style={styles.wrap}>
         <BackLink onPress={onBack} style={styles.back} />
         <Text style={[type.screenTitle, { color: colors.paper, fontFamily: ui.display }]}>{t("notifications")}</Text>
+        {streakRow}
+        <Text style={[type.metadata, styles.footer]}>{t("streakReminderFooter")}</Text>
         <GuestGate
           title={t("notifications")}
           message={t("signInToNotifications")}
@@ -129,6 +196,7 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
       <Text style={[type.bodySm, { color: colors.lilac, marginVertical: spacing.sm }]}>
         Max 3 alerts per day. Toggle each type independently.
       </Text>
+      {streakRow}
       {saveError ? (
         <Text style={[type.bodySm, { color: colors.pink, marginBottom: spacing.sm }]} accessibilityRole="alert">
           {saveError}
@@ -149,9 +217,7 @@ export function NotificationsScreen({ onBack, onSignIn }: Props) {
           />
         </View>
       ))}
-      <Text style={[type.metadata, styles.footer]}>
-        Your choices are saved to your account. Push alerts aren’t switched on in this test build yet.
-      </Text>
+      <Text style={[type.metadata, styles.footer]}>{t("streakReminderFooter")}</Text>
     </View>
   );
 }

@@ -44,9 +44,8 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
         <CloseButton onPress={onClose} style={styles.close} />
         <Text style={[type.screenTitle, { color: colors.paper }]}>{t("signInUnavailable")}</Text>
         <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.sm }]}>
-          This build is missing sign-in configuration. You can keep playing as a guest.
+          This build is missing sign-in configuration. Sign-in is required to play.
         </Text>
-        <PrimaryButton label={t("continueGuest")} onPress={onClose} style={{ marginTop: spacing.lg }} />
       </View>
     );
   }
@@ -55,9 +54,9 @@ export function SignInScreen({ onClose, onSuccess, initialError }: Props) {
     <View style={styles.wrap}>
       <CloseButton onPress={onClose} style={styles.close} />
 
-      <Text style={[type.screenTitle, { color: colors.paper }]}>Save your progress</Text>
+      <Text style={[type.screenTitle, { color: colors.paper }]}>Sign in to play</Text>
       <Text style={[type.bodySm, { color: colors.lilac, marginTop: spacing.sm }]}>
-        Keep streaks, friends, and recap — your guest progress carries over.
+        Keep streaks, friends, and recap on your account.
       </Text>
 
       <PrimaryButton

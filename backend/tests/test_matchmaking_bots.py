@@ -285,6 +285,76 @@ async def test_rematch_against_bot_reschedules_bot_play():
 
 
 @pytest.mark.asyncio
+async def test_catch_up_bot_play_runs_after_grace():
+    human, bot = uuid4(), uuid4()
+    human_play_id = uuid4()
+    match = _match(
+        player_a_id=human,
+        player_b_id=bot,
+        play_a_id=human_play_id,
+        play_b_id=None,
+        status="playing",
+        opponent_is_bot=True,
+    )
+    human_play = SimpleNamespace(
+        id=human_play_id,
+        score=74,
+        duration_ms=20000,
+        created_at=datetime.now(UTC) - timedelta(seconds=20),
+    )
+    session = AsyncMock()
+    session.get = AsyncMock(return_value=human_play)
+
+    with (
+        patch("app.modules.matchmaking.service.get_settings") as settings,
+        patch(
+            "app.modules.matchmaking.service.bot_ops.bot_user_id_for_match",
+            AsyncMock(return_value=bot),
+        ),
+        patch("app.modules.matchmaking.service.execute_bot_play", AsyncMock(return_value=True)) as exe,
+    ):
+        settings.return_value = SimpleNamespace(online_matchmaking_enabled=True)
+        ok = await mm.catch_up_bot_play_if_needed(session, match)
+        assert ok is True
+        exe.assert_awaited_once_with(session, match.id)
+
+
+@pytest.mark.asyncio
+async def test_catch_up_bot_play_waits_for_grace():
+    human, bot = uuid4(), uuid4()
+    human_play_id = uuid4()
+    match = _match(
+        player_a_id=human,
+        player_b_id=bot,
+        play_a_id=human_play_id,
+        play_b_id=None,
+        status="playing",
+        opponent_is_bot=True,
+    )
+    human_play = SimpleNamespace(
+        id=human_play_id,
+        score=74,
+        duration_ms=20000,
+        created_at=datetime.now(UTC) - timedelta(seconds=3),
+    )
+    session = AsyncMock()
+    session.get = AsyncMock(return_value=human_play)
+
+    with (
+        patch("app.modules.matchmaking.service.get_settings") as settings,
+        patch(
+            "app.modules.matchmaking.service.bot_ops.bot_user_id_for_match",
+            AsyncMock(return_value=bot),
+        ),
+        patch("app.modules.matchmaking.service.execute_bot_play", AsyncMock(return_value=True)) as exe,
+    ):
+        settings.return_value = SimpleNamespace(online_matchmaking_enabled=True)
+        ok = await mm.catch_up_bot_play_if_needed(session, match)
+        assert ok is False
+        exe.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_serialize_match_omits_bot_flags():
     human, bot = uuid4(), uuid4()
     match = _match(
@@ -304,7 +374,10 @@ async def test_serialize_match_omits_bot_flags():
     )
     session.scalar = AsyncMock(return_value=None)
 
-    with patch("app.modules.matchmaking.service.finalize_match_if_needed", AsyncMock()):
+    with (
+        patch("app.modules.matchmaking.service.catch_up_bot_play_if_needed", AsyncMock()),
+        patch("app.modules.matchmaking.service.finalize_match_if_needed", AsyncMock()),
+    ):
         payload = await mm.serialize_match(session, match, viewer_id=human)
         assert "opponentIsBot" not in payload
         assert "isBot" not in payload

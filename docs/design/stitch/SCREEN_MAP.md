@@ -24,7 +24,7 @@
 ## Intentional deviations (API honesty)
 - No likes/comments/XP economy / India geo ranks / notification inbox / per-question quiz timers.
 - Heart / Chat on ActionRail labeled **Soon** (disabled) until likes/comments APIs exist.
-- Share uses `POST /v1/moments/{id}/share-card` (moments) or native `Share` (post-game scores). No fake “Challenge” duel.
+- Share uses `POST /v1/moments/{id}/share-card` (moments) or `POST /v1/games/{key}/plays/{playId}/share-card` (post-game; text fallback if unsaved). No fake “Challenge” duel.
 - Friend strips show real friend choices only; response totals are labeled as responses, not extra friends.
 - Leaderboard / invite UIs do not invent ranks or player counts.
 - Language preference is device-local; UI remains English until localization ships.

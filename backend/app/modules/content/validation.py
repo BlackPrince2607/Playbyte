@@ -92,9 +92,12 @@ def validate_item(raw: Any) -> dict:
             if not isinstance(value, str) or not 0 < len(value) <= 64:
                 raise fail("emoji value")
         elif kind in ("image", "audio"):
+            # https CDN, or bundled spot-the-difference flat art (`asset:spot/<key>`).
             url = m.get("url")
-            if not isinstance(url, str) or not url.startswith("https://"):
-                raise fail("media url must be https")
+            if not isinstance(url, str) or not (url.startswith("https://") or url.startswith("asset:spot/")):
+                raise fail("media url must be https or asset:spot/")
+            if kind == "audio" and isinstance(url, str) and url.startswith("asset:spot/"):
+                raise fail("audio cannot use asset:spot/")
         else:
             raise fail(f"unknown media kind {kind}")
 

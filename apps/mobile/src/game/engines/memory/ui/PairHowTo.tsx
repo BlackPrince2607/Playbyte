@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { PrimaryButton } from "../../../../components/PrimaryButton";
+import { useLanguage } from "../../../../context/LanguageContext";
 import { fonts } from "../../../../theme/typography";
 
 const LAVENDER = "#F3F0FA";
@@ -19,12 +20,13 @@ function MiniCard({ face, faceUp }: { face?: string; faceUp?: boolean }) {
 }
 
 export function PairHowTo({ onDone, title }: { onDone: () => void; title?: string }) {
+  const { t, fonts: ui } = useLanguage();
   return (
     <View style={styles.root} accessibilityViewIsModal>
       <View style={styles.card}>
-        <Text style={styles.kicker}>{title ?? "FIND THE PAIR"}</Text>
-        <Text style={styles.headline}>Flip two. Match them all.</Text>
-        <Text style={styles.body}>Eight cards, four pairs. Remember what you flip — clear the board before time runs out.</Text>
+        <Text style={[styles.kicker, { fontFamily: ui.bodyBold }]}>{title ?? t("pairHowToTitle")}</Text>
+        <Text style={[styles.headline, { fontFamily: ui.bodyBold }]}>{t("pairHowToHeadline")}</Text>
+        <Text style={[styles.body, { fontFamily: ui.body }]}>{t("pairHowToBody")}</Text>
 
         <View style={styles.demoRow}>
           <MiniCard face="🦊" faceUp />
@@ -32,15 +34,15 @@ export function PairHowTo({ onDone, title }: { onDone: () => void; title?: strin
           <MiniCard />
           <MiniCard face="🍕" faceUp />
         </View>
-        <Text style={[styles.demoLabel, { color: OK }]}>Match locks the pair</Text>
+        <Text style={[styles.demoLabel, { color: OK, fontFamily: ui.bodyMedium }]}>{t("pairHowToMatch")}</Text>
 
         <View style={styles.bullets}>
-          <Text style={styles.bullet}>• Tap a card to flip it</Text>
-          <Text style={styles.bullet}>• Two matching faces score — streaks pay more</Text>
-          <Text style={styles.bullet}>• Mismatches flip back after a beat</Text>
+          <Text style={[styles.bullet, { fontFamily: ui.body }]}>{t("pairHowToTip1")}</Text>
+          <Text style={[styles.bullet, { fontFamily: ui.body }]}>{t("pairHowToTip2")}</Text>
+          <Text style={[styles.bullet, { fontFamily: ui.body }]}>{t("pairHowToTip3")}</Text>
         </View>
 
-        <PrimaryButton label="Play" onPress={onDone} variant="success" style={{ marginTop: 8 }} />
+        <PrimaryButton label={t("arrowHowToPlay")} onPress={onDone} variant="success" style={{ marginTop: 8 }} />
       </View>
     </View>
   );

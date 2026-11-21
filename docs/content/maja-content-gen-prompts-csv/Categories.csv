@@ -1,84 +1,87 @@
-slug,label,include,exclude,scope_note,category_rules,poll_question_types,quiz_question_types,evergreen_polls,evergreen_quizzes,uses_briefs,brief_count
-cricket,Cricket,"IPL, international cricket, T20 / ODI / Tests, players, rules, formats, upcoming fixtures",football and other non-cricket sports as the main topic,,"Stay inside categoryScope for this slug only.
+slug,label,formats,types_by_format,include,exclude,scope_note,category_rules,poll_question_types,quiz_question_types,evergreen_polls,evergreen_quizzes,uses_briefs,brief_count
+bollywood,Bollywood,"poll, trivia, this_or_that, find_the_difference, quiz","{""poll"": [""casting"", ""nostalgia"", ""couples"", ""endings"", ""versus"", ""prediction"", ""dialogues"", ""music""], ""trivia"": [""movie_guess"", ""song_guess"", ""dialogue"", ""actors_name"", ""who"", ""which""], ""this_or_that"": [""actors"", ""movies"", ""eras"", ""ott_vs_theatre""], ""find_the_difference"": [""movie_scenes"", ""posters"", ""sets""], ""quiz"": [""facts"", ""records"", ""awards"", ""who"", ""which""]}","Hindi cinema, actors and actresses, iconic scenes and dialogues, OTT vs theatre, nostalgia 90s/2000s, music and dance","Hollywood as the main topic, politics",,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-SCOPE: IPL, internationals, formats, rules, debates — not football/NBA/F1 as the main topic.
-BAD name spam: three cards all about Kohli / Rohit / Dhoni. Rotate or ask nameless knowledge questions.
-GOOD: 'How many balls in an over?', 'What does DRS stand for?', one debate, one upcoming take if verified.","captaincy, challenge, death, debate, format, hot, opinion, powerplay, prediction, toss, watch","format, powerplay, stat, trivia, which, who",6,2,yes,1
-movies,Movies / Bollywood & Indian cinema,"theatrical releases, trailers, OTT, interval culture, stars, rewatches",non-film TV news dumps,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+GOOD: casting debates, nostalgia, endings, movie/song/dialogue trivia.
+BAD: endless 'who is your favourite actor?' with no situation.","casting, challenge, company, couples, debate, dialogues, end, endings, hot, hypothetical, interval, language, music, night, nostalgia, opinion, prediction, rewatch, screen, sequel, snack, social_debate, song, spoiler, star, versus","awards, facts, interval, recognition, records, rewatch, screen, spoiler, stat, trivia, which, who",12,4,yes,1
+mythology,Mythology,"poll, trivia, this_or_that, find_the_difference, quiz","{""poll"": [""ramayana"", ""mahabharat"", ""shiv"", ""krishna"", ""characters"", ""morals"", ""hypothetical"", ""versus""], ""trivia"": [""characters"", ""events"", ""weapons"", ""who"", ""which""], ""this_or_that"": [""characters"", ""qualities"", ""choices""], ""find_the_difference"": [""temple_art"", ""scenes"", ""symbols""], ""quiz"": [""stories"", ""characters"", ""places"", ""who"", ""which""]}","Ramayana, Mahabharata, Shiv / Krishna and related stories, moral dilemmas, character debates","insulting religious beliefs, presenting disputed interpretations as universal fact",Be respectful of beliefs and regional versions.,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: friend cancels / must-watch dilemma, interval stakes, trailer hype vs wait, film recognition.
-BAD: endless 'who is your favourite actor?' or bare 'theatre or OTT?' with no situation.","challenge, company, debate, end, hot, interval, language, night, opinion, prediction, rewatch, screen, sequel, snack, song, spoiler, star","interval, rewatch, screen, spoiler, stat, trivia, which, who",12,4,yes,1
-music,Music,"Bollywood songs, indie, hip-hop, concerts, playlists",,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+Respect religious beliefs and regional versions. Never insult.
+Use poll types ramayana / mahabharat / shiv / morals / hypothetical.","characters, debate, hot, hypothetical, krishna, mahabharat, morals, opinion, ramayana, shiv, social_debate, versus","characters, events, facts, places, recognition, stories, trivia, which, who",6,3,no,0
+tv-serials,TV Serials,"poll, trivia, this_or_that, find_the_difference, quiz","{""poll"": [""plots"", ""characters"", ""endings"", ""versus"", ""nostalgia"", ""prediction""], ""trivia"": [""dialogue"", ""cast"", ""shows"", ""who"", ""which""], ""this_or_that"": [""shows"", ""characters"", ""tropes""], ""find_the_difference"": [""sets"", ""scenes"", ""costumes""], ""quiz"": [""facts"", ""cast"", ""who"", ""which""]}","Indian TV serials, daily soaps, iconic characters, plot twists, nostalgia",politics as the main topic,,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: live vs studio trade-off, playlist identity, song recognition.
-BAD: generic 'best singer' surveys with no angle.","challenge, debate, discovery, hot, live, memory, opinion, playlist, prediction, tickets, volume","live, playlist, stat, trivia, which, who",6,2,yes,0
-pop-culture,Pop culture,"memes, viral audio, creator drama, fandom fights",,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+GOOD: plot twists, character debates, nostalgia, cast trivia.","challenge, characters, debate, endings, hot, hypothetical, nostalgia, opinion, plots, prediction, social_debate, versus","cast, facts, recognition, records, shows, stat, trivia, which, who",6,3,yes,0
+cricket,Cricket,"poll, trivia, this_or_that, find_the_difference, quiz","{""poll"": [""captaincy"", ""ipl"", ""rivalries"", ""death_overs"", ""versus"", ""prediction"", ""fan_behaviour""], ""trivia"": [""players"", ""records"", ""rules"", ""who"", ""which""], ""this_or_that"": [""players"", ""formats"", ""teams""], ""find_the_difference"": [""stadiums"", ""kits"", ""moments""], ""quiz"": [""rules"", ""records"", ""history"", ""who"", ""which""]}","IPL, international cricket, T20 / ODI / Tests, players, captaincy, rivalries",football and other non-cricket sports as the main topic,,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: meme recognition, fandom side-picking, verified viral reactions only.
-BAD: inventing that something is viral without verifiedTrends.","audio, challenge, creator, debate, fandom, hot, meme, opinion, prediction, quote, trend","audio, meme, stat, trivia, which, who",6,2,yes,0
-food,Food,"street food, chai/coffee, biryani loyalty, late-night cravings",,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+SCOPE: IPL, internationals, formats, rules, debates — not football as the main topic.
+BAD name spam: three cards all about Kohli / Rohit / Dhoni. Rotate angles.
+Use poll types like captaincy / ipl when relevant.","captaincy, challenge, death, death_overs, debate, fan_behaviour, format, hot, hypothetical, ipl, opinion, powerplay, prediction, rivalries, social_debate, toss, versus, watch","facts, format, history, powerplay, recognition, records, rules, stat, trivia, which, who",6,2,yes,1
+indian-foods,Indian Foods,"poll, trivia, this_or_that, find_the_difference, quiz","{""poll"": [""habits"", ""regional"", ""spice"", ""street_food"", ""versus"", ""cravings""], ""trivia"": [""dishes"", ""origins"", ""ingredients"", ""who"", ""which""], ""this_or_that"": [""dishes"", ""regions"", ""sweet_vs_savoury""], ""find_the_difference"": [""thalis"", ""street_stalls"", ""kitchens""], ""quiz"": [""origins"", ""ingredients"", ""festivals"", ""who"", ""which""]}","Indian regional cuisine, street food, home cooking, spice and habits, festival food",non-food lifestyle as the main topic,,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: late-night dilemma with stakes, city loyalty, keep-only-one forever, familiar-food surprise fact.
-BAD: bare 'chai or coffee?', 'sweet or spicy?', or formal dining-survey language.","chai, craving, debate, hot, loyalty, opinion, plan, spice, sweet","chai, loyalty, trivia, which, who",6,2,no,0
-gaming,Gaming,"mobile esports, ranked vs casual, battle pass, PC/console",,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+GOOD: late-night dilemma with stakes, regional loyalty, familiar-food surprise fact.
+BAD: bare 'chai or coffee?' with no situation.","chai, craving, cravings, debate, habits, hot, hypothetical, loyalty, opinion, plan, regional, social_debate, spice, street_food, sweet, versus","chai, facts, festivals, ingredients, loyalty, origins, recognition, trivia, which, who",6,2,no,0
+football,Football,"poll, trivia, this_or_that, find_the_difference, quiz","{""poll"": [""clubs"", ""rivalries"", ""penalties"", ""versus"", ""prediction"", ""fan_culture""], ""trivia"": [""players"", ""tournaments"", ""clubs"", ""who"", ""which""], ""this_or_that"": [""players"", ""clubs"", ""leagues""], ""find_the_difference"": [""kits"", ""stadiums"", ""celebrations""], ""quiz"": [""rules"", ""history"", ""records"", ""who"", ""which""]}","Indian and international football, Premier League, Champions League, World Cup, club rivalries, player comparisons",cricket as the main topic,,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: ranked vs chill with stakes, tilt decisions, mode/device trivia.
-BAD: vague 'do you like gaming?' cards.","debate, device, genre, hot, opinion, session, spend, squad, tilt","genre, mode, trivia, which, who",6,2,no,0
-sports,Sports (Non-Cricket),"football/soccer, hockey, badminton, tennis, kabaddi, athletics, F1, NBA / Olympics topics Indians follow, chess","cricket, IPL, T20, ODI, BCCI, wickets, batting/bowling cricket terms, cricket players or Indian cricket takes",Cricket has its own category slug 'cricket'. Never write cricket cards for sports.,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+SCOPE (critical): football only — never cricket/IPL/T20 as the main topic.
+GOOD: club rivalries, penalties, player versus, verified upcoming predictions.","challenge, clubs, debate, derby, fan_culture, fantasy, hot, hypothetical, loyalty, opinion, penalties, prediction, ritual, rivalries, social_debate, take, versus, watch","derby, facts, history, recognition, records, rules, stat, trivia, watch, which, who",6,2,yes,0
+general-knowledge,General Knowledge,"poll, trivia, this_or_that, find_the_difference, quiz","{""poll"": [""opinions"", ""habits"", ""india"", ""internet"", ""versus"", ""social_debate""], ""trivia"": [""india"", ""world"", ""science_lite"", ""who"", ""which""], ""this_or_that"": [""habits"", ""places"", ""preferences""], ""find_the_difference"": [""landmarks"", ""maps"", ""objects""], ""quiz"": [""india"", ""world"", ""science_lite"", ""who"", ""which""]}","India facts, everyday knowledge, light science, geography, internet culture","party politics, exam-cram capital/date dumps",,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-SCOPE (critical): sports means Sports (Non-Cricket) ONLY.
-NEVER mention cricket, IPL, T20, ODI, BCCI, wickets, batting, bowling, or cricket players.
-BAD: 'How do you feel about the current state of Indian cricket?'.
-GOOD: football derby identity, kabaddi heat, badminton, hockey, F1, Olympics, chess — rotate sports.","challenge, debate, derby, fantasy, hot, loyalty, opinion, prediction, ritual, take, watch","derby, stat, trivia, watch, which, who",6,2,yes,0
-news,News literacy (not party politics spam),"fact-check habits, headline literacy, viral claim skepticism","partisan campaigning, invented breaking news",,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+GOOD: India/world recognition, light science, share-or-verify habits.
+BAD: party politics or exam-cram capital dumps.","debate, habits, hot, hypothetical, india, internet, opinion, opinions, social_debate, versus","facts, india, recognition, science_lite, trivia, which, who, world",6,3,no,0
+kpop,K-pop,"poll, trivia, this_or_that, find_the_difference, quiz","{""poll"": [""idols"", ""comebacks"", ""ships"", ""versus"", ""concepts"", ""prediction""], ""trivia"": [""songs"", ""groups"", ""facts"", ""who"", ""which""], ""this_or_that"": [""groups"", ""concepts"", ""eras""], ""find_the_difference"": [""stages"", ""outfits"", ""albums""], ""quiz"": [""discography"", ""members"", ""who"", ""which""]}","K-pop idols and groups, comebacks, concepts, fandom habits, light K-drama crossover",non-K entertainment as the main topic,,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: fact-check literacy quizzes and share-or-verify debates.
-BAD: partisan propaganda or inventing breaking headlines.","alerts, challenge, check, debate, depth, habit, hot, opinion, prediction, share, time","check, habit, stat, trivia, which, who",6,2,yes,0
-tech,Tech,"phones, AI tools, privacy, startups Indians use",,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+GOOD: concept/comeback debates, fandom rituals, recognition trivia.","bias, binge, challenge, comeback, comebacks, concept, concepts, debate, end, hot, hypothetical, idols, lead, lightstick, opinion, ost, pace, playlist, prediction, ships, social_debate, sub, versus","concept, discography, facts, lightstick, members, ost, playlist, recognition, records, stat, sub, trivia, which, who",12,5,yes,0
+boys-girls,Boys & Girls,poll,"{""poll"": [""habits"", ""texting"", ""dating_playful"", ""friendships"", ""who_is_more_likely"", ""social_debate""]}","playful everyday behavioural differences, texting, friendships, dating expectations, who is more likely","insulting either gender, presenting stereotypes as facts, explicit or harmful content",Playful and balanced only — never insulting.,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: everyday permission dilemmas, hype vs wait, misconception quizzes.
-BAD: speculative product rumors without verifiedTrends/briefs; bare 'Android or iPhone?'.","apps, challenge, class, debate, experiment, fact, future, hot, hype, opinion, os, phone, prediction, privacy, read, wonder, work","os, privacy, read, stat, trivia, which, who, wonder",12,4,yes,0
-personality-vibe,Personality & vibe,"weekend energy, plans, friendship habits, work style",,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+POLL ONLY. Playful balanced 'who is more likely' — never insult either gender.
+Never present stereotypes as facts.","birthday, cancel, dating_playful, debate, drama, everyday, fitness, friendship, friendships, habits, hot, hypothetical, intro, opinion, plans, seen, social, social_debate, texting, travel, versus, who_is_more_likely, work","everyday, facts, fitness, friendship, recognition, social, travel, trivia, which, who, work",18,6,no,0
+math-puzzles,Math Puzzles,quiz,"{""quiz"": [""number_puzzles"", ""patterns"", ""logic_lite"", ""quick_calc""]}","number puzzles, patterns, quick mental math, logic-lite","formal exam papers, advanced university math",,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: vivid social scenario that reveals identity; quizzes that map a behavior to a vibe.
-BAD: bland personality inventories.","birthday, cancel, debate, drama, everyday, fitness, friendship, hot, intro, opinion, plans, seen, social, travel, work","everyday, fitness, friendship, social, travel, trivia, which, who, work",18,6,no,0
-fashion,Fashion,"fits, trends, wedding fits, comfort vs drip",,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+QUIZ ONLY. Fair quick number/pattern puzzles — not university exams.","debate, hint, hot, hypothetical, opinion, pace, share, social_debate, style, timer, type, versus","facts, logic_lite, number_puzzles, patterns, quick_calc, recognition, riddle, sudoku, trivia, which, who",6,2,no,0
+memory-games,Memory Games,find_the_difference,"{""find_the_difference"": [""pairs"", ""sequences"", ""scenes"", ""objects""]}","spot the difference, memory pairs, visual recall",text-only trivia as the main format,,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: keep-or-skip trend takes, comfort vs drip for a real event, wedding-fit debates.
-BAD: generic 'favourite color' filler.","colour, debate, event, fit, hot, opinion, shoes, shop, trend","fit, shoes, trivia, which, who",6,2,no,0
-health,Health habits,"sleep, movement, stress, eating well",medical diagnosis advice,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+Prefer find_the_difference / memory themes; skip inventing fake image URLs.","debate, hot, hypothetical, objects, opinion, pairs, scenes, sequences, social_debate, versus","facts, pairs, recognition, scenes, trivia, which, who",4,2,no,0
+word-puzzles,Word Puzzles,quiz,"{""quiz"": [""anagrams"", ""missing_letters"", ""synonyms"", ""riddles""]}","anagrams, word riddles, missing letters, synonyms",long essay answers,,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: habit choices with self-expression and light knowledge checks. Never give medical advice.
-BAD: diagnosis or treatment prompts.","check, debate, food, hot, morning, move, opinion, sleep, stress","move, sleep, trivia, which, who",6,2,no,0
-kpop,K-Pop & K-drama adjacent fandom,"comebacks, biases, lightsticks, OST, binge habits",,,"Stay inside categoryScope for this slug only.
+Vary formats across the batch when multiple formats are allowed.
+QUIZ ONLY. Anagrams, riddles, missing letters — short and fair.","anagrams, debate, hot, hypothetical, missing_letters, opinion, riddles, social_debate, synonyms, versus","anagrams, facts, missing_letters, recognition, riddles, synonyms, trivia, which, who",4,2,no,0
+maths,Maths,quiz,"{""quiz"": [""arithmetic"", ""percentages"", ""ratios"", ""quick_facts""]}","arithmetic, percentages, ratios, everyday maths","advanced calculus, exam-cram proofs",,"Stay inside categoryScope for this slug only.
+Only use allowedFormats and typesByFormat from the user payload.
 If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
 Every card needs a clear engagement mechanism — not just category fit.
-GOOD: concept/comeback debates, fandom rituals, recognition trivia.
-BAD: repeating the same bias poll with different names.","bias, binge, challenge, comeback, concept, debate, end, hot, lead, lightstick, opinion, ost, pace, playlist, prediction, sub","concept, lightstick, ost, playlist, stat, sub, trivia, which, who",12,5,yes,0
-puzzles,Puzzles,"word/number/visual puzzle vibes, hints vs no hints",,,"Stay inside categoryScope for this slug only.
-If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
-Every card needs a clear engagement mechanism — not just category fit.
-GOOD: hint vs no-hint debates plus fair quick-solve challenges.
-BAD: unsolvable riddles as polls.","debate, hint, hot, opinion, pace, share, style, timer, type","riddle, sudoku, trivia, which, who",6,2,no,0
-logical-reasoning,Logical reasoning,"patterns, odd one out, if-then",,,"Stay inside categoryScope for this slug only.
-If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
-Every card needs a clear engagement mechanism — not just category fit.
-GOOD: short fair logic quizzes; odd-one-out with one clear rule; speed vs accuracy debates.
-BAD: ambiguous trick questions with multiple valid answers.","debate, fail, hot, opinion, pattern, speed, style, type","odd, pattern, trivia, which, who",6,2,no,0
-math-numbers,Math & numbers,"mental maths, percentages, sequences, everyday numbers",,,"Stay inside categoryScope for this slug only.
-If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing.
-Every card needs a clear engagement mechanism — not just category fit.
-GOOD: fast answerable everyday number quizzes; light school-memory debates.
-BAD: opaque multi-step exam problems.","calc, debate, feel, hot, opinion, real, school, speed, topic","order, percent, trivia, which, who",6,2,no,0
+Vary formats across the batch when multiple formats are allowed.
+QUIZ ONLY. Everyday arithmetic, percentages, ratios.","calc, debate, feel, hot, hypothetical, opinion, real, school, social_debate, speed, topic, versus","arithmetic, facts, order, percent, percentages, quick_facts, ratios, recognition, trivia, which, who",6,2,no,0

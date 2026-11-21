@@ -33,30 +33,51 @@ import { isSupabaseConfigured } from "../../lib/supabase";
 import { formatFriendCode, friendCodeFor, parseFriendCode } from "../../lib/friendCode";
 import {
   acceptChallenge,
-  createChallenge,
   declineChallenge,
   listChallenges,
 } from "../../lib/challenges";
+import { resolveFeedGame } from "../../lib/gameCatalog";
 import { listMyMatches } from "../../lib/matchmaking";
 import { withSeededCrowd } from "../../lib/seededEngagement";
 import { shareAppInvite } from "../../lib/shareInvite";
 import { useLanguage } from "../../context/LanguageContext";
 import { fill } from "../../i18n/strings";
-import { localizeGame } from "../../i18n/games";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
 type Props = {
   onSignIn: () => void;
   onOpenLeaderboard?: () => void;
-  onPlayChallenge?: (game: FeedGame, challenge: { id: string; seed: string }) => void;
-  onPlayOnlineMatch?: (game: FeedGame, match: { id: string; seed: string }) => void;
+  /** Opens Compete → challenge flow with this friend preselected. */
+  onChallengeFriend?: (friendId: string) => void;
+  onPlayChallenge?: (
+    game: FeedGame,
+    challenge: {
+      id: string;
+      seed: string;
+      opponent?: { displayName: string; avatarKey: string | null };
+    },
+  ) => void;
+  onPlayOnlineMatch?: (
+    game: FeedGame,
+    match: {
+      id: string;
+      seed: string;
+      opponent?: { displayName: string; avatarKey: string | null };
+    },
+  ) => void;
 };
 
 type Notice = { kind: "success" | "error"; text: string } | null;
 
-export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, onPlayOnlineMatch }: Props) {
-  const { t, language, fonts: ui } = useLanguage();
+export function FriendsScreen({
+  onSignIn,
+  onOpenLeaderboard,
+  onChallengeFriend,
+  onPlayChallenge,
+  onPlayOnlineMatch,
+}: Props) {
+  const { t, fonts: ui } = useLanguage();
   const insets = useSafeAreaInsets();
   const { isSignedIn, user } = useAuth();
   const {
@@ -79,7 +100,6 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, on
   const [sending, setSending] = useState(false);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [onlineMatches, setOnlineMatches] = useState<OnlineMatch[]>([]);
-  const [challengeFriendId, setChallengeFriendId] = useState<string | null>(null);
 
   const parsedCode = parseFriendCode(addInput);
   const inputInvalid = addInput.trim().length >= 8 && !parsedCode;
@@ -100,9 +120,44 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, on
     [items],
   );
 
-  const challengeTarget = challengeFriendId
-    ? friends.find((f) => f.userId === challengeFriendId) ?? null
-    : null;
+  const actionableChallenges = useMemo(
+    () =>
+      challenges.filter((c) => {
+        if (c.status === "pending" && c.role === "opponent") return true;
+        if ((c.status === "active" || c.status === "pending") && !c.iHavePlayed) return true;
+        return false;
+      }),
+    [challenges],
+  );
+
+  const waitingOrDoneChallenges = useMemo(() => {
+    const actionableIds = new Set(
+      challenges
+        .filter((c) => {
+          if (c.status === "pending" && c.role === "opponent") return true;
+          if ((c.status === "active" || c.status === "pending") && !c.iHavePlayed) return true;
+          return false;
+        })
+        .map((c) => c.id),
+    );
+    return challenges.filter((c) => !actionableIds.has(c.id)).slice(0, 8);
+  }, [challenges]);
+
+  const actionableMatches = useMemo(
+    () =>
+      onlineMatches.filter(
+        (m) => (m.status === "ready" || m.status === "playing") && !m.iHavePlayed,
+      ),
+    [onlineMatches],
+  );
+
+  const historyMatches = useMemo(
+    () =>
+      onlineMatches
+        .filter((m) => m.status === "completed" || m.iHavePlayed)
+        .slice(0, 8),
+    [onlineMatches],
+  );
 
   const loadMe = useCallback(async () => {
     try {
@@ -184,15 +239,18 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, on
     }
   }
 
-  function gameCardFor(challenge: Challenge): FeedGame {
-    const fromFeed = feedGames.find((g) => g.key === challenge.gameKey);
-    if (fromFeed) return fromFeed;
-    return {
-      type: "mini_game",
-      key: challenge.gameKey,
+  async function gameCardFor(challenge: Challenge): Promise<FeedGame> {
+    return resolveFeedGame(challenge.gameKey, {
       title: challenge.gameTitle,
-      blurb: "",
-    };
+      feed: feedGames,
+      hint: {
+        title: challenge.gameTitle,
+        blurb: challenge.gameBlurb,
+        engine: challenge.engine,
+        variation: challenge.variation,
+        config: challenge.config,
+      },
+    });
   }
 
   function challengeSubtitle(c: Challenge): string {
@@ -221,7 +279,16 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, on
     try {
       const res = await acceptChallenge(c.id);
       await loadChallenges();
-      onPlayChallenge?.(gameCardFor(c), { id: c.id, seed: res.seed });
+      const game = await gameCardFor(c);
+      const other = c.role === "challenger" ? c.opponent : c.challenger;
+      onPlayChallenge?.(game, {
+        id: c.id,
+        seed: res.seed,
+        opponent: {
+          displayName: other.displayName,
+          avatarKey: other.avatarKey ?? null,
+        },
+      });
     } catch (e) {
       setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : t("challengeSendFailed") });
     } finally {
@@ -242,23 +309,17 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, on
   }
 
   function onPlayOpenChallenge(c: Challenge) {
-    onPlayChallenge?.(gameCardFor(c), { id: c.id, seed: c.seed });
-  }
-
-  async function sendFriendChallenge(game: FeedGame) {
-    if (!challengeTarget) return;
-    const friend = challengeTarget;
-    setBusy(`chal-create:${friend.userId}`);
-    try {
-      await createChallenge({ opponentUserId: friend.userId, gameKey: game.key });
-      setChallengeFriendId(null);
-      setNotice({ kind: "success", text: fill(t("challengeSent"), { name: friend.displayName }) });
-      await loadChallenges();
-    } catch (e) {
-      setNotice({ kind: "error", text: isApiError(e) ? e.userMessage : t("challengeSendFailed") });
-    } finally {
-      setBusy(null);
-    }
+    const other = c.role === "challenger" ? c.opponent : c.challenger;
+    void gameCardFor(c).then((game) =>
+      onPlayChallenge?.(game, {
+        id: c.id,
+        seed: c.seed,
+        opponent: {
+          displayName: other.displayName,
+          avatarKey: other.avatarKey ?? null,
+        },
+      }),
+    );
   }
 
   function acceptRequest(id: string, name: string) {
@@ -560,77 +621,20 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, on
         </View>
       ) : null}
 
-      {isSignedIn ? (
+      {actionableChallenges.length > 0 || actionableMatches.length > 0 ? (
         <View style={styles.section}>
-          <SectionTitle title={t("onlineMatchesTitle")} count={onlineMatches.length} />
-          {onlineMatches.length === 0 ? (
-            <View style={[styles.list, { padding: spacing.md }]}>
-              <Text style={[type.bodySm, { color: colors.lilac }]}>{t("noOnlineMatches")}</Text>
-            </View>
-          ) : (
-            <View style={styles.list}>
-              {onlineMatches.slice(0, 8).map((m, i) => {
-                const name = m.opponent?.displayName ?? t("opponent");
-                const canPlay =
-                  (m.status === "ready" || m.status === "playing") &&
-                  !m.iHavePlayed &&
-                  Boolean(onPlayOnlineMatch);
-                const subtitle =
-                  m.status === "completed"
-                    ? fill(t("challengeCompleted"), {
-                        my: m.myScore ?? "—",
-                        their: m.theirScore ?? "—",
-                        name,
-                      })
-                    : m.iHavePlayed
-                      ? fill(t("waitingForOpponent"), { name })
-                      : fill(t("matchFoundVs"), { name });
-                return (
-                  <PersonRow
-                    key={m.id}
-                    first={i === 0}
-                    name={m.gameTitle}
-                    avatarKey={m.opponent?.avatarKey ?? null}
-                    subtitle={subtitle}
-                  >
-                    {canPlay ? (
-                      <Pressable
-                        onPress={() => {
-                          const fromFeed = feedGames.find((g) => g.key === m.gameKey);
-                          const game: FeedGame = fromFeed ?? {
-                            type: "mini_game",
-                            key: m.gameKey,
-                            title: m.gameTitle,
-                            blurb: "",
-                          };
-                          onPlayOnlineMatch?.(game, { id: m.id, seed: m.seed });
-                        }}
-                        style={({ pressed }) => [styles.textButton, pressed && { opacity: 0.7 }]}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("playChallenge")}
-                      >
-                        <Text style={[styles.textButtonLabel, { fontFamily: ui.bodyBold }]}>
-                          {t("playChallenge")}
-                        </Text>
-                      </Pressable>
-                    ) : null}
-                  </PersonRow>
-                );
-              })}
-            </View>
-          )}
-        </View>
-      ) : null}
-
-      {challenges.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle title={t("challengesTitle")} count={challenges.length} />
+          <SectionTitle
+            title={t("yourTurnTitle")}
+            count={actionableChallenges.length + actionableMatches.length}
+          />
           <View style={styles.list}>
-            {challenges.map((c, i) => {
+            {actionableChallenges.map((c, i) => {
               const other = c.role === "challenger" ? c.opponent : c.challenger;
               const pendingIncoming = c.status === "pending" && c.role === "opponent";
               const canPlay =
-                (c.status === "active" || c.status === "pending") && !c.iHavePlayed && Boolean(onPlayChallenge);
+                (c.status === "active" || c.status === "pending") &&
+                !c.iHavePlayed &&
+                Boolean(onPlayChallenge);
               return (
                 <PersonRow
                   key={c.id}
@@ -665,63 +669,63 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, on
                       accessibilityRole="button"
                       accessibilityLabel={t("playChallenge")}
                     >
-                      <Text style={[styles.textButtonLabel, { fontFamily: ui.bodyBold }]}>{t("playChallenge")}</Text>
+                      <Text style={[styles.textButtonLabel, { fontFamily: ui.bodyBold }]}>
+                        {t("playChallenge")}
+                      </Text>
                     </Pressable>
-                  ) : c.status === "completed" ? (
-                    <Text style={[type.micro, { color: colors.lilac }]}>{t("seeChallengeResult")}</Text>
                   ) : null}
                 </PersonRow>
               );
             })}
-          </View>
-        </View>
-      ) : null}
-
-      {challengeTarget ? (
-        <View style={styles.section}>
-          <SectionTitle title={fill(t("pickGameToChallenge"), { name: challengeTarget.displayName })} />
-          <View style={styles.list}>
-            {feedGames.length ? (
-              feedGames.map((g, i) => {
-                const localized = localizeGame(g, language);
-                return (
-                  <Pressable
-                    key={g.key}
-                    onPress={() => void sendFriendChallenge(g)}
-                    disabled={busy !== null}
-                    style={({ pressed }) => [
-                      styles.personRow,
-                      i > 0 && styles.personDivider,
-                      pressed && { opacity: 0.75 },
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={localized.title}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]} numberOfLines={1}>
-                        {localized.title}
+            {actionableMatches.map((m, i) => {
+              const name = m.opponent?.displayName ?? t("opponent");
+              const first = actionableChallenges.length === 0 && i === 0;
+              return (
+                <PersonRow
+                  key={m.id}
+                  first={first}
+                  name={m.gameTitle}
+                  avatarKey={m.opponent?.avatarKey ?? null}
+                  subtitle={fill(t("matchFoundVs"), { name })}
+                >
+                  {onPlayOnlineMatch ? (
+                    <Pressable
+                      onPress={() => {
+                        void resolveFeedGame(m.gameKey, {
+                          title: m.gameTitle,
+                          feed: feedGames,
+                          hint: {
+                            title: m.gameTitle,
+                            blurb: m.gameBlurb,
+                            engine: m.engine,
+                            variation: m.variation,
+                            config: m.config,
+                          },
+                        }).then((game) =>
+                          onPlayOnlineMatch(game, {
+                            id: m.id,
+                            seed: m.seed,
+                            opponent: m.opponent
+                              ? {
+                                  displayName: m.opponent.displayName,
+                                  avatarKey: m.opponent.avatarKey ?? null,
+                                }
+                              : undefined,
+                          }),
+                        );
+                      }}
+                      style={({ pressed }) => [styles.textButton, pressed && { opacity: 0.7 }]}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("playChallenge")}
+                    >
+                      <Text style={[styles.textButtonLabel, { fontFamily: ui.bodyBold }]}>
+                        {t("playChallenge")}
                       </Text>
-                      <Text style={[type.metadata, { color: colors.lilac }]} numberOfLines={1}>
-                        {localized.blurb}
-                      </Text>
-                    </View>
-                    {busy === `chal-create:${challengeTarget.userId}` ? (
-                      <ActivityIndicator size="small" color={colors.lime} />
-                    ) : (
-                      <Text style={[type.micro, { color: colors.lime, fontFamily: ui.bodyBold }]}>{t("challenge")}</Text>
-                    )}
-                  </Pressable>
-                );
-              })
-            ) : (
-              <Text style={[type.bodySm, { color: colors.lilac }]}>{t("noChallenges")}</Text>
-            )}
-            <PrimaryButton
-              label={t("cancel")}
-              variant="secondary"
-              onPress={() => setChallengeFriendId(null)}
-              style={{ marginTop: spacing.sm }}
-            />
+                    </Pressable>
+                  ) : null}
+                </PersonRow>
+              );
+            })}
           </View>
         </View>
       ) : null}
@@ -744,11 +748,11 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, on
                 subtitle={formatFriendCode(friendCodeFor(f.userId))}
                 mono
               >
-                {onPlayChallenge ? (
+                {onChallengeFriend ? (
                   <IconButton
                     icon="flash-outline"
                     label={fill(t("challengeNamed"), { name: f.displayName })}
-                    onPress={() => setChallengeFriendId(f.userId)}
+                    onPress={() => onChallengeFriend(f.userId)}
                     disabled={busy !== null}
                   />
                 ) : null}
@@ -781,6 +785,55 @@ export function FriendsScreen({ onSignIn, onOpenLeaderboard, onPlayChallenge, on
           </View>
         )}
       </View>
+
+      {historyMatches.length > 0 || waitingOrDoneChallenges.length > 0 ? (
+        <View style={styles.section}>
+          <SectionTitle title={t("battleHistoryTitle")} />
+          <View style={styles.list}>
+            {waitingOrDoneChallenges.map((c, i) => {
+              const other = c.role === "challenger" ? c.opponent : c.challenger;
+              return (
+                <PersonRow
+                  key={c.id}
+                  first={i === 0}
+                  name={c.gameTitle}
+                  avatarKey={other.avatarKey}
+                  subtitle={challengeSubtitle(c)}
+                >
+                  {c.status === "completed" ? (
+                    <Text style={[type.micro, { color: colors.lilac }]}>{t("seeChallengeResult")}</Text>
+                  ) : null}
+                </PersonRow>
+              );
+            })}
+            {historyMatches.map((m, i) => {
+              const name = m.opponent?.displayName ?? t("opponent");
+              const first = waitingOrDoneChallenges.length === 0 && i === 0;
+              const subtitle =
+                m.status === "completed"
+                  ? fill(t("challengeCompleted"), {
+                      my: m.myScore ?? "—",
+                      their: m.theirScore ?? "—",
+                      name,
+                    })
+                  : fill(t("waitingForOpponent"), { name });
+              return (
+                <PersonRow
+                  key={m.id}
+                  first={first}
+                  name={m.gameTitle}
+                  avatarKey={m.opponent?.avatarKey ?? null}
+                  subtitle={subtitle}
+                >
+                  {m.status === "completed" ? (
+                    <Text style={[type.micro, { color: colors.lilac }]}>{t("seeChallengeResult")}</Text>
+                  ) : null}
+                </PersonRow>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
 
       {friendRequests.outgoing.length > 0 ? (
         <View style={styles.section}>

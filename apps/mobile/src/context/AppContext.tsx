@@ -10,12 +10,13 @@ import React, {
 import { AppState as RNAppState } from "react-native";
 import {
   api,
+  clearGuestToken,
   CrowdSnapshot,
-  ensureGuest,
   FeedItem,
   FeedMoment,
   Friend,
   FriendRequest,
+  getUserAccessToken,
   isApiError,
   loadToken,
   MeProfile,
@@ -54,8 +55,10 @@ import {
   capture,
   markOnboardingStart,
   onboardingDurationSeconds,
-  trackAppOpened,
+  trackAppOpenedAsync,
 } from "../lib/analytics";
+import { isStreakReminderEnabled, noteStreakForAnalytics } from "../lib/retentionStorage";
+import { scheduleStreakReminder } from "../lib/streakReminders";
 import { claimStreak, fetchWallet } from "../lib/walletApi";
 import { useAuth } from "./AuthContext";
 import { useLanguage } from "./LanguageContext";
@@ -89,7 +92,7 @@ type AppState = {
   loadMoreFeed: (viewerIndex?: number) => Promise<void>;
   retryBoot: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
-  /** Re-open profile/interests after a guest later signs in without having set them up. */
+  /** Re-open profile/interests (or signup) when setup is incomplete or sign-in is required. */
   resumeOnboarding: (step?: OnboardingStep) => Promise<void>;
   setOnboardingStep: (step: OnboardingStep) => void;
   setTab: (t: TabKey) => void;
@@ -107,7 +110,7 @@ type AppState = {
   friendRequestsError: string;
   refreshFriendRequests: (force?: boolean) => Promise<void>;
   friendAvatars: { displayName: string; avatarKey: string | null }[];
-  /** Signed-in player's name and photo for the top bars; null for guests. */
+  /** Signed-in player's name and photo for the top bars. */
   me: MySummary | null;
   updateMe: (patch: Partial<MySummary>) => void;
   isFeedTabActive: boolean;
@@ -339,9 +342,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         migrateCount: count > 0 ? count : undefined,
         migrateDate: storedDate ?? undefined,
       });
+      const { broken, previous } = await noteStreakForAnalytics(next.streak);
+      if (broken) {
+        capture("streak_broken", { streak_count: 1, previous_streak: previous });
+      }
+      if ((next.coinsEarned ?? 0) > 0 || next.streakClaimed) {
+        capture("streak_claimed", {
+          streak_count: next.streak,
+          coins_earned: next.coinsEarned ?? 0,
+          already_claimed: Boolean(next.streakClaimed && !(next.coinsEarned ?? 0)),
+        });
+      }
       applyWallet(next, next.coinsEarned ?? 0, "streak");
+      if (await isStreakReminderEnabled()) {
+        void scheduleStreakReminder();
+      }
     } catch {
-      setStreak(await recordDailyVisit());
+      const nextStreak = await recordDailyVisit();
+      const { broken, previous } = await noteStreakForAnalytics(nextStreak);
+      if (broken) capture("streak_broken", { streak_count: 1, previous_streak: previous });
+      setStreak(nextStreak);
     }
   }, [isSignedIn, applyWallet]);
 
@@ -639,21 +659,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (isSignedIn) {
       void refreshFriends(true);
       void refreshFriendRequests(true);
+      void refreshFeed(true, { replace: true });
     } else {
       clearUserScopedState();
     }
-    void refreshFeed(true, { replace: true });
   }, [authReady, isSignedIn, refreshFriends, refreshFriendRequests, clearUserScopedState, refreshFeed]);
 
   const boot = useCallback(async () => {
     setBootError("");
     try {
       await loadToken();
-      await ensureGuest();
+      clearGuestToken();
       const done = await isOnboardingDone();
       setOnboardingDoneState(done);
       if (!done) {
         setOnboardingStepState(await getOnboardingStep());
+      }
+      // Feed needs a signed-in session; onboarding can render without it.
+      if (!getUserAccessToken()) {
+        setReady(true);
+        return;
       }
       // Show last feed instantly (unplayed first via applyFeedPage); replace with a fresh
       // unanswered-led server page so reopening never keeps played polls at the top.
@@ -695,7 +720,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
-    trackAppOpened("cold", user?.id ?? null);
+    void trackAppOpenedAsync("cold", user?.id ?? null);
     if (!onboardingDone) markOnboardingStart();
   }, [ready, user?.id, onboardingDone]);
 
@@ -711,9 +736,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     void reloadFeedForLanguage();
   }, [language, ready, languageReady, reloadFeedForLanguage]);
 
-  // Reopening the app shows a fresh feed from the first post.
+  // Warm reopen — track even during onboarding so early drop-offs are visible.
+  // Feed refresh only runs after onboarding so we don't thrash boot.
   useEffect(() => {
-    if (!ready || !onboardingDone) return;
+    if (!ready) return;
     let backgroundedAt: number | null = null;
     const sub = RNAppState.addEventListener("change", (s) => {
       if (s === "background") {
@@ -721,7 +747,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       if (s !== "active" || backgroundedAt === null) return;
-      trackAppOpened("warm", user?.id ?? null);
+      void trackAppOpenedAsync("warm", user?.id ?? null);
+      if (!onboardingDone) {
+        backgroundedAt = null;
+        return;
+      }
       if (isSignedIn) void syncEconomy();
       else void recordDailyVisit().then(setStreak);
       const away = Date.now() - backgroundedAt;

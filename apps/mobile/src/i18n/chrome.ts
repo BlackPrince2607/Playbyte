@@ -50,6 +50,12 @@ const HI: Record<string, string> = {
   Nice: "नाइस",
   "Too slow!": "धीमे हो गए!",
   "Not yet…": "अभी नहीं…",
+  "All found!": "सब मिल गए!",
+  "All spotted!": "सब ढूँढ लिए!",
+  Differences: "फ़र्क",
+  "Scene detail": "सीन डिटेल",
+  Subtlety: "सूक्ष्मता",
+  Where: "कहाँ?",
 };
 
 export function localizeChrome(text: string, lang: AppLang): string {

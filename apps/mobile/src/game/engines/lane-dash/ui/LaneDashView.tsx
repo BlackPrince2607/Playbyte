@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(245, 240, 255, 0.5)",
   },
   laneRow: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     flexDirection: "row",
   },
   laneTint: { flex: 1 },
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   crashFlash: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(255, 77, 141, 0.28)",
   },
   meta: { color: colors.lilac, textAlign: "center", marginBottom: spacing.sm },

@@ -5,15 +5,20 @@ function idem(prefix: string) {
 }
 
 export async function enqueueMatchmaking(input: {
+  /** Theme lobby — server picks a concrete game from the category pool. */
+  category?: string;
+  /** Legacy / specific-game queue (friends). Ignored when category is set. */
   gameKey?: string;
   preferredOpponentUserId?: string;
   extend?: boolean;
 }): Promise<MatchmakingTicket> {
+  const lobby = input.category ?? input.gameKey ?? "any";
   return api<MatchmakingTicket>("/v1/matchmaking/tickets", {
     method: "POST",
-    headers: { "Idempotency-Key": idem(`mm-${input.gameKey ?? "any"}`) },
+    headers: { "Idempotency-Key": idem(`mm-${lobby}`) },
     body: JSON.stringify({
-      gameKey: input.gameKey,
+      category: input.category,
+      gameKey: input.category ? undefined : input.gameKey,
       preferredOpponentUserId: input.preferredOpponentUserId,
       extend: input.extend ?? false,
     }),

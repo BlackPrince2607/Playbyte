@@ -8,6 +8,11 @@ export const ANDROID_PACKAGE = "app.maja.mobile";
 
 export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
 
+/** Community WhatsApp group invite. Override with EXPO_PUBLIC_WHATSAPP_GROUP_URL if needed. */
+export const WHATSAPP_GROUP_URL =
+  process.env.EXPO_PUBLIC_WHATSAPP_GROUP_URL?.trim() ||
+  "https://chat.whatsapp.com/JWG7SVjTIUtAUOxwrUa8F3?mode=gi_t";
+
 /** Link included in invite / score shares. Override with EXPO_PUBLIC_APP_SHARE_URL if needed. */
 export const APP_SHARE_URL = process.env.EXPO_PUBLIC_APP_SHARE_URL?.trim() || PLAY_STORE_URL;
 

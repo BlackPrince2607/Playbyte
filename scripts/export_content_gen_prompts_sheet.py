@@ -83,12 +83,13 @@ def main() -> None:
             ["Model", "OPENAI_MODEL default gpt-4o-mini (OpenRouter if key starts with sk-or-)"],
             [
                 "Languages",
-                "Two stages, one card: (1) English Content Agent writes prompt/label only; "
-                "(2) Hindi Localization Agent writes promptHi/labelHi after English is finalized",
+                "Two pools: (1) English Content Agent invents EN cards; "
+                "(2) Hindi Content Agent invents original HI cards (not localization).",
             ],
             ["Batch size", "~20 cards per onboarding category per refresh"],
             ["Card TTL", "No short TTL — previous live moments retired only after the new batch is live"],
             ["Active categories", ", ".join(ONBOARDING_SLUGS)],
+            ["Taxonomy", "category → format (poll/trivia/this_or_that/find_the_difference/quiz) → types (taxonomy.py)"],
             ["Event brief categories", ", ".join(sorted(EVENT_SLUGS))],
             ["Trend poll types", ", ".join(sorted(TREND_POLL_TYPES))],
             ["Trend quiz types", ", ".join(sorted(TREND_QUIZ_TYPES))],
@@ -96,12 +97,11 @@ def main() -> None:
             ["Event quiz types", ", ".join(sorted(EVENT_QUIZ_TYPES))],
             [
                 "How to read this workbook",
-                "Agent System Prompt = English-only LLM system message. Agent User Payload = JSON user message schema. "
-                "Shared Rules = rules[] sent every category. Category Scope/Rules = sports vs cricket extras. "
-                "Evergreen Polls/Quizzes = bank templates. Brief Templates = verified event cards. "
-                "Meme Pack = memegen image polls. Hindi Localize = second-pass localization prompt (never invents cards). "
-                "Poll Gen & Feed = how polls are created and shown in the swipe feed. "
-                "Trends Input = ops-maintained India trends JSON per category.",
+                "Agent System Prompt = English-only LLM system message. Agent User Payload = JSON user message schema "
+                "including allowedFormats + typesByFormat. Shared Rules = rules[] sent every category. "
+                "Category Scope/Rules = per-slug taxonomy extras. Evergreen Polls/Quizzes = bank templates. "
+                "Brief Templates = verified event cards. Meme/FTD Pack = image spice. "
+                "Hindi Generate = separate HI invent agent. Trends Input = ops India trends JSON.",
             ],
             [
                 "India trends",
@@ -113,7 +113,7 @@ def main() -> None:
     )
 
     # Build messages for a sample category to dump exact prompts.
-    sample_slug = "movies"
+    sample_slug = "bollywood"
     msgs = _messages(sample_slug, 20, briefs_for(sample_slug), avoid_prompts=[], insights={})
     system_prompt = msgs[0]["content"]
     user_payload = json.loads(msgs[1]["content"])
@@ -196,14 +196,19 @@ def main() -> None:
     _sheet(wb, "User Payload Schema", ["Key", "Meaning"], schema_rows, widths=[24, 100])
 
     # Per-category overview
+    from scripts.content_gen.taxonomy import all_types_for, formats_for
+
     cat_rows: list[list[object]] = []
     for slug in ONBOARDING_SLUGS:
         scope = _category_scope(slug)
         rules = _category_rules(slug)
+        types_map = all_types_for(slug)
         cat_rows.append(
             [
                 slug,
                 scope.get("label", slug),
+                ", ".join(formats_for(slug)),
+                json.dumps(types_map, ensure_ascii=False),
                 ", ".join(scope.get("include") or []) if isinstance(scope.get("include"), list) else "",
                 ", ".join(scope.get("exclude") or []) if isinstance(scope.get("exclude"), list) else "",
                 scope.get("note", ""),
@@ -222,6 +227,8 @@ def main() -> None:
         [
             "slug",
             "label",
+            "formats",
+            "types_by_format",
             "include",
             "exclude",
             "scope_note",
@@ -234,7 +241,7 @@ def main() -> None:
             "brief_count",
         ],
         cat_rows,
-        widths=[18, 22, 40, 40, 40, 50, 30, 30, 14, 14, 12, 12],
+        widths=[18, 22, 40, 50, 40, 40, 40, 50, 30, 30, 14, 14, 12, 12],
     )
 
     # Category scopes / rules detail (one row per rule line)
@@ -258,10 +265,10 @@ def main() -> None:
         widths=[18, 12, 100],
     )
 
-    # Full sample user payload (movies) for understanding
+    # Full sample user payload for understanding
     _sheet(
         wb,
-        "Sample User JSON (movies)",
+        "Sample User JSON (bollywood)",
         ["JSON"],
         [[json.dumps(user_payload, ensure_ascii=False, indent=2)]],
         widths=[140],

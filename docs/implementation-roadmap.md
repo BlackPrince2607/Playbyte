@@ -45,7 +45,7 @@
 | Google OAuth | Welcome CTA | AuthContext, Supabase providers | OAuth console | Sign-in works | Large |
 | Friend remove / block | API + UI | friends module, FriendsScreen | Product rules | Remove reflected in list | Medium |
 | Friend competitive scores | Real aggregates if product wants ranks | new API | Game plays privacy | Scores from DB only | Large |
-| Game share-card / challenge | Post-game share without fake Sign-In | sharing + MainShell | Storage | Share works for plays | Medium |
+| Game share-card / challenge | Post-game share without fake Sign-In | sharing + MainShell | Storage | Share works for plays | Done (play share-card API + result UI) |
 | Full i18n | Language affects strings | mobile i18n | Content | Language setting works | Large |
 | Sentry wiring | Use `SENTRY_DSN` | main.py, mobile | Sentry project | Errors visible | Medium |
 | Integration tests + Postgres | Testcontainers or staging suite | backend/tests | CI runners | Respond/share/auth covered live | Large |

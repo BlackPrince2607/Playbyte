@@ -1,0 +1,4 @@
+{
+  "description": "Optional find-the-difference image moments for feed refresh. Empty by default — ops can add rows without an app release. categorySlug must be an active taxonomy slug that allows find_the_difference.",
+  "moments": []
+}

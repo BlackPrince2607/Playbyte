@@ -21,26 +21,57 @@ import { useApp } from "../../context/AppContext";
 import { colors, radius, spacing, surface } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
+export type DuelPreview = {
+  opponent: { displayName: string; avatarKey: string | null };
+  gameTitle?: string;
+  countdownSeconds?: number;
+  badgeLabel?: string;
+};
+
 type Props = {
-  match: OnlineMatch;
+  /** Online quick-match payload. Prefer this when available. */
+  match?: OnlineMatch | null;
+  /** Friend challenge / synthetic duel when there is no OnlineMatch. */
+  duel?: DuelPreview | null;
   onClose: () => void;
   onReady: () => void;
   onProfile?: () => void;
+  /** When false, countdown waits at GO until the game card is warmed. */
+  gameReady?: boolean;
+  launchError?: string;
 };
 
-export function OpponentFoundScreen({ match, onClose, onReady, onProfile }: Props) {
+export function OpponentFoundScreen({
+  match,
+  duel,
+  onClose,
+  onReady,
+  onProfile,
+  gameReady = true,
+  launchError,
+}: Props) {
   const insets = useSafeAreaInsets();
   const { me } = useApp();
-  const initial = Math.max(1, Math.min(5, match.countdownSeconds || 3));
+  const preview: DuelPreview = duel ?? {
+    opponent: {
+      displayName: match?.opponent?.displayName ?? "Rival",
+      avatarKey: match?.opponent?.avatarKey ?? null,
+    },
+    gameTitle: match?.gameTitle,
+    countdownSeconds: match?.countdownSeconds,
+  };
+  const initial = Math.max(1, Math.min(5, preview.countdownSeconds || 3));
   const [count, setCount] = useState(initial);
   const readyFired = useRef(false);
   const countScale = useSharedValue(1);
   const glow = useSharedValue(0.7);
   const vsSpin = useSharedValue(0);
 
-  const opponent = match.opponent;
   const youName = me?.displayName ?? "You";
-  const oppName = opponent?.displayName ?? "Rival";
+  const oppName = preview.opponent.displayName;
+  const oppAvatar = preview.opponent.avatarKey;
+  const badgeLabel = preview.badgeLabel ?? "Opponent Found";
+  const gameTitle = preview.gameTitle;
 
   useEffect(() => {
     glow.value = withRepeat(
@@ -62,16 +93,16 @@ export function OpponentFoundScreen({ match, onClose, onReady, onProfile }: Prop
   }, [count, countScale]);
 
   useEffect(() => {
-    if (count <= 0) {
-      if (!readyFired.current) {
-        readyFired.current = true;
-        onReady();
-      }
-      return;
+    if (count > 0) {
+      const t = setTimeout(() => setCount((c) => c - 1), 1000);
+      return () => clearTimeout(t);
     }
-    const t = setTimeout(() => setCount((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [count, onReady]);
+    // Hold at GO until the playable card is ready — never dump into "Game unavailable".
+    if (launchError || readyFired.current) return;
+    if (!gameReady) return;
+    readyFired.current = true;
+    onReady();
+  }, [count, gameReady, launchError, onReady]);
 
   const countStyle = useAnimatedStyle(() => ({ transform: [{ scale: countScale.value }] }));
   const youGlowStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
@@ -100,8 +131,13 @@ export function OpponentFoundScreen({ match, onClose, onReady, onProfile }: Prop
 
         <Animated.View entering={FadeIn.duration(300)} style={styles.badge}>
           <View style={styles.dot} />
-          <Text style={styles.badgeText}>Opponent Found</Text>
+          <Text style={styles.badgeText}>{badgeLabel}</Text>
         </Animated.View>
+        {gameTitle ? (
+          <Text style={styles.gameHint} numberOfLines={1}>
+            Playing {gameTitle}
+          </Text>
+        ) : null}
 
         <View style={styles.stage}>
           <View style={styles.beam} />
@@ -130,7 +166,7 @@ export function OpponentFoundScreen({ match, onClose, onReady, onProfile }: Prop
           <View style={styles.col}>
             <Animated.View style={[styles.oppGlow, oppGlowStyle]} />
             <View style={styles.oppFrame}>
-              <AvatarImage displayName={oppName} avatarKey={opponent?.avatarKey} size={104} />
+              <AvatarImage displayName={oppName} avatarKey={oppAvatar} size={104} />
             </View>
             <Text style={[type.bodyLg, styles.name]} numberOfLines={1}>
               {oppName}
@@ -148,7 +184,7 @@ export function OpponentFoundScreen({ match, onClose, onReady, onProfile }: Prop
               countStyle,
             ]}
           >
-            {count > 0 ? String(count) : "GO!"}
+            {count > 0 ? String(count) : launchError ? "!" : gameReady ? "GO!" : "…"}
           </Animated.Text>
           <View style={styles.dots}>
             {[1, 2, 3].map((i) => (
@@ -158,7 +194,27 @@ export function OpponentFoundScreen({ match, onClose, onReady, onProfile }: Prop
               />
             ))}
           </View>
-          <Text style={[type.bodySm, { color: colors.lilac }]}>Battle starting...</Text>
+          {launchError ? (
+            <>
+              <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center", paddingHorizontal: 24 }]}>
+                {launchError}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  readyFired.current = false;
+                  onReady();
+                }}
+                style={({ pressed }) => [styles.retryBtn, pressed && { opacity: 0.9 }]}
+              >
+                <Text style={styles.retryLabel}>Try again</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Text style={[type.bodySm, { color: colors.lilac }]}>
+              {count > 0 ? "Battle starting..." : gameReady ? "Battle starting..." : "Loading game…"}
+            </Text>
+          )}
         </View>
       </View>
     </View>
@@ -238,6 +294,15 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     textTransform: "uppercase",
     fontWeight: "500",
+  },
+  gameHint: {
+    marginTop: 10,
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: colors.paper,
+    letterSpacing: 0.3,
+    textAlign: "center",
+    paddingHorizontal: spacing.margin,
   },
   stage: {
     width: "100%",
@@ -356,5 +421,17 @@ const styles = StyleSheet.create({
   },
   progressDotOn: {
     backgroundColor: surface.lime,
+  },
+  retryBtn: {
+    marginTop: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: radius.pill,
+    backgroundColor: surface.lime,
+  },
+  retryLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: colors.ink,
   },
 });

@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from app.config import get_settings
 from app.infrastructure.postgres.db import SessionLocal
-from app.infrastructure.postgres.models import OutboxEvent
+from app.infrastructure.postgres.models import Match, OutboxEvent
 from app.infrastructure.realtime.publisher import NoopRealtimePublisher, SupabaseBroadcastPublisher
 
 
@@ -29,6 +29,7 @@ async def maintain_matchmaking() -> None:
         if await mm.advisory_pair_lock(session):
             await mm.pair_searching_tickets(session)
         await mm.mark_ready_matches(session)
+        await mm.catch_up_overdue_bot_plays(session)
         await mm.finalize_due_matches(session)
         await session.commit()
 
@@ -99,7 +100,15 @@ async def process_once() -> int:
 
                     match_id = event.payload.get("matchId")
                     if match_id:
-                        await mm.execute_bot_play(session, UUID(match_id))
+                        ok = await mm.execute_bot_play(session, UUID(match_id))
+                        if not ok:
+                            # Bot score still missing → retry shortly (don't drop the job).
+                            match = await session.get(Match, UUID(match_id))
+                            if match and await mm.match_awaits_bot_play(session, match):
+                                event.status = "pending"
+                                event.next_attempt_at = datetime.now(UTC) + timedelta(seconds=5)
+                                handled += 1
+                                continue
                 event.status = "done"
                 handled += 1
             except Exception:

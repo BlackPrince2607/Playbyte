@@ -1,28 +1,69 @@
 JSON
 "{
-  ""category"": ""movies"",
+  ""category"": ""bollywood"",
+  ""categoryLabel"": ""Bollywood"",
   ""categoryScope"": {
-    ""label"": ""Movies / Bollywood & Indian cinema"",
     ""include"": [
-      ""theatrical releases"",
-      ""trailers"",
-      ""OTT"",
-      ""interval culture"",
-      ""stars"",
-      ""rewatches""
+      ""Hindi cinema"",
+      ""actors and actresses"",
+      ""iconic scenes and dialogues"",
+      ""OTT vs theatre"",
+      ""nostalgia 90s/2000s"",
+      ""music and dance""
     ],
     ""exclude"": [
-      ""non-film TV news dumps""
+      ""Hollywood as the main topic"",
+      ""politics""
     ],
-    ""goodAngles"": [
-      ""friend-says-must-watch dilemma"",
-      ""interval / theatre stakes"",
-      ""trailer hype vs wait"",
-      ""film recognition or surprising familiar fact""
+    ""note"": """"
+  },
+  ""allowedFormats"": [
+    ""poll"",
+    ""trivia"",
+    ""this_or_that"",
+    ""find_the_difference"",
+    ""quiz""
+  ],
+  ""typesByFormat"": {
+    ""poll"": [
+      ""casting"",
+      ""nostalgia"",
+      ""couples"",
+      ""endings"",
+      ""versus"",
+      ""prediction"",
+      ""dialogues"",
+      ""music""
+    ],
+    ""trivia"": [
+      ""movie_guess"",
+      ""song_guess"",
+      ""dialogue"",
+      ""actors_name"",
+      ""who"",
+      ""which""
+    ],
+    ""this_or_that"": [
+      ""actors"",
+      ""movies"",
+      ""eras"",
+      ""ott_vs_theatre""
+    ],
+    ""find_the_difference"": [
+      ""movie_scenes"",
+      ""posters"",
+      ""sets""
+    ],
+    ""quiz"": [
+      ""facts"",
+      ""records"",
+      ""awards"",
+      ""who"",
+      ""which""
     ]
   },
   ""need"": 20,
-  ""today"": ""2026-11-02"",
+  ""today"": ""2026-11-20"",
   ""mix"": {
     ""quizzes"": 12,
     ""polls"": 8,
@@ -37,31 +78,54 @@ JSON
     ""preferPollTypes"": [
       ""debate"",
       ""hot"",
-      ""opinion""
+      ""hypothetical"",
+      ""opinion"",
+      ""social_debate"",
+      ""versus""
+    ],
+    ""preferFormats"": [
+      ""poll"",
+      ""trivia"",
+      ""this_or_that"",
+      ""find_the_difference"",
+      ""quiz""
     ]
   },
-  ""market"": ""India English feed for Gen-Z (metros + Tier-2). Fast swipe interactions: trivia proves knowledge; polls create debate. Hindi/Hinglish is a separate localization stage."",
+  ""market"": ""India English feed for Gen-Z (metros + Tier-2/3). Fast swipe interactions across poll / trivia / this_or_that / quiz. Hindi is a separate generation agent with its own card pool — never mix."",
   ""pollQuestionTypes"": [
+    ""casting"",
     ""challenge"",
     ""company"",
+    ""couples"",
     ""debate"",
+    ""dialogues"",
     ""end"",
+    ""endings"",
     ""hot"",
+    ""hypothetical"",
     ""interval"",
     ""language"",
+    ""music"",
     ""night"",
+    ""nostalgia"",
     ""opinion"",
     ""prediction"",
     ""rewatch"",
     ""screen"",
     ""sequel"",
     ""snack"",
+    ""social_debate"",
     ""song"",
     ""spoiler"",
-    ""star""
+    ""star"",
+    ""versus""
   ],
   ""quizQuestionTypes"": [
+    ""awards"",
+    ""facts"",
     ""interval"",
+    ""recognition"",
+    ""records"",
     ""rewatch"",
     ""screen"",
     ""spoiler"",
@@ -70,17 +134,62 @@ JSON
     ""which"",
     ""who""
   ],
-  ""trendQuizTypes"": [
+  ""triviaQuestionTypes"": [
+    ""actors_name"",
+    ""dialogue"",
+    ""facts"",
+    ""interval"",
+    ""movie_guess"",
+    ""recognition"",
+    ""records"",
+    ""rewatch"",
+    ""screen"",
+    ""song_guess"",
+    ""spoiler"",
+    ""stat"",
     ""trivia"",
     ""which"",
     ""who""
   ],
-  ""evergreenBank"": ""Friday night. Where do you watch?\nTheatre — big screen only\nCouch and a stream\nWhat keeps you in the seat?\nAn interval twist\nA slow burn that earns the end\nA sequel is announced. You…\nBook early\nWait for reviews\nProtect the original\nInterval snack. Your move?\nAlways popcorn\nSneak your own\nSkip food\nHow do you watch?\nHindi original\nDubbed, subtitles on\nWho is in the next seat?\nThe group chat, all of them\nOne friend who will not talk\nTonight is for…\nA new Hindi release\nA rewatch of a classic\nSomeone starts a spoiler. You…\nCover your ears\nTell them to finish\nYou rewatch because…\nIt feels like home\nYou forgot the plot\nThe interval song. You…\nSing along\nWait for the story\nYou pick a film for…\nThe lead pair\nThe director\nThe credits roll. You…\nSit through them\nAre already discussing the end\nThe short break in the middle of a theatrical film in India is called the…\nInterval\nEncore\nOverture\nA film you leave the house to see on a large shared screen is a…\nTheatre screening\nDub\nSequel\nTelling the ending before someone has watched is a…\nSpoiler\nChorus\nHeadline\nPlaying a film you have already finished is a…\nRewatch\nDebut\nToss"",
+  ""thisOrThatTypes"": [
+    ""actors"",
+    ""challenge"",
+    ""company"",
+    ""debate"",
+    ""end"",
+    ""eras"",
+    ""hot"",
+    ""hypothetical"",
+    ""interval"",
+    ""language"",
+    ""movies"",
+    ""night"",
+    ""opinion"",
+    ""ott_vs_theatre"",
+    ""prediction"",
+    ""rewatch"",
+    ""screen"",
+    ""sequel"",
+    ""snack"",
+    ""social_debate"",
+    ""song"",
+    ""spoiler"",
+    ""star"",
+    ""versus""
+  ],
+  ""trendQuizTypes"": [
+    ""facts"",
+    ""recognition"",
+    ""trivia"",
+    ""which"",
+    ""who""
+  ],
+  ""evergreenBank"": ""Friday night. Where do you watch?\nTheatre — big screen only\nCouch and a stream\nWhat keeps you in the seat?\nAn interval twist\nA slow burn that earns the end\nSequel announced. Your move?\nBook early\nWait for reviews\nProtect the original\nInterval snack. Your move?\nAlways popcorn\nSneak your own\nSkip food\nHow do you watch?\nHindi original\nDubbed, subtitles on\nWho is in the next seat?\nThe group chat, all of them\nOne friend who will not talk\nTonight is for…\nA new Hindi release\nA rewatch of a classic\nSomeone starts a spoiler. Next?\nCover your ears\nTell them to finish\nYou rewatch because…\nIt feels like home\nYou forgot the plot\nInterval song hits. Your move?\nSing along\nWait for the story\nYou pick a film for…\nThe lead pair\nThe director\nCredits are rolling. What do you do?\nSit through them\nAre already discussing the end\nThe short break in the middle of a theatrical film in India is called the…\nInterval\nEncore\nOverture\nA film you leave the house to see on a large shared screen is a…\nTheatre screening\nDub\nSequel\nTelling the ending before someone has watched is a…\nSpoiler\nChorus\nHeadline\nPlaying a film you have already finished is a…\nRewatch\nDebut\nToss"",
   ""verifiedTrends"": [
     {
       ""trendId"": ""movies-weekend-window"",
       ""topic"": ""Weekend theatre release"",
-      ""category"": ""movies"",
+      ""category"": ""bollywood"",
       ""freshness"": ""recent"",
       ""eventStatus"": ""completed"",
       ""eventDate"": ""2026-10-24"",
@@ -102,7 +211,7 @@ JSON
   ""briefs"": [
     {
       ""id"": ""movies-weekend-window"",
-      ""category"": ""movies"",
+      ""category"": ""bollywood"",
       ""title"": ""Weekend theatre release"",
       ""eventDate"": ""2026-10-24"",
       ""context"": ""This weekend's theatre release"",
@@ -180,13 +289,16 @@ JSON
     ""Return JSON with a candidates array. English fields only — never promptHi, labelHi, or optionsHi."",
     ""Every candidate category must equal the requested category."",
     ""Stay inside categoryScope — never write a card that belongs in a different onboarding category."",
-    ""Today is 2026-11-02. Prefer verified live/upcoming India context from verifiedTrends when present."",
+    ""Today is 2026-11-20. Prefer verified live/upcoming India context from verifiedTrends when present."",
     ""Never invent a trend. Never claim something is trending/viral without a matching verifiedTrends row."",
     ""MIX (soft target): about 12 QUIZZES (~60% knowable play) and 8 polls (~debate/hot/opinion). Quality beats quotas — fewer strong cards beat weak fill."",
     ""Quiz-first: most cards should be knowable quizzes with one clear correct answer; polls add debate heat."",
     ""Predictions: at most ~10% of the batch, only for upcoming verifiedTrends/briefs with briefId when required."",
     ""If verifiedTrends is empty: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — without viral/trending wording. Evergreen is not a synonym for boring trivia."",
     ""Not formal survey speak. Not essays. Spicy but friendly. Understandable in ~3 seconds."",
+    ""MOBILE READABILITY (critical): prompt max ~90 characters / ~18 words. Option labels max ~36 characters."",
+    ""Write a complete readable question — never cryptic stubs like 'Heat level. You…' or 'Movement today is…'."",
+    ""Avoid long dictionary definitions ('X is a…' with a paragraph). Keep quizzes punchy and scannable."",
     ""A quiz has exactly one correct option. Polls must set isCorrect false on every option."",
     ""Incorrect quiz options must be plausible — no absurd distractors, no 'All/None of the above'."",
     ""Two options use type predict. Three or four use type pulse."",
@@ -212,7 +324,7 @@ JSON
     ""Prioritize verifiedTrends that are LIVE or UPCOMING for THIS category (manual India trends JSON + briefs). Skip party politics."",
     ""One verified trend → normally ONE strong interaction angle (trivia OR debate OR prediction), not five paraphrases."",
     ""CLOSED / PAST EVENTS (critical): NEVER ask users to predict the outcome of a match, tournament, season, election, award, or final that has already concluded as of today."",
-    ""BAD past prediction: 'Who will win IPL 2026?' when IPL 2026 is already over by 2026-11-02."",
+    ""BAD past prediction: 'Who will win IPL 2026?' when IPL 2026 is already over by 2026-11-20."",
     ""BAD past prediction: 'Prediction: who wins the final?' for a final that already happened."",
     ""OK on past events: opinion/debate only ('Fair Player of the Match?', 'Was that the right call?')."",
     ""OK predictions: only UPCOMING fixtures (tonight / this weekend / next match) that have not started — and only with briefId when questionType is prediction."",
@@ -232,15 +344,17 @@ JSON
     ""NO Hinglish in English fields: never use Hindi words or Latin transliteration (yaar, kya, kitna, bahut, nahi, scene hai, full on, etc.)."",
     ""English must read like English a fluent speaker would write — not Hindi written in Latin letters."",
     ""Indian names, brand names, movie titles, and proper nouns in English are fine."",
-    ""A separate Hindi localization agent will create promptHi / labelHi after validation."",
+    ""Hindi feed cards are invented by a separate Hindi generation agent — never mix languages."",
     ""Output schema per candidate: format, category, questionType, type, prompt, options[{label,isCorrect}], briefId."",
     ""Do NOT include promptHi, labelHi, or optionsHi — they are forbidden in this stage."",
     ""Aim for about 20 strong candidates. Quality over quantity — return fewer rather than pad with weak cards."",
     ""Pass an internal swipe-feed check before including a card: clear in ~3s, reason to tap, specific not generic."",
     ""Stay inside categoryScope for this slug only."",
+    ""Only use allowedFormats and typesByFormat from the user payload."",
     ""If verifiedTrends is empty for this category: ship strong evergreen PLAY (scenarios, recognition, sharp debates) — do NOT fake viral framing."",
     ""Every card needs a clear engagement mechanism — not just category fit."",
-    ""GOOD: friend cancels / must-watch dilemma, interval stakes, trailer hype vs wait, film recognition."",
-    ""BAD: endless 'who is your favourite actor?' or bare 'theatre or OTT?' with no situation.""
+    ""Vary formats across the batch when multiple formats are allowed."",
+    ""GOOD: casting debates, nostalgia, endings, movie/song/dialogue trivia."",
+    ""BAD: endless 'who is your favourite actor?' with no situation.""
   ]
 }"

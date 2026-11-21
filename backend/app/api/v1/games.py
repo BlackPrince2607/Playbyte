@@ -11,6 +11,7 @@ from app.infrastructure.postgres.db import get_session
 from app.infrastructure.postgres.models import MiniGame
 from app.modules.economy.rules import parse_local_date
 from app.modules.games.service import catalog_entry, game_stats, submit_play
+from app.modules.sharing.service import play_share_card
 
 router = APIRouter(prefix="/games", tags=["games"])
 
@@ -102,3 +103,13 @@ async def post_play(
         challenge_id=body.challengeId,
         match_id=body.matchId,
     )
+
+
+@router.post("/{game_key}/plays/{play_id}/share-card")
+async def post_play_share_card(
+    game_key: str,
+    play_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    actor: Actor = Depends(get_actor),
+) -> dict:
+    return await play_share_card(session, actor, game_key, play_id)

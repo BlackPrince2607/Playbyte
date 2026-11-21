@@ -14,7 +14,6 @@ import { localizeGame } from "../../i18n/games";
 import { fill } from "../../i18n/strings";
 import { capture } from "../../lib/analytics";
 import { FREE_HINTS_PER_DAY, hintCoinCost } from "../../lib/economy";
-import { guestFreeHintsLeft, takeGuestFreeHint } from "../../lib/storage";
 import { spendHint } from "../../lib/walletApi";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
@@ -34,7 +33,7 @@ import { gameBus, levelStore, newSessionId, recentIdsStore, sessionStore } from 
 import { SessionRunner } from "../session/runner";
 import { CompletedPlay, GameSession } from "../session/types";
 import { feedback } from "./feedback";
-import { GameFrame } from "./GameFrame";
+import { GameFrame, type DuelHud } from "./GameFrame";
 import { HintPriceContext } from "./kit";
 import { Confetti, Countdown, FlashOverlay } from "./motion";
 import { EngineModule } from "./types";
@@ -50,6 +49,8 @@ type Props = {
   seed?: string;
   /** Skip recent-content avoidance (challenge duels must stay seed-identical). */
   sharedSeed?: boolean;
+  /** Online / challenge duel — shows both PFPs and race progress in the HUD. */
+  duel?: DuelHud | null;
 };
 
 /** Android back leaves the game (screens without their own pause menu). */
@@ -65,7 +66,7 @@ function useBackToExit(onExit: () => void, enabled = true) {
 }
 
 /** Plays any game card through the session runner of its engine. */
-export function GameHost({ card, onComplete, onExit, restore, seed, sharedSeed }: Props) {
+export function GameHost({ card, onComplete, onExit, restore, seed, sharedSeed, duel }: Props) {
   registerEngines();
   const { language } = useLanguage();
   const title = localizeGame(card, language).title;
@@ -92,6 +93,7 @@ export function GameHost({ card, onComplete, onExit, restore, seed, sharedSeed }
         restore={restore}
         seed={seed}
         sharedSeed={sharedSeed}
+        duel={duel}
         onComplete={onComplete}
         onExit={onExit}
       />
@@ -161,11 +163,12 @@ type SessionProps = {
   restore?: GameSession;
   seed?: string;
   sharedSeed?: boolean;
+  duel?: DuelHud | null;
   onComplete: (play: CompletedPlay) => void;
   onExit: () => void;
 };
 
-function SdkSession({ gameKey, title, definition, restore, seed, sharedSeed, onComplete, onExit }: SessionProps) {
+function SdkSession({ gameKey, title, definition, restore, seed, sharedSeed, duel, onComplete, onExit }: SessionProps) {
   const { t } = useLanguage();
   const [boot, setBoot] = useState<Boot>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -237,18 +240,42 @@ function SdkSession({ gameKey, title, definition, restore, seed, sharedSeed, onC
       />
     );
   }
-  return <ActiveSession {...boot} gameKey={gameKey} title={title} restored={!!restore} onComplete={onComplete} onExit={onExit} />;
+  return (
+    <ActiveSession
+      {...boot}
+      gameKey={gameKey}
+      title={title}
+      restored={!!restore}
+      duel={duel}
+      onComplete={onComplete}
+      onExit={onExit}
+    />
+  );
 }
 
 type ActiveProps = Ready & {
   gameKey: string;
   title: string;
   restored: boolean;
+  duel?: DuelHud | null;
   onComplete: (play: CompletedPlay) => void;
   onExit: () => void;
 };
 
-function ActiveSession({ mod, runner, clock, content, definition, gameKey, title, restored, quickStart, onComplete, onExit }: ActiveProps) {
+function ActiveSession({
+  mod,
+  runner,
+  clock,
+  content,
+  definition,
+  gameKey,
+  title,
+  restored,
+  quickStart,
+  duel,
+  onComplete,
+  onExit,
+}: ActiveProps) {
   const { t, fonts: ui } = useLanguage();
   const { isSignedIn } = useAuth();
   const { wallet, applyWallet } = useApp();
@@ -260,7 +287,6 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
   const [menuOpen, setMenuOpen] = useState(restored && snap.status === "paused");
   const [levelUp, setLevelUp] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
-  const [guestLeft, setGuestLeft] = useState(FREE_HINTS_PER_DAY);
   const pendingHint = useRef<{ id: string; key: string } | null>(null);
   const finished = useRef(false);
   const onCompleteRef = useRef(onComplete);
@@ -281,12 +307,7 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
     else setCounting(true);
   }, [quickStart, runner]);
 
-  useEffect(() => {
-    if (isSignedIn) return;
-    void guestFreeHintsLeft().then(setGuestLeft);
-  }, [isSignedIn]);
-
-  const freeLeft = isSignedIn ? (wallet?.freeHintsLeft ?? FREE_HINTS_PER_DAY) : guestLeft;
+  const freeLeft = wallet?.freeHintsLeft ?? FREE_HINTS_PER_DAY;
 
   const persist = useCallback(() => {
     void sessionStore.save({ ...runner.serialize(), title }).catch(() => {});
@@ -446,7 +467,7 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
       void (async () => {
         const cost = hintCoinCost(definition.engine, id);
         const hintNumber = Math.max(1, snap.hints.findIndex((h) => h.id === id) + 1);
-        const isFree = cost == null || freeLeft > 0 || !isSignedIn;
+        const isFree = cost == null || freeLeft > 0;
         capture("hint_viewed", {
           game_id: gameKey,
           hint_number: hintNumber,
@@ -454,19 +475,7 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
         });
 
         if (!isSignedIn) {
-          if (cost == null) {
-            runner.useHint(id);
-            capture("hint_unlocked", { game_id: gameKey, coin_cost: 0, balance_after: null });
-            return;
-          }
-          const ok = await takeGuestFreeHint();
-          if (!ok) {
-            setShopOpen(true);
-            return;
-          }
-          setGuestLeft((left) => Math.max(0, left - 1));
-          runner.useHint(id);
-          capture("hint_unlocked", { game_id: gameKey, coin_cost: 0, balance_after: null });
+          setShopOpen(true);
           return;
         }
         const key =
@@ -514,7 +523,14 @@ function ActiveSession({ mod, runner, clock, content, definition, gameKey, title
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.ink }}>
-      <GameFrame title={title} subtitle={variationTitle?.toUpperCase()} snapshot={snap} now={now} onPause={openMenu}>
+      <GameFrame
+        title={title}
+        subtitle={variationTitle?.toUpperCase()}
+        snapshot={snap}
+        now={now}
+        onPause={openMenu}
+        duel={duel}
+      >
         <HintPriceContext.Provider
           value={{
             engine: definition.engine,

@@ -7,11 +7,17 @@ import pytest
 
 from app.common.auth import Actor
 from app.common.errors import AppError
-from app.modules.sharing.service import _render, moment_share_card
+from app.modules.sharing.service import _render, _render_play, moment_share_card, play_share_card
 
 
 def test_render_share_card_png() -> None:
     png = _render("Who wins tonight?", "Home side")
+    assert png[:8] == b"\x89PNG\r\n\x1a\n"
+    assert len(png) > 1000
+
+
+def test_render_play_share_card_png() -> None:
+    png = _render_play("Emoji Movies", 420, detail="8/10 correct", brag="Better than 72% of players")
     assert png[:8] == b"\x89PNG\r\n\x1a\n"
     assert len(png) > 1000
 
@@ -132,3 +138,102 @@ async def test_share_card_maps_missing_storage_config_to_503() -> None:
             await moment_share_card(session, actor, moment_id)
     assert exc.value.status_code == 503
     assert exc.value.code == "storage_unavailable"
+
+
+@pytest.mark.asyncio
+async def test_play_share_card_requires_own_play() -> None:
+    play_id = uuid4()
+    actor = Actor(kind="guest", guest_id=uuid4())
+    play = SimpleNamespace(
+        id=play_id,
+        game_key="emoji-movies",
+        user_id=None,
+        guest_session_id=uuid4(),  # different guest
+        score=10,
+        summary={"correct": 3, "attempts": 5},
+    )
+    session = AsyncMock()
+    session.get = AsyncMock(return_value=play)
+
+    with patch("app.modules.sharing.service.get_object_storage", return_value=MagicMock()):
+        with pytest.raises(AppError) as exc:
+            await play_share_card(session, actor, "emoji-movies", play_id)
+    assert exc.value.status_code == 403
+    assert exc.value.code == "forbidden"
+
+
+@pytest.mark.asyncio
+async def test_play_share_card_not_found() -> None:
+    play_id = uuid4()
+    actor = Actor(kind="guest", guest_id=uuid4())
+    session = AsyncMock()
+    session.get = AsyncMock(return_value=None)
+
+    with patch("app.modules.sharing.service.get_object_storage", return_value=MagicMock()):
+        with pytest.raises(AppError) as exc:
+            await play_share_card(session, actor, "guess-flags", play_id)
+    assert exc.value.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_play_share_card_success() -> None:
+    play_id = uuid4()
+    guest_id = uuid4()
+    actor = Actor(kind="guest", guest_id=guest_id)
+    play = SimpleNamespace(
+        id=play_id,
+        game_key="emoji-movies",
+        user_id=None,
+        guest_session_id=guest_id,
+        score=880,
+        summary={"correct": 9, "attempts": 10},
+    )
+    game = SimpleNamespace(title="Emoji Movies", score_direction="higher_is_better")
+
+    session = AsyncMock()
+    session.get = AsyncMock(side_effect=[play, game])
+    session.scalar = AsyncMock(return_value=None)  # no existing card
+    session.scalars = AsyncMock(return_value=[100, 200, 500, 880])
+    session.add = MagicMock()
+
+    storage = MagicMock()
+    storage.put_bytes = AsyncMock(return_value="https://cdn.example/share-cards/play.png")
+    storage.public_url = MagicMock(return_value="https://cdn.example/share-cards/play.png")
+
+    with patch("app.modules.sharing.service.get_object_storage", return_value=storage):
+        out = await play_share_card(session, actor, "emoji-movies", play_id)
+
+    assert out["assetUrl"].endswith("play.png")
+    assert "emoji-movies" in out["deepLink"]
+    storage.put_bytes.assert_awaited_once()
+    session.add.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_play_share_card_returns_existing() -> None:
+    play_id = uuid4()
+    guest_id = uuid4()
+    actor = Actor(kind="guest", guest_id=guest_id)
+    play = SimpleNamespace(
+        id=play_id,
+        game_key="guess-flags",
+        user_id=None,
+        guest_session_id=guest_id,
+        score=50,
+        summary=None,
+    )
+    existing = SimpleNamespace(asset_key=f"share/plays/{play_id}/cached.png")
+
+    session = AsyncMock()
+    session.get = AsyncMock(return_value=play)
+    session.scalar = AsyncMock(return_value=existing)
+
+    storage = MagicMock()
+    storage.public_url = MagicMock(return_value="https://cdn.example/share-cards/cached.png")
+    storage.put_bytes = AsyncMock()
+
+    with patch("app.modules.sharing.service.get_object_storage", return_value=storage):
+        out = await play_share_card(session, actor, "guess-flags", play_id)
+
+    assert out["assetUrl"].endswith("cached.png")
+    storage.put_bytes.assert_not_called()

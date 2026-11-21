@@ -1,12 +1,11 @@
 import { assertMobileEnv, getApiBaseUrl } from "./lib/env";
 import { localDateString } from "./lib/dailyStreak";
-import { getStoredGuestToken, setStoredGuestToken } from "./lib/storage";
+import { setStoredGuestToken } from "./lib/storage";
 
 assertMobileEnv();
 
 const API_TIMEOUT_MS = 30_000;
 
-let guestToken = "";
 let userAccessToken = "";
 
 type ErrorBody = { code?: string; message?: string; requestId?: string };
@@ -30,7 +29,7 @@ export class ApiError extends Error {
 }
 
 function friendlyMessage(status: number, code: string, backendMessage: string): string {
-  if (status === 401) return "Your session expired. Sign in again or continue as guest.";
+  if (status === 401) return "Your session expired. Sign in again.";
   if (status === 402) {
     if (code === "insufficient_coins") return "Not enough coins.";
     return backendMessage || "That purchase could not be verified.";
@@ -69,30 +68,19 @@ export function getUserAccessToken() {
   return userAccessToken || null;
 }
 
-export function getGuestToken() {
-  return guestToken;
-}
-
-export function setGuestToken(value: string) {
-  guestToken = value;
-  void setStoredGuestToken(value);
-}
-
 export function clearGuestToken() {
-  guestToken = "";
   void setStoredGuestToken("");
 }
 
+/** Clears any legacy guest token from older builds. Sign-in is required for API auth. */
 export async function loadToken() {
-  const stored = await getStoredGuestToken();
-  if (stored) guestToken = stored;
-  return guestToken;
+  clearGuestToken();
+  return "";
 }
 
 async function authorizationHeader(): Promise<string | undefined> {
   if (userAccessToken) return `Bearer ${userAccessToken}`;
-  if (!guestToken) await ensureGuest();
-  return guestToken ? `Bearer ${guestToken}` : undefined;
+  return undefined;
 }
 
 async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
@@ -124,8 +112,8 @@ async function fetchApi<T>(path: string, init: RequestInit, authRetries: number)
   const data = await res.json().catch(() => ({}));
   const body = parseErrorBody(data);
 
-  // Allow refresh-then-guest demotion (up to 2 recoveries).
-  if (res.status === 401 && authRetries < 2 && unauthorizedHandler) {
+  // Allow one refresh recovery before surfacing the 401.
+  if (res.status === 401 && authRetries < 1 && unauthorizedHandler) {
     const recovered = await unauthorizedHandler();
     if (recovered) return fetchApi(path, init, authRetries + 1);
   }
@@ -143,24 +131,6 @@ async function fetchApi<T>(path: string, init: RequestInit, authRetries: number)
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   return fetchApi(path, init, 0);
-}
-
-export async function ensureGuest(opts?: { forceNew?: boolean }): Promise<string> {
-  const forceNew = opts?.forceNew ?? false;
-  if (userAccessToken && !forceNew) return guestToken;
-  if (forceNew) clearGuestToken();
-  else if (!guestToken) await loadToken();
-  if (guestToken && !forceNew) return guestToken;
-  const res = await fetchWithTimeout(`${getApiBaseUrl()}/v1/guest/sessions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
-  const data = (await res.json().catch(() => ({}))) as { token?: string; message?: string; code?: string };
-  if (!res.ok || !data.token) {
-    throw new ApiError(res.status, data.code ?? "guest_failed", data.message ?? `HTTP ${res.status}`);
-  }
-  setGuestToken(data.token);
-  return data.token;
 }
 
 export type CrowdSnapshot = {
@@ -268,6 +238,10 @@ export type Challenge = {
   status: ChallengeStatus;
   gameKey: string;
   gameTitle: string;
+  gameBlurb?: string;
+  engine?: string;
+  variation?: string;
+  config?: Record<string, unknown>;
   seed: string;
   createdAt: string | null;
   expiresAt: string | null;
@@ -305,6 +279,11 @@ export type OnlineMatch = {
   status: MatchStatus;
   gameKey: string;
   gameTitle: string;
+  /** Present on newer APIs — lets clients launch without a feed-cache hit. */
+  gameBlurb?: string;
+  engine?: string;
+  variation?: string;
+  config?: Record<string, unknown>;
   seed: string;
   foundAt: string | null;
   readyAt: string | null;
@@ -328,6 +307,7 @@ export type MatchmakingTicket = {
   id: string;
   status: MatchmakingTicketStatus;
   gameKey: string | null;
+  category?: string | null;
   createdAt: string | null;
   expiresAt: string | null;
   matchId: string | null;
@@ -389,7 +369,12 @@ export type ShareCardResponse = {
 
 export function shareErrorMessage(err: unknown): string {
   if (isApiError(err)) {
-    if (err.status === 403) return "Answer this moment first to share your card.";
+    if (err.status === 403) {
+      if (err.code === "forbidden" && /play/i.test(err.message)) {
+        return "Share is available after your score is saved.";
+      }
+      return "Answer this moment first to share your card.";
+    }
     return err.userMessage;
   }
   if (err instanceof Error) {

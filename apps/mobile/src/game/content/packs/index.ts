@@ -1,5 +1,5 @@
 /**
- * Bundled fallback packs (JSON only — media stays on https URLs) so games work on first launch.
+ * Bundled fallback packs (JSON + local `asset:spot/` art for spot_pair) so games work on first launch.
  * Loaded lazily; the same JSON files seed the backend via backend/scripts/import_content.py.
  */
 type PackModule = { items?: unknown; default?: { items?: unknown } };

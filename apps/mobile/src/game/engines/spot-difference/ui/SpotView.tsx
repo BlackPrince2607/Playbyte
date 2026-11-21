@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { GestureResponderEvent, Image, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
+import { GestureResponderEvent, Image, type ImageSourcePropType, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, ZoomIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
+import { useLanguage } from "../../../../context/LanguageContext";
+import { fill } from "../../../../i18n/strings";
 import { colors, radius, spacing } from "../../../../theme/colors";
 import { fonts, type } from "../../../../theme/typography";
 import { feedback, prefersReducedMotion } from "../../../ui/feedback";
@@ -10,6 +12,7 @@ import type { Difference } from "../logic/differences";
 import type { SpotAction, SpotState } from "../logic/engine";
 import type { SpotOverlay } from "../logic/pairs";
 import { ASPECT } from "../logic/scene";
+import { spotAssetModule } from "./spotAssets";
 
 const GOLD = "#FFD84D";
 
@@ -61,6 +64,13 @@ function DiffOverlay({ d, overlay, width }: { d: Difference; overlay: SpotOverla
   }
 }
 
+function pictureSource(uri: string): ImageSourcePropType | null {
+  if (!uri) return null;
+  const bundled = spotAssetModule(uri);
+  if (bundled != null) return bundled;
+  return { uri };
+}
+
 function Picture({
   uri,
   side,
@@ -81,6 +91,7 @@ function Picture({
   enabled: boolean;
 }) {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const source = pictureSource(uri);
   useEffect(() => {
     setStatus("loading");
   }, [uri]);
@@ -102,9 +113,9 @@ function Picture({
       accessibilityHint="Tap where this picture differs from the other one. Hints mark a difference for you."
       style={[styles.picture, { width, height }]}
     >
-      {uri ? (
+      {source ? (
         <Image
-          source={{ uri }}
+          source={source}
           style={{ width, height }}
           resizeMode="cover"
           onLoad={() => setStatus("ready")}
@@ -144,6 +155,7 @@ function Picture({
 }
 
 export function SpotView({ state, dispatch, requestHint, snapshot, resolveAsset }: EngineViewProps<SpotState, SpotAction>) {
+  const { t } = useLanguage();
   const [box, setBox] = useState({ w: 0, h: 0 });
   const onLayout = (e: LayoutChangeEvent) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
   const aspect = state.aspect || ASPECT;
@@ -166,7 +178,7 @@ export function SpotView({ state, dispatch, requestHint, snapshot, resolveAsset 
   return (
     <View style={{ flex: 1, paddingHorizontal: spacing.margin, gap: spacing.sm }}>
       <View style={styles.header}>
-        <Text style={[type.bodySm, { color: colors.lilac }]}>Tap the differences on either picture</Text>
+        <Text style={[type.bodySm, { color: colors.lilac }]}>{t("spotTapHint")}</Text>
         <View style={styles.dots} accessibilityLabel={`${foundN} of ${state.diffs.length} found`}>
           {state.diffs.map((d, i) => (
             <View key={d.id} style={[styles.dot, i < foundN && { backgroundColor: colors.lime, borderColor: colors.lime }]} />
@@ -184,7 +196,9 @@ export function SpotView({ state, dispatch, requestHint, snapshot, resolveAsset 
       <HintBar hints={snapshot.hints} onHint={requestHint} />
       {state.roundOver ? (
         <Text style={[type.bodyLg, { color: foundN >= state.diffs.length ? colors.lime : colors.pink, textAlign: "center" }]} accessibilityLiveRegion="polite">
-          {foundN >= state.diffs.length ? "All spotted!" : `Missed ${state.diffs.length - foundN}`}
+          {foundN >= state.diffs.length
+            ? t("allSpotted")
+            : fill(t("missedDiffs"), { count: state.diffs.length - foundN })}
         </Text>
       ) : null}
     </View>

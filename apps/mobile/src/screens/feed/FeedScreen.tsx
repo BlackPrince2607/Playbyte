@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, LayoutChangeEvent, RefreshControl, View, ViewToken } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FeedGame, FeedItem } from "../../api";
+import { DailyFeaturedBanner } from "../../components/DailyFeaturedBanner";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
 import { FeedTopBar } from "../../components/FeedTopBar";
@@ -10,20 +11,26 @@ import { SwipeHintOverlay } from "../../components/SwipeHintOverlay";
 import { isMoment, useApp } from "../../context/AppContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { capture } from "../../lib/analytics";
+import { getDailyFeaturedGame } from "../../lib/dailyFeatured";
 import { prefetchGame } from "../../game/platform/prefetchGame";
 import type { CompletedPlay } from "../../game/session/types";
 import { FEED_PREFETCH_AHEAD, feedKeys } from "../../lib/feedPages";
 import { prefetchMomentImages } from "../../lib/prefetchMomentImages";
 import { isSwipeHintPending, markSwipeHintSeen } from "../../lib/storage";
-import { colors } from "../../theme/colors";
+import { colors, spacing } from "../../theme/colors";
 import { GameIntroPage } from "./GameIntroPage";
 import { GuessFeedPage, isInlineGuessGame } from "./GuessFeedPage";
 import { MomentFeedPage } from "./MomentFeedPage";
+
+/** Native RefreshControl freezes a paging FlatList while `refreshing` — release it immediately after the pull. */
+const PULL_NATIVE_MS = 120;
 
 /** How many cards ahead of the viewer to warm (games + poll images). */
 const FEED_WARM_AHEAD = 3;
 
 type Props = {
+  /** Incremented when the Feed tab is pressed while already active — scroll to the first card. */
+  feedTopNonce?: number;
   onPlayGame: (game: FeedGame) => void;
   onChallengeGame?: (game: FeedGame, challenge: { id: string; seed: string }) => void;
   /** Guess trivia finished in-feed — same submit/result path as GameHost. */
@@ -37,6 +44,7 @@ type Props = {
 const VIEWABILITY = { itemVisiblePercentThreshold: 60 };
 
 export function FeedScreen({
+  feedTopNonce = 0,
   onPlayGame,
   onChallengeGame,
   onGuessComplete,
@@ -63,7 +71,9 @@ export function FeedScreen({
   nearEnd.current = { count: items.length, loadMore: loadMoreFeed };
   const insets = useSafeAreaInsets();
   const [pageH, setPageH] = useState(0);
+  /** Brief native pull ack only — keeping this true locks the paging list and feels stuck. */
   const [pulling, setPulling] = useState(false);
+  const pullLock = useRef(false);
   const listRef = useRef<FlatList<FeedItem>>(null);
   /** Page the list is showing, so programmatic jumps (Live tab, refresh) only scroll when needed. */
   const shownIndex = useRef(feedIndex);
@@ -72,6 +82,8 @@ export function FeedScreen({
   const viewedIds = useRef(new Set<string>());
   /** Feed page the swipe tip appeared on; moving off it counts as having learned the gesture. */
   const [swipeHintFrom, setSwipeHintFrom] = useState<number | null>(null);
+  const [featured, setFeatured] = useState<FeedGame | null>(null);
+  const featuredTracked = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,6 +94,22 @@ export function FeedScreen({
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getDailyFeaturedGame().then((game) => {
+      if (!cancelled) setFeatured(game);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!featured || featuredTracked.current) return;
+    featuredTracked.current = true;
+    capture("daily_featured_viewed", { game_id: featured.key });
+  }, [featured]);
 
   const dismissSwipeHint = useCallback(() => {
     setSwipeHintFrom(null);
@@ -106,6 +134,14 @@ export function FeedScreen({
     shownIndex.current = feedIndex;
     listRef.current?.scrollToIndex({ index: feedIndex, animated: false });
   }, [feedIndex, items.length, pageH]);
+
+  // Feed tab pressed again while already on Feed → jump to the first card.
+  useEffect(() => {
+    if (!feedTopNonce || !pageH || items.length === 0) return;
+    shownIndex.current = 0;
+    setFeedIndex(0);
+    listRef.current?.scrollToIndex({ index: 0, animated: true });
+  }, [feedTopNonce, pageH, items.length, setFeedIndex]);
 
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken<FeedItem>[] }) => {
     const index = viewableItems[0]?.index;
@@ -135,11 +171,23 @@ export function FeedScreen({
   }, []);
 
   const onPull = useCallback(() => {
+    if (pullLock.current) return;
+    pullLock.current = true;
     setPulling(true);
+    // Drop the native spinner immediately so the feed isn't frozen waiting on the network.
+    const unlock = setTimeout(() => setPulling(false), PULL_NATIVE_MS);
     refreshFeed(true, { replace: true })
-      .then(() => setFeedIndex(0))
+      .then(() => {
+        shownIndex.current = 0;
+        setFeedIndex(0);
+        listRef.current?.scrollToOffset({ offset: 0, animated: false });
+      })
       .catch(() => {})
-      .finally(() => setPulling(false));
+      .finally(() => {
+        clearTimeout(unlock);
+        setPulling(false);
+        pullLock.current = false;
+      });
   }, [refreshFeed, setFeedIndex]);
 
   const onLayout = (e: LayoutChangeEvent) => setPageH(Math.round(e.nativeEvent.layout.height));
@@ -251,6 +299,17 @@ export function FeedScreen({
         <SwipeHintOverlay onDismiss={dismissSwipeHint} />
       ) : null}
       <FeedTopBar streak={streak} coins={wallet?.balance ?? 0} onStreak={onOpenStreak} onCoins={onOpenWallet} onProfile={onOpenProfile} />
+      {featured && isFeedTabActive && feedIndex === 0 ? (
+        <View style={{ position: "absolute", top: insets.top + 56, left: 0, right: 0, zIndex: 40, paddingTop: spacing.xs }}>
+          <DailyFeaturedBanner
+            game={featured}
+            onPlay={(game) => {
+              capture("daily_featured_played", { game_id: game.key });
+              onPlayGame(game);
+            }}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }

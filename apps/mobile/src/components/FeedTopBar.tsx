@@ -48,8 +48,11 @@ export function FeedTopBar({
   const photo = avatarKey ?? me?.avatarKey ?? null;
   const avatarSize = variant === "compete" ? 32 : 40;
   const prevCoins = useRef(coins);
+  const prevStreak = useRef(streak);
   const scale = useSharedValue(1);
   const glow = useSharedValue(0);
+  const streakScale = useSharedValue(1);
+  const streakGlow = useSharedValue(0);
 
   useEffect(() => {
     const grew = coins > prevCoins.current;
@@ -59,10 +62,24 @@ export function FeedTopBar({
     glow.value = withSequence(withTiming(1, { duration: 120 }), withTiming(0, { duration: 700 }));
   }, [coins, coinCredit?.id, glow, scale]);
 
+  useEffect(() => {
+    const grew = streak > prevStreak.current;
+    prevStreak.current = streak;
+    if (!grew || prefersReducedMotion()) return;
+    streakScale.value = withSequence(withTiming(1.2, { duration: 140 }), withSpring(1, { damping: 9 }));
+    streakGlow.value = withSequence(withTiming(1, { duration: 140 }), withTiming(0, { duration: 800 }));
+  }, [streak, streakGlow, streakScale]);
+
   const coinChipStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     borderColor: glow.value > 0.05 ? colors.lime : colors.line,
     backgroundColor: glow.value > 0.05 ? "rgba(198, 255, 92, 0.16)" : colors.cardAlt,
+  }));
+
+  const streakChipStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: streakScale.value }],
+    borderColor: streakGlow.value > 0.05 ? colors.pink : colors.line,
+    backgroundColor: streakGlow.value > 0.05 ? "rgba(255, 105, 180, 0.18)" : colors.cardAlt,
   }));
 
   return (
@@ -88,15 +105,17 @@ export function FeedTopBar({
               </Animated.View>
             </Pressable>
             <Pressable
-              style={({ pressed }) => [styles.streak, pressed && { opacity: 0.7 }]}
+              style={({ pressed }) => [pressed && { opacity: 0.7 }]}
               onPress={onStreak}
               disabled={!onStreak}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel={`Streak ${streak}. Open streak details`}
+              accessibilityLabel={fill(t("streakA11y"), { count: streak })}
             >
-              <Text style={[type.statsSm, { color: colors.pink }]}>{streak}</Text>
-              <Text style={{ fontSize: 14 }}>🔥</Text>
+              <Animated.View style={[styles.streak, streakChipStyle]}>
+                <Text style={[type.statsSm, { color: colors.pink }]}>{streak}</Text>
+                <Text style={{ fontSize: 14 }}>🔥</Text>
+              </Animated.View>
             </Pressable>
           </View>
         ) : (

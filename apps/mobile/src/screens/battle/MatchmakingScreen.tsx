@@ -34,7 +34,8 @@ import { colors, radius, spacing, surface } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
 type Props = {
-  gameKey?: string;
+  /** Theme lobby id (trivia, emoji, …). Server rotates games inside the pool. */
+  category?: string;
   gameLabel: string;
   signedIn: boolean;
   onNeedSignIn: () => void;
@@ -225,7 +226,7 @@ function BounceDot({ delay, color }: { delay: number; color: string }) {
 }
 
 export function MatchmakingScreen({
-  gameKey,
+  category,
   gameLabel,
   signedIn,
   onNeedSignIn,
@@ -314,7 +315,7 @@ export function MatchmakingScreen({
     async function begin() {
       try {
         const ticket = await enqueueMatchmaking({
-          gameKey,
+          category,
           extend: searchKey > 0,
         });
         if (cancelled) return;
@@ -366,7 +367,7 @@ export function MatchmakingScreen({
       cancelled = true;
       cleanup();
     };
-  }, [signedIn, gameKey, searchKey, t]);
+  }, [signedIn, category, searchKey, t]);
 
   async function handleCancel() {
     void Haptics.selectionAsync();

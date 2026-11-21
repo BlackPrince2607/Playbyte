@@ -23,7 +23,9 @@ export type SpotPair = {
 };
 
 const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
-const https = (u: unknown): u is string => typeof u === "string" && /^https:\/\//.test(u);
+/** Remote https or bundled flat art (`asset:spot/<key>`). */
+const mediaUrl = (u: unknown): u is string =>
+  typeof u === "string" && (/^https:\/\//.test(u) || /^asset:spot\//.test(u));
 const OPS: OverlayOp[] = ["blob", "ring", "dim", "bright", "badge", "hide"];
 
 const overlaps = (a: Difference, b: Difference) =>
@@ -59,13 +61,13 @@ function parseOverlay(raw: unknown, fallbackId: string): SpotOverlay | null {
   return { id, side, op, color };
 }
 
-/** Parse a content item into a playable photo pair, or null if malformed. */
+/** Parse a content item into a playable illustration pair, or null if malformed. */
 export function pairFromItem(item: ContentItem): SpotPair | null {
   const media = item.media ?? [];
-  const images = media.filter((m): m is { kind: "image"; url: string } => m.kind === "image" && https(m.url));
+  const images = media.filter((m): m is { kind: "image"; url: string } => m.kind === "image" && mediaUrl(m.url));
   const attrs = item.attributes;
-  const leftUrl = https(attrs.leftUrl) ? attrs.leftUrl : images[0]?.url;
-  const rightUrl = https(attrs.rightUrl) ? attrs.rightUrl : images[1]?.url ?? images[0]?.url;
+  const leftUrl = mediaUrl(attrs.leftUrl) ? attrs.leftUrl : images[0]?.url;
+  const rightUrl = mediaUrl(attrs.rightUrl) ? attrs.rightUrl : images[1]?.url ?? images[0]?.url;
   if (!leftUrl || !rightUrl) return null;
 
   const rawDiffs = attrs.diffs;
@@ -86,8 +88,9 @@ export function pairFromItem(item: ContentItem): SpotPair | null {
       if (o) overlays.push(o);
     }
   }
-  // Default: alternate sides with a blob so a pack without overlays still looks different.
-  if (!overlays.length) {
+  // Only invent blobs when both sides share one photo — otherwise the baked pair already differs
+  // and fake marks would spoil the round (same image + clickable dots).
+  if (!overlays.length && leftUrl === rightUrl) {
     diffs.forEach((d, i) => overlays.push({ id: d.id, side: i % 2 === 0 ? "right" : "left", op: "blob", color: "#FF4D8D" }));
   }
 

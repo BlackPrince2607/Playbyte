@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import {
+  Alert,
   BackHandler,
   Pressable,
   StyleSheet,
@@ -43,14 +44,31 @@ import { WeeklyRecapScreen } from "./screens/profile/WeeklyRecapScreen";
 import { SignInScreen } from "./screens/auth/SignInScreen";
 import { useAuth } from "./context/AuthContext";
 import { clearLocalSupabaseSession, isSupabaseConfigured } from "./lib/supabase";
-import { capture, markOnboardingStart, trackScreen } from "./lib/analytics";
+import {
+  capture,
+  gamePlayProps,
+  markOnboardingStart,
+  noteGameCompletedAnalytics,
+  trackScreen,
+} from "./lib/analytics";
+import { getGamesCompletedLifetime, markDay0AppointmentShown, shouldShowDay0Appointment } from "./lib/retentionStorage";
+import { startStreakReminderListener } from "./lib/streakReminders";
 import { useFriendInvite } from "./lib/useFriendInvite";
 import { colors, spacing } from "./theme/colors";
 import { type } from "./theme/typography";
 
-type ActiveChallenge = { id: string; seed: string };
-type ActiveMatch = { id: string; seed: string };
+type DuelOpponent = { displayName: string; avatarKey: string | null };
+type ActiveChallenge = { id: string; seed: string; opponent?: DuelOpponent };
+type ActiveMatch = { id: string; seed: string; opponent?: DuelOpponent };
 type GameResult = SaveOutcome & { game: FeedGame; play: CompletedPlay };
+
+function rivalFromMatch(m: OnlineMatch | ActiveMatch | null | undefined): DuelOpponent | undefined {
+  if (!m) return undefined;
+  if ("opponent" in m && m.opponent) {
+    return { displayName: m.opponent.displayName, avatarKey: m.opponent.avatarKey ?? null };
+  }
+  return undefined;
+}
 
 type MatchmakingSheetProps = {
   visible: boolean;
@@ -155,6 +173,7 @@ export function MainShell() {
     refreshWallet,
     refreshFriends,
     refreshFriendRequests,
+    me,
   } = useApp();
   const { googleAvailable, signInWithGoogle, isSignedIn, user } = useAuth();
   const { t, language, fonts: ui } = useLanguage();
@@ -173,6 +192,8 @@ export function MainShell() {
   const [showWallet, setShowWallet] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  /** Friends tab → Compete: preselect this friend for the challenge flow. */
+  const [battleFriendId, setBattleFriendId] = useState<string | null>(null);
   const [gameSubmitting, setGameSubmitting] = useState(false);
   const [resumable, setResumable] = useState<GameSession | null>(null);
   const [restoring, setRestoring] = useState<GameSession | undefined>(undefined);
@@ -180,6 +201,8 @@ export function MainShell() {
   const [signInError, setSignInError] = useState("");
   const [introPage, setIntroPage] = useState(0);
   const [finishingOnboarding, setFinishingOnboarding] = useState(false);
+  /** Bumped when Feed is tapped while already on Feed — scroll the pager to the first card. */
+  const [feedTopNonce, setFeedTopNonce] = useState(0);
   const wasSignedIn = useRef<boolean | null>(null);
 
   const showNewFriend = useCallback(() => {
@@ -188,6 +211,11 @@ export function MainShell() {
     setTab("friends");
   }, [refreshFriends, refreshFriendRequests, setTab]);
   const invite = useFriendInvite({ active: ready && onboardingDone, isSignedIn, onAdded: showNewFriend });
+
+  useEffect(() => {
+    if (!ready) return;
+    return startStreakReminderListener();
+  }, [ready]);
 
   // Once the app is up: start analytics, retry plays that failed to submit and offer to resume an interrupted game.
   useEffect(() => {
@@ -205,6 +233,17 @@ export function MainShell() {
       .catch(() => {});
   }, [ready, onboardingDone, refreshWallet]);
 
+  const maybeDay0Appointment = useCallback(async () => {
+    try {
+      const plays = await getGamesCompletedLifetime();
+      if (!(await shouldShowDay0Appointment(plays))) return;
+      await markDay0AppointmentShown();
+      Alert.alert(t("yourStreak"), t("day0Appointment"));
+    } catch {
+      /* ignore */
+    }
+  }, [t]);
+
   const dismissOverlays = useCallback(() => {
     setShowSignIn(false);
     setSignInError("");
@@ -221,7 +260,7 @@ export function MainShell() {
     setGameResult(null);
   }, []);
 
-  // After logout: drop auth-gated overlays and land on Feed as guest.
+  // After logout / session loss: drop overlays and require sign-in again.
   useEffect(() => {
     if (wasSignedIn.current === null) {
       wasSignedIn.current = isSignedIn;
@@ -231,9 +270,17 @@ export function MainShell() {
       dismissOverlays();
       setTab("feed");
       setPromptSave(false);
+      void resumeOnboarding("signup");
     }
     wasSignedIn.current = isSignedIn;
-  }, [isSignedIn, dismissOverlays, setTab, setPromptSave]);
+  }, [isSignedIn, dismissOverlays, setTab, setPromptSave, resumeOnboarding]);
+
+  // Legacy guest installs finished onboarding without an account — send them to signup.
+  useEffect(() => {
+    if (ready && onboardingDone && !isSignedIn) {
+      void resumeOnboarding("signup");
+    }
+  }, [ready, isSignedIn, onboardingDone, resumeOnboarding]);
 
   const welcomeGoogle = useCallback(async () => {
     if (welcomeAuthBusy) return;
@@ -252,7 +299,7 @@ export function MainShell() {
     }
   }, [signInWithGoogle, welcomeAuthBusy, setOnboardingStep]);
 
-  /** After guest → feed → login, finish profile + categories if the account has none yet. */
+  /** After sign-in, finish profile + categories if the account has none yet. */
   const maybeResumeSetupAfterSignIn = useCallback(async () => {
     try {
       const r = await api<{ categories: unknown[] }>("/v1/me/interests");
@@ -281,6 +328,7 @@ export function MainShell() {
         game_id: game.key,
         game_type: game.engine ?? game.key,
         source,
+        ...gamePlayProps(),
       });
       setPlaying(game);
     },
@@ -298,6 +346,7 @@ export function MainShell() {
       game_id: session.gameKey,
       game_type: def.engine,
       source: "resume",
+      ...gamePlayProps(),
     });
     setPlaying({
       type: "mini_game",
@@ -348,13 +397,55 @@ export function MainShell() {
       if (match && !tagged.matchId) tagged = { ...tagged, matchId: match.id };
       setGameSubmitting(true);
       const outcome = await savePlay(tagged);
-      capture("game_completed", {
-        game_id: game.key,
+      await noteGameCompletedAnalytics({
+        gameId: game.key,
         score: tagged.score,
-        duration_seconds: Math.round(tagged.durationMs / 1000),
+        durationSeconds: Math.round(tagged.durationMs / 1000),
       });
+      // Seed duel meta from the live session so the result screen has PFPs even before poll.
+      const seededMatch = outcome.match
+        ? {
+            ...outcome.match,
+            opponentName: outcome.match.opponentName ?? match?.opponent?.displayName,
+            opponentAvatarKey: outcome.match.opponentAvatarKey ?? match?.opponent?.avatarKey ?? null,
+            myScore: outcome.match.myScore ?? tagged.score,
+          }
+        : match
+          ? {
+              id: match.id,
+              status: "playing",
+              myScore: tagged.score,
+              theirScore: null as number | null,
+              opponentName: match.opponent?.displayName,
+              opponentAvatarKey: match.opponent?.avatarKey ?? null,
+            }
+          : undefined;
+      const seededChallenge = outcome.challenge
+        ? {
+            ...outcome.challenge,
+            opponentName: outcome.challenge.opponentName ?? challenge?.opponent?.displayName,
+            opponentAvatarKey:
+              outcome.challenge.opponentAvatarKey ?? challenge?.opponent?.avatarKey ?? null,
+            myScore: outcome.challenge.myScore ?? tagged.score,
+          }
+        : challenge
+          ? {
+              id: challenge.id,
+              status: "active",
+              myScore: tagged.score,
+              theirScore: null as number | null,
+              opponentName: challenge.opponent?.displayName,
+              opponentAvatarKey: challenge.opponent?.avatarKey ?? null,
+            }
+          : undefined;
       // Result screen before clearing submitting so inline Guess never flashes the feed.
-      setGameResult({ ...outcome, game, play: tagged });
+      setGameResult({
+        ...outcome,
+        game,
+        play: tagged,
+        match: seededMatch ?? outcome.match,
+        challenge: seededChallenge ?? outcome.challenge,
+      });
       setPlaying(null);
       setPlaySeed(undefined);
       setActiveChallenge(null);
@@ -622,7 +713,6 @@ export function MainShell() {
       screen = (
         <WelcomeScreen
           onBack={goBackOnboarding}
-          onGuest={() => setOnboardingStep("interests")}
           googleAvailable={googleAvailable}
           onGoogleSignIn={() => void welcomeGoogle()}
           busy={welcomeAuthBusy}
@@ -660,6 +750,7 @@ export function MainShell() {
   }
 
   if (playing) {
+    const rival = activeMatch?.opponent ?? activeChallenge?.opponent;
     return (
       <View style={{ flex: 1 }}>
         <GameHost
@@ -667,6 +758,17 @@ export function MainShell() {
           restore={restoring}
           seed={playSeed}
           sharedSeed={!!activeChallenge || !!activeMatch}
+          duel={
+            rival
+              ? {
+                  you: {
+                    displayName: me?.displayName ?? "You",
+                    avatarKey: me?.avatarKey ?? null,
+                  },
+                  opponent: rival,
+                }
+              : null
+          }
           onComplete={(play) => void submitGamePlay(play)}
           onExit={cancelGame}
         />
@@ -710,23 +812,45 @@ export function MainShell() {
           playSeed={gameResult.play.seed}
           challengeSummary={gameResult.challenge}
           matchSummary={gameResult.match}
+          onMatchUpdated={(match) => {
+            setGameResult((r) => (r ? { ...r, match } : r));
+          }}
           onRetrySave={() => void retrySave()}
           retryingSave={retryingSave}
-          onPlayAgain={() => startGame(gameResult.game, "replay")}
-          onPlayOnline={() => setOnlineSearchGame(gameResult.game)}
+          onPlayAgain={
+            gameResult.match || gameResult.challenge
+              ? undefined
+              : () => startGame(gameResult.game, "replay")
+          }
+          onPlayOnline={
+            gameResult.match || gameResult.challenge
+              ? undefined
+              : () => setOnlineSearchGame(gameResult.game)
+          }
           onRematch={
             gameResult.match
               ? async () => {
                   const { rematch } = await import("./lib/matchmaking");
                   const m = await rematch(gameResult.match!.id);
-                  startGame(gameResult.game, "online", null, { id: m.id, seed: m.seed });
+                  startGame(gameResult.game, "online", null, {
+                    id: m.id,
+                    seed: m.seed,
+                    opponent: rivalFromMatch(m),
+                  });
                 }
               : undefined
           }
-          onNextGame={upNext ? () => startGame(upNext, "next") : undefined}
+          onNextGame={
+            gameResult.match || gameResult.challenge
+              ? undefined
+              : upNext
+                ? () => startGame(upNext, "next")
+                : undefined
+          }
           onBackToFeed={() => {
             setGameResult(null);
             void refreshWallet();
+            void maybeDay0Appointment();
           }}
           onSignIn={() => setShowSignIn(true)}
           enableShare
@@ -742,7 +866,11 @@ export function MainShell() {
             const game = onlineSearchGame ?? gameResult.game;
             setOnlineSearchGame(null);
             setGameResult(null);
-            startGame(game, "online", null, { id: match.id, seed: match.seed });
+            startGame(game, "online", null, {
+              id: match.id,
+              seed: match.seed,
+              opponent: rivalFromMatch(match),
+            });
           }}
         />
       </View>
@@ -807,6 +935,7 @@ export function MainShell() {
       <View style={styles.body}>
         <View style={[styles.tabPane, tab !== "feed" && styles.hidden]}>
           <FeedScreen
+            feedTopNonce={feedTopNonce}
             onPlayGame={startGame}
             onChallengeGame={(game, challenge) => startGame(game, "challenge", challenge)}
             onGuessComplete={(game, play) => void submitInlineGuess(game, play)}
@@ -821,9 +950,14 @@ export function MainShell() {
             signedIn={isSignedIn}
             onNeedSignIn={() => setShowSignIn(true)}
             onProfile={() => setTab("vault")}
-            onChallengeFriend={() => setTab("friends")}
+            onAddFriends={() => setTab("friends")}
+            initialFriendId={battleFriendId}
+            onConsumedInitialFriend={() => setBattleFriendId(null)}
             onStartMatch={(game, match) => {
               startGame(game, "online", null, match);
+            }}
+            onStartChallenge={(game, challenge) => {
+              startGame(game, "challenge", challenge);
             }}
           />
         </View>
@@ -831,12 +965,14 @@ export function MainShell() {
           <FriendsScreen
             onSignIn={() => setShowSignIn(true)}
             onOpenLeaderboard={() => setShowLeaderboard(true)}
+            onChallengeFriend={(friendId) => {
+              setBattleFriendId(friendId);
+              setTab("compete");
+            }}
             onPlayChallenge={(game, challenge) => {
-              setTab("feed");
               startGame(game, "challenge", challenge);
             }}
             onPlayOnlineMatch={(game, match) => {
-              setTab("feed");
               startGame(game, "online", null, match);
             }}
           />
@@ -888,7 +1024,16 @@ export function MainShell() {
         </Pressable>
       ) : null}
 
-      <BottomNav active={tab} onChange={(t: TabKey) => setTab(t)} />
+      <BottomNav
+        active={tab}
+        onChange={(next: TabKey) => {
+          if (next === "feed" && tab === "feed") {
+            setFeedTopNonce((n) => n + 1);
+            return;
+          }
+          setTab(next);
+        }}
+      />
       <WalletSheet
         visible={showWallet}
         onClose={() => setShowWallet(false)}

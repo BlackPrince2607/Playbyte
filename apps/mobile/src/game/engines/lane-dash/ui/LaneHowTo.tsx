@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { PrimaryButton } from "../../../../components/PrimaryButton";
+import { useLanguage } from "../../../../context/LanguageContext";
 import { fonts } from "../../../../theme/typography";
 
 const LAVENDER = "#F3F0FA";
@@ -11,12 +12,13 @@ const LIME = "#C6FF3D";
 const PINK = "#FF4D8D";
 
 export function LaneHowTo({ onDone, title }: { onDone: () => void; title?: string }) {
+  const { t, fonts: ui } = useLanguage();
   return (
     <View style={styles.root} accessibilityViewIsModal>
       <View style={styles.card}>
-        <Text style={styles.kicker}>{title ?? "LANE DASH"}</Text>
-        <Text style={styles.headline}>Stay in a clear lane.</Text>
-        <Text style={styles.body}>Swipe or tap left, center, or right. Dodge the bars — three hits and you&apos;re out.</Text>
+        <Text style={[styles.kicker, { fontFamily: ui.bodyBold }]}>{title ?? t("laneHowToTitle")}</Text>
+        <Text style={[styles.headline, { fontFamily: ui.bodyBold }]}>{t("laneHowToHeadline")}</Text>
+        <Text style={[styles.body, { fontFamily: ui.body }]}>{t("laneHowToBody")}</Text>
 
         <View style={styles.lanes}>
           {[0, 1, 2].map((i) => (
@@ -25,15 +27,15 @@ export function LaneHowTo({ onDone, title }: { onDone: () => void; title?: strin
             </View>
           ))}
         </View>
-        <Text style={[styles.demoLabel, { color: LIME }]}>Move to the open lane</Text>
+        <Text style={[styles.demoLabel, { color: LIME, fontFamily: ui.bodyMedium }]}>{t("laneHowToMove")}</Text>
 
         <View style={styles.bullets}>
-          <Text style={styles.bullet}>• Tap a third of the screen or swipe sideways</Text>
-          <Text style={styles.bullet}>• Near-misses earn bonus points</Text>
-          <Text style={styles.bullet}>• Survive the timer for a finish bonus</Text>
+          <Text style={[styles.bullet, { fontFamily: ui.body }]}>{t("laneHowToTip1")}</Text>
+          <Text style={[styles.bullet, { fontFamily: ui.body }]}>{t("laneHowToTip2")}</Text>
+          <Text style={[styles.bullet, { fontFamily: ui.body }]}>{t("laneHowToTip3")}</Text>
         </View>
 
-        <PrimaryButton label="Play" onPress={onDone} variant="success" style={{ marginTop: 8 }} />
+        <PrimaryButton label={t("arrowHowToPlay")} onPress={onDone} variant="success" style={{ marginTop: 8 }} />
       </View>
     </View>
   );

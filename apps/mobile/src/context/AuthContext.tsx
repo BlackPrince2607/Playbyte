@@ -1,12 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { AuthError, User } from "@supabase/supabase-js";
 import {
-  api,
   clearGuestToken,
-  ensureGuest,
-  getGuestToken,
   getUserAccessToken,
-  isApiError,
   loadToken,
   setUnauthorizedHandler,
   setUserAccessToken,
@@ -86,27 +82,6 @@ export function mapAuthError(error: unknown): string {
   return "Could not authenticate.";
 }
 
-async function convertGuestIfNeeded() {
-  const guestToken = getGuestToken();
-  if (!guestToken) return;
-  try {
-    await api("/v1/me/convert-guest", {
-      method: "POST",
-      body: JSON.stringify({ guestToken }),
-    });
-  } catch (e) {
-    if (isApiError(e) && (e.status === 404 || e.status === 409)) return;
-    console.warn("[auth] convert-guest failed", e);
-  }
-}
-
-/** Defer work so onAuthStateChange can release its auth lock (avoids supabase-js deadlock). */
-function deferAuthSideEffect(work: () => Promise<void>) {
-  setTimeout(() => {
-    void work().catch((e) => console.warn("[auth] deferred side effect failed", e));
-  }, 0);
-}
-
 async function withTimeout<T>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -128,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const readyOnce = useRef(false);
   /** Coalesce concurrent 401 recoveries onto one refresh (avoids refresh-token rotation races). */
   const recoverInflight = useRef<Promise<boolean> | null>(null);
-  /** Access token we last applied via 401 recovery — a second 401 with the same token demotes. */
+  /** Access token we last applied via 401 recovery — a second 401 with the same token signs out. */
   const recoverAppliedToken = useRef<string | null>(null);
 
   const markReady = useCallback(() => {
@@ -137,30 +112,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setReady(true);
   }, []);
 
-  const demoteToGuest = useCallback(async (): Promise<boolean> => {
+  const clearSignedOutSession = useCallback(async (): Promise<boolean> => {
     await clearLocalSupabaseSession();
     setUserAccessToken(null);
     setUser(null);
     recoverAppliedToken.current = null;
-    try {
-      clearGuestToken();
-      await ensureGuest({ forceNew: true });
-      return true;
-    } catch {
-      return false;
-    }
+    clearGuestToken();
+    return false;
   }, []);
 
   const recoverFrom401 = useCallback(async (): Promise<boolean> => {
     if (!isSupabaseConfigured()) {
-      setUserAccessToken(null);
-      setUser(null);
-      try {
-        await ensureGuest({ forceNew: true });
-        return true;
-      } catch {
-        return false;
-      }
+      return clearSignedOutSession();
     }
 
     if (recoverInflight.current) return recoverInflight.current;
@@ -170,8 +133,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const before = getUserAccessToken();
         // Same token already refreshed for a prior 401 in this wave → backend still rejects JWT.
         if (before && recoverAppliedToken.current === before) {
-          console.warn("[auth] 401 after refresh — demoting to guest");
-          return demoteToGuest();
+          console.warn("[auth] 401 after refresh — signing out");
+          return clearSignedOutSession();
         }
 
         const sb = getSupabase();
@@ -201,10 +164,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return true;
             }
           } catch {
-            /* fall through to demote */
+            /* fall through to sign out */
           }
-          console.warn("[auth] refresh token unusable — demoting to guest", error);
-          return demoteToGuest();
+          console.warn("[auth] refresh token unusable — signing out", error);
+          return clearSignedOutSession();
         }
 
         // Network / unknown refresh failure — keep persisted session; fail this request.
@@ -220,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
 
     return recoverInflight.current;
-  }, [demoteToGuest]);
+  }, [clearSignedOutSession]);
 
   useEffect(() => {
     setUnauthorizedHandler(recoverFrom401);
@@ -239,8 +202,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        // Storage only — do not block splash on network guest creation.
+        // Drop any legacy guest token; sign-in is required for API access.
         await loadToken();
+        clearGuestToken();
         if (initId !== authInitId.current) return;
 
         if (isSupabaseConfigured()) {
@@ -252,13 +216,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUserAccessToken(next);
             setUser(session?.user ?? null);
             if (event === "SIGNED_IN") recoverAppliedToken.current = null;
-            if (next && (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED")) {
-              deferAuthSideEffect(convertGuestIfNeeded);
-            } else if (!next && event === "SIGNED_OUT") {
+            if (!next && event === "SIGNED_OUT") {
               recoverAppliedToken.current = null;
-              deferAuthSideEffect(async () => {
-                await ensureGuest();
-              });
+              clearGuestToken();
             }
           });
           unsub = () => sub.subscription.unsubscribe();
@@ -307,17 +267,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } finally {
         clearTimeout(budgetTimer);
         if (initId === authInitId.current) markReady();
-        // Network guest bootstrap after UI can render.
-        deferAuthSideEffect(async () => {
-          try {
-            await ensureGuest();
-            const guest = getGuestToken();
-            // Prefer the auth-state identify effect for signed-in users.
-            if (guest && !getUserAccessToken()) identify(`guest:${guest}`);
-          } catch (e) {
-            console.warn("[auth] ensureGuest after ready failed", e);
-          }
-        });
       }
     })();
 
@@ -328,15 +277,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [markReady]);
 
-  // Keep PostHog distinct_id aligned with the signed-in user or guest token.
+  // Keep PostHog distinct_id aligned with the signed-in user.
+  // Do not reset on transient logged-out flashes — that wipes anonymous→identified chains.
+  // resetAnalytics() runs only on explicit sign-out below.
   useEffect(() => {
     if (!ready) return;
     if (user?.id) {
       identify(user.id, { email: user.email ?? null });
-      return;
     }
-    const guest = getGuestToken();
-    if (guest) identify(`guest:${guest}`);
   }, [ready, user]);
 
   const signInWithGoogle = useCallback(async () => {
@@ -358,7 +306,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserAccessToken(data.session?.access_token ?? null);
       setUser(data.user);
       recoverAppliedToken.current = null;
-      await convertGuestIfNeeded();
+      clearGuestToken();
     } catch (e) {
       if (isGoogleNativeError(e)) throw new Error(mapGoogleSignInError(e));
       throw new Error(mapAuthError(e));
@@ -377,10 +325,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserAccessToken(null);
     setUser(null);
     recoverAppliedToken.current = null;
+    clearGuestToken();
     resetAnalytics();
-    await ensureGuest({ forceNew: true });
-    const guest = getGuestToken();
-    if (guest) identify(`guest:${guest}`);
   }, []);
 
   const value = useMemo(

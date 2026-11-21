@@ -58,6 +58,15 @@
         }
       ],
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#C6FF5C",
+          "defaultChannel": "streak-reminders",
+          "sounds": []
+        }
+      ],
+      [
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.maja-android-only"

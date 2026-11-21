@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { ComponentProps } from "react";
@@ -6,7 +6,6 @@ import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
 import { useLanguage } from "../context/LanguageContext";
 import { fill } from "../i18n/strings";
-import { guestFreeHintsLeft } from "../lib/storage";
 import { colors, radius, spacing } from "../theme/colors";
 import { type } from "../theme/typography";
 import { BottomSheetShell } from "./BottomSheetShell";
@@ -16,7 +15,7 @@ import { GuestGate } from "./GuestGate";
 type Props = {
   visible: boolean;
   onClose: () => void;
-  /** When set, guests can leave for sign-in. Omitted during a game so the round stays on screen. */
+  /** When set, unsigned-in users can leave for sign-in. Omitted during a game so the round stays on screen. */
   onSignIn?: () => void;
 };
 
@@ -95,15 +94,10 @@ export function WalletSheet({ visible, onClose, onSignIn }: Props) {
   const { isSignedIn } = useAuth();
   const { wallet, refreshWallet, coinCredit } = useApp();
   const { t, fonts: ui } = useLanguage();
-  const [guestLeft, setGuestLeft] = useState(0);
   const credited = visible && coinCredit && coinCredit.amount > 0 ? coinCredit : null;
 
   useEffect(() => {
-    if (!visible) return;
-    if (!isSignedIn) {
-      void guestFreeHintsLeft().then(setGuestLeft);
-      return;
-    }
+    if (!visible || !isSignedIn) return;
     void refreshWallet();
   }, [visible, isSignedIn, refreshWallet]);
 
@@ -178,7 +172,7 @@ export function WalletSheet({ visible, onClose, onSignIn }: Props) {
         ) : (
           <GuestGate
             title={t("signInToEarn")}
-            message={fill(t("guestHintsLeft"), { count: guestLeft })}
+            message={t("guestBody")}
             actionLabel={onSignIn ? t("signInToEarnCta") : undefined}
             onSignIn={onSignIn}
           >

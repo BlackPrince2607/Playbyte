@@ -13,14 +13,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/shapes_desk_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/shapes_desk_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -29,88 +29,50 @@
       "attributes": {
         "title": "Office desk",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/shapes_desk_1_left",
+        "rightUrl": "asset:spot/shapes_desk_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.0533,
-            "hh": 0.0533
-          },
-          {
-            "id": "d2",
-            "x": 0.22,
-            "y": 0.42,
-            "hw": 0.0633,
-            "hh": 0.0633
-          },
-          {
-            "id": "d3",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0575,
-            "hh": 0.0575
-          },
-          {
-            "id": "d4",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0612,
-            "hh": 0.0612
-          },
-          {
-            "id": "d5",
             "x": 0.82,
             "y": 0.22,
-            "hw": 0.0554,
-            "hh": 0.0554
-          },
-          {
-            "id": "d6",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0567,
-            "hh": 0.0567
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "blob",
-            "color": "#7FDBFF"
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d2",
-            "side": "left",
-            "op": "hide",
-            "color": "#FF4D8D"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d3",
-            "side": "right",
-            "op": "bright",
-            "color": "#B28DFF"
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d4",
-            "side": "left",
-            "op": "ring",
-            "color": "#FFD84D"
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.057,
+            "hh": 0.057
           },
           {
             "id": "d5",
-            "side": "right",
-            "op": "dim",
-            "color": "#B28DFF"
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "badge",
-            "color": "#FF4D8D"
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.062,
+            "hh": 0.062
           }
         ]
       },
@@ -127,14 +89,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/shapes_kitchen_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/shapes_kitchen_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -143,88 +105,50 @@
       "attributes": {
         "title": "Kitchen counter",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/shapes_kitchen_1_left",
+        "rightUrl": "asset:spot/shapes_kitchen_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0512,
-            "hh": 0.0512
-          },
-          {
-            "id": "d2",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0606,
-            "hh": 0.0606
-          },
-          {
-            "id": "d3",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.0561,
-            "hh": 0.0561
-          },
-          {
-            "id": "d4",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0619,
-            "hh": 0.0619
-          },
-          {
-            "id": "d5",
             "x": 0.22,
             "y": 0.42,
-            "hw": 0.0624,
-            "hh": 0.0624
-          },
-          {
-            "id": "d6",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0554,
-            "hh": 0.0554
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "ring",
-            "color": "#7FDBFF"
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d2",
-            "side": "left",
-            "op": "blob",
-            "color": "#FF8A3D"
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.062,
+            "hh": 0.062
           },
           {
             "id": "d3",
-            "side": "right",
-            "op": "hide",
-            "color": "#7FDBFF"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0582,
+            "hh": 0.0582
           },
           {
             "id": "d4",
-            "side": "left",
-            "op": "dim",
-            "color": "#FF8A3D"
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0557,
+            "hh": 0.0557
           },
           {
             "id": "d5",
-            "side": "right",
-            "op": "badge",
-            "color": "#7FDBFF"
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0545,
+            "hh": 0.0545
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "bright",
-            "color": "#7FDBFF"
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.052,
+            "hh": 0.052
           }
         ]
       },
@@ -241,14 +165,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/shapes_living_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/shapes_living_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -257,88 +181,50 @@
       "attributes": {
         "title": "Living room",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/shapes_living_1_left",
+        "rightUrl": "asset:spot/shapes_living_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.22,
-            "y": 0.42,
-            "hw": 0.0618,
-            "hh": 0.0618
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.057,
+            "hh": 0.057
           },
           {
             "id": "d2",
             "x": 0.82,
             "y": 0.22,
-            "hw": 0.0621,
-            "hh": 0.0621
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d3",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.059,
-            "hh": 0.059
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d4",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0507,
-            "hh": 0.0507
-          },
-          {
-            "id": "d5",
             "x": 0.48,
             "y": 0.5,
-            "hw": 0.0508,
-            "hh": 0.0508
-          },
-          {
-            "id": "d6",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0633,
-            "hh": 0.0633
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "ring",
-            "color": "#C6FF3D"
-          },
-          {
-            "id": "d2",
-            "side": "left",
-            "op": "blob",
-            "color": "#FF8A3D"
-          },
-          {
-            "id": "d3",
-            "side": "right",
-            "op": "badge",
-            "color": "#7FDBFF"
-          },
-          {
-            "id": "d4",
-            "side": "left",
-            "op": "hide",
-            "color": "#7FDBFF"
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d5",
-            "side": "right",
-            "op": "bright",
-            "color": "#B28DFF"
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.057,
+            "hh": 0.057
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "dim",
-            "color": "#FFD84D"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.05,
+            "hh": 0.05
           }
         ]
       },
@@ -355,14 +241,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/shapes_shelf_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/shapes_shelf_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -371,88 +257,50 @@
       "attributes": {
         "title": "Book shelf",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/shapes_shelf_1_left",
+        "rightUrl": "asset:spot/shapes_shelf_1_right",
         "diffs": [
           {
             "id": "d1",
             "x": 0.72,
             "y": 0.4,
-            "hw": 0.0568,
-            "hh": 0.0568
+            "hw": 0.062,
+            "hh": 0.062
           },
           {
             "id": "d2",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.0547,
-            "hh": 0.0547
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0545,
+            "hh": 0.0545
           },
           {
             "id": "d3",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.053,
-            "hh": 0.053
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0582,
+            "hh": 0.0582
           },
           {
             "id": "d4",
             "x": 0.22,
             "y": 0.42,
-            "hw": 0.0623,
-            "hh": 0.0623
+            "hw": 0.0557,
+            "hh": 0.0557
           },
           {
             "id": "d5",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0542,
-            "hh": 0.0542
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0533,
+            "hh": 0.0533
           },
           {
             "id": "d6",
             "x": 0.18,
             "y": 0.2,
-            "hw": 0.0594,
-            "hh": 0.0594
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "badge",
-            "color": "#FF4D8D"
-          },
-          {
-            "id": "d2",
-            "side": "left",
-            "op": "dim",
-            "color": "#FF8A3D"
-          },
-          {
-            "id": "d3",
-            "side": "right",
-            "op": "bright",
-            "color": "#FF8A3D"
-          },
-          {
-            "id": "d4",
-            "side": "left",
-            "op": "ring",
-            "color": "#FF4D8D"
-          },
-          {
-            "id": "d5",
-            "side": "right",
-            "op": "hide",
-            "color": "#FF8A3D"
-          },
-          {
-            "id": "d6",
-            "side": "left",
-            "op": "blob",
-            "color": "#7FDBFF"
+            "hw": 0.0607,
+            "hh": 0.0607
           }
         ]
       },
@@ -469,14 +317,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/city_skyline_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/city_skyline_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -485,88 +333,50 @@
       "attributes": {
         "title": "City skyline",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/city_skyline_1_left",
+        "rightUrl": "asset:spot/city_skyline_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.058,
-            "hh": 0.058
-          },
-          {
-            "id": "d2",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0615,
-            "hh": 0.0615
-          },
-          {
-            "id": "d3",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.0596,
-            "hh": 0.0596
-          },
-          {
-            "id": "d4",
-            "x": 0.22,
-            "y": 0.42,
-            "hw": 0.0612,
-            "hh": 0.0612
-          },
-          {
-            "id": "d5",
             "x": 0.82,
             "y": 0.22,
-            "hw": 0.054,
-            "hh": 0.054
-          },
-          {
-            "id": "d6",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0565,
-            "hh": 0.0565
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "badge",
-            "color": "#7FDBFF"
+            "hw": 0.052,
+            "hh": 0.052
           },
           {
             "id": "d2",
-            "side": "left",
-            "op": "dim",
-            "color": "#FFD84D"
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d3",
-            "side": "right",
-            "op": "bright",
-            "color": "#FFD84D"
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d4",
-            "side": "left",
-            "op": "hide",
-            "color": "#7FDBFF"
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d5",
-            "side": "right",
-            "op": "blob",
-            "color": "#FFD84D"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.057,
+            "hh": 0.057
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "ring",
-            "color": "#FF4D8D"
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.05,
+            "hh": 0.05
           }
         ]
       },
@@ -583,14 +393,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/city_street_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/city_street_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -599,88 +409,50 @@
       "attributes": {
         "title": "Busy street",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/city_street_1_left",
+        "rightUrl": "asset:spot/city_street_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.0526,
-            "hh": 0.0526
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.052,
+            "hh": 0.052
           },
           {
             "id": "d2",
-            "x": 0.22,
-            "y": 0.42,
-            "hw": 0.0606,
-            "hh": 0.0606
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d3",
             "x": 0.72,
             "y": 0.4,
-            "hw": 0.062,
-            "hh": 0.062
+            "hw": 0.0545,
+            "hh": 0.0545
           },
           {
             "id": "d4",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0596,
-            "hh": 0.0596
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0533,
+            "hh": 0.0533
           },
           {
             "id": "d5",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0634,
-            "hh": 0.0634
-          },
-          {
-            "id": "d6",
             "x": 0.5,
             "y": 0.16,
-            "hw": 0.0507,
-            "hh": 0.0507
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "hide",
-            "color": "#FF4D8D"
-          },
-          {
-            "id": "d2",
-            "side": "left",
-            "op": "badge",
-            "color": "#C6FF3D"
-          },
-          {
-            "id": "d3",
-            "side": "right",
-            "op": "blob",
-            "color": "#FF4D8D"
-          },
-          {
-            "id": "d4",
-            "side": "left",
-            "op": "dim",
-            "color": "#FF4D8D"
-          },
-          {
-            "id": "d5",
-            "side": "right",
-            "op": "ring",
-            "color": "#FFD84D"
+            "hw": 0.0533,
+            "hh": 0.0533
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "bright",
-            "color": "#FF4D8D"
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.062,
+            "hh": 0.062
           }
         ]
       },
@@ -697,14 +469,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/city_night_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/city_night_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -713,88 +485,50 @@
       "attributes": {
         "title": "Night lights",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/city_night_1_left",
+        "rightUrl": "asset:spot/city_night_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0546,
-            "hh": 0.0546
-          },
-          {
-            "id": "d2",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0608,
-            "hh": 0.0608
-          },
-          {
-            "id": "d3",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.0526,
-            "hh": 0.0526
-          },
-          {
-            "id": "d4",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0601,
-            "hh": 0.0601
-          },
-          {
-            "id": "d5",
-            "x": 0.22,
-            "y": 0.42,
-            "hw": 0.0536,
-            "hh": 0.0536
-          },
-          {
-            "id": "d6",
             "x": 0.18,
             "y": 0.2,
-            "hw": 0.0588,
-            "hh": 0.0588
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "ring",
-            "color": "#C6FF3D"
+            "hw": 0.0607,
+            "hh": 0.0607
           },
           {
             "id": "d2",
-            "side": "left",
-            "op": "badge",
-            "color": "#FF8A3D"
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0557,
+            "hh": 0.0557
           },
           {
             "id": "d3",
-            "side": "right",
-            "op": "blob",
-            "color": "#B28DFF"
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0595,
+            "hh": 0.0595
           },
           {
             "id": "d4",
-            "side": "left",
-            "op": "dim",
-            "color": "#FF4D8D"
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0545,
+            "hh": 0.0545
           },
           {
             "id": "d5",
-            "side": "right",
-            "op": "hide",
-            "color": "#FFD84D"
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "bright",
-            "color": "#FFD84D"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0508,
+            "hh": 0.0508
           }
         ]
       },
@@ -811,14 +545,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/city_market_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/city_market_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -827,88 +561,50 @@
       "attributes": {
         "title": "Urban market",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/city_market_1_left",
+        "rightUrl": "asset:spot/city_market_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.062,
-            "hh": 0.062
-          },
-          {
-            "id": "d2",
             "x": 0.82,
             "y": 0.22,
-            "hw": 0.063,
-            "hh": 0.063
-          },
-          {
-            "id": "d3",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.056,
-            "hh": 0.056
-          },
-          {
-            "id": "d4",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.06,
-            "hh": 0.06
-          },
-          {
-            "id": "d5",
-            "x": 0.22,
-            "y": 0.42,
-            "hw": 0.0555,
-            "hh": 0.0555
-          },
-          {
-            "id": "d6",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.058,
-            "hh": 0.058
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "ring",
-            "color": "#FFD84D"
+            "hw": 0.0582,
+            "hh": 0.0582
           },
           {
             "id": "d2",
-            "side": "left",
-            "op": "hide",
-            "color": "#FF4D8D"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0508,
+            "hh": 0.0508
           },
           {
             "id": "d3",
-            "side": "right",
-            "op": "dim",
-            "color": "#C6FF3D"
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d4",
-            "side": "left",
-            "op": "badge",
-            "color": "#FFD84D"
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d5",
-            "side": "right",
-            "op": "bright",
-            "color": "#FF4D8D"
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "blob",
-            "color": "#C6FF3D"
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.057,
+            "hh": 0.057
           }
         ]
       },
@@ -925,14 +621,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/garden_flowers_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/garden_flowers_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -941,88 +637,50 @@
       "attributes": {
         "title": "Flower bed",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/garden_flowers_1_left",
+        "rightUrl": "asset:spot/garden_flowers_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0645,
-            "hh": 0.0645
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d2",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0538,
-            "hh": 0.0538
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d3",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.0599,
-            "hh": 0.0599
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d4",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0584,
-            "hh": 0.0584
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.057,
+            "hh": 0.057
           },
           {
             "id": "d5",
             "x": 0.22,
             "y": 0.42,
-            "hw": 0.0604,
-            "hh": 0.0604
+            "hw": 0.057,
+            "hh": 0.057
           },
           {
             "id": "d6",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0518,
-            "hh": 0.0518
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "dim",
-            "color": "#FF8A3D"
-          },
-          {
-            "id": "d2",
-            "side": "left",
-            "op": "bright",
-            "color": "#B28DFF"
-          },
-          {
-            "id": "d3",
-            "side": "right",
-            "op": "blob",
-            "color": "#FF8A3D"
-          },
-          {
-            "id": "d4",
-            "side": "left",
-            "op": "ring",
-            "color": "#FFD84D"
-          },
-          {
-            "id": "d5",
-            "side": "right",
-            "op": "badge",
-            "color": "#C6FF3D"
-          },
-          {
-            "id": "d6",
-            "side": "left",
-            "op": "hide",
-            "color": "#FFD84D"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.05,
+            "hh": 0.05
           }
         ]
       },
@@ -1039,14 +697,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/garden_park_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/garden_park_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -1055,88 +713,50 @@
       "attributes": {
         "title": "Park lawn",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/garden_park_1_left",
+        "rightUrl": "asset:spot/garden_park_1_right",
         "diffs": [
           {
             "id": "d1",
             "x": 0.22,
             "y": 0.42,
-            "hw": 0.0568,
-            "hh": 0.0568
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d2",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0539,
-            "hh": 0.0539
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0557,
+            "hh": 0.0557
           },
           {
             "id": "d3",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0623,
-            "hh": 0.0623
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d4",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0574,
-            "hh": 0.0574
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d5",
             "x": 0.5,
             "y": 0.16,
-            "hw": 0.0584,
-            "hh": 0.0584
+            "hw": 0.0582,
+            "hh": 0.0582
           },
           {
             "id": "d6",
             "x": 0.48,
             "y": 0.5,
-            "hw": 0.0518,
-            "hh": 0.0518
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "blob",
-            "color": "#7FDBFF"
-          },
-          {
-            "id": "d2",
-            "side": "left",
-            "op": "dim",
-            "color": "#7FDBFF"
-          },
-          {
-            "id": "d3",
-            "side": "right",
-            "op": "hide",
-            "color": "#C6FF3D"
-          },
-          {
-            "id": "d4",
-            "side": "left",
-            "op": "badge",
-            "color": "#7FDBFF"
-          },
-          {
-            "id": "d5",
-            "side": "right",
-            "op": "ring",
-            "color": "#FFD84D"
-          },
-          {
-            "id": "d6",
-            "side": "left",
-            "op": "bright",
-            "color": "#FF4D8D"
+            "hw": 0.05,
+            "hh": 0.05
           }
         ]
       },
@@ -1153,14 +773,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/garden_path_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/garden_path_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -1169,88 +789,50 @@
       "attributes": {
         "title": "Garden path",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/garden_path_1_left",
+        "rightUrl": "asset:spot/garden_path_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0577,
-            "hh": 0.0577
-          },
-          {
-            "id": "d2",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.058,
-            "hh": 0.058
-          },
-          {
-            "id": "d3",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0649,
-            "hh": 0.0649
-          },
-          {
-            "id": "d4",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.053,
-            "hh": 0.053
-          },
-          {
-            "id": "d5",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.0573,
-            "hh": 0.0573
-          },
-          {
-            "id": "d6",
             "x": 0.22,
             "y": 0.42,
-            "hw": 0.0586,
-            "hh": 0.0586
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "ring",
-            "color": "#FF4D8D"
+            "hw": 0.0533,
+            "hh": 0.0533
           },
           {
             "id": "d2",
-            "side": "left",
-            "op": "badge",
-            "color": "#B28DFF"
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d3",
-            "side": "right",
-            "op": "bright",
-            "color": "#7FDBFF"
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0508,
+            "hh": 0.0508
           },
           {
             "id": "d4",
-            "side": "left",
-            "op": "dim",
-            "color": "#FFD84D"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0595,
+            "hh": 0.0595
           },
           {
             "id": "d5",
-            "side": "right",
-            "op": "hide",
-            "color": "#7FDBFF"
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "blob",
-            "color": "#C6FF3D"
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.05,
+            "hh": 0.05
           }
         ]
       },
@@ -1267,14 +849,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/garden_greenhouse_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/garden_greenhouse_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -1283,88 +865,50 @@
       "attributes": {
         "title": "Greenhouse",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/garden_greenhouse_1_left",
+        "rightUrl": "asset:spot/garden_greenhouse_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0585,
-            "hh": 0.0585
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0595,
+            "hh": 0.0595
           },
           {
             "id": "d2",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0573,
-            "hh": 0.0573
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0533,
+            "hh": 0.0533
           },
           {
             "id": "d3",
-            "x": 0.22,
-            "y": 0.42,
-            "hw": 0.0534,
-            "hh": 0.0534
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0595,
+            "hh": 0.0595
           },
           {
             "id": "d4",
             "x": 0.5,
             "y": 0.16,
-            "hw": 0.0616,
-            "hh": 0.0616
+            "hw": 0.0557,
+            "hh": 0.0557
           },
           {
             "id": "d5",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0545,
-            "hh": 0.0545
-          },
-          {
-            "id": "d6",
             "x": 0.48,
             "y": 0.5,
-            "hw": 0.0587,
-            "hh": 0.0587
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "bright",
-            "color": "#B28DFF"
-          },
-          {
-            "id": "d2",
-            "side": "left",
-            "op": "badge",
-            "color": "#7FDBFF"
-          },
-          {
-            "id": "d3",
-            "side": "right",
-            "op": "ring",
-            "color": "#FF4D8D"
-          },
-          {
-            "id": "d4",
-            "side": "left",
-            "op": "hide",
-            "color": "#7FDBFF"
-          },
-          {
-            "id": "d5",
-            "side": "right",
-            "op": "blob",
-            "color": "#C6FF3D"
+            "hw": 0.052,
+            "hh": 0.052
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "dim",
-            "color": "#FF8A3D"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.05,
+            "hh": 0.05
           }
         ]
       },
@@ -1381,14 +925,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/space_nebula_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/space_nebula_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -1397,88 +941,50 @@
       "attributes": {
         "title": "Nebula",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/space_nebula_1_left",
+        "rightUrl": "asset:spot/space_nebula_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0526,
-            "hh": 0.0526
-          },
-          {
-            "id": "d2",
-            "x": 0.48,
-            "y": 0.5,
-            "hw": 0.0584,
-            "hh": 0.0584
-          },
-          {
-            "id": "d3",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0563,
-            "hh": 0.0563
-          },
-          {
-            "id": "d4",
             "x": 0.22,
             "y": 0.42,
-            "hw": 0.0567,
-            "hh": 0.0567
-          },
-          {
-            "id": "d5",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0565,
-            "hh": 0.0565
-          },
-          {
-            "id": "d6",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0585,
-            "hh": 0.0585
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "bright",
-            "color": "#B28DFF"
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d2",
-            "side": "left",
-            "op": "dim",
-            "color": "#FFD84D"
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d3",
-            "side": "right",
-            "op": "ring",
-            "color": "#FFD84D"
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.052,
+            "hh": 0.052
           },
           {
             "id": "d4",
-            "side": "left",
-            "op": "badge",
-            "color": "#7FDBFF"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.052,
+            "hh": 0.052
           },
           {
             "id": "d5",
-            "side": "right",
-            "op": "hide",
-            "color": "#FFD84D"
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0533,
+            "hh": 0.0533
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "blob",
-            "color": "#B28DFF"
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0595,
+            "hh": 0.0595
           }
         ]
       },
@@ -1495,14 +1001,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/space_milky_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/space_milky_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -1511,88 +1017,50 @@
       "attributes": {
         "title": "Milky Way",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/space_milky_1_left",
+        "rightUrl": "asset:spot/space_milky_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0536,
-            "hh": 0.0536
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.052,
+            "hh": 0.052
           },
           {
             "id": "d2",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0592,
-            "hh": 0.0592
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0545,
+            "hh": 0.0545
           },
           {
             "id": "d3",
             "x": 0.18,
             "y": 0.2,
-            "hw": 0.0631,
-            "hh": 0.0631
+            "hw": 0.057,
+            "hh": 0.057
           },
           {
             "id": "d4",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.05,
+            "hh": 0.05
+          },
+          {
+            "id": "d5",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.052,
+            "hh": 0.052
+          },
+          {
+            "id": "d6",
             "x": 0.48,
             "y": 0.5,
-            "hw": 0.0624,
-            "hh": 0.0624
-          },
-          {
-            "id": "d5",
-            "x": 0.22,
-            "y": 0.42,
-            "hw": 0.0518,
-            "hh": 0.0518
-          },
-          {
-            "id": "d6",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0607,
-            "hh": 0.0607
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "hide",
-            "color": "#FF4D8D"
-          },
-          {
-            "id": "d2",
-            "side": "left",
-            "op": "dim",
-            "color": "#FF4D8D"
-          },
-          {
-            "id": "d3",
-            "side": "right",
-            "op": "bright",
-            "color": "#FFD84D"
-          },
-          {
-            "id": "d4",
-            "side": "left",
-            "op": "ring",
-            "color": "#C6FF3D"
-          },
-          {
-            "id": "d5",
-            "side": "right",
-            "op": "blob",
-            "color": "#FF8A3D"
-          },
-          {
-            "id": "d6",
-            "side": "left",
-            "op": "badge",
-            "color": "#FF4D8D"
+            "hw": 0.057,
+            "hh": 0.057
           }
         ]
       },
@@ -1609,14 +1077,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/space_earth_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/space_earth_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -1625,88 +1093,50 @@
       "attributes": {
         "title": "Earth from orbit",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/space_earth_1_left",
+        "rightUrl": "asset:spot/space_earth_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.18,
-            "y": 0.2,
-            "hw": 0.0524,
-            "hh": 0.0524
-          },
-          {
-            "id": "d2",
             "x": 0.48,
             "y": 0.5,
-            "hw": 0.0622,
-            "hh": 0.0622
-          },
-          {
-            "id": "d3",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0615,
-            "hh": 0.0615
-          },
-          {
-            "id": "d4",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0611,
-            "hh": 0.0611
-          },
-          {
-            "id": "d5",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0542,
-            "hh": 0.0542
-          },
-          {
-            "id": "d6",
-            "x": 0.22,
-            "y": 0.42,
-            "hw": 0.061,
-            "hh": 0.061
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "bright",
-            "color": "#FF4D8D"
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d2",
-            "side": "left",
-            "op": "dim",
-            "color": "#FF4D8D"
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0508,
+            "hh": 0.0508
           },
           {
             "id": "d3",
-            "side": "right",
-            "op": "badge",
-            "color": "#FFD84D"
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0595,
+            "hh": 0.0595
           },
           {
             "id": "d4",
-            "side": "left",
-            "op": "blob",
-            "color": "#FF4D8D"
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0607,
+            "hh": 0.0607
           },
           {
             "id": "d5",
-            "side": "right",
-            "op": "ring",
-            "color": "#FF8A3D"
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.05,
+            "hh": 0.05
           },
           {
             "id": "d6",
-            "side": "left",
-            "op": "hide",
-            "color": "#FF4D8D"
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.05,
+            "hh": 0.05
           }
         ]
       },
@@ -1723,14 +1153,14 @@
       "media": [
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/space_stars_1_left",
           "w": 800,
           "h": 500,
           "alt": "Picture A"
         },
         {
           "kind": "image",
-          "url": "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&w=800&h=500&q=80",
+          "url": "asset:spot/space_stars_1_right",
           "w": 800,
           "h": 500,
           "alt": "Picture B"
@@ -1739,88 +1169,50 @@
       "attributes": {
         "title": "Star field",
         "aspect": 0.625,
-        "leftUrl": "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&w=800&h=500&q=80",
-        "rightUrl": "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&w=800&h=500&q=80",
+        "leftUrl": "asset:spot/space_stars_1_left",
+        "rightUrl": "asset:spot/space_stars_1_right",
         "diffs": [
           {
             "id": "d1",
-            "x": 0.72,
-            "y": 0.4,
-            "hw": 0.0614,
-            "hh": 0.0614
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0533,
+            "hh": 0.0533
           },
           {
             "id": "d2",
-            "x": 0.5,
-            "y": 0.16,
-            "hw": 0.0632,
-            "hh": 0.0632
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.062,
+            "hh": 0.062
           },
           {
             "id": "d3",
-            "x": 0.82,
-            "y": 0.22,
-            "hw": 0.0607,
-            "hh": 0.0607
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0508,
+            "hh": 0.0508
           },
           {
             "id": "d4",
             "x": 0.22,
             "y": 0.42,
-            "hw": 0.0628,
-            "hh": 0.0628
+            "hw": 0.0607,
+            "hh": 0.0607
           },
           {
             "id": "d5",
             "x": 0.48,
             "y": 0.5,
-            "hw": 0.0579,
-            "hh": 0.0579
+            "hw": 0.057,
+            "hh": 0.057
           },
           {
             "id": "d6",
             "x": 0.18,
             "y": 0.2,
-            "hw": 0.0503,
-            "hh": 0.0503
-          }
-        ],
-        "overlays": [
-          {
-            "id": "d1",
-            "side": "right",
-            "op": "dim",
-            "color": "#7FDBFF"
-          },
-          {
-            "id": "d2",
-            "side": "left",
-            "op": "badge",
-            "color": "#B28DFF"
-          },
-          {
-            "id": "d3",
-            "side": "right",
-            "op": "bright",
-            "color": "#B28DFF"
-          },
-          {
-            "id": "d4",
-            "side": "left",
-            "op": "blob",
-            "color": "#C6FF3D"
-          },
-          {
-            "id": "d5",
-            "side": "right",
-            "op": "hide",
-            "color": "#B28DFF"
-          },
-          {
-            "id": "d6",
-            "side": "left",
-            "op": "ring",
-            "color": "#FF8A3D"
+            "hw": 0.05,
+            "hh": 0.05
           }
         ]
       },

@@ -1,7 +1,15 @@
 /** Shared game UI building blocks (answer tiles, hint bar, clue card) used across engine views. */
 import React, { createContext, useContext } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 import { hintCoinCost } from "../../lib/economy";
@@ -139,6 +147,59 @@ export type HintPrices = {
 
 export const HintPriceContext = createContext<HintPrices | null>(null);
 
+function HintChip({
+  hint,
+  tag,
+  paid,
+  onHint,
+}: {
+  hint: Hint;
+  tag: string | null;
+  paid: boolean;
+  onHint: (id: string) => void;
+}) {
+  const scale = useSharedValue(1);
+  const flash = useSharedValue(0);
+  const reduced = prefersReducedMotion();
+  const anim = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    borderColor: interpolateColor(flash.value, [0, 1], [colors.line, colors.lime]),
+    backgroundColor: interpolateColor(flash.value, [0, 1], [colors.card, colors.limeFill]),
+  }));
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={tag ? `${hint.label}, ${tag}` : `${hint.label}${hint.cost ? `, costs ${hint.cost} points` : ""}`}
+      hitSlop={10}
+      style={styles.hintPressable}
+      android_ripple={{ color: "rgba(198,255,61,0.28)" }}
+      onPressIn={() => {
+        if (reduced) return;
+        scale.value = withTiming(0.94, { duration: 70 });
+        flash.value = withTiming(1, { duration: 70 });
+      }}
+      onPressOut={() => {
+        if (reduced) return;
+        scale.value = withSpring(1, { damping: 14, stiffness: 280 });
+        flash.value = withTiming(0, { duration: 280 });
+      }}
+      onPress={() => {
+        feedback("tap");
+        onHint(hint.id);
+      }}
+    >
+      <Animated.View style={[styles.hint, anim]}>
+        <Text style={[type.metadata, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
+          💡 {hint.label}
+          {tag ? <Text style={{ color: paid ? colors.lilac : colors.lime }}>{`  ${tag}`}</Text> : null}
+          {!tag && hint.cost ? <Text style={{ color: colors.lilac }}>{`  −${hint.cost}`}</Text> : null}
+        </Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 export function HintBar({ hints, onHint }: { hints: Hint[]; onHint: (id: string) => void }) {
   const prices = useContext(HintPriceContext);
   if (!hints.length) return null;
@@ -149,25 +210,7 @@ export function HintBar({ hints, onHint }: { hints: Hint[]; onHint: (id: string)
         const tag =
           prices && coinCost != null ? (prices.freeLeft > 0 ? prices.freeText : prices.coinText(coinCost)) : null;
         const paid = tag != null && tag !== prices?.freeText;
-        return (
-          <Pressable
-            key={h.id}
-            onPress={() => {
-              feedback("select");
-              onHint(h.id);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={tag ? `${h.label}, ${tag}` : `${h.label}${h.cost ? `, costs ${h.cost} points` : ""}`}
-            hitSlop={6}
-            style={styles.hint}
-          >
-            <Text style={[type.metadata, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
-              💡 {h.label}
-              {tag ? <Text style={{ color: paid ? colors.lilac : colors.lime }}>{`  ${tag}`}</Text> : null}
-              {!tag && h.cost ? <Text style={{ color: colors.lilac }}>{`  −${h.cost}`}</Text> : null}
-            </Text>
-          </Pressable>
-        );
+        return <HintChip key={h.id} hint={h} tag={tag} paid={paid} onHint={onHint} />;
       })}
     </View>
   );
@@ -257,12 +300,15 @@ const styles = StyleSheet.create({
   },
   gridLabel: { color: colors.paper, fontFamily: fonts.bodyBold, textAlign: "center" },
   hintRow: { flexDirection: "row", justifyContent: "center", gap: spacing.sm, marginTop: spacing.xs },
+  hintPressable: { borderRadius: radius.pill, overflow: "hidden" },
   hint: {
-    minHeight: 36,
+    minHeight: 40,
     justifyContent: "center",
-    paddingHorizontal: 14,
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: radius.pill,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.line,
     backgroundColor: colors.card,
   },

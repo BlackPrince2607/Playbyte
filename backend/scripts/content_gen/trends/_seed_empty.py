@@ -6,24 +6,7 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-ONBOARDING_SLUGS = (
-    "cricket",
-    "movies",
-    "music",
-    "pop-culture",
-    "food",
-    "gaming",
-    "sports",
-    "news",
-    "tech",
-    "personality-vibe",
-    "fashion",
-    "health",
-    "kpop",
-    "puzzles",
-    "logical-reasoning",
-    "math-numbers",
-)
+from scripts.content_gen.taxonomy import ONBOARDING_SLUGS
 
 ROOT = Path(__file__).resolve().parent
 

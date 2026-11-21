@@ -33,7 +33,11 @@ function checkMedia(m: unknown): string | null {
   if (!isObj(m)) return "media entry not an object";
   if (m.kind === "emoji") return typeof m.value === "string" && m.value.length > 0 && m.value.length <= 64 ? null : "emoji value";
   if (m.kind === "image" || m.kind === "audio") {
-    if (typeof m.url !== "string" || !/^https:\/\//.test(m.url)) return "media url must be https";
+    // https CDN, or bundled spot-the-difference flat art (`asset:spot/<key>`).
+    if (typeof m.url !== "string" || !(/^(https:\/\/|asset:spot\/)/.test(m.url))) {
+      return "media url must be https or asset:spot/";
+    }
+    if (m.kind === "audio" && m.url.startsWith("asset:spot/")) return "audio cannot use asset:spot/";
     return null;
   }
   return `unknown media kind ${String(m.kind)}`;

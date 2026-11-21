@@ -85,6 +85,7 @@ async def serialize_challenge(
         "status": challenge.status,
         "gameKey": challenge.game_key,
         "gameTitle": game.title if game else challenge.game_key,
+        "gameBlurb": getattr(game, "blurb", "") if game else "",
         "seed": challenge.seed,
         "createdAt": _iso(challenge.created_at),
         "expiresAt": _iso(challenge.expires_at),
@@ -94,6 +95,13 @@ async def serialize_challenge(
         "opponentScore": opponent_score,
         "momentId": str(challenge.moment_id) if challenge.moment_id else None,
     }
+    if game is not None:
+        if getattr(game, "engine", None):
+            payload["engine"] = game.engine
+            payload["variation"] = getattr(game, "variation", None)
+        cfg = getattr(game, "config", None)
+        if cfg:
+            payload["config"] = cfg
     if viewer_id is not None:
         payload["role"] = "challenger" if viewer_id == challenge.challenger_id else "opponent"
         my_play = (

@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -23,7 +23,7 @@ type Props = {
   onPress?: () => void;
   emoji?: string;
   showCheck?: boolean;
-  /** Grid tile that stretches to its cell; the image shrinks to fit instead of overflowing the card. */
+  /** Grid tile that stretches to its cell; the image keeps a real square size. */
   tile?: boolean;
   /** Tighter padding when many text answers share the card. */
   compact?: boolean;
@@ -48,6 +48,11 @@ export function AnswerButton({
   const scale = useSharedValue(1);
   const fillWidth = useSharedValue(0);
   const reduced = prefersReducedMotion();
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageUrl]);
 
   useEffect(() => {
     const target = percent != null && percent > 0 ? Math.min(100, percent) : selected || correct ? 100 : 0;
@@ -60,11 +65,14 @@ export function AnswerButton({
     backgroundColor: fillColor,
   }));
 
+  const showImage = Boolean(imageUrl) && !imageFailed;
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label ?? undefined}
       disabled={disabled}
+      style={tile ? styles.tilePressable : undefined}
       onPressIn={() => {
         if (disabled || reduced) return;
         scale.value = withTiming(0.97, { duration: 70 });
@@ -91,8 +99,13 @@ export function AnswerButton({
         {(percent != null && percent > 0) || selected || correct ? (
           <Animated.View style={[styles.fill, fillStyle]} />
         ) : null}
-        {imageUrl ? (
-          <Image source={{ uri: imageUrl }} style={tile ? styles.tileImage : styles.image} resizeMode="contain" />
+        {showImage ? (
+          <Image
+            source={{ uri: imageUrl! }}
+            style={tile ? styles.tileImage : styles.image}
+            resizeMode="contain"
+            onError={() => setImageFailed(true)}
+          />
         ) : null}
         <View style={styles.row}>
           <Text
@@ -118,6 +131,7 @@ export function AnswerButton({
 }
 
 const styles = StyleSheet.create({
+  tilePressable: { flex: 1 },
   btn: {
     backgroundColor: colors.cardAlt,
     borderWidth: 1,
@@ -137,8 +151,8 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     padding: spacing.sm,
     justifyContent: "flex-start",
-    minHeight: 56,
-    flexShrink: 1,
+    minHeight: 140,
+    flexShrink: 0,
   },
   selected: { borderColor: colors.lime, borderWidth: 2 },
   incorrect: { borderColor: colors.pink, borderWidth: 2 },
@@ -157,8 +171,7 @@ const styles = StyleSheet.create({
   },
   tileImage: {
     width: "100%",
-    flex: 1,
-    minHeight: 0,
+    aspectRatio: 1,
     borderRadius: radius.sm,
     marginBottom: spacing.xs,
     backgroundColor: colors.ink,

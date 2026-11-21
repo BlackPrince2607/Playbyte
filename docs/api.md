@@ -16,6 +16,7 @@ Errors: `{ "code", "message", "requestId" }`
 | POST | /moments/:id/share-card | guest/user | After respond |
 | GET | /games | guest/user | |
 | POST | /games/:key/plays | guest/user | `Idempotency-Key` |
+| POST | /games/:key/plays/:playId/share-card | guest/user | After play saved; PNG brag card |
 | GET | /me | user | |
 | PATCH | /me/profile | user | `avatarKey` only accepts your own uploaded key, or `""` to clear |
 | POST | /me/avatar | user | Multipart `file`; PNG, JPEG or WebP up to 2 MB → `{ avatarKey, url }` |

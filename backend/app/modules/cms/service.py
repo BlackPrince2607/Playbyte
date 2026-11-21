@@ -33,6 +33,8 @@ async def create_moment(
     tag_slugs: list[str] | None = None,
     prompt_hi: str | None = None,
     content_lang: str = "en",
+    content_format: str | None = None,
+    content_type: str | None = None,
 ) -> Moment:
     normalized: list[dict] = []
     for i, opt in enumerate(options):
@@ -65,19 +67,21 @@ async def create_moment(
         opt["label"] = label or None
 
     tags = tag_slugs or []
-    is_quiz = "quiz" in tags or scoring_mode == "correct_option"
+    knowledge_tags = {"quiz", "trivia"}
+    is_quiz = bool(knowledge_tags & set(tags)) or scoring_mode == "correct_option"
     if is_quiz:
         scoring_mode = "correct_option"
         correct_count = sum(1 for o in normalized if o.get("isCorrect"))
         if correct_count != 1:
             raise AppError("invalid", "Quiz moments need exactly one correct option.", 422)
-        if "quiz" not in tags:
-            tags = [*tags, "quiz"]
+        # Normalize legacy "quiz" content tags onto the feed-facing "trivia" badge.
+        tags = [t for t in tags if t not in knowledge_tags]
+        tags = [*tags, "trivia"]
     else:
         scoring_mode = "none"
         for o in normalized:
             o["isCorrect"] = False
-        if "poll" not in tags and "quiz" not in tags:
+        if "poll" not in tags and not (knowledge_tags & set(tags)):
             tags = [*tags, "poll"]
 
     lowered = " ".join((o.get("label") or "") for o in normalized).lower() + " " + prompt.lower()
@@ -88,6 +92,8 @@ async def create_moment(
     lang = (content_lang or "en").strip().lower()
     if lang not in {"en", "hi"}:
         raise AppError("invalid", "content_lang must be en or hi.", 422)
+    fmt = (content_format or "").strip() or None
+    ctype = (content_type or "").strip() or None
     m = Moment(
         type=moment_type,
         category_id=category_id,
@@ -96,6 +102,8 @@ async def create_moment(
         content_lang=lang,
         prompt_image_key=prompt_image_key,
         scoring_mode=scoring_mode,
+        content_format=fmt,
+        content_type=ctype,
         restricted_topic=restricted_topic,
         content_window_id=content_window_id,
         starts_at=starts_at,

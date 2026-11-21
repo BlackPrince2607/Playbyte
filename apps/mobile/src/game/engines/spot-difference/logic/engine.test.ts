@@ -46,6 +46,13 @@ describe("spot_pair content", () => {
     }
   });
 
+  it("does not invent overlay marks when left and right urls differ", () => {
+    const base = bundle.items[0];
+    const pair = pairFromItem(base)!;
+    assert.notEqual(pair.leftUrl, pair.rightUrl);
+    assert.equal(pair.overlays.length, 0);
+  });
+
   it("rejects malformed pairs", () => {
     const base = bundle.items[0];
     assert.equal(pairFromItem({ ...base, media: [], attributes: { ...base.attributes, leftUrl: "", rightUrl: "" } }), null);
@@ -150,12 +157,13 @@ describe("spot the difference rules", () => {
     assert.equal(runner.getSnapshot().state.breakdown.clear, undefined);
   });
 
-  it("rounds expose https photo urls and side overlays", () => {
+  it("rounds expose distinct media urls; overlays only when sides share one image", () => {
     const { runner } = start();
     const s = runner.getSnapshot().state;
-    assert.match(s.leftUrl, /^https:\/\//);
-    assert.match(s.rightUrl, /^https:\/\//);
-    assert.ok(s.overlays.length >= 1);
+    assert.match(s.leftUrl, /^(https:\/\/|asset:spot\/)/);
+    assert.match(s.rightUrl, /^(https:\/\/|asset:spot\/)/);
+    assert.notEqual(s.leftUrl, s.rightUrl);
+    assert.equal(s.overlays.length, 0);
     assert.ok(s.overlays.every((o) => s.diffs.some((d) => d.id === o.id)));
   });
 });

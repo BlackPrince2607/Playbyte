@@ -1,37 +1,11 @@
 category,bank_text_sent_to_model
-cricket,"Powerplay over. Your instinct is…
-Swing at everything
-Keep wickets in hand
-Death overs. You bowl…
-Yorkers at the stumps
-Slower balls and hope
-Your captain looks like…
-Calm, field set early
-Aggressive, always hunting a wicket
-You win the toss. You…
-Bat first and set a total
-Chase under lights
-India night. You watch with…
-Family and a running commentary
-Friends and a second screen
-Your format is…
-T20 — three hours and done
-Test — five days if it lasts
-A batter scores a hundred runs in one innings. What is that score called?
-A century
-A duck
-A maiden
-The fielding side is limited in how many fielders can be outside the circle at the start of a T20. What is that phase called?
-The powerplay
-The death
-The toss"
-movies,"Friday night. Where do you watch?
+bollywood,"Friday night. Where do you watch?
 Theatre — big screen only
 Couch and a stream
 What keeps you in the seat?
 An interval twist
 A slow burn that earns the end
-A sequel is announced. You…
+Sequel announced. Your move?
 Book early
 Wait for reviews
 Protect the original
@@ -48,19 +22,19 @@ One friend who will not talk
 Tonight is for…
 A new Hindi release
 A rewatch of a classic
-Someone starts a spoiler. You…
+Someone starts a spoiler. Next?
 Cover your ears
 Tell them to finish
 You rewatch because…
 It feels like home
 You forgot the plot
-The interval song. You…
+Interval song hits. Your move?
 Sing along
 Wait for the story
 You pick a film for…
 The lead pair
 The director
-The credits roll. You…
+Credits are rolling. What do you do?
 Sit through them
 Are already discussing the end
 The short break in the middle of a theatrical film in India is called the…
@@ -79,62 +53,94 @@ Playing a film you have already finished is a…
 Rewatch
 Debut
 Toss"
-music,"What is winning your week?
-Film songs
-Indie and alt
-Hip-hop
-Lo-fi focus
-Concert tickets just dropped. You…
-Buy in the first minute
-Wait to see who else is going
-The stream is enough
-What hits harder?
-A live gig
-The studio album
-How do you find a new song?
-A friend sends it
-The autoplay keeps going
-Your listening looks like…
-Headphones, world off
-Speaker, everyone hears it
-A song sticks because…
-The chorus
-The memory attached to it
-A recording made in front of an audience, wrong notes included, is a…
-Live album
-Studio album
-Playlist
-A short list of songs you queue on purpose is a…
-Playlist
-Encore
-Ticket"
-pop-culture,"The meme of the week. You…
-Send it to three chats
-Are already tired of it
-A viral audio. You…
-Use it the same day
-Let it pass
-Two fandoms are fighting. You…
-Pick a side
-Watch with snacks
-A creator you like slips. You…
-Give them one more video
-Unfollow quietly
-A reel trend. You…
-Try it once
-Scroll past
-You remember a show by…
-One line everyone quotes
-The ending
-A joke format copied across thousands of posts is a…
-Meme
-Century
-Derby
-A short sound everyone reuses on video is a…
-Viral audio
-Headline
-Toss"
-food,"Late night. What wins?
+mythology,"Which quality of Hanuman would you most want?
+Courage
+Devotion
+Loyalty
+Was Karna's loyalty his greatest…
+Strength
+Weakness
+Who would you choose as a mentor?
+Krishna
+Dronacharya
+Was Yudhishthira right to follow the dice rules?
+Yes — dharma first
+No — family first
+What draws you more in Shiv stories?
+Ascetic calm
+Fierce power
+If you were Vibhishan, would you leave Lanka?
+Leave for dharma
+Stay loyal to home
+In the Ramayana, who is known for devotion and strength?
+Hanuman
+Shakuni
+Duryodhana
+The Mahabharata war is set mainly around which place?
+Kurukshetra
+Ayodhya
+Lanka
+Who is Sita's husband in the Ramayana?
+Ram
+Lakshman
+Bharat"
+tv-serials,"A big twist drops mid-week. You…
+Rewatch immediately
+Wait for tonight's episode
+Which character type do you root for?
+The underdog
+The schemer
+How should a long-running serial end?
+Clean closure
+Open for a reboot
+Peak TV nostalgia is…
+Early 2000s soaps
+Recent family dramas
+Who carries the show?
+Lead pair chemistry
+Supporting cast chaos
+Next big leap will be…
+Time skip
+New villain entry
+A long-running daily Indian family drama is often called a…
+Soap / serial
+Short film
+News bulletin
+The main romantic pair of a serial are usually called the…
+Lead pair
+Guest anchors
+Umpires
+An episode that reveals a major secret is often called a…
+Twist episode
+Friendly
+Interval"
+cricket,"Powerplay over. Your instinct is…
+Swing at everything
+Keep wickets in hand
+Death overs. You bowl…
+Yorkers at the stumps
+Slower balls and hope
+Your captain looks like…
+Calm, field set early
+Aggressive, always hunting a wicket
+You win the toss. What do you do?
+Bat first and set a total
+Chase under lights
+India night. You watch with…
+Family and a running commentary
+Friends and a second screen
+Your format is…
+T20 — three hours and done
+Test — five days if it lasts
+A batter scores a hundred runs in one innings. What is that score called?
+A century
+A duck
+A maiden
+The fielding side is limited in how many fielders can be outside the circle at the start of a T20. What is that phase called?
+The powerplay
+The death
+The toss"
+indian-foods,"Late night. What wins?
 Street food
 Whatever is already at home
 The cup in your hand is…
@@ -146,10 +152,10 @@ You will try every version
 Dinner is…
 Cooked at home
 Ordered in
-Heat level. You…
+Food comes spicy. Your move?
 Ask for extra
 Keep it mild
-After the meal you…
+After the meal, what do you want?
 Need something sweet
 Are already done
 Milk, tea, and spice simmered together is…
@@ -160,34 +166,7 @@ A spiced rice dish with meat or vegetables, claimed by many cities, is…
 Biryani
 Toast
 Salad"
-gaming,"Tonight you queue for…
-A ranked match
-A chill casual lobby
-Your main is…
-Shooters
-Strategy and MOBAs
-Story single-player
-You play with…
-The same trio every night
-Solo queue and vibes
-A battle pass drops. You…
-Buy it on day one
-Grind free rewards only
-You mostly play on…
-Mobile
-PC or console
-After a loss streak you…
-One more game
-Close the app
-A game built around shooting from a first-person view is often called…
-An FPS
-A puzzle
-A rhythm game
-Playing against other people online is…
-Multiplayer
-A cutscene
-A tutorial"
-sports,"Big match night. Where are you?
+football,"Big match night. Where are you?
 On the couch with the stream
 In the stands if you can get a ticket
 Your club loyalty looks like…
@@ -202,7 +181,7 @@ Hyped from the team sheet
 Your match ritual is…
 Jersey on, snacks ready
 Headphones in, no spoilers
-A tight call goes against your side. You…
+Bad call against your side. Next?
 Rewatch the clip twice
 Trust the referee and move on
 A sport uses a round ball and a goal, and outfield players may not handle the ball. Which sport is it?
@@ -213,85 +192,93 @@ Two local clubs play each other and the city splits. What is that match called?
 A derby
 A friendly
 A trial"
-news,"Morning news. You…
-Read one long piece
-Scroll headlines and stop
-A viral claim. You…
-Look for the source
-Forward it if it feels true
-Breaking alerts. You…
-Keep them on
-Mute the noise
-You trust…
-A reporter you follow
-A friend who reads a lot
-A story upsets you. You…
-Read the whole thing
-Close the app
-News time is…
-With breakfast
-Late, if at all
-Comparing a viral claim with a named source is a…
-Fact check
-Rumour
-Spoiler
-The title line of a story, before the article, is the…
+general-knowledge,"You learn something new mostly from…
+Short videos
+Long reads
+India fact debates with friends feel…
+Fun and competitive
+Too nerdy
+What should schools emphasize more?
+Practical skills
+General knowledge
+Viral 'fact' lands. You…
+Verify first
+Share if it sounds right
+Quiz nights are…
+Your comfort zone
+Only for specialists
+Is GK more useful than trending news?
+GK wins
+News wins
+India's national animal is the…
+Tiger
+Lion
+Elephant
+The largest ocean on Earth is the…
+Pacific
+Atlantic
+Indian
+Water freezes at…
+0°C
+100°C
+50°C"
+kpop,"Your bias is the one who…
+Owns the encore — center stage
+Sings the high note — that one line
+Midnight comeback drop. Your move?
+Stream the music video first
+Learn the chorus before breakfast
+Which concept is your era?
+Dark and cinematic — black outfits
+Fresh and bright — pastels, smile
+Concert night looks like…
+Lightstick up — you know every fan chant
+Phone away — you just want the live vocal
+Your playlist is mostly…
+Title tracks — the big chorus only
+B-sides — the songs they skip promoting
+Pick your fandom habit.
+Streaming party — refresh the view count
+Fancam loop — one member, all night
+You press play for…
+A slow romance
+A thriller that starts loud
+Episode one ends. Next move?
+Start episode two
+Save it for tomorrow
+Who are you rooting for?
+The quiet lead
+The scene-stealer friend
+Great soundtrack — what do you do?
+Add it immediately
+Only notice the sad scene
+Sad ending landed. Your reaction?
+Accept it
+Need a fan edit
+How do you watch?
+Subtitles, original audio
+A dub if you are cooking
+A group returns in black outfits with a whisper chorus. Which concept is it?
+Dark and cinematic — black outfits
+Fresh and bright — pastels, smile
+Title tracks — the big chorus only
+You skip the promoted single and loop the deep cuts. Which playlist habit is that?
+B-sides — the songs they skip promoting
+Title tracks — the big chorus only
+Streaming party — refresh the view count
+You know every fan chant and the colour of the official light. Which concert habit is that?
+Lightstick up — you know every fan chant
+Phone away — you just want the live vocal
+Fancam loop — one member, all night
+The songs written for a series are the…
+Soundtrack
+Toss
 Headline
-Chorus
-Interval"
-tech,"A new phone drops. You…
-Read the reviews first
-Want it the same day
-App permissions. You…
-Deny almost everything
-Tap allow and move on
-AI at work. You…
-Use it every day
-Keep it for drafts only
-Your home screen is…
-A few tools you actually open
-A folder of apps you forgot
-Your phone is…
-iOS
-Android
-A startup launch. You…
-Try the preview
-Wait until your friends complain
-A science headline. You…
-Open the paper
-Trust the summary
-You would rather understand…
-Space
-The human body
-A kitchen experiment. You…
-Follow the steps
-Change one thing and see
-A surprising fact. You…
-Check it
-Repeat it at dinner
-The invention you want is…
-Clean energy that just works
-A doctor in your pocket
-Science class was…
-The lab
-The diagrams
-The mobile system made by Apple is…
-iOS
-A browser
-A charger
-A prompt that asks if an app may use your camera is a…
-Permission
-Playlist
-Derby
-A formal write-up of an experiment is a…
-Paper
-Playlist
-Jersey
-The study of stars, planets, and what is beyond Earth is…
-Space science
-Fashion
-A derby"
-personality-vibe,"Your ideal escape looks like…
+Translated lines on screen while you hear the original actors are…
+Subtitles
+A derby
+A century"
+boys-girls,"Your ideal escape looks like…
 Beach person — sunsets and slow days
 Mountain person — cool air and quiet trails
 How do you take a trip?
@@ -327,23 +314,23 @@ Send a meme — say it without a speech
 A disagreement looks like…
 Sort it out now — talk before you sleep
 Take some space — come back calmer
-Group plan, short notice. You…
+Last-minute group plan — you in?
 Say yes
 Need a day to decide
-You read the message. You…
+You read the message. What next?
 Reply now
 Leave it on seen
-A birthday. You…
+Friend's birthday — how do you show up?
 Call
 A text is enough
 Story reply and done
-The group chat is on fire. You…
+Group chat is on fire. Your move?
 Jump in
 Mute for an hour
-A new person joins. You…
+A new person joins. What do you do?
 Talk first
 Wait to be pulled in
-You need to cancel. You…
+You need to cancel plans. How?
 Say it early
 Hope they cancel first
 Aarav books nothing and takes the first bus toward the hills. Which travel vibe is that?
@@ -370,115 +357,7 @@ A friend is upset, so they send a meme instead of a speech. Which friendship vib
 Send a meme — say it without a speech
 Call them — hear the whole story
 Sort it out now — talk before you sleep"
-fashion,"Getting dressed. You…
-Plan the outfit
-Grab what is clean
-A trend arrives. You…
-Try it once
-Wait until it looks normal
-The pair you reach for…
-Comfort first
-The good ones
-You shop when…
-You need something
-You are bored
-Your default colour is…
-Black, always
-Whatever is bright
-A wedding invite. You…
-Buy something new
-Restyle what you own
-The combination of clothes you leave the house in is an…
-Outfit
-Playlist
-Innings
-The pair you wear on your feet is…
-Shoes
-Subtitles
-A wicket"
-health,"A healthy morning is…
-Water before the phone
-A real breakfast
-Sleep. You…
-Protect the hours
-Trade them for one more episode
-Movement today is…
-A walk outside
-A workout you scheduled
-A heavy day. You…
-Step away for ten minutes
-Push through and crash later
-Eating well this week means…
-Cooking more
-One less order-in
-A weird symptom. You…
-Ask a doctor
-Search and worry
-The hours your body uses to recover at night are…
-Sleep
-A comeback
-A headline
-Walking or training so your body works is…
-Movement
-A spoiler
-A toss"
-kpop,"Your bias is the one who…
-Owns the encore — center of the stage
-Sings the high note — you wait for that line
-A comeback drops at midnight. You…
-Stream the music video first
-Learn the chorus before breakfast
-Which concept is your era?
-Dark and cinematic — black outfits, whisper chorus
-Fresh and bright — pastels and a smile
-Concert night looks like…
-Lightstick up — you know every fan chant
-Phone away — you just want the live vocal
-Your playlist is mostly…
-Title tracks — the big chorus only
-B-sides — the songs they skip promoting
-Pick your fandom habit.
-Streaming party — refresh the view count
-Fancam loop — one member, all night
-You press play for…
-A slow romance
-A thriller that starts loud
-Episode one ends. You…
-Start episode two
-Save it for tomorrow
-You root for…
-The quiet lead
-The friend who steals scenes
-The soundtrack. You…
-Add it immediately
-Notice it only in the sad scene
-A sad ending. You…
-Accept it
-Need a fan edit
-You watch with…
-Subtitles, original audio
-A dub if you are cooking
-A group returns in black outfits with a whisper chorus. Which concept is it?
-Dark and cinematic — black outfits, whisper chorus
-Fresh and bright — pastels and a smile
-Title tracks — the big chorus only
-You skip the promoted single and loop the deep cuts. Which playlist habit is that?
-B-sides — the songs they skip promoting
-Title tracks — the big chorus only
-Streaming party — refresh the view count
-You know every fan chant and the colour of the official light. Which concert habit is that?
-Lightstick up — you know every fan chant
-Phone away — you just want the live vocal
-Fancam loop — one member, all night
-The songs written for a series are the…
-Soundtrack
-Toss
-Headline
-Translated lines on screen while you hear the original actors are…
-Subtitles
-A derby
-A century"
-puzzles,"Your puzzle mood is…
+math-puzzles,"Your puzzle mood is…
 One hard board, no hints
 Easy wins and a streak
 You open first…
@@ -505,33 +384,47 @@ A short question that hides the answer in wordplay is a…
 Riddle
 Jersey
 Interval"
-logical-reasoning,"A logic question lands. You…
-Map it out step by step
-Guess from the vibe
-Number patterns are…
-Your comfort zone
+memory-games,"Memory pair rounds should be…
+Fast and visual
+Slow and careful
+Spot-the-difference is best with…
+Busy scenes
+Minimal props
+You remember sequences better by…
+Rhythm
+Positions
+Harder memory challenge?
+More items
+Less time
+Matching two identical cards in a grid is a…
+Memory pair
+Century
+Spoiler
+Finding changes between two similar images is…
+Spot the difference
+An anagram
+A toss"
+word-puzzles,"Anagram rounds feel…
+Like a warm-up
+Like a boss fight
+You prefer word puzzles that are…
+Clever riddles
+Straight definitions
+Missing-letter grids should be…
+Blitz timed
+Unhurried
+Synonym races are…
+Your lane
 Where you slow down
-Two answers both feel right. You…
-Eliminate until one remains
-Pick and move on
-You want…
-Fast rounds
-Time to think
-Your favourite is…
-Odd one out
-If-then scenarios
-You miss one. You…
-Read why and lock it in
-Skip the explanation
-Finding what comes next in a sequence is…
-Pattern recognition
-A spoiler
-A powerplay
-Picking the item that does not belong is finding the…
-Odd one out
-Captain
-Encore"
-math-numbers,"Mental maths feels…
+Rearranging letters to form a new word is an…
+Anagram
+Interval
+Derby
+A short question that hides the answer in wordplay is a…
+Riddle
+Jersey
+Powerplay"
+maths,"Mental maths feels…
 Like a warm-up
 Like a trap
 You prefer…

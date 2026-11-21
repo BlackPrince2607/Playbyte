@@ -13,9 +13,11 @@ type Props = {
   onClose: () => void;
   onContinue: (category: BattleCategory) => void;
   onProfile?: () => void;
+  subtitle?: string;
+  error?: string;
 };
 
-export function ChooseGameScreen({ onClose, onContinue, onProfile }: Props) {
+export function ChooseGameScreen({ onClose, onContinue, onProfile, subtitle, error }: Props) {
   const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<BattleCategoryId>("mixed");
   const active = BATTLE_CATEGORIES.find((c) => c.id === selected) ?? BATTLE_CATEGORIES[0];
@@ -33,10 +35,15 @@ export function ChooseGameScreen({ onClose, onContinue, onProfile }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[type.screenTitle, { color: colors.paper }]}>Choose a game</Text>
+        <Text style={[type.screenTitle, { color: colors.paper }]}>Choose a category</Text>
         <Text style={[type.bodySm, { color: colors.lilac, marginTop: -8 }]}>
-          Pick a theme for your 1v1 battle
+          {subtitle ?? "Same lobby · random playable game · fresh questions each duel"}
         </Text>
+        {error ? (
+          <Text style={[type.bodySm, { color: colors.pink, marginTop: -4 }]} accessibilityRole="alert">
+            {error}
+          </Text>
+        ) : null}
         <View style={styles.grid}>
           {BATTLE_CATEGORIES.map((cat, index) => {
             const on = cat.id === selected;
@@ -70,6 +77,9 @@ export function ChooseGameScreen({ onClose, onContinue, onProfile }: Props) {
                   <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.display }]}>
                     {cat.label}
                   </Text>
+                  <Text style={styles.tileBlurb} numberOfLines={2}>
+                    {cat.blurb}
+                  </Text>
                 </Pressable>
               </Animated.View>
             );
@@ -86,8 +96,10 @@ export function ChooseGameScreen({ onClose, onContinue, onProfile }: Props) {
           }}
           style={({ pressed }) => [styles.continue, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
         >
-          <Text style={[type.button, { color: colors.paper, letterSpacing: 1 }]}>CONTINUE</Text>
-          <Text style={styles.continueSub}>{active.label}</Text>
+          <Text style={[type.button, { color: colors.paper, letterSpacing: 1 }]}>FIND OPPONENT</Text>
+          <Text style={styles.continueSub}>
+            {active.label} · {active.gameKeys.length ? `${active.gameKeys.length} games` : "any game"}
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -140,12 +152,21 @@ const styles = StyleSheet.create({
   tileWrap: { width: "47%" },
   tile: {
     width: "100%",
+    minHeight: 168,
     aspectRatio: 1,
     borderRadius: 20,
     padding: spacing.md,
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.sm,
+    gap: 6,
+  },
+  tileBlurb: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11,
+    lineHeight: 14,
+    color: colors.lilac,
+    textAlign: "center",
+    paddingHorizontal: 4,
   },
   tileOn: {
     backgroundColor: colors.cardAlt,

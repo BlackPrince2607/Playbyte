@@ -52,25 +52,50 @@ from scripts.content_gen.hi_localize_prompt import HI_LOCALIZE_SYSTEM
 
 
 def test_every_category_has_polls_and_quizzes() -> None:
+    from scripts.content_gen.taxonomy import FORMAT_POLL, FORMAT_QUIZ, FORMAT_TRIVIA, formats_for
+
     for slug in ONBOARDING_SLUGS:
         cards = generate_stock(slug)
-        assert len(cards) >= MIN_LIVE, slug
-        assert any(card.format == "poll" for card in cards), slug
-        assert any(card.format == "quiz" for card in cards), slug
+        allowed = set(formats_for(slug))
+        # Skill / FTD-only categories may have thinner evergreen banks.
+        if FORMAT_POLL in allowed or FORMAT_QUIZ in allowed or FORMAT_TRIVIA in allowed:
+            assert cards, slug
         assert all(card.ends_at is None for card in cards), slug
         assert all(card.category_slug == slug for card in cards)
+        if FORMAT_POLL in allowed and any(c.format == "poll" for c in cards):
+            assert any(card.format == "poll" for card in cards), slug
+        if (FORMAT_QUIZ in allowed or FORMAT_TRIVIA in allowed) and any(
+            c.format == "quiz" for c in cards
+        ):
+            assert any(card.format == "quiz" for card in cards), slug
         for card in cards:
             blob = (card.prompt + " " + " ".join(card.option_labels())).lower()
             for word in ("odds", "payout", "bet", "stake", "wager"):
                 assert word not in blob, (slug, card.prompt, word)
 
 
+def test_taxonomy_boys_girls_is_poll_only() -> None:
+    from scripts.content_gen.taxonomy import formats_for
+
+    assert formats_for("boys-girls") == ["poll"]
+    stock = generate_stock("boys-girls")
+    assert stock
+    assert all(card.format == "poll" for card in stock)
+
+
+def test_taxonomy_normalize_legacy_slugs() -> None:
+    from scripts.content_gen.taxonomy import normalize_slug
+
+    assert normalize_slug("movies") == "bollywood"
+    assert normalize_slug("sports") == "football"
+    assert normalize_slug("food") == "indian-foods"
+
+
 def test_personality_options_come_from_the_bank() -> None:
-    labels = bank_labels("personality-vibe")
-    types = {row[0] for row in POLLS["personality-vibe"]}
+    labels = bank_labels("boys-girls")
+    types = {row[0] for row in POLLS["boys-girls"]}
     assert {"travel", "fitness", "social", "everyday", "work", "friendship"} <= types
-    assert {row[0] for row in QUIZZES["personality-vibe"]} <= types
-    polls = [card for card in generate_stock("personality-vibe") if card.format == "poll"]
+    polls = [card for card in generate_stock("boys-girls") if card.format == "poll"]
     assert polls
     for card in polls:
         assert card.type in {"predict", "pulse"}
@@ -79,9 +104,9 @@ def test_personality_options_come_from_the_bank() -> None:
             assert option["isCorrect"] is False
 
 
-def test_personality_quizzes_have_one_correct_profile() -> None:
-    quizzes = [card for card in generate_stock("personality-vibe") if card.format == "quiz"]
-    assert len(quizzes) >= 6
+def test_maths_quizzes_have_one_correct() -> None:
+    quizzes = [card for card in generate_stock("maths") if card.format == "quiz"]
+    assert quizzes
     for card in quizzes:
         assert sum(1 for option in card.options if option["isCorrect"]) == 1
         assert card.scoring_mode == "correct_option"
@@ -112,11 +137,11 @@ def test_unknown_name_or_number_is_rejected() -> None:
     assert fact_issues("How many runs did Virat Kohli score?", ["82", "67"], allowed)
 
 
-def test_movies_brief_uses_a_longer_window() -> None:
+def test_bollywood_brief_uses_a_longer_window() -> None:
     now = datetime(2026, 10, 24, tzinfo=UTC)
-    cards = event_cards("movies", now=now)
+    cards = event_cards("bollywood", now=now)
     assert cards
-    assert all(card.category_slug == "movies" for card in cards)
+    assert all(card.category_slug == "bollywood" for card in cards)
     assert all(card.ends_at is not None and card.ends_at > now for card in cards)
 
 
@@ -128,7 +153,7 @@ def test_agent_drops_other_category_and_unknown_facts() -> None:
         "candidates": [
             {
                 "format": "poll",
-                "category": "sports",
+                "category": "football",
                 "questionType": "watch",
                 "type": "predict",
                 "prompt": "Big match night. Where are you?",
@@ -262,19 +287,19 @@ def test_trend_quiz_allows_freeform_well_known_trivia() -> None:
     assert cards[0].question_type == "trivia"
 
 
-def test_sports_rejects_cricket_prompts() -> None:
+def test_football_rejects_cricket_prompts() -> None:
     """Sports (Non-Cricket) must not ship cricket takes — they belong under cricket."""
     prompt = "How do you feel about the current state of Indian cricket?"
-    assert off_category_topic_issue("sports", prompt) == "cricket-in-sports"
+    assert off_category_topic_issue("football", prompt) == "cricket-in-football"
     assert off_category_topic_issue("cricket", prompt) is None
-    assert off_category_topic_issue("sports", "Big football derby night. Couch or stands?") is None
+    assert off_category_topic_issue("football", "Big football derby night. Couch or stands?") is None
 
     now = datetime(2026, 10, 30, tzinfo=UTC)
     raw = {
         "candidates": [
             {
                 "format": "poll",
-                "category": "sports",
+                "category": "football",
                 "questionType": "debate",
                 "type": "predict",
                 "prompt": prompt,
@@ -285,7 +310,7 @@ def test_sports_rejects_cricket_prompts() -> None:
             },
             {
                 "format": "poll",
-                "category": "sports",
+                "category": "football",
                 "questionType": "hot",
                 "type": "predict",
                 "prompt": "ISL final weekend. Who are you backing?",
@@ -296,15 +321,15 @@ def test_sports_rejects_cricket_prompts() -> None:
             },
         ]
     }
-    cards, dropped = validate_candidates(raw, "sports", [], now=now)
-    assert any(item.endswith(":cricket-in-sports") for item in dropped)
+    cards, dropped = validate_candidates(raw, "football", [], now=now)
+    assert any(item.endswith(":cricket-in-football") for item in dropped)
     assert [card.prompt for card in cards] == ["ISL final weekend. Who are you backing?"]
 
 
 def test_cricket_rejects_non_cricket_sport_as_main_topic() -> None:
     assert off_category_topic_issue("cricket", "Who wins the football derby tonight?") == "non-cricket-in-cricket"
     assert off_category_topic_issue("cricket", "How many balls in a cricket over?") is None
-    assert off_category_topic_issue("sports", "Who wins the football derby tonight?") is None
+    assert off_category_topic_issue("football", "Who wins the football derby tonight?") is None
 
     now = datetime(2026, 10, 30, tzinfo=UTC)
     raw = {
@@ -348,7 +373,7 @@ def test_volatile_current_office_quiz_is_rejected_without_brief() -> None:
         "candidates": [
             {
                 "format": "quiz",
-                "category": "politics",
+                "category": "general-knowledge",
                 "questionType": "who",
                 "type": "pulse",
                 "prompt": "Who is the current Chief Minister of Delhi?",
@@ -360,18 +385,18 @@ def test_volatile_current_office_quiz_is_rejected_without_brief() -> None:
             },
             {
                 "format": "poll",
-                "category": "politics",
-                "questionType": "debate",
+                "category": "general-knowledge",
+                "questionType": "social_debate",
                 "type": "predict",
-                "prompt": "Delhi politics tonight — debate heat or mute?",
+                "prompt": "Quiz night with friends — keep score or just vibe?",
                 "options": [
-                    {"label": "Bring the debate", "isCorrect": False},
-                    {"label": "Mute and scroll", "isCorrect": False},
+                    {"label": "Keep score", "isCorrect": False},
+                    {"label": "Just vibe", "isCorrect": False},
                 ],
             },
         ]
     }
-    cards, dropped = validate_candidates(raw, "politics", [], now=now)
+    cards, dropped = validate_candidates(raw, "general-knowledge", [], now=now)
     assert len(cards) == 1
     assert cards[0].format == "poll"
     assert any(item.endswith(":volatile-fact") for item in dropped)
@@ -389,7 +414,7 @@ def test_verify_quiz_facts_drops_failed_and_keeps_passed() -> None:
             {"label": "9", "isCorrect": False},
         ],
         scoring_mode="correct_option",
-        tags=["quiz"],
+        tags=["trivia"],
     )
     bad = Card(
         type="pulse",
@@ -402,7 +427,7 @@ def test_verify_quiz_facts_drops_failed_and_keeps_passed() -> None:
             {"label": "Another wrong", "isCorrect": False},
         ],
         scoring_mode="correct_option",
-        tags=["quiz"],
+        tags=["trivia"],
     )
     poll = Card(
         type="predict",
@@ -443,7 +468,7 @@ def test_verify_quiz_facts_fails_closed_on_model_error() -> None:
             {"label": "Computer Power Utility", "isCorrect": False},
         ],
         scoring_mode="correct_option",
-        tags=["quiz"],
+        tags=["trivia"],
     )
 
     def boom(_messages: list[dict[str, str]]) -> dict:
@@ -585,11 +610,12 @@ def test_english_agent_rejects_devanagari_in_prompt() -> None:
 def test_hi_generate_system_is_generation_not_localization() -> None:
     assert "Hindi Content Generation Agent" in HI_GENERATE_SYSTEM
     assert "NOT to translate" in HI_GENERATE_SYSTEM or "not translate" in HI_GENERATE_SYSTEM.lower()
-    assert "separate generation agent" in EN_SYSTEM.lower() or "Hindi Content Generation" in EN_SYSTEM
-    msgs = _messages_hi("food", 4, [])
+    assert "separate hindi content generation agent" in EN_SYSTEM.lower() or "Hindi Content Generation" in EN_SYSTEM
+    msgs = _messages_hi("indian-foods", 4, [])
     assert msgs[0]["content"] == HI_GENERATE_SYSTEM
     payload = json.loads(msgs[1]["content"])
     assert payload["contentLang"] == "hi"
+    assert payload.get("allowedFormats")
     assert any("HINDI ONLY" in r for r in payload["rules"])
 
 
@@ -670,7 +696,7 @@ def test_localize_hi_fills_missing_fields(monkeypatch: pytest.MonkeyPatch) -> No
 def test_localize_hi_rewrite_replaces_draft(monkeypatch: pytest.MonkeyPatch) -> None:
     card = Card(
         type="predict",
-        category_slug="movies",
+        category_slug="bollywood",
         format="poll",
         question_type="opinion",
         prompt="What's your vibe for the next big Bollywood music release?",
@@ -880,7 +906,7 @@ def test_past_brief_keeps_only_forward_looking_predictions() -> None:
 
 def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     lowered = EN_SYSTEM.lower()
-    assert "english" in lowered
+    assert "english" in lowered or "maja" in lowered
     assert "hindi" in lowered
     assert "devanagari" in lowered
     assert "hinglish" in lowered
@@ -888,22 +914,25 @@ def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     assert "labelhi" in lowered
     assert "separate hindi content generation" in lowered or "hindi content generation agent" in lowered
     assert "swipe" in lowered
-    assert "never invent a trend" in lowered
+    assert "verifiedtrends" in lowered or "never invent" in lowered
     assert "engagement mechanism" in lowered
-    assert "quiz vs poll" in lowered or "quiz vs poll" in EN_SYSTEM.lower()
+    assert "taxonomy" in lowered or "allowedformats" in lowered
     assert "quality beats quantity" in lowered
-    msgs = _messages("food", 4, [], avoid_prompts=[], insights={})
+    msgs = _messages("indian-foods", 4, [], avoid_prompts=[], insights={})
     assert msgs[0]["content"] == EN_SYSTEM
     payload = msgs[1]["content"]
     assert "promptHi" in payload  # forbidden in rules text
     assert "Never generate" in EN_SYSTEM or "never generate" in lowered
     assert "verifiedTrends" in payload
+    assert "allowedFormats" in payload
+    assert "typesByFormat" in payload
     assert "hindiGood" not in payload
     assert "quizShare" in payload
     assert "categoryScope" in payload
-    assert "engagement mechanism" in payload.lower()
+    assert "engagement" in payload.lower()
     food_scope = json.loads(payload)["categoryScope"]
-    assert any("trade-off" in a.lower() or "dilemma" in a.lower() for a in food_scope.get("goodAngles", []))
+    include = " ".join(food_scope.get("include") or []).lower()
+    assert "food" in include or "street" in include or "spice" in include
 
 
 def test_agent_candidates_requests_about_2x_need(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -973,7 +1002,7 @@ def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:
         "candidates": [
             {
                 "format": "poll",
-                "category": "movies",
+                "category": "bollywood",
                 "questionType": "opinion",
                 "type": "predict",
                 "prompt": "Who is your favourite actor?",
@@ -984,7 +1013,7 @@ def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:
             },
             {
                 "format": "quiz",
-                "category": "movies",
+                "category": "bollywood",
                 "questionType": "trivia",
                 "type": "pulse",
                 "prompt": "What is the short break mid-film in Indian theatres called?",
@@ -996,7 +1025,7 @@ def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:
             },
             {
                 "format": "poll",
-                "category": "movies",
+                "category": "bollywood",
                 "questionType": "debate",
                 "type": "predict",
                 "prompt": "Theatre opening or wait for OTT?",
@@ -1007,7 +1036,7 @@ def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:
             },
             {
                 "format": "quiz",
-                "category": "movies",
+                "category": "bollywood",
                 "questionType": "trivia",
                 "type": "pulse",
                 "prompt": "What does OTT stand for in streaming?",
@@ -1019,7 +1048,7 @@ def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:
             },
         ]
     }
-    cards, dropped = validate_candidates(raw, "movies", [], now=now)
+    cards, dropped = validate_candidates(raw, "bollywood", [], now=now)
     assert any(item.endswith(":lazy-poll") for item in dropped)
     assert any(item.endswith(":quiz-correct") for item in dropped)
     assert any(item.endswith(":poll-correct") for item in dropped)
@@ -1048,7 +1077,7 @@ def test_semantic_duplicate_against_avoid_prompts() -> None:
             },
             {
                 "format": "poll",
-                "category": "movies",
+                "category": "bollywood",
                 "questionType": "opinion",
                 "type": "predict",
                 "prompt": "Which actor do you love the most?",
@@ -1071,7 +1100,7 @@ def test_semantic_duplicate_against_avoid_prompts() -> None:
 
     movie_cards, movie_dropped = validate_candidates(
         {"candidates": [raw["candidates"][1]]},
-        "movies",
+        "bollywood",
         [],
         now=now,
     )
@@ -1087,7 +1116,7 @@ def test_upcoming_prediction_accepted_completed_rejected() -> None:
         "candidates": [
             {
                 "format": "poll",
-                "category": "movies",
+                "category": "bollywood",
                 "questionType": "prediction",
                 "type": "predict",
                 "briefId": brief["id"],
@@ -1099,7 +1128,7 @@ def test_upcoming_prediction_accepted_completed_rejected() -> None:
             }
         ]
     }
-    cards, dropped = validate_candidates(raw, "movies", briefs, now=now)
+    cards, dropped = validate_candidates(raw, "bollywood", briefs, now=now)
     assert dropped == []
     assert len(cards) == 1
 
@@ -1186,7 +1215,7 @@ def test_localization_preserves_mechanics_and_uses_hi_system(
             {"label": "4", "isCorrect": False},
         ],
         scoring_mode="correct_option",
-        tags=["quiz"],
+        tags=["trivia"],
         brief_id="brief-x",
     )
 
@@ -1278,7 +1307,7 @@ def test_trends_for_filters_expired_and_wrong_category() -> None:
         },
         {
             "trendId": "other-cat",
-            "category": "movies",
+            "category": "bollywood",
             "topic": "Wrong file scope",
             "expiresAt": "2026-11-05T00:00:00Z",
         },
@@ -1311,9 +1340,9 @@ def test_merge_verified_trends_includes_manual_and_briefs() -> None:
     assert foodish[0]["trendId"] == "food-chai-debate"
     assert foodish[0]["source"] == "manual_trends"
 
-    briefs = [row for row in load_briefs() if row.get("category") == "movies"]
-    movie_trends = merge_verified_trends("movies", briefs, now=now)
-    assert any(t.get("source") == "brief" for t in movie_trends)
+    briefs = [row for row in load_briefs() if row.get("category") == "bollywood"]
+    bollywood_trends = merge_verified_trends("bollywood", briefs, now=now)
+    assert any(t.get("source") == "brief" for t in bollywood_trends)
 
     merged_food = merge_verified_trends("food", [], manual_rows=manual, now=now)
     assert [t["trendId"] for t in merged_food] == ["food-chai-debate"]

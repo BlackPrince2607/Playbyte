@@ -1,37 +1,49 @@
 INSERT INTO categories (slug, name, sort_order, active) VALUES
-  ('cricket', 'Cricket', 1, true),
-  ('movies', 'Bollywood', 2, true),
-  ('music', 'Music', 3, true),
-  ('pop-culture', 'Memes & Pop Culture', 4, true),
-  ('food', 'Food', 5, true),
-  ('gaming', 'Gaming', 6, true),
-  ('sports', 'Sports (Non-Cricket)', 7, true),
-  ('news', 'News & Current Affairs', 8, true),
-  ('tech', 'Technology', 9, true),
-  ('personality-vibe', 'Personality & Quizzes', 10, true),
-  ('fashion', 'Fashion & Beauty', 11, true),
-  ('health', 'Health & Fitness', 12, true),
-  ('kpop', 'K-Pop & K-Drama', 13, true),
-  ('puzzles', 'Puzzles', 14, true),
-  ('logical-reasoning', 'Logical Reasoning', 15, true),
-  ('math-numbers', 'Math & Numbers', 16, true),
-  -- Legacy / merged — kept inactive so old content FKs stay valid.
-  ('weather', 'Weather', 90, false),
-  ('casual', 'Casual', 91, false),
-  ('entertainment', 'Entertainment', 92, false),
-  ('politics', 'Politics', 93, false),
-  ('science', 'Science', 94, false),
-  ('social', 'Social', 95, false),
-  ('k-drama', 'K-Drama', 96, false)
+  ('bollywood', 'Bollywood', 1, true),
+  ('mythology', 'Mythology', 2, true),
+  ('tv-serials', 'TV Serials', 3, true),
+  ('cricket', 'Cricket', 4, true),
+  ('indian-foods', 'Indian Foods', 5, true),
+  ('football', 'Football', 6, true),
+  ('general-knowledge', 'General Knowledge', 7, true),
+  ('kpop', 'K-pop', 8, true),
+  ('boys-girls', 'Boys & Girls', 9, true),
+  ('math-puzzles', 'Math Puzzles', 10, true),
+  ('memory-games', 'Memory Games', 11, true),
+  ('word-puzzles', 'Word Puzzles', 12, true),
+  ('maths', 'Maths', 13, true),
+  -- Legacy / remapped — kept inactive so old content FKs stay valid.
+  ('movies', 'Bollywood (legacy)', 90, false),
+  ('music', 'Music', 91, false),
+  ('pop-culture', 'Memes & Pop Culture', 92, false),
+  ('food', 'Food', 93, false),
+  ('gaming', 'Gaming', 94, false),
+  ('sports', 'Sports (Non-Cricket)', 95, false),
+  ('news', 'News & Current Affairs', 96, false),
+  ('tech', 'Technology', 97, false),
+  ('personality-vibe', 'Personality & Quizzes', 98, false),
+  ('fashion', 'Fashion & Beauty', 99, false),
+  ('health', 'Health & Fitness', 100, false),
+  ('puzzles', 'Puzzles', 101, false),
+  ('logical-reasoning', 'Logical Reasoning', 102, false),
+  ('math-numbers', 'Math & Numbers', 103, false),
+  ('weather', 'Weather', 104, false),
+  ('casual', 'Casual', 105, false),
+  ('entertainment', 'Entertainment', 106, false),
+  ('politics', 'Politics', 107, false),
+  ('science', 'Science', 108, false),
+  ('social', 'Social', 109, false),
+  ('k-drama', 'K-Drama', 110, false)
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
   sort_order = EXCLUDED.sort_order,
   active = EXCLUDED.active;
 
 INSERT INTO content_tags (slug, name, sort_order) VALUES
-  ('quiz', 'Quiz', 1),
-  ('poll', 'Poll', 2),
-  ('game', 'Game', 3)
+  ('trivia', 'Trivia', 1),
+  ('quiz', 'Quiz', 2),
+  ('poll', 'Poll', 3),
+  ('game', 'Game', 4)
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO mini_games (key, title, blurb, status, sort_order, config) VALUES

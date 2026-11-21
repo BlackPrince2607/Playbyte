@@ -256,6 +256,12 @@ def publish_moment(
         body["promptHi"] = str(prompt_hi).strip()
     content_lang = str(moment.get("contentLang") or moment.get("content_lang") or "en").strip().lower()
     body["contentLang"] = "hi" if content_lang == "hi" else "en"
+    content_format = moment.get("contentFormat") or moment.get("content_format")
+    if content_format:
+        body["contentFormat"] = str(content_format).strip()
+    content_type = moment.get("contentType") or moment.get("content_type")
+    if content_type:
+        body["contentType"] = str(content_type).strip()
     if moment.get("endsAt"):
         body["endsAt"] = moment["endsAt"]
     if moment.get("promptImageKey"):
@@ -288,10 +294,18 @@ def publish_moment(
 
 
 def build_batch(count: int, *, include_images: bool) -> list[dict[str, Any]]:
+    from scripts.content_gen.taxonomy import normalize_slug
+
     pack: list[dict[str, Any]] = []
     if include_images and MEME_PACK.exists():
         meme = json.loads(MEME_PACK.read_text(encoding="utf-8"))
-        pack = [m for m in (meme.get("moments") or []) if m.get("categorySlug") in LIVE_CATEGORIES]
+        for m in meme.get("moments") or []:
+            if not isinstance(m, dict):
+                continue
+            row = dict(m)
+            row["categorySlug"] = normalize_slug(str(row.get("categorySlug") or ""))
+            if row["categorySlug"] in LIVE_CATEGORIES:
+                pack.append(row)
     random.shuffle(pack)
     combined = pack
     # Prefer unique prompts; keep order after shuffle.
@@ -316,6 +330,8 @@ def _card_row(card: Any, *, content_lang: str, window_ends: datetime) -> dict[st
         "type": card.type,
         "tags": list(card.tags),
         "scoringMode": card.scoring_mode,
+        "contentFormat": getattr(card, "format", None) or None,
+        "contentType": getattr(card, "question_type", None) or None,
         "prompt": card.prompt,
         "options": [
             {
@@ -467,6 +483,15 @@ def plan_agent_batch(
             seen_hi.add(card.prompt)
             added_hi += 1
         print(f"AGENT hi/{slug}: kept {added_hi}", flush=True)
+
+        # Find-the-difference spice from optional image pack (no LLM image invention).
+        try:
+            from scripts.content_gen.ftd_spice import ftd_spice_for
+
+            for ftd in ftd_spice_for(slug, limit=2):
+                planned.append(ftd)
+        except Exception as exc:  # noqa: BLE001
+            print(f"WARN ftd/{slug}: {exc}", flush=True)
     return planned
 
 
@@ -575,7 +600,7 @@ def main() -> int:
             moment = hydrated
 
         tags = set(moment.get("tags") or [])
-        is_quiz = "quiz" in tags or moment.get("scoringMode") == "correct_option"
+        is_quiz = bool(tags & {"quiz", "trivia"}) or moment.get("scoringMode") == "correct_option"
         if is_quiz and not moment.get("briefId"):
             blocked = volatile_fact_issue(str(moment.get("prompt") or ""))
             if blocked:

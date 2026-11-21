@@ -14,8 +14,8 @@ export type SubmitPlayResponse = {
     status: string;
     myScore?: number | null;
     theirScore?: number | null;
-    challenger?: { displayName: string };
-    opponent?: { displayName: string };
+    challenger?: { displayName: string; avatarKey?: string | null };
+    opponent?: { displayName: string; avatarKey?: string | null };
     role?: "challenger" | "opponent";
   };
   match?: {
@@ -23,7 +23,7 @@ export type SubmitPlayResponse = {
     status: string;
     myScore?: number | null;
     theirScore?: number | null;
-    opponent?: { displayName: string };
+    opponent?: { displayName: string; avatarKey?: string | null };
   };
 };
 

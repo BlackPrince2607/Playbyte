@@ -12,6 +12,10 @@ const KEYS = {
   localProfile: "maja_local_profile",
   sound: "maja_sound",
   swipeHint: "maja_swipe_hint",
+  /** One-time Play Store rating sheet after the first finished game. */
+  ratePrompt: "maja_rate_prompt",
+  /** One-time WhatsApp community group sheet after a finished game. */
+  whatsappPrompt: "maja_whatsapp_prompt",
 } as const;
 
 export type OnboardingStep = "language" | "intro" | "signup" | "profile" | "interests" | "ready";
@@ -87,7 +91,7 @@ export async function setOnboardingDone() {
   await clearOnboardingStep();
 }
 
-/** Re-open onboarding mid-app (e.g. guest skipped profile/interests, then signed in). */
+/** Re-open onboarding mid-app (e.g. incomplete profile/interests after sign-in). */
 export async function clearOnboardingDone() {
   await AsyncStorage.removeItem(KEYS.onboarding);
 }
@@ -101,6 +105,24 @@ export async function markSwipeHintSeen() {
   await AsyncStorage.setItem(KEYS.swipeHint, "seen");
 }
 
+/** True until the first-game Play Store rating sheet has been shown (rate or dismiss). */
+export async function shouldShowRatePrompt() {
+  return (await AsyncStorage.getItem(KEYS.ratePrompt)) !== "shown";
+}
+
+export async function markRatePromptShown() {
+  await AsyncStorage.setItem(KEYS.ratePrompt, "shown");
+}
+
+/** True until the WhatsApp community sheet has been shown (join or dismiss). */
+export async function shouldShowWhatsAppPrompt() {
+  return (await AsyncStorage.getItem(KEYS.whatsappPrompt)) !== "shown";
+}
+
+export async function markWhatsAppPromptShown() {
+  await AsyncStorage.setItem(KEYS.whatsappPrompt, "shown");
+}
+
 export async function getLanguage() {
   return (await AsyncStorage.getItem(KEYS.language)) ?? "en";
 }
@@ -109,7 +131,7 @@ export async function setLanguage(lang: string) {
   await AsyncStorage.setItem(KEYS.language, lang);
 }
 
-/** Name, email and gender from onboarding. Gender (and everything, for guests) only lives on this device. */
+/** Name, email and gender from onboarding. Gender only lives on this device. */
 export async function getLocalProfile(): Promise<LocalProfile | null> {
   const raw = await AsyncStorage.getItem(KEYS.localProfile);
   if (!raw) return null;
@@ -151,38 +173,6 @@ export async function getStreak() {
 
 export async function getStreakDate() {
   return AsyncStorage.getItem(KEYS.streakDate);
-}
-
-const FREE_HINTS_KEY = "maja_free_hints";
-
-export async function guestFreeHintsLeft(now = new Date()): Promise<number> {
-  const today = localDateString(now);
-  const raw = await AsyncStorage.getItem(FREE_HINTS_KEY);
-  let used = 0;
-  try {
-    const parsed = raw ? (JSON.parse(raw) as { date?: string; used?: number }) : null;
-    if (parsed?.date === today) used = Number(parsed.used) || 0;
-  } catch {
-    used = 0;
-  }
-  return Math.max(0, 3 - used);
-}
-
-/** Uses one of the three daily guest hints. False when today's allowance is gone. */
-export async function takeGuestFreeHint(now = new Date()): Promise<boolean> {
-  const today = localDateString(now);
-  const left = await guestFreeHintsLeft(now);
-  if (left <= 0) return false;
-  const raw = await AsyncStorage.getItem(FREE_HINTS_KEY);
-  let used = 0;
-  try {
-    const parsed = raw ? (JSON.parse(raw) as { date?: string; used?: number }) : null;
-    if (parsed?.date === today) used = Number(parsed.used) || 0;
-  } catch {
-    used = 0;
-  }
-  await AsyncStorage.setItem(FREE_HINTS_KEY, JSON.stringify({ date: today, used: used + 1 }));
-  return true;
 }
 
 export async function recordDailyVisit(now = new Date()): Promise<number> {

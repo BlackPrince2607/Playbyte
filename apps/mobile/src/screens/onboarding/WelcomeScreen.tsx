@@ -13,7 +13,6 @@ import { BackButton, BrandDiamond, Glow, GoogleLogo, PulseDot, onboardingStyles,
 
 type Props = {
   onBack: () => void;
-  onGuest: () => void;
   onGoogleSignIn?: () => void;
   googleAvailable?: boolean;
   busy?: boolean;
@@ -82,7 +81,6 @@ function Sparkle({ children, style }: { children: ReactNode; style: TextStyle })
 
 export function WelcomeScreen({
   onBack,
-  onGuest,
   onGoogleSignIn,
   googleAvailable,
   busy,
@@ -164,9 +162,6 @@ export function WelcomeScreen({
             {auth.label}
           </Text>
         </Pressable>
-        <Pressable onPress={onGuest} disabled={busy} hitSlop={8} accessibilityRole="button" style={{ marginTop: 14 }}>
-          <Text style={[styles.guest, { fontFamily: ui.bodyMedium }]}>{t("continueGuest")}</Text>
-        </Pressable>
       </View>
     </View>
   );
@@ -210,5 +205,4 @@ const styles = StyleSheet.create({
     boxShadow: "0 10px 20px rgba(0,0,0,0.35)",
   },
   authLabel: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 22, color: "#fff", letterSpacing: 0.2, flexShrink: 1 },
-  guest: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "rgba(251,207,232,0.6)", textAlign: "center" },
 });

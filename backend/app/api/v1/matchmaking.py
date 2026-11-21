@@ -14,6 +14,7 @@ router = APIRouter(prefix="/matchmaking", tags=["matchmaking"])
 
 class TicketIn(BaseModel):
     gameKey: str | None = Field(default=None, min_length=1, max_length=80)
+    category: str | None = Field(default=None, min_length=1, max_length=40)
     preferredOpponentUserId: UUID | None = None
     extend: bool = False
 
@@ -35,6 +36,7 @@ async def post_ticket(
         session,
         actor.user_id,
         game_key=body.gameKey,
+        category=body.category,
         idempotency_key=idempotency_key[:128],
         preferred_opponent_id=body.preferredOpponentUserId,
         extend_existing=body.extend,
