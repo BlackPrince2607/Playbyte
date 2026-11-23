@@ -680,14 +680,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setReady(true);
         return;
       }
-      // Show last feed instantly (unplayed first via applyFeedPage); replace with a fresh
-      // unanswered-led server page so reopening never keeps played polls at the top.
+      // Show last feed instantly (unplayed first via applyFeedPage). Soft-refresh so
+      // new cards stitch onto the end — never replace + jump to top while the user scrolls.
       const cached = await hydrateFeedFromCache().catch(() => false);
       if (cached) {
         setReady(true);
-        void loadFeed({ refreshing: true, replace: true })
-          .then(() => setFeedIndex(0))
-          .catch(() => {});
+        void loadFeed({ refreshing: true }).catch(() => {});
         return;
       }
       try {
@@ -757,10 +755,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const away = Date.now() - backgroundedAt;
       backgroundedAt = null;
       if (away < REOPEN_REFRESH_AFTER_MS) return;
-      refreshFeed(true, { replace: true }).then(
-        () => setFeedIndex(0),
-        () => {},
-      );
+      // Soft-continue: keep the viewer's place. Pull-to-refresh still replaces + jumps to top.
+      void refreshFeed(true);
     });
     return () => sub.remove();
   }, [ready, onboardingDone, refreshFeed, isSignedIn, syncEconomy, user?.id]);

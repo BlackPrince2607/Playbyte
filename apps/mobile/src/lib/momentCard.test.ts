@@ -21,7 +21,7 @@ test("errors win over everything else", () => {
 
 test("unanswered cards prompt the player", () => {
   assert.match(momentStatus(base)!.text, /how everyone voted/);
-  assert.match(momentStatus({ ...base, isQuiz: true })!.text, /right/);
+  assert.match(momentStatus({ ...base, isQuiz: true })!.text, /correct answer/i);
 });
 
 test("quiz feedback, then friend activity, then your answer", () => {

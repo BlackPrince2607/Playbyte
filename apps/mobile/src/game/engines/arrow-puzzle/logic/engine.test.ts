@@ -6,7 +6,7 @@ import { definition, playHeadless, runConformance } from "../../../testing/harne
 import { arrowMeta } from "../meta";
 import { arrowEngine } from "./arrowPuzzle";
 import { Cell, arrowCount, generateBoard, isFree, solvable } from "./board";
-import { ArrowAction, ArrowState, BLOCK_MS, BOARD_BONUS } from "./engine";
+import { ArrowAction, ArrowState, BLOCK_MS, CLEAR_BONUS, TIME_SCORE_CAP, finishScore, maxArrowScore } from "./engine";
 
 const solver = (s: ArrowState): ArrowAction | null => {
   if (s.roundOver || !s.cells.length) return null;
@@ -22,8 +22,8 @@ for (const v of arrowMeta.variations) {
     pickAction: solver,
     stepMs: 250,
     invalidAction: () => ({ type: "tap", index: -1 }),
-    // Per-board clock reset: a perfect solver never times out.
-    finite: false,
+    // One board; a perfect solver always finishes.
+    finite: true,
   });
 }
 
@@ -49,52 +49,58 @@ describe("arrow boards", () => {
 });
 
 describe("arrow rules", () => {
-  it("gives each board 10 or 12 seconds", () => {
-    assert.equal(opened("s20").roundLimitMs, 10_000);
-    assert.equal(opened("s25").roundLimitMs, 12_000);
-    assert.equal(arrowEngine.maxScore(definition({ engine: "arrow_puzzle", variation: "s20" })), 45012);
-    assert.equal(arrowEngine.maxScore(definition({ engine: "arrow_puzzle", variation: "s25" })), 54000);
+  it("opens a stopwatch run with no countdown deadline", () => {
+    const s = opened("s20");
+    assert.equal(s.finishMs, null);
+    assert.equal(s.penaltyMs, 0);
+    assert.ok(s.total > 0);
+    assert.equal(s.total, arrowCount(s.cells));
+    assert.equal(arrowEngine.progress(s).deadline, undefined);
+    assert.equal(arrowEngine.progress(s).totalRounds, 1);
+    assert.equal(arrowEngine.maxScore(definition({ engine: "arrow_puzzle", variation: "s20" })), maxArrowScore());
+    assert.equal(finishScore(12_345), TIME_SCORE_CAP - 12_345);
   });
 
   it("sends a clear arrow and frees whatever was behind it", () => {
     const base = opened("s20");
-    const board: ArrowState = { ...base, cols: 3, rows: 1, cells: [1, 1, null] };
+    const board: ArrowState = { ...base, cols: 3, rows: 1, cells: [1, 1, null], total: 2 };
     const blocked = arrowEngine.reduce(board, { type: "tap", index: 0 }, { now: 100, rng: createRng("no") });
     assert.equal(blocked.state.cells[0], 1);
     assert.equal(blocked.state.score, board.score);
-    assert.equal(blocked.state.roundEnd, board.roundEnd - BLOCK_MS);
+    assert.equal(blocked.state.penaltyMs, board.penaltyMs + BLOCK_MS);
+    assert.equal(blocked.state.roundOver, false);
     assert.equal(blocked.outcome?.correct, false);
 
     const sent = arrowEngine.reduce(board, { type: "tap", index: 1 }, { now: 100, rng: createRng("yes") });
     assert.equal(sent.state.cells[1], null);
-    assert.equal(sent.state.roundEnd, board.roundEnd);
+    assert.equal(sent.state.penaltyMs, board.penaltyMs);
     assert.ok(sent.state.score > board.score);
     assert.equal(isFree(sent.state.cells, 3, 1, 0), true);
   });
 
-  it("a cleared board deals a larger one, pays the bonus, and resets the clock", () => {
+  it("clearing the last arrow ends the run and records finish time", () => {
     const base = opened("s20");
     const board: ArrowState = {
       ...base,
       cols: 2,
       rows: 2,
       cells: [1, null, null, null] as Cell[],
-      fill: 0.62,
-      roundEnd: base.roundStart + 2_000,
-      roundLimitMs: base.limitMs,
+      total: 1,
+      cleared: 0,
+      penaltyMs: BLOCK_MS,
+      roundStart: 1_000,
     };
-    const at = board.roundStart + 1_500;
-    const cleared = arrowEngine.reduce(board, { type: "tap", index: 0 }, { now: at, rng: createRng("next") });
-    assert.equal(cleared.state.boards, 1);
-    assert.equal(cleared.state.cleared, base.cleared + 1);
-    assert.equal(cleared.state.cols, 3);
-    assert.equal(cleared.state.rows, 3);
-    assert.ok(arrowCount(cleared.state.cells) > 1);
-    assert.equal(cleared.state.breakdown.clear, BOARD_BONUS);
-    assert.equal(solvable(cleared.state.cells, cleared.state.cols, cleared.state.rows), true);
-    assert.equal(cleared.state.roundStart, at);
-    assert.equal(cleared.state.roundEnd, at + board.limitMs);
-    assert.equal(cleared.state.roundLimitMs, board.limitMs);
+    const at = 4_500;
+    const cleared = arrowEngine.reduce(board, { type: "tap", index: 0 }, { now: at, rng: createRng("done") });
+    assert.equal(cleared.state.roundOver, true);
+    assert.equal(cleared.state.cleared, 1);
+    assert.equal(arrowCount(cleared.state.cells), 0);
+    assert.equal(cleared.state.finishMs, at - board.roundStart + BLOCK_MS);
+    assert.equal(cleared.state.breakdown.clear, CLEAR_BONUS);
+    assert.equal(cleared.state.breakdown.speed, finishScore(cleared.state.finishMs!));
+    assert.equal(arrowEngine.status(cleared.state), "gameOver");
+    const result = arrowEngine.result(cleared.state);
+    assert.equal(result.breakdown?.finishMs, cleared.state.finishMs);
   });
 
   it("opens on a square board", () => {
@@ -103,23 +109,11 @@ describe("arrow rules", () => {
     assert.ok(s.cols >= 4 && s.cols <= 6);
   });
 
-  it("a blocked tap inside the last second ends the run", () => {
-    const base = opened("s20");
-    const board: ArrowState = { ...base, cols: 2, rows: 1, cells: [1, 1], roundEnd: base.roundStart + 800 };
-    const ended = arrowEngine.reduce(board, { type: "tap", index: 0 }, { now: base.roundStart + 200, rng: createRng("out") });
-    assert.equal(ended.state.roundOver, true);
-    assert.equal(arrowEngine.status(ended.state), "gameOver");
-    assert.equal(arrowEngine.progress(ended.state).deadline, undefined);
-  });
-
-  it("the clock ending the round is a loss with the arrows still on the board", () => {
+  it("tick never times out a stopwatch run", () => {
     const s = opened("s25");
-    const waiting = arrowEngine.tick(s, { now: s.roundEnd - 1, rng: createRng("wait") });
+    const waiting = arrowEngine.tick(s, { now: s.roundStart + 60_000, rng: createRng("wait") });
+    assert.equal(waiting.state.roundOver, false);
     assert.equal(waiting.state, s);
-    const done = arrowEngine.tick(s, { now: s.roundEnd, rng: createRng("done") });
-    assert.equal(done.state.roundOver, true);
-    assert.equal(done.state.cleared, 0);
-    assert.equal(arrowCount(done.state.cells), arrowCount(s.cells));
   });
 
   it("rejects taps on empty cells", () => {

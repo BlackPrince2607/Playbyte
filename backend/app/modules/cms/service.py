@@ -74,9 +74,10 @@ async def create_moment(
         correct_count = sum(1 for o in normalized if o.get("isCorrect"))
         if correct_count != 1:
             raise AppError("invalid", "Quiz moments need exactly one correct option.", 422)
-        # Normalize legacy "quiz" content tags onto the feed-facing "trivia" badge.
+        # Puzzle/maths skill cards keep the "quiz" badge; topic knowledge uses "trivia".
+        prefer_quiz_badge = "quiz" in tags and "trivia" not in tags
         tags = [t for t in tags if t not in knowledge_tags]
-        tags = [*tags, "trivia"]
+        tags = [*tags, "quiz" if prefer_quiz_badge else "trivia"]
     else:
         scoring_mode = "none"
         for o in normalized:

@@ -131,6 +131,53 @@ def main() -> None:
         widths=[18, 120],
     )
 
+    from scripts.content_gen.poll_prompt import (  # noqa: E402
+        ENGAGEMENT_POLL_TYPES,
+        HI_POLL_CATEGORY_PLAYBOOK,
+        HI_POLL_ENGAGEMENT_SYSTEM,
+        POLL_ENGAGEMENT_SYSTEM,
+        POLL_CATEGORY_PLAYBOOK,
+    )
+    from scripts.content_gen.hi_generate_prompt import HI_GENERATE_SYSTEM  # noqa: E402
+
+    _sheet(
+        wb,
+        "New prompt",
+        ["Section", "Detail"],
+        [
+            ["Source", "backend/scripts/content_gen/poll_prompt.py (implemented from ChatGPT New prompt tab)"],
+            ["Engagement pollTypes", ", ".join(ENGAGEMENT_POLL_TYPES)],
+            ["POLL_ENGAGEMENT_SYSTEM", POLL_ENGAGEMENT_SYSTEM],
+            ["EN_SYSTEM (full)", system_prompt],
+            *[
+                [f"playbook:{slug}", json.dumps(row, ensure_ascii=False)]
+                for slug, row in sorted(POLL_CATEGORY_PLAYBOOK.items())
+            ],
+        ],
+        widths=[28, 120],
+    )
+
+    _sheet(
+        wb,
+        "New prompt HI",
+        ["Section", "Detail"],
+        [
+            [
+                "Source",
+                "backend/scripts/content_gen/poll_prompt.py → build_hi_system(); "
+                "hi_generate_prompt.py → HI_GENERATE_SYSTEM",
+            ],
+            ["Engagement pollTypes", ", ".join(ENGAGEMENT_POLL_TYPES)],
+            ["HI_POLL_ENGAGEMENT_SYSTEM", HI_POLL_ENGAGEMENT_SYSTEM],
+            ["HI_GENERATE_SYSTEM (full)", HI_GENERATE_SYSTEM],
+            *[
+                [f"playbook_hi:{slug}", json.dumps(row, ensure_ascii=False)]
+                for slug, row in sorted(HI_POLL_CATEGORY_PLAYBOOK.items())
+            ],
+        ],
+        widths=[28, 120],
+    )
+
     # Shared rules (same for all; category extras listed separately)
     shared_rules = [r for r in user_payload["rules"] if not r.startswith("SCOPE")]
     _sheet(

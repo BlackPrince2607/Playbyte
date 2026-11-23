@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import * as Sharing from "expo-sharing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvatarImage } from "../../components/AvatarImage";
@@ -315,7 +315,6 @@ export function PostGameResultScreen({
   const { t, language, fonts: ui } = useLanguage();
   const { isSignedIn, user } = useAuth();
   const { wallet, friends, refreshFriends, me, streak } = useApp();
-  const sharePrompt = fill(celebrate ? t("resultSharePrompt") : t("resultSharePromptSoft"), { score });
   const beatenLabel = beaten.count.toLocaleString(language === "hi" ? "hi-IN" : "en-IN");
   const hitGameCap =
     isSignedIn &&
@@ -488,7 +487,10 @@ export function PostGameResultScreen({
       : null;
 
   async function shareTextScore() {
-    const brag = fill(t("shareBeat"), { score, title: gameTitle, count: beatenLabel, pct: beaten.pct });
+    const brag =
+      score <= 0
+        ? fill(t("sharePlain"), { score, title: gameTitle })
+        : fill(t("shareBeat"), { score, title: gameTitle, count: beatenLabel, pct: beaten.pct });
     await Share.share({ message: `${brag}\n${APP_SHARE_URL}` });
   }
 
@@ -591,8 +593,10 @@ export function PostGameResultScreen({
               {localizeChrome(headline, language)}
             </Text>
             <View style={styles.hero} accessible accessibilityLabel={`Score ${score}`}>
-              <Text style={[type.largeScore, { color: colors.lime }]}>{shownScore}</Text>
+              <View style={styles.heroGlow} pointerEvents="none" />
               <Text style={[type.micro, { color: colors.lilac, letterSpacing: 2 }]}>{t("pointsLabel")}</Text>
+              <Text style={[type.largeScore, { color: colors.lime }]}>{shownScore}</Text>
+              <View style={styles.scoreUnderline} />
               {coinsEarned > 0 ? (
                 <View style={styles.coinsEarned}>
                   <CoinIcon size={18} />
@@ -614,11 +618,12 @@ export function PostGameResultScreen({
                 <Text
                   style={[type.bodySm, { color: colors.ink, fontFamily: fonts.bodyBold, textAlign: "center" }]}
                 >
-                  {fill(t("betterThanPlayers"), { count: beatenLabel })}
+                  {score <= 0
+                    ? t("zeroScoreTryAgain")
+                    : fill(t("betterThanPlayers"), { count: beatenLabel })}
                 </Text>
               </View>
             </View>
-            <Text style={[type.bodyLg, styles.sharePrompt, { fontFamily: ui.body }]}>{sharePrompt}</Text>
           </>
         )}
 
@@ -707,6 +712,18 @@ export function PostGameResultScreen({
             />
           ) : null}
 
+          {!isDuel && gameKey && onPlayOnline ? (
+            <PrimaryButton
+              label={t("playOnline")}
+              variant="secondary"
+              icon="globe-outline"
+              onPress={() => {
+                capture("result_action_clicked", { action: "play_online" });
+                onPlayOnline();
+              }}
+            />
+          ) : null}
+
           {!isDuel && onNextGame ? (
             <PrimaryButton
               label={t("nextGame")}
@@ -719,64 +736,42 @@ export function PostGameResultScreen({
             />
           ) : null}
 
-          <View style={styles.secondaryRow}>
-            {enableShare ? (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => void shareScore()}
-                disabled={sharing}
-                style={({ pressed }) => [styles.ghostBtn, pressed && { opacity: 0.75 }]}
-              >
-                <Text style={[type.bodySm, { color: colors.paper, fontFamily: ui.bodyBold }]}>
-                  {sharing ? t("openingShare") : t("shareScoreInstead")}
-                </Text>
-              </Pressable>
-            ) : null}
-            {!isDuel && gameKey ? (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  void refreshFriends();
-                  setPickerOpen(true);
-                }}
-                style={({ pressed }) => [styles.ghostBtn, pressed && { opacity: 0.75 }]}
-              >
-                <Text style={[type.bodySm, { color: colors.paper, fontFamily: ui.bodyBold }]}>
-                  {t("challenge")}
-                </Text>
-              </Pressable>
-            ) : null}
-            <Pressable
-              accessibilityRole="button"
+          {enableShare ? (
+            <PrimaryButton
+              label={sharing ? t("openingShare") : shareError ? t("retryShare") : t("shareScoreInstead")}
+              variant="secondary"
+              icon="share-social-outline"
+              disabled={sharing}
+              busy={sharing}
+              onPress={() => void shareScore()}
+            />
+          ) : null}
+
+          {!isDuel && gameKey ? (
+            <PrimaryButton
+              label={t("challenge")}
+              variant="secondary"
+              icon="flash-outline"
               onPress={() => {
-                capture("result_action_clicked", { action: "feed" });
-                onBackToFeed();
+                void refreshFriends();
+                setPickerOpen(true);
               }}
-              style={({ pressed }) => [styles.ghostBtn, styles.ghostPrimary, pressed && { opacity: 0.85 }]}
-            >
-              <Text style={[type.bodySm, { color: colors.ink, fontFamily: ui.bodyBold }]}>{t("done")}</Text>
-            </Pressable>
-          </View>
+            />
+          ) : null}
 
           {shareError ? (
             <Text style={[type.metadata, { color: colors.pinkSoft, textAlign: "center" }]}>{shareError}</Text>
           ) : null}
 
-          {/* Keep play-online as a quiet text link for solo results only */}
-          {!isDuel && gameKey && onPlayOnline ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                capture("result_action_clicked", { action: "play_online" });
-                onPlayOnline();
-              }}
-              style={{ paddingVertical: spacing.xs }}
-            >
-              <Text style={[type.micro, { color: colors.lilac, textAlign: "center", letterSpacing: 1 }]}>
-                {t("playOnline").toUpperCase()}
-              </Text>
-            </Pressable>
-          ) : null}
+          <PrimaryButton
+            label={t("backToFeed")}
+            variant="success"
+            icon="home-outline"
+            onPress={() => {
+              capture("result_action_clicked", { action: "feed" });
+              onBackToFeed();
+            }}
+          />
         </View>
 
         {!isDuel && (showAccuracy || (rounds && rounds.length > 0)) ? (
@@ -888,19 +883,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs,
     marginTop: spacing.sm,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.xl,
     paddingHorizontal: spacing.md,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 77, 141, 0.35)",
+    overflow: "hidden",
   },
-  sharePrompt: {
-    color: colors.paper,
-    textAlign: "center",
-    marginTop: spacing.xs,
+  heroGlow: {
+    position: "absolute",
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: "rgba(198, 255, 61, 0.12)",
+    top: "28%",
+  },
+  scoreUnderline: {
+    width: 72,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.lime,
+    marginTop: 2,
     marginBottom: spacing.xs,
-    paddingHorizontal: spacing.sm,
   },
   coinsEarned: {
     flexDirection: "row",
@@ -969,28 +974,6 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   actions: { width: "100%", gap: spacing.sm, marginTop: spacing.md },
-  secondaryRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    justifyContent: "center",
-    marginTop: spacing.xs,
-  },
-  ghostBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.cardAlt,
-    minHeight: 40,
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  ghostPrimary: {
-    backgroundColor: colors.lime,
-    borderColor: colors.lime,
-  },
   saveBanner: {
     width: "100%",
     marginTop: spacing.sm,

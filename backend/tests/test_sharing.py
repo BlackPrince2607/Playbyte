@@ -20,6 +20,19 @@ def test_render_play_share_card_png() -> None:
     png = _render_play("Emoji Movies", 420, detail="8/10 correct", brag="Better than 72% of players")
     assert png[:8] == b"\x89PNG\r\n\x1a\n"
     assert len(png) > 1000
+    from PIL import Image
+    from io import BytesIO
+
+    img = Image.open(BytesIO(png))
+    assert img.size == (1080, 1350)
+
+
+def test_render_uses_truetype_font() -> None:
+    from app.modules.sharing.render import _font
+
+    font = _font("bold", 64)
+    # Default bitmap font has no path; TrueType fonts do.
+    assert getattr(font, "path", None)
 
 
 @pytest.mark.asyncio
@@ -84,12 +97,12 @@ async def test_share_card_success_generates_and_uploads() -> None:
 async def test_share_card_returns_existing_without_reupload() -> None:
     moment_id = uuid4()
     actor = Actor(kind="guest", guest_id=uuid4())
-    existing = SimpleNamespace(asset_key="share/existing.png")
+    existing = SimpleNamespace(asset_key="share/v3/existing.png")
     session = AsyncMock()
     session.scalar = AsyncMock(return_value=existing)
 
     storage = MagicMock()
-    storage.public_url = MagicMock(return_value="https://cdn.example/share-cards/existing.png")
+    storage.public_url = MagicMock(return_value="https://cdn.example/share-cards/share/v3/existing.png")
     storage.put_bytes = AsyncMock()
 
     with patch("app.modules.sharing.service.get_object_storage", return_value=storage):
@@ -222,7 +235,7 @@ async def test_play_share_card_returns_existing() -> None:
         score=50,
         summary=None,
     )
-    existing = SimpleNamespace(asset_key=f"share/plays/{play_id}/cached.png")
+    existing = SimpleNamespace(asset_key=f"share/v3/plays/{play_id}/cached.png")
 
     session = AsyncMock()
     session.get = AsyncMock(return_value=play)

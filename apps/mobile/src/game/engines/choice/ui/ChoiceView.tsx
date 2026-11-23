@@ -18,10 +18,11 @@ type CardProps = {
   picked: boolean;
   majority: boolean;
   disabled: boolean;
+  compact?: boolean;
   onPress: () => void;
 };
 
-function SideCard({ option, pct, revealed, picked, majority, disabled, onPress }: CardProps) {
+function SideCard({ option, pct, revealed, picked, majority, disabled, compact, onPress }: CardProps) {
   const fill = useSharedValue(0);
   useEffect(() => {
     fill.value = revealed ? (prefersReducedMotion() ? pct : withTiming(pct, { duration: 650 })) : 0;
@@ -38,17 +39,21 @@ function SideCard({ option, pct, revealed, picked, majority, disabled, onPress }
       accessibilityState={{ disabled, selected: picked }}
       style={({ pressed }) => [
         styles.card,
+        compact && styles.cardCompact,
         { borderColor: picked ? colors.lime : colors.line },
         pressed && !disabled && { transform: [{ scale: 0.97 }], borderColor: colors.lime },
       ]}
     >
       <Animated.View style={[styles.fill, { backgroundColor: tint }, fillStyle]} />
-      <Text style={styles.emoji}>{option.emoji ?? "❔"}</Text>
-      <Text style={styles.label} numberOfLines={2}>
+      <Text style={[styles.emoji, compact && styles.emojiCompact]}>{option.emoji ?? "❔"}</Text>
+      <Text style={[styles.label, compact && styles.labelCompact]} numberOfLines={2}>
         {option.label}
       </Text>
       {revealed ? (
-        <Animated.Text entering={prefersReducedMotion() ? undefined : FadeIn.duration(300)} style={[styles.pct, { color: majority ? colors.lime : colors.paper }]}>
+        <Animated.Text
+          entering={prefersReducedMotion() ? undefined : FadeIn.duration(300)}
+          style={[styles.pct, compact && styles.pctCompact, { color: majority ? colors.lime : colors.paper }]}
+        >
           {pct}%
         </Animated.Text>
       ) : null}
@@ -56,7 +61,7 @@ function SideCard({ option, pct, revealed, picked, majority, disabled, onPress }
   );
 }
 
-export function ChoiceView({ state, dispatch, snapshot }: EngineViewProps<ChoiceState, ChoiceAction>) {
+export function ChoiceView({ state, dispatch, snapshot, compact }: EngineViewProps<ChoiceState, ChoiceAction>) {
   const { t, fonts: ui } = useLanguage();
   const q = state.q;
   const pick = state.pick;
@@ -85,26 +90,48 @@ export function ChoiceView({ state, dispatch, snapshot }: EngineViewProps<Choice
   }
 
   return (
-    <View style={styles.root}>
-      <Animated.View key={q.id} entering={prefersReducedMotion() ? undefined : FadeInDown.duration(240)} style={{ gap: spacing.md }}>
+    <View style={[styles.root, compact && styles.rootCompact]}>
+      <Animated.View
+        key={q.id}
+        entering={prefersReducedMotion() ? undefined : FadeInDown.duration(240)}
+        style={{ gap: compact ? spacing.sm : spacing.md }}
+      >
         <Text style={[type.metadata, { color: colors.lilac, textAlign: "center", letterSpacing: 1, fontFamily: ui.bodyMedium }]}>
           {predict ? t("whatDidMost") : t("pickSide")}
         </Text>
         <Text
-          style={[styles.prompt, promptTextStyle(q.prompt, { max: 26 })]}
+          style={[styles.prompt, compact && styles.promptCompact, promptTextStyle(q.prompt, { max: compact ? 20 : 26 })]}
           accessibilityRole="header"
-          numberOfLines={4}
+          numberOfLines={compact ? 3 : 4}
           adjustsFontSizeToFit
           minimumFontScale={0.85}
         >
           {q.prompt}
         </Text>
         <View style={styles.row}>
-          <SideCard option={q.a} pct={pctA} revealed={!!pick} picked={pick?.side === "a"} majority={pctA >= pctB} disabled={disabled} onPress={() => choose("a")} />
+          <SideCard
+            option={q.a}
+            pct={pctA}
+            revealed={!!pick}
+            picked={pick?.side === "a"}
+            majority={pctA >= pctB}
+            disabled={disabled}
+            compact={compact}
+            onPress={() => choose("a")}
+          />
           <View style={styles.vs}>
             <Text style={styles.vsText}>VS</Text>
           </View>
-          <SideCard option={q.b} pct={pctB} revealed={!!pick} picked={pick?.side === "b"} majority={pctB >= pctA} disabled={disabled} onPress={() => choose("b")} />
+          <SideCard
+            option={q.b}
+            pct={pctB}
+            revealed={!!pick}
+            picked={pick?.side === "b"}
+            majority={pctB >= pctA}
+            disabled={disabled}
+            compact={compact}
+            onPress={() => choose("b")}
+          />
         </View>
       </Animated.View>
       {pick ? (
@@ -122,7 +149,9 @@ export function ChoiceView({ state, dispatch, snapshot }: EngineViewProps<Choice
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: spacing.margin, paddingBottom: spacing.lg, gap: spacing.lg },
+  rootCompact: { paddingHorizontal: 0, paddingBottom: spacing.sm, gap: spacing.sm },
   prompt: { ...type.gameQuestion, fontSize: 26, lineHeight: 32, color: colors.paper, textAlign: "center" },
+  promptCompact: { fontSize: 20, lineHeight: 26 },
   row: { flexDirection: "row", alignItems: "stretch" },
   card: {
     flex: 1,
@@ -136,10 +165,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     overflow: "hidden",
   },
+  cardCompact: {
+    minHeight: 140,
+    padding: spacing.sm,
+    gap: spacing.xs,
+  },
   fill: { position: "absolute", left: 0, right: 0, bottom: 0 },
   emoji: { fontSize: 64 },
+  emojiCompact: { fontSize: 40 },
   label: { ...type.button, fontSize: 20, lineHeight: 26, color: colors.paper, textAlign: "center" },
+  labelCompact: { fontSize: 16, lineHeight: 20 },
   pct: { fontFamily: fonts.display, fontSize: 32 },
+  pctCompact: { fontSize: 24 },
   vs: { width: 36, alignItems: "center", justifyContent: "center" },
   vsText: { fontFamily: fonts.display, fontSize: 16, color: colors.pink },
 });

@@ -31,6 +31,8 @@ const HI: Record<string, string> = {
   "Arrows cleared": "एरो क्लियर",
   "Blocked taps": "ब्लॉक्ड टैप्स",
   "Boards cleared": "बोर्ड क्लियर",
+  "Finish time": "फिनिश टाइम",
+  "Time penalties": "टाइम पेनल्टी",
   "HOW YOU SCORED": "स्कोर कैसे बना",
   // Engine / moment chrome
   "Correct!": "सही!",

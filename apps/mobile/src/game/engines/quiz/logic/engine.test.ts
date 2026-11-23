@@ -121,6 +121,25 @@ describe("quiz core", () => {
     assert.ok(share(0.9) > share(0.1) + 0.3);
   });
 
+  it("keeps bollywood and global distractors in separate lanes", () => {
+    const pool = [
+      { id: "b1", answer: "Tum Hi Ho", group: "bollywood_ballad", difficulty: 0.1, clues: [] },
+      { id: "b2", answer: "Kesariya", group: "bollywood_romance", difficulty: 0.15, clues: [] },
+      { id: "b3", answer: "What Jhumka?", group: "bollywood_dance", difficulty: 0.3, clues: [] },
+      { id: "g1", answer: "Flowers", group: "global_pop", difficulty: 0.2, clues: [] },
+      { id: "g2", answer: "Despacito", group: "global_pop", difficulty: 0.1, clues: [] },
+      { id: "g3", answer: "Happy", group: "global_pop", difficulty: 0.15, clues: [] },
+    ];
+    for (let i = 0; i < 40; i++) {
+      const opts = pickDistractors(pool[0], pool, 2, 0.05, createRng(`b${i}`));
+      assert.equal(opts.length, 2);
+      assert.ok(opts.every((o) => o.id.startsWith("b")));
+      const gOpts = pickDistractors(pool[3], pool, 2, 0.05, createRng(`g${i}`));
+      assert.equal(gOpts.length, 2);
+      assert.ok(gOpts.every((o) => o.id.startsWith("g")));
+    }
+  });
+
   it("adapts difficulty upward for a strong player", () => {
     const { runner } = playHeadless({ engine: guessEngine, definition: def({ roundCount: 10 }), content, pickAction: right, stepMs: 300 });
     assert.ok(runner.getSnapshot().level > 0.3);

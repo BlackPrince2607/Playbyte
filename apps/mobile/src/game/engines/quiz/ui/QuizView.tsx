@@ -11,10 +11,6 @@ import type { QuizAction, QuizState } from "../logic/types";
 type Props = EngineViewProps<QuizState, QuizAction> & {
   /** Feed preview: options stay tappable while the session is still `ready`. */
   allowReadyAnswer?: boolean;
-  /** Feed preview: skip wallet-backed hints. */
-  hideHints?: boolean;
-  /** Drop horizontal padding when hosted inside a padded feed card. */
-  compact?: boolean;
 };
 
 /** Shared view for the multiple-choice engine family (Guess, Emoji Guess, Odd One Out, Fact/Fake). */

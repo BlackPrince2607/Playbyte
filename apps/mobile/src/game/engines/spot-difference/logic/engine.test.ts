@@ -46,11 +46,18 @@ describe("spot_pair content", () => {
     }
   });
 
-  it("does not invent overlay marks when left and right urls differ", () => {
+  it("requires distinct left/right art and never invents stamp overlays", () => {
     const base = bundle.items[0];
     const pair = pairFromItem(base)!;
     assert.notEqual(pair.leftUrl, pair.rightUrl);
     assert.equal(pair.overlays.length, 0);
+    assert.equal(
+      pairFromItem({
+        ...base,
+        attributes: { ...base.attributes, leftUrl: pair.leftUrl, rightUrl: pair.leftUrl },
+      }),
+      null,
+    );
   });
 
   it("rejects malformed pairs", () => {
@@ -157,13 +164,12 @@ describe("spot the difference rules", () => {
     assert.equal(runner.getSnapshot().state.breakdown.clear, undefined);
   });
 
-  it("rounds expose distinct media urls; overlays only when sides share one image", () => {
+  it("rounds expose distinct media urls with no stamp overlays", () => {
     const { runner } = start();
     const s = runner.getSnapshot().state;
     assert.match(s.leftUrl, /^(https:\/\/|asset:spot\/)/);
     assert.match(s.rightUrl, /^(https:\/\/|asset:spot\/)/);
     assert.notEqual(s.leftUrl, s.rightUrl);
     assert.equal(s.overlays.length, 0);
-    assert.ok(s.overlays.every((o) => s.diffs.some((d) => d.id === o.id)));
   });
 });

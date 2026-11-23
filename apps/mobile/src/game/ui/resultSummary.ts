@@ -29,6 +29,8 @@ const STATS: [key: string, label: string, format?: (v: number) => string][] = [
   ["cleared", "Arrows cleared"],
   ["blocked", "Blocked taps"],
   ["boards", "Boards cleared"],
+  ["finishMs", "Finish time", (v) => (v >= 60_000 ? `${Math.floor(v / 60_000)}:${String(Math.floor((v % 60_000) / 1000)).padStart(2, "0")}.${Math.floor((v % 1000) / 100)}` : `${(v / 1000).toFixed(1)}s`)],
+  ["penaltyMs", "Time penalties", (v) => `+${Math.round(v / 1000)}s`],
   ["bestReactionMs", "Best reaction", (v) => `${Math.round(v)} ms`],
 ];
 

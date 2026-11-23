@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   eyebrow: { color: WA_GREEN, letterSpacing: 2, textAlign: "center" },
-  title: { textAlign: "center", fontSize: 26 },
+  title: { textAlign: "center", fontSize: 24, lineHeight: 32 },
   body: { color: colors.lilac, textAlign: "center", marginBottom: spacing.xs },
   joinBtn: {
     backgroundColor: WA_GREEN,

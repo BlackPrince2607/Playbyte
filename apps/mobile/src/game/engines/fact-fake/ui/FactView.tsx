@@ -22,10 +22,16 @@ import type { EngineViewProps } from "../../../ui/types";
 import type { QuizAnswer, QuizAction, QuizQuestion, QuizState } from "../../quiz/logic/types";
 import { FACT_ID, FAKE_ID } from "../logic/engine";
 
-type CardProps = { q: QuizQuestion; answered: QuizAnswer | null; disabled: boolean; onAnswer: (id: string) => void };
+type CardProps = {
+  q: QuizQuestion;
+  answered: QuizAnswer | null;
+  disabled: boolean;
+  onAnswer: (id: string) => void;
+  compact?: boolean;
+};
 
 /** Swipe right for Fact, left for Fake. Buttons below do the same for players who prefer tapping. */
-function StatementCard({ q, answered, disabled, onAnswer }: CardProps) {
+function StatementCard({ q, answered, disabled, onAnswer, compact }: CardProps) {
   const { width } = useWindowDimensions();
   const threshold = width * 0.22;
   const tx = useSharedValue(0);
@@ -69,17 +75,17 @@ function StatementCard({ q, answered, disabled, onAnswer }: CardProps) {
     <GestureDetector gesture={pan}>
       <Animated.View
         entering={prefersReducedMotion() ? undefined : FadeInDown.duration(260)}
-        style={[styles.card, { borderColor: border }, cardStyle]}
+        style={[styles.card, compact && styles.cardCompact, { borderColor: border }, cardStyle]}
         accessible
         accessibilityLabel={`Statement: ${q.prompt}`}
         accessibilityHint="Swipe right if it's a fact, left if it's fake, or use the buttons below"
       >
         <Animated.Text style={[styles.tag, styles.tagFact, factTag]}>FACT</Animated.Text>
         <Animated.Text style={[styles.tag, styles.tagFake, fakeTag]}>FAKE</Animated.Text>
-        {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
+        {emoji ? <Text style={[styles.emoji, compact && { fontSize: 40 }]}>{emoji}</Text> : null}
         <Text
-          style={[styles.statement, promptTextStyle(q.prompt, { max: 24 })]}
-          numberOfLines={7}
+          style={[styles.statement, compact && styles.statementCompact, promptTextStyle(q.prompt, { max: compact ? 20 : 24 })]}
+          numberOfLines={compact ? 5 : 7}
           adjustsFontSizeToFit
           minimumFontScale={0.7}
         >
@@ -87,7 +93,9 @@ function StatementCard({ q, answered, disabled, onAnswer }: CardProps) {
         </Text>
         {answered ? (
           <Animated.View entering={prefersReducedMotion() ? undefined : FadeIn.duration(200)} style={[styles.stamp, { borderColor: truthIsFact ? colors.lime : colors.pink }]}>
-            <Text style={[styles.stampText, { color: truthIsFact ? colors.lime : colors.pink }]}>{truthIsFact ? "✓ FACT" : "✗ FAKE"}</Text>
+            <Text style={[styles.stampText, compact && { fontSize: 20 }, { color: truthIsFact ? colors.lime : colors.pink }]}>
+              {truthIsFact ? "✓ FACT" : "✗ FAKE"}
+            </Text>
           </Animated.View>
         ) : null}
       </Animated.View>
@@ -114,7 +122,7 @@ function VerdictButton({ id, label, color, disabled, picked, onPress }: { id: st
   );
 }
 
-export function FactView({ state, dispatch, snapshot }: EngineViewProps<QuizState, QuizAction>) {
+export function FactView({ state, dispatch, snapshot, compact }: EngineViewProps<QuizState, QuizAction>) {
   const { language } = useLanguage();
   const q = state.q;
   if (!q) return null;
@@ -132,11 +140,11 @@ export function FactView({ state, dispatch, snapshot }: EngineViewProps<QuizStat
         : localizeChrome("Not quite.", language);
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, compact && styles.rootCompact]}>
       <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>
         {answered ? " " : localizeChrome("Swipe right for Fact, left for Fake", language)}
       </Text>
-      <StatementCard key={q.id} q={q} answered={answered} disabled={disabled} onAnswer={answer} />
+      <StatementCard key={q.id} q={q} answered={answered} disabled={disabled} onAnswer={answer} compact={compact} />
       <View style={styles.buttons}>
         <VerdictButton
           id={FAKE_ID}
@@ -169,6 +177,7 @@ export function FactView({ state, dispatch, snapshot }: EngineViewProps<QuizStat
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: spacing.margin, paddingBottom: spacing.lg, gap: spacing.md },
+  rootCompact: { paddingHorizontal: 0, paddingBottom: spacing.sm, gap: spacing.sm },
   card: {
     minHeight: 260,
     borderRadius: radius.lg,
@@ -179,8 +188,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.md,
   },
+  cardCompact: {
+    minHeight: 160,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
   emoji: { fontSize: 56 },
   statement: { ...type.gameQuestion, fontSize: 24, lineHeight: 30, color: colors.paper, textAlign: "center" },
+  statementCompact: { fontSize: 20, lineHeight: 26 },
   tag: { position: "absolute", top: spacing.md, fontFamily: fonts.display, fontSize: 22, borderWidth: 2, borderRadius: radius.sm, paddingHorizontal: 8 },
   tagFact: { left: spacing.md, color: colors.lime, borderColor: colors.lime, transform: [{ rotate: "-12deg" }] },
   tagFake: { right: spacing.md, color: colors.pink, borderColor: colors.pink, transform: [{ rotate: "12deg" }] },

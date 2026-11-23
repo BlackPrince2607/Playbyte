@@ -68,11 +68,19 @@ function snapEnd(start: Cell, dr: number, dc: number, n: number): Cell {
   return start;
 }
 
-export function WordSearchView({ state, dispatch, requestHint, snapshot }: EngineViewProps<WordSearchState, WordSearchAction>) {
+export function WordSearchView({
+  state,
+  dispatch,
+  requestHint,
+  snapshot,
+  compact,
+  hideHints,
+}: EngineViewProps<WordSearchState, WordSearchAction>) {
   const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const n = state.grid.length;
-  const cell = n ? Math.floor((Math.min(width, 480) - spacing.margin * 2) / n) : 0;
+  const pad = compact ? spacing.sm : spacing.margin * 2;
+  const cell = n ? Math.floor((Math.min(width, compact ? 400 : 480) - pad) / n) : 0;
   const [sel, setSelState] = useState<{ from: Cell; to: Cell } | null>(null);
   const [pending, setPendingState] = useState<Cell | null>(null);
   const startRef = useRef<Cell | null>(null);
@@ -213,20 +221,37 @@ export function WordSearchView({ state, dispatch, requestHint, snapshot }: Engin
   const wordList = useMemo(() => [...state.words].sort((a, b) => b.word.length - a.word.length), [state.words]);
 
   return (
-    <View style={{ flex: 1, alignItems: "center", paddingHorizontal: spacing.margin, gap: spacing.md }}>
-      <Text style={[type.bodyLg, { color: colors.lilac }]} accessibilityRole="header">
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        paddingHorizontal: compact ? 0 : spacing.margin,
+        gap: compact ? spacing.xs : spacing.md,
+        minHeight: 0,
+        justifyContent: compact ? "center" : undefined,
+      }}
+    >
+      <Text style={[type.bodyLg, { color: colors.lilac }, compact && { fontSize: 15 }]} accessibilityRole="header">
         Theme: <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold }}>{state.theme}</Text>
       </Text>
-      <View style={styles.words}>
+      <View style={[styles.words, compact && styles.wordsCompact]}>
         {wordList.map((p) => {
           const done = doneWords.has(p.word);
           const reveal = !state.hidden || done || state.roundOver;
           const hint = state.hinted.includes(p.word);
           const label = reveal ? p.word : hint ? `${p.word[0]}${" _".repeat(p.word.length - 1)}` : `${p.word.length} letters`;
           return (
-            <View key={p.word} style={[styles.chip, done && styles.chipDone]}>
+            <View key={p.word} style={[styles.chip, compact && styles.chipCompact, done && styles.chipDone]}>
               <Text
-                style={[type.metadata, { color: done ? colors.ink : colors.paper, fontFamily: fonts.bodyBold, textDecorationLine: done ? "line-through" : "none" }]}
+                style={[
+                  type.metadata,
+                  {
+                    color: done ? colors.ink : colors.paper,
+                    fontFamily: fonts.bodyBold,
+                    textDecorationLine: done ? "line-through" : "none",
+                    fontSize: compact ? 11 : undefined,
+                  },
+                ]}
                 accessibilityLabel={done ? `${p.word}, found` : reveal ? p.word : `Hidden word, ${p.word.length} letters`}
               >
                 {label}
@@ -277,7 +302,7 @@ export function WordSearchView({ state, dispatch, requestHint, snapshot }: Engin
           ))}
         </Animated.View>
       </GestureDetector>
-      <HintBar hints={snapshot.hints} onHint={requestHint} />
+      {hideHints ? null : <HintBar hints={snapshot.hints} onHint={requestHint} />}
       {state.roundOver ? (
         <Text style={[type.bodyLg, { color: foundCount >= state.words.length ? colors.lime : colors.pink }]} accessibilityLiveRegion="polite">
           {foundCount >= state.words.length
@@ -294,6 +319,8 @@ const styles = StyleSheet.create({
   cell: { alignItems: "center", justifyContent: "center", borderRadius: 6 },
   letter: { color: colors.paper, fontFamily: fonts.bodyBold },
   words: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: spacing.xs },
+  wordsCompact: { maxHeight: 56, overflow: "hidden" },
   chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.cardAlt },
+  chipCompact: { paddingHorizontal: 8, paddingVertical: 4 },
   chipDone: { backgroundColor: colors.lime, borderColor: colors.lime },
 });

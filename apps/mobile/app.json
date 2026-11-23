@@ -2,7 +2,7 @@
   "expo": {
     "name": "MAJA",
     "slug": "maja",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "scheme": "maja",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -16,6 +16,7 @@
     },
     "android": {
       "package": "app.maja.mobile",
+      "versionCode": 10,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",

@@ -55,8 +55,9 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
     local.tags?.some((t) => t.slug === "quiz" || t.slug === "trivia") ??
     local.scoringMode === "correct_option";
   const contentTag = local.tags?.[0];
-  const isTriviaTag =
-    contentTag?.slug === "trivia" || contentTag?.slug === "quiz" || (!contentTag && isQuiz);
+  const tagSlug = contentTag?.slug;
+  const isTriviaTag = tagSlug === "trivia";
+  const isQuizTag = tagSlug === "quiz" || (!contentTag && isQuiz);
   const myOption = local.options.find((o) => o.id === local.myOptionId);
 
   useEffect(() => {
@@ -280,13 +281,15 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
 
       <View style={styles.content}>
         <View style={styles.metaRow}>
-          <View style={[styles.hotTag, isTriviaTag && styles.triviaTag]}>
+          <View style={[styles.hotTag, (isTriviaTag || isQuizTag) && styles.triviaTag]}>
             <Text style={[type.metadata, styles.hotTagText, { fontFamily: ui.bodyBold }]}>
               {isTriviaTag
                 ? `🧠 ${t("triviaTag")}`
-                : contentTag?.slug === "poll"
-                  ? `📊 ${t("pollTag")}`
-                  : `🔥 ${tagLabel}`}
+                : isQuizTag
+                  ? `🧩 ${t("quizTag")}`
+                  : tagSlug === "poll"
+                    ? `📊 ${t("pollTag")}`
+                    : `🔥 ${tagLabel}`}
             </Text>
           </View>
           <LivePill count={total} label={fill(t("playingNow"), { count: formatCount(total) })} />

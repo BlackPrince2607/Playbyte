@@ -19,6 +19,7 @@ from scripts.content_gen.taxonomy import (  # noqa: E402
     KNOWLEDGE_FORMATS,
     ONBOARDING_SLUGS,
     OPINION_FORMATS,
+    QUIZ_ONLY_SLUGS,
     format_to_scoring_mode,
     format_to_tags,
     formats_for,
@@ -31,7 +32,24 @@ MIN_LIVE = 8
 EVENT_POLL_TYPES = frozenset({"opinion", "debate", "prediction", "challenge", "versus", "hypothetical"})
 EVENT_QUIZ_TYPES = frozenset({"stat", "who", "which", "facts", "records"})
 # Freeform trend polls for every onboarding category (not bound to the evergreen bank).
-TREND_POLL_TYPES = frozenset({"opinion", "debate", "hot", "versus", "hypothetical", "social_debate"})
+# Freeform opinion types — includes high-engagement pollTypes from poll_prompt.py.
+TREND_POLL_TYPES = frozenset(
+    {
+        "opinion",
+        "debate",
+        "hot",
+        "pick_one",
+        "who_is_right",
+        "who_is_more_likely",
+        "what_would_you_do",
+        "prediction",
+        "versus",
+        "personality",
+        "unpopular_opinion",
+        "hypothetical",
+        "social_debate",
+    }
+)
 # Freeform India-trend trivia (well-known facts only — not locked to the evergreen bank).
 TREND_QUIZ_TYPES = frozenset({"trivia", "who", "which", "facts", "recognition"})
 
@@ -333,30 +351,7 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("device", "You mostly play on…", "Mobile", "PC or console"),
         _p("tilt", "After a loss streak you…", "One more game", "Close the app"),
     ),
-    "math-puzzles": (
-        _p("pace", "Your puzzle mood is…", "One hard board, no hints", "Easy wins and a streak"),
-        _p("type", "You open first…", "Word puzzles", "Number grids", "Visual spot-the-difference"),
-        _p("hint", "Stuck for a minute. You…", "Take the hint", "Stare until it clicks"),
-        _p("timer", "A countdown on a puzzle…", "Makes it more fun", "Kills the fun"),
-        _p("share", "You clear a tough one. You…", "Send a screenshot", "Start the next immediately"),
-        _p("style", "You prefer…", "Logic that feels fair", "A clever trick ending"),
-    ),
-    "logical-reasoning": (
-        _p("style", "A logic question lands. You…", "Map it out step by step", "Guess from the vibe"),
-        _p("pattern", "Number patterns are…", "Your comfort zone", "Where you slow down"),
-        _p("debate", "Two answers both feel right. You…", "Eliminate until one remains", "Pick and move on"),
-        _p("speed", "You want…", "Fast rounds", "Time to think"),
-        _p("type", "Your favourite is…", "Odd one out", "If-then scenarios"),
-        _p("fail", "You miss one puzzle. Next?", "Read why and lock it in", "Skip the explanation"),
-    ),
-    "maths": (
-        _p("feel", "Mental maths feels…", "Like a warm-up", "Like a trap"),
-        _p("topic", "You prefer…", "Percentages and deals", "Sequences and patterns"),
-        _p("calc", "A tough sum. You…", "Do it in your head", "Need a notepad"),
-        _p("speed", "Number rounds should be…", "Blitz", "Unhurried"),
-        _p("school", "Maths class was…", "Actually fun", "A survival sport"),
-        _p("real", "You notice numbers most in…", "Cricket scores", "Sale prices"),
-    ),
+    # math-puzzles / maths / word-puzzles / memory-games: quiz or FTD only — no opinion polls.
     "mythology": (
         _p("ramayana", "Which quality of Hanuman would you most want?", "Courage", "Devotion", "Loyalty"),
         _p("mahabharat", "Was Karna's loyalty his greatest…", "Strength", "Weakness"),
@@ -380,18 +375,6 @@ POLLS: dict[str, tuple[Poll, ...]] = {
         _p("internet", "Viral 'fact' lands. You…", "Verify first", "Share if it sounds right"),
         _p("opinions", "Quiz nights are…", "Your comfort zone", "Only for specialists"),
         _p("social_debate", "Is GK more useful than trending news?", "GK wins", "News wins"),
-    ),
-    "memory-games": (
-        _p("pairs", "Memory pair rounds should be…", "Fast and visual", "Slow and careful"),
-        _p("scenes", "Spot-the-difference is best with…", "Busy scenes", "Minimal props"),
-        _p("sequences", "You remember sequences better by…", "Rhythm", "Positions"),
-        _p("objects", "Harder memory challenge?", "More items", "Less time"),
-    ),
-    "word-puzzles": (
-        _p("anagrams", "Anagram rounds feel…", "Like a warm-up", "Like a boss fight"),
-        _p("riddles", "You prefer word puzzles that are…", "Clever riddles", "Straight definitions"),
-        _p("missing_letters", "Missing-letter grids should be…", "Blitz timed", "Unhurried"),
-        _p("synonyms", "Synonym races are…", "Your lane", "Where you slow down"),
     ),
 }
 
@@ -488,16 +471,20 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
         _q("mode", "Playing against other people online is…", ("Multiplayer", "A cutscene", "A tutorial"), 0),
     ),
     "math-puzzles": (
-        _q("sudoku", "A number grid where each row and column uses 1–9 once is…", ("Sudoku", "Chess", "Ludo"), 0),
-        _q("riddle", "A short question that hides the answer in wordplay is a…", ("Riddle", "Jersey", "Interval"), 0),
+        _q("number_puzzles", "What comes next: 2, 4, 8, 16, …?", ("32", "24", "20"), 0),
+        _q("patterns", "Which number does not belong: 3, 5, 7, 9, 11?", ("9", "5", "11"), 0),
+        _q("quick_calc", "A shirt costs ₹800. 25% off is…", ("₹600", "₹700", "₹500"), 0),
+        _q("logic_lite", "If all A are B, and this is A, then it is…", ("Definitely B", "Never B", "Maybe C"), 0),
     ),
     "logical-reasoning": (
-        _q("pattern", "Finding what comes next in a sequence is…", ("Pattern recognition", "A spoiler", "A powerplay"), 0),
-        _q("odd", "Picking the item that does not belong is finding the…", ("Odd one out", "Captain", "Encore"), 0),
+        _q("pattern", "What comes next: 1, 1, 2, 3, 5, …?", ("8", "6", "7"), 0),
+        _q("odd", "Which does not belong: square, circle, triangle, banana?", ("Banana", "Circle", "Square"), 0),
     ),
     "maths": (
         _q("percent", "Half of 100 is…", ("50", "25", "75"), 0),
         _q("order", "The next even number after 8 is…", ("10", "9", "7"), 0),
+        _q("arithmetic", "12 + 8 − 5 equals…", ("15", "16", "10"), 0),
+        _q("ratios", "A 2:1 mix of water to milk. For 2 cups milk you need…", ("4 cups water", "2 cups water", "1 cup water"), 0),
     ),
     "mythology": (
         _q("characters", "In the Ramayana, who is known for devotion and strength?", ("Hanuman", "Shakuni", "Duryodhana"), 0),
@@ -514,13 +501,16 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
         _q("world", "The largest ocean on Earth is the…", ("Pacific", "Atlantic", "Indian"), 0),
         _q("science_lite", "Water freezes at…", ("0°C", "100°C", "50°C"), 0),
     ),
-    "memory-games": (
-        _q("pairs", "Matching two identical cards in a grid is a…", ("Memory pair", "Century", "Spoiler"), 0),
-        _q("scenes", "Finding changes between two similar images is…", ("Spot the difference", "An anagram", "A toss"), 0),
-    ),
     "word-puzzles": (
-        _q("anagrams", "Rearranging letters to form a new word is an…", ("Anagram", "Interval", "Derby"), 0),
-        _q("riddles", "A short question that hides the answer in wordplay is a…", ("Riddle", "Jersey", "Powerplay"), 0),
+        _q("anagrams", "Unscramble these letters to make a fruit: PLEAP", ("Apple", "Grape", "Mango"), 0),
+        _q("anagrams", "Rearrange EARTH to make a body part", ("Heart", "Ear", "Hair"), 0),
+        _q("anagrams", "Unscramble OCEHR to make a place to sing", ("Choir", "Horse", "Shore"), 0),
+        _q("missing_letters", "Fill in the blanks: C_FF__", ("Coffee", "Castle", "Circus"), 0),
+        _q("missing_letters", "Complete the word: T_G_R", ("Tiger", "Tower", "Tutor"), 0),
+        _q("synonyms", "Which word means almost the same as 'happy'?", ("Glad", "Angry", "Tired"), 0),
+        _q("synonyms", "Which word means almost the same as 'begin'?", ("Start", "Finish", "Pause"), 0),
+        _q("riddles", "I have keys but no locks, space but no room. What am I?", ("A keyboard", "A piano", "A map"), 0),
+        _q("riddles", "What has cities but no houses, and roads but no cars?", ("A map", "A dream", "A cloud"), 0),
     ),
 }
 
@@ -528,9 +518,11 @@ QUIZZES: dict[str, tuple[Quiz, ...]] = {
 def question_types(slug: str, fmt: str) -> set[str]:
     """Allowed content types for a category format (taxonomy + bank + trend extras)."""
     key = normalize_slug(slug)
+    # Never invent poll/trivia types for formats this category does not allow
+    # (e.g. word-puzzles is quiz-only — pollQuestionTypes must stay empty).
+    if fmt not in set(formats_for(key)):
+        return set()
     allowed = set(types_for(key, fmt))
-    if not allowed and fmt in formats_for(key):
-        allowed = set(types_for(key, fmt))
     # Bank rows still contribute known evergreen types.
     if fmt in OPINION_FORMATS or fmt == FORMAT_POLL:
         allowed |= {row[0] for row in POLLS.get(key, ())}
@@ -539,7 +531,9 @@ def question_types(slug: str, fmt: str) -> set[str]:
             allowed |= set(EVENT_POLL_TYPES)
     if fmt in KNOWLEDGE_FORMATS or fmt == FORMAT_QUIZ:
         allowed |= {row[0] for row in QUIZZES.get(key, ())}
-        allowed |= set(TREND_QUIZ_TYPES)
+        # Skill puzzles stay puzzle-typed — do not open freeform "trivia" trend types.
+        if key not in QUIZ_ONLY_SLUGS:
+            allowed |= set(TREND_QUIZ_TYPES)
         if key in EVENT_SLUGS:
             allowed |= set(EVENT_QUIZ_TYPES)
     if fmt == FORMAT_THIS_OR_THAT:
@@ -586,7 +580,7 @@ def _card_from_poll(slug: str, row: Poll) -> Card:
         prompt=prompt,
         options=[{"label": label, "isCorrect": False} for label in options],
         scoring_mode=format_to_scoring_mode(FORMAT_POLL),
-        tags=format_to_tags(FORMAT_POLL),
+        tags=format_to_tags(FORMAT_POLL, slug),
     )
 
 
@@ -600,7 +594,7 @@ def _card_from_quiz(slug: str, row: Quiz) -> Card:
         prompt=prompt,
         options=[{"label": label, "isCorrect": i == correct} for i, label in enumerate(options)],
         scoring_mode=format_to_scoring_mode(FORMAT_QUIZ),
-        tags=format_to_tags(FORMAT_QUIZ),
+        tags=format_to_tags(FORMAT_QUIZ, slug),
     )
 
 
@@ -860,13 +854,13 @@ def cards_from_brief(brief: dict[str, Any], now: datetime | None = None) -> list
                 continue
             opt_dicts = [{"label": label, "isCorrect": label == correct} for label in options]
             scoring = "correct_option"
-            tags = format_to_tags(FORMAT_QUIZ if fmt == "quiz" else FORMAT_TRIVIA)
+            tags = format_to_tags(FORMAT_QUIZ if fmt == "quiz" else FORMAT_TRIVIA, slug)
         else:
             if qtype == "prediction" and "prediction" not in prompt.lower():
                 continue
             opt_dicts = [{"label": label, "isCorrect": False} for label in options]
             scoring = "none"
-            tags = format_to_tags(FORMAT_POLL)
+            tags = format_to_tags(FORMAT_POLL, slug)
         if fact_issues(prompt, options, allowed):
             continue
         moment_type = "predict" if len(options) == 2 else "pulse"

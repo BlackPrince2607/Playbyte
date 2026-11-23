@@ -1,17 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, {
-  Easing,
-  FadeIn,
-  FadeOut,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FeedGame, isApiError } from "../../api";
 import { FriendPickerModal } from "../../components/FriendPickerModal";
 import { LivePill } from "../../components/MajaLogo";
@@ -30,14 +22,13 @@ import { randomSeed } from "../../game/core/rng";
 import { engineRegistry } from "../../game/engines";
 import { registerEngines } from "../../game/engines/manifest";
 import { LEGACY_REPLACEMENTS } from "../../game/engines/replacements";
-import type { QuizAction, QuizState } from "../../game/engines/quiz/logic/types";
-import { QuizView } from "../../game/engines/quiz/ui/QuizView";
+import { isInlineFeedGame } from "../../game/inlineFeed";
 import { loadContent, resolveAsset } from "../../game/platform/content";
 import { awaitEnginePrefetch, isEngineWarm, markEngineWarm, prefetchGame } from "../../game/platform/prefetchGame";
 import { gameBus, levelStore, newSessionId, recentIdsStore } from "../../game/platform/services";
 import { SessionRunner } from "../../game/session/runner";
 import type { CompletedPlay } from "../../game/session/types";
-import { feedback, prefersReducedMotion } from "../../game/ui/feedback";
+import { feedback } from "../../game/ui/feedback";
 import { Confetti, FlashOverlay, StreakBadge, TimerCountdown, usePop } from "../../game/ui/motion";
 import type { EngineModule } from "../../game/ui/types";
 import { localizeGame } from "../../i18n/games";
@@ -47,6 +38,14 @@ import { createChallenge } from "../../lib/challenges";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
 
+export { isInlineFeedGame } from "../../game/inlineFeed";
+
+/** Clears absolute FeedTopBar (avatar row ~40 + padding). */
+const FEED_TOP_CLEARANCE = 56;
+
+/** @deprecated Prefer `isInlineFeedGame` — kept for FeedScreen import stability. */
+export const isInlineGuessGame = isInlineFeedGame;
+
 type Props = {
   item: FeedGame;
   height: number;
@@ -54,11 +53,14 @@ type Props = {
   onComplete: (play: CompletedPlay) => void;
   onChallengeStart?: (challenge: { id: string; seed: string }) => void;
   onSignIn?: () => void;
+  /** True while an in-feed round is live — parent can lock the paging feed. */
+  onPlayingChange?: (playing: boolean) => void;
 };
 
 type ReadyBoot = {
   mod: EngineModule;
-  runner: SessionRunner<QuizState, QuizAction, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  runner: SessionRunner<any, any, unknown>;
   clock: SessionClock;
   content: ContentBundle;
   definition: GameDefinition;
@@ -71,10 +73,6 @@ type Boot =
   | { phase: "error"; message: string }
   | ({ phase: "ready" } & ReadyBoot);
 
-export function isInlineGuessGame(item: FeedGame): boolean {
-  return item.engine === "guess" || item.config?.engine === "guess";
-}
-
 export function GuessFeedPage({
   item: raw,
   height,
@@ -82,10 +80,12 @@ export function GuessFeedPage({
   onComplete,
   onChallengeStart,
   onSignIn,
+  onPlayingChange,
 }: Props) {
   const { language, t, fonts: ui } = useLanguage();
   const { isSignedIn } = useAuth();
   const { friends, refreshFriends } = useApp();
+  const insets = useSafeAreaInsets();
   const item = localizeGame(raw, language);
   const tag =
     typeof item.config?.tag === "string" && item.config.tag.trim()
@@ -105,6 +105,8 @@ export function GuessFeedPage({
   }, [isActive, raw.key, raw.engine, raw.variation]);
 
   // Tear down when the card leaves view — swipe-away abandons an in-progress round.
+  // Mid-play uses a long debounce: locking the feed / RefreshControl can flicker viewability
+  // on the first PLAY tap; a short teardown remounted as loading (blank) then idle PLAY again.
   // Keep a just-finished session mounted so the complete→submit timeout can still fire.
   useEffect(() => {
     if (isActive) return;
@@ -112,18 +114,27 @@ export function GuessFeedPage({
     if (prev.phase !== "ready") return;
     const status = prev.runner.getSnapshot().status;
     if (status === "completed") return;
-    if (status === "ready" || status === "abandoned") {
-      setBoot({ phase: "idle" });
-      return;
-    }
-    if (status === "playing" || status === "roundOver" || status === "paused") {
-      capture("game_abandoned", {
-        game_id: raw.key,
-        elapsed_seconds: Math.round(prev.runner.durationMs / 1000),
-      });
-      prev.runner.abandon();
-      setBoot({ phase: "idle" });
-    }
+
+    const live = status === "playing" || status === "roundOver" || status === "paused";
+    const timer = setTimeout(() => {
+      const latest = bootRef.current;
+      if (latest.phase !== "ready") return;
+      const now = latest.runner.getSnapshot().status;
+      if (now === "completed") return;
+      if (now === "ready" || now === "abandoned") {
+        setBoot({ phase: "idle" });
+        return;
+      }
+      if (now === "playing" || now === "roundOver" || now === "paused") {
+        capture("game_abandoned", {
+          game_id: raw.key,
+          elapsed_seconds: Math.round(latest.runner.durationMs / 1000),
+        });
+        latest.runner.abandon();
+        setBoot({ phase: "idle" });
+      }
+    }, live ? 1800 : 450);
+    return () => clearTimeout(timer);
   }, [isActive, raw.key]);
 
   useEffect(() => {
@@ -132,8 +143,16 @@ export function GuessFeedPage({
     const prev = bootRef.current;
     if (prev.phase === "ready" && prev.sessionKey === sessionKey) {
       const status = prev.runner.getSnapshot().status;
-      // Fresh preview or a celebration still submitting — don't rebuild.
-      if (status === "ready" || status === "completed") return;
+      // Keep live / finished sessions — never rebuild mid-play (that made PLAY "vanish").
+      if (
+        status === "ready" ||
+        status === "completed" ||
+        status === "playing" ||
+        status === "roundOver" ||
+        status === "paused"
+      ) {
+        return;
+      }
     }
 
     let cancelled = false;
@@ -174,12 +193,12 @@ export function GuessFeedPage({
         startLevel,
         targetResponseMs: mod.targetResponseMs,
         avoidIds,
-      }) as SessionRunner<QuizState, QuizAction, unknown>;
+      });
 
       setBoot({ phase: "ready", mod, runner, clock, content, definition, sessionKey });
     })().catch((e: unknown) => {
       if (cancelled) return;
-      if (__DEV__) console.warn(`[guess-feed] ${raw.key} failed`, e);
+      if (__DEV__) console.warn(`[inline-feed] ${raw.key} failed`, e);
       setBoot({
         phase: "error",
         message: e instanceof Error && e.message === "content" ? "content" : "start",
@@ -210,7 +229,7 @@ export function GuessFeedPage({
   }
 
   return (
-    <View style={[styles.page, { height }]}>
+    <View style={[styles.page, { height, paddingTop: insets.top + FEED_TOP_CLEARANCE }]}>
       <LinearGradient colors={["rgba(198,255,61,0.16)", "transparent", colors.ink]} style={StyleSheet.absoluteFill} />
       <View style={styles.glow} />
 
@@ -223,7 +242,7 @@ export function GuessFeedPage({
         <LivePill label={t("inFeed")} />
       </View>
       <Text
-        style={[type.button, { color: colors.paper, fontFamily: ui.display, marginBottom: spacing.xs }]}
+        style={[type.button, { color: colors.paper, fontFamily: ui.display, marginBottom: spacing.sm }]}
         numberOfLines={1}
       >
         {item.title}
@@ -256,6 +275,7 @@ export function GuessFeedPage({
             }}
             onComplete={onComplete}
             onRestart={restartPreview}
+            onPlayingChange={onPlayingChange}
           />
         ) : null}
       </View>
@@ -281,6 +301,7 @@ function ActiveGuess({
   onOpenChallenge,
   onComplete,
   onRestart,
+  onPlayingChange,
 }: {
   boot: ReadyBoot;
   gameKey: string;
@@ -289,17 +310,37 @@ function ActiveGuess({
   onOpenChallenge: () => void;
   onComplete: (play: CompletedPlay) => void;
   onRestart: () => void;
+  onPlayingChange?: (playing: boolean) => void;
 }) {
   const { t, fonts: ui } = useLanguage();
   const { runner, clock, mod, definition, content } = boot;
+  const EngineView = mod.View;
+  const quiet = !!mod.quietOutcomes;
   const snap = useSyncExternalStore(runner.subscribe, runner.getSnapshot);
   const scorePop = usePop(snap.score);
   const finished = useRef(false);
+  /** Hide glass immediately on tap — don't wait a frame for the store (avoids "PLAY stuck"). */
+  const [playArmed, setPlayArmed] = useState(false);
   const now = useCallback(() => clock.now(), [clock]);
-  const idle = snap.status === "ready";
+  const idle = snap.status === "ready" && !playArmed;
+  const live =
+    snap.status === "playing" || snap.status === "roundOver" || snap.status === "paused" || playArmed;
+
+  useEffect(() => {
+    if (snap.status !== "ready") setPlayArmed(false);
+  }, [snap.status, boot.sessionKey]);
+
+  // Only the live card toggles the feed lock. Sibling cards must not call false (that re-enabled
+  // swipe mid-round and tore the session down → blank screen / PLAY stuck).
+  useEffect(() => {
+    if (!live) return;
+    onPlayingChange?.(true);
+    return () => onPlayingChange?.(false);
+  }, [live, onPlayingChange]);
 
   const dispatch = useCallback(
-    (action: QuizAction) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (action: any) => {
       if (runner.getSnapshot().status === "ready") {
         capture("game_started", {
           game_id: gameKey,
@@ -330,9 +371,9 @@ function ActiveGuess({
   const seq = snap.lastOutcome?.seq;
   const correct = snap.lastOutcome?.correct;
   useEffect(() => {
-    if (seq === undefined) return;
+    if (quiet || seq === undefined) return;
     feedback(correct ? "success" : "error");
-  }, [seq, correct]);
+  }, [quiet, seq, correct]);
 
   useEffect(() => {
     if (snap.status !== "completed" || finished.current) return;
@@ -366,6 +407,9 @@ function ActiveGuess({
 
   const startPlay = useCallback(() => {
     if (runner.getSnapshot().status !== "ready") return;
+    // Lock paging before start() so FlatList can't steal the tap / flicker viewability.
+    setPlayArmed(true);
+    onPlayingChange?.(true);
     feedback("select");
     capture("game_started", {
       game_id: gameKey,
@@ -374,7 +418,7 @@ function ActiveGuess({
       ...gamePlayProps(),
     });
     runner.start();
-  }, [runner, gameKey, definition.engine]);
+  }, [runner, gameKey, definition.engine, onPlayingChange]);
 
   const leave = useCallback(() => {
     capture("game_abandoned", {
@@ -385,7 +429,6 @@ function ActiveGuess({
     onRestart();
   }, [runner, gameKey, onRestart]);
 
-  const state = snap.state as QuizState;
   const total = snap.totalRounds;
   const roundLabel = total
     ? `${Math.min(snap.round || 1, total)}/${total}`
@@ -410,7 +453,7 @@ function ActiveGuess({
         {!idle ? (
           <Text style={[type.micro, { color: colors.lilac, fontFamily: ui.bodyMedium }]}>{roundLabel}</Text>
         ) : null}
-        <TimerCountdown deadline={snap.deadline} now={now} paused={snap.status !== "playing"} />
+        {!idle ? <TimerCountdown deadline={snap.deadline} now={now} paused={snap.status !== "playing"} /> : null}
         <View style={styles.hudRight}>
           {!idle ? <StreakBadge streak={snap.streak} /> : null}
           <Animated.Text style={[type.statsSm, scorePop, { color: colors.lime, fontFamily: ui.bodyBold }]}>
@@ -419,37 +462,69 @@ function ActiveGuess({
         </View>
       </View>
 
-      <View style={styles.playfield}>
-        <QuizView
-          snapshot={snap}
-          state={state}
-          dispatch={dispatch}
-          requestHint={() => {}}
-          now={now}
-          definition={definition}
-          content={content}
-          resolveAsset={resolveAsset}
-          hideHints
-          compact
-        />
+      <View style={styles.playfield} pointerEvents={idle ? "none" : "auto"}>
+        <InlinePlayErrorBoundary onReset={onRestart} title={t("couldntStart")} retryLabel={t("retry")}>
+          <EngineView
+            snapshot={snap}
+            state={snap.state}
+            dispatch={dispatch}
+            requestHint={() => {}}
+            now={now}
+            definition={definition}
+            content={content}
+            resolveAsset={resolveAsset}
+            hideHints
+            compact
+          />
+        </InlinePlayErrorBoundary>
       </View>
 
       {idle ? (
-        <PlayGlassOverlay
-          onPlay={startPlay}
-          showChallenge={showChallenge}
-          onChallenge={onOpenChallenge}
-        />
+        <PlayNowBar onPlay={startPlay} showChallenge={showChallenge} onChallenge={onOpenChallenge} />
       ) : null}
 
-      <FlashOverlay seq={snap.lastOutcome?.seq} color={snap.lastOutcome?.correct ? colors.lime : colors.pink} />
+      {quiet ? null : (
+        <FlashOverlay seq={snap.lastOutcome?.seq} color={snap.lastOutcome?.correct ? colors.lime : colors.pink} />
+      )}
       <Confetti active={snap.status === "completed"} />
     </View>
   );
 }
 
-/** Green glass veil over the preview — tap anywhere to start the clock. */
-function PlayGlassOverlay({
+/** Keeps an engine render crash from blanking the whole feed page. */
+class InlinePlayErrorBoundary extends Component<
+  { onReset: () => void; title: string; retryLabel: string; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    if (__DEV__) console.warn("[inline-feed] view crash", error, info.componentStack);
+  }
+
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <View style={styles.errorBox}>
+        <Text style={[type.bodyLg, { color: colors.paper, textAlign: "center" }]}>{this.props.title}</Text>
+        <PrimaryButton
+          label={this.props.retryLabel}
+          onPress={() => {
+            this.setState({ failed: false });
+            this.props.onReset();
+          }}
+        />
+      </View>
+    );
+  }
+}
+
+/** Bottom CTA bar — preview stays visible; no full-card PLAY overlay. */
+function PlayNowBar({
   onPlay,
   showChallenge,
   onChallenge,
@@ -458,59 +533,24 @@ function PlayGlassOverlay({
   showChallenge: boolean;
   onChallenge: () => void;
 }) {
-  const { t, fonts: ui, language } = useLanguage();
-  const pulse = useSharedValue(1);
-
-  useEffect(() => {
-    if (prefersReducedMotion()) return;
-    // Soft breathe — same rhythm as live pills / classic tap-to-start overlays.
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(0.72, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
-        withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
-      ),
-      -1,
-      false,
-    );
-  }, [pulse]);
-
-  const playStyle = useAnimatedStyle(() => ({
-    opacity: pulse.value,
-    transform: [{ scale: 0.98 + pulse.value * 0.02 }],
-  }));
-
-  const label = language === "hi" ? t("playTrivia") : "PLAY!";
+  const { t, fonts: ui } = useLanguage();
 
   return (
     <Animated.View
-      entering={FadeIn.duration(220)}
-      exiting={FadeOut.duration(160)}
-      style={styles.glassRoot}
-      pointerEvents="box-none"
+      entering={FadeIn.duration(200)}
+      exiting={FadeOut.duration(140)}
+      style={styles.playBar}
     >
       <Pressable
         onPress={onPlay}
         accessibilityRole="button"
         accessibilityLabel={t("playTrivia")}
         accessibilityHint={t("tapAnswerToPlay")}
-        style={styles.glassHit}
+        hitSlop={6}
+        style={({ pressed }) => [styles.playNowBtn, pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }]}
       >
-        <LinearGradient
-          colors={["rgba(87,225,91,0.28)", "rgba(198,255,61,0.18)", "rgba(21,14,43,0.55)"]}
-          locations={[0, 0.45, 1]}
-          start={{ x: 0.1, y: 0 }}
-          end={{ x: 0.9, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View pointerEvents="none" style={styles.glassSheen} />
-        <View pointerEvents="none" style={styles.glassRim} />
-
-        <Animated.Text
-          pointerEvents="none"
-          style={[styles.playWord, { fontFamily: ui.display }, playStyle]}
-        >
-          {label}
-        </Animated.Text>
+        <Ionicons name="play" size={18} color={colors.ink} />
+        <Text style={[type.button, { color: colors.ink, fontFamily: ui.bodyBold }]}>{t("playTrivia")}</Text>
       </Pressable>
 
       {showChallenge ? (
@@ -533,7 +573,6 @@ const styles = StyleSheet.create({
   page: {
     backgroundColor: colors.ink,
     paddingHorizontal: spacing.margin,
-    paddingTop: 100,
     paddingBottom: spacing.lg,
   },
   glow: {
@@ -568,17 +607,20 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
     overflow: "hidden",
   },
   errorBox: { flex: 1, justifyContent: "center", gap: spacing.sm, paddingHorizontal: spacing.sm },
-  playRoot: { flex: 1, minHeight: 0, position: "relative" },
+  playRoot: { flex: 1, minHeight: 0 },
   hud: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    marginBottom: spacing.xs,
-    minHeight: 28,
+    marginBottom: spacing.sm,
+    minHeight: 32,
+    paddingHorizontal: spacing.xs,
   },
   hudRight: { marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: spacing.sm },
   leaveBtn: {
@@ -589,57 +631,32 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   playfield: { flex: 1, minHeight: 0 },
-  glassRoot: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: radius.md,
-    overflow: "hidden",
-    zIndex: 4,
-  },
-  glassHit: {
-    flex: 1,
-    justifyContent: "center",
+  playBar: {
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
     alignItems: "center",
   },
-  glassSheen: {
-    position: "absolute",
-    top: -40,
-    left: -20,
-    right: 40,
-    height: "55%",
-    borderRadius: radius.lg,
-    backgroundColor: "rgba(245,240,255,0.08)",
-    transform: [{ rotate: "-8deg" }],
-  },
-  glassRim: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: "rgba(198,255,61,0.45)",
-  },
-  playWord: {
-    color: colors.paper,
-    fontSize: 64,
-    lineHeight: 68,
-    letterSpacing: -1.5,
-    fontWeight: "700",
-    textAlign: "center",
-    textShadowColor: "rgba(21,14,43,0.7)",
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 12,
+  playNowBtn: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    minHeight: 52,
+    borderRadius: radius.pill,
+    backgroundColor: colors.lime,
+    paddingHorizontal: spacing.lg,
   },
   challengeChip: {
-    position: "absolute",
-    bottom: spacing.sm,
-    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: radius.pill,
-    backgroundColor: "rgba(21,14,43,0.55)",
+    backgroundColor: "rgba(21,14,43,0.45)",
     borderWidth: 1,
     borderColor: "rgba(245,240,255,0.18)",
-    zIndex: 5,
   },
 });

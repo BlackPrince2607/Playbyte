@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton } from "./PrimaryButton";
@@ -21,12 +22,10 @@ export function RateAppModal({ visible, onRate, onDismiss }: Props) {
       <View style={[styles.backdrop, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onDismiss} accessibilityLabel={t("rateMaybeLater")} />
         <View style={styles.card} accessibilityViewIsModal>
-          <Text style={[type.metadata, styles.eyebrow, { fontFamily: ui.bodyBold }]}>
-            {t("rateAppEyebrow")}
-          </Text>
-          <Text style={[type.bodyLg, styles.title, { fontFamily: ui.display, color: colors.paper }]}>
-            {t("rateAppTitle")}
-          </Text>
+          <View style={styles.iconBadge} accessibilityElementsHidden>
+            <Ionicons name="star" size={32} color={colors.lime} />
+          </View>
+          <Text style={[styles.title, { fontFamily: ui.display, color: colors.paper }]}>{t("rateAppTitle")}</Text>
           <Text style={[type.bodySm, styles.body, { fontFamily: ui.body }]}>{t("rateAppBody")}</Text>
           <PrimaryButton label={t("rateOnPlayStore")} onPress={onRate} icon="star-outline" />
           <Pressable
@@ -65,7 +64,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  eyebrow: { color: colors.lilac, letterSpacing: 2, textAlign: "center" },
-  title: { textAlign: "center", fontSize: 26 },
+  iconBadge: {
+    alignSelf: "center",
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "rgba(198,255,61,0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(198,255,61,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs,
+  },
+  title: {
+    textAlign: "center",
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: "700",
+  },
   body: { color: colors.lilac, textAlign: "center", marginBottom: spacing.xs },
 });

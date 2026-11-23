@@ -10,6 +10,18 @@ export const normLabel = (s: string) =>
     .trim();
 
 /**
+ * Hard lane for music/film packs tagged `bollywood_*` / `global_*`.
+ * Keeps Bollywood songs from mixing with Western hits (and vice versa). Other group
+ * names (flags, word themes, etc.) return undefined so cross-group mixing still works.
+ */
+export function groupFamily(group?: string): string | undefined {
+  if (!group) return undefined;
+  if (group.startsWith("bollywood")) return "bollywood";
+  if (group.startsWith("global")) return "global";
+  return undefined;
+}
+
+/**
  * DistractorGenerator: picks `count` wrong answers for `answer`.
  * `similarity` (0..1) is the chance each slot is filled from the answer's own group (and from
  * editor-provided `attrs.distractors`), so higher levels offer more confusable options.
@@ -28,7 +40,12 @@ export function pickDistractors(answer: PoolItem, pool: PoolItem[], count: numbe
   const explicit = Array.isArray(answer.attrs?.distractors)
     ? rng.shuffle((answer.attrs!.distractors as unknown[]).filter((d): d is string => typeof d === "string"))
     : [];
-  const others = pool.filter((p) => p.id !== answer.id);
+  const family = groupFamily(answer.group);
+  const others = pool.filter((p) => {
+    if (p.id === answer.id) return false;
+    if (family && groupFamily(p.group) !== family) return false;
+    return true;
+  });
   const same = rng.shuffle(others.filter((p) => answer.group !== undefined && p.group === answer.group));
   const rest = rng.shuffle(others.filter((p) => answer.group === undefined || p.group !== answer.group));
 

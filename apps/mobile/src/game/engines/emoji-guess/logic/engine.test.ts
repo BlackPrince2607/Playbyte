@@ -53,13 +53,51 @@ describe("emoji guess", () => {
     }
   });
 
-  it("gives more time and fewer upfront clues than flag Guess", () => {
+  it("gives more time and only the emoji up front (hints stay behind Next clue)", () => {
     const easy = emojiGuessEngine.difficulty.paramsFor(0);
     const hard = emojiGuessEngine.difficulty.paramsFor(1);
     assert.equal(easy.timeLimitMs, 20_000);
     assert.equal(hard.timeLimitMs, 9_000);
-    assert.equal(easy.startClues, 2);
+    assert.equal(easy.startClues, 1);
     assert.equal(hard.startClues, 1);
+  });
+
+  it("song rounds show only the emoji until the player asks for a clue", () => {
+    const { runner } = playHeadless({
+      engine: emojiGuessEngine,
+      definition: definition({ engine: "emoji_guess", variation: "song" }),
+      content: packBundle("emoji_song"),
+      pickAction: () => null,
+      stopAfter: 0,
+    });
+    const s = runner.getSnapshot().state;
+    assert.equal(s.revealed, 1);
+    assert.equal(s.q?.clues[0]?.kind, "emoji");
+    assert.ok((s.q?.clues.length ?? 0) > 1);
+  });
+
+  it("song rounds never mix Bollywood and global options", () => {
+    for (let i = 0; i < 40; i++) {
+      const { runner } = playHeadless({
+        engine: emojiGuessEngine,
+        definition: definition({ engine: "emoji_guess", variation: "song", roundCount: 1 }),
+        content: packBundle("emoji_song"),
+        pickAction: () => null,
+        stopAfter: 0,
+        seed: `song-lane-${i}`,
+      });
+      const snap = runner.getSnapshot().state;
+      const familyOf = (id: string) => {
+        const g = snap.pool.find((p) => p.id === id)?.group ?? "";
+        return g.startsWith("bollywood") ? "bollywood" : g.startsWith("global") ? "global" : null;
+      };
+      const q = snap.q!;
+      const lane = familyOf(q.answerId);
+      assert.ok(lane, q.answerId);
+      for (const o of q.options) {
+        assert.equal(familyOf(o.id), lane, `${q.answerId} option ${o.label}`);
+      }
+    }
   });
 
   it("filters movies by category", () => {

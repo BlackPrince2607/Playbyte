@@ -1,5 +1,5 @@
-import React from "react";
-import { ScrollView, Text, View, useWindowDimensions } from "react-native";
+import React, { useState } from "react";
+import { LayoutChangeEvent, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { colors, spacing } from "../../../../theme/colors";
 import { type } from "../../../../theme/typography";
@@ -11,8 +11,16 @@ import type { QuizAction, QuizState } from "../../quiz/logic/types";
 const columnsFor = (n: number, textual: boolean) => (n <= 4 ? 2 : n <= 6 ? (textual ? 2 : 3) : n <= 9 ? 3 : 4);
 
 /** Card-grid presentation of a quiz question (Odd One Out). */
-export function OddGridView({ state, dispatch, requestHint, snapshot }: EngineViewProps<QuizState, QuizAction>) {
-  const { width } = useWindowDimensions();
+export function OddGridView({
+  state,
+  dispatch,
+  requestHint,
+  snapshot,
+  compact,
+  hideHints,
+}: EngineViewProps<QuizState, QuizAction>) {
+  const { width: windowW } = useWindowDimensions();
+  const [hostW, setHostW] = useState(0);
   const q = state.q;
   const wrongSeq = snapshot.lastOutcome && !snapshot.lastOutcome.correct ? snapshot.lastOutcome.seq : 0;
   const shake = useShake(wrongSeq);
@@ -20,8 +28,13 @@ export function OddGridView({ state, dispatch, requestHint, snapshot }: EngineVi
   const answered = state.answer;
   const textual = q.options.some((o) => o.label);
   const cols = columnsFor(q.options.length, textual);
-  const gap = spacing.sm;
-  const size = Math.floor((Math.min(width, 520) - spacing.margin * 2 - gap * (cols - 1)) / cols);
+  const gap = compact ? spacing.xs : spacing.sm;
+  const widthBudget = compact
+    ? hostW > 0
+      ? hostW
+      : Math.min(windowW, 520) - spacing.margin * 2
+    : Math.min(windowW, 520) - spacing.margin * 2;
+  const size = Math.max(56, Math.floor((widthBudget - gap * (cols - 1)) / cols));
 
   const tileState = (id: string): TileState => {
     if (state.eliminated.includes(id)) return "eliminated";
@@ -31,8 +44,13 @@ export function OddGridView({ state, dispatch, requestHint, snapshot }: EngineVi
     return "dim";
   };
 
-  return (
-    <ScrollView contentContainerStyle={{ paddingHorizontal: spacing.margin, paddingBottom: spacing.lg, gap: spacing.md, alignItems: "center" }} bounces={false}>
+  const onHostLayout = (e: LayoutChangeEvent) => {
+    const next = e.nativeEvent.layout.width;
+    if (next > 0 && Math.abs(next - hostW) > 1) setHostW(next);
+  };
+
+  const body = (
+    <>
       <Text style={[type.bodyLg, { color: colors.lilac, textAlign: "center" }]} accessibilityRole="header">
         {q.prompt}
       </Text>
@@ -56,7 +74,7 @@ export function OddGridView({ state, dispatch, requestHint, snapshot }: EngineVi
           />
         ))}
       </Animated.View>
-      <HintBar hints={snapshot.hints} onHint={requestHint} />
+      {hideHints ? null : <HintBar hints={snapshot.hints} onHint={requestHint} />}
       {answered && answered.optionId === null ? (
         <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]}>Time's up!</Text>
       ) : null}
@@ -65,6 +83,31 @@ export function OddGridView({ state, dispatch, requestHint, snapshot }: EngineVi
           <Text style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>{q.explanation}</Text>
         </View>
       ) : null}
+    </>
+  );
+
+  if (compact) {
+    return (
+      <View
+        onLayout={onHostLayout}
+        style={{ flex: 1, minHeight: 0, gap: spacing.sm, alignItems: "center", justifyContent: "center" }}
+      >
+        {body}
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView
+      contentContainerStyle={{
+        paddingHorizontal: spacing.margin,
+        paddingBottom: spacing.lg,
+        gap: spacing.md,
+        alignItems: "center",
+      }}
+      bounces={false}
+    >
+      {body}
     </ScrollView>
   );
 }

@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import React, { useEffect, useState } from "react";
+import { LayoutChangeEvent, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, {
   FadeInDown,
   interpolate,
@@ -93,29 +93,39 @@ function FlipCard({
   );
 }
 
-export function PairView({ state, dispatch, snapshot }: EngineViewProps<MemoryState, MemoryAction>) {
+export function PairView({ state, dispatch, snapshot, compact }: EngineViewProps<MemoryState, MemoryAction>) {
   const { width } = useWindowDimensions();
+  const [hostW, setHostW] = useState(0);
   const playing = snapshot.status === "playing";
   const wrongSeq = snapshot.lastOutcome && !snapshot.lastOutcome.correct ? snapshot.lastOutcome.seq : 0;
   const shake = useShake(wrongSeq);
-  const gap = spacing.sm;
-  const boardW = Math.min(width - spacing.margin * 2, 420);
-  const size = Math.floor((boardW - gap * (COLS - 1)) / COLS);
+  const gap = compact ? spacing.xs : spacing.sm;
+  const widthBudget = compact
+    ? hostW > 0
+      ? hostW
+      : Math.min(width, 420) - spacing.margin
+    : Math.min(width - spacing.margin * 2, 420);
+  const size = Math.max(48, Math.floor((widthBudget - gap * (COLS - 1)) / COLS));
 
   useEffect(() => {
     if (!snapshot.lastOutcome) return;
     feedback(snapshot.lastOutcome.correct ? "success" : "error");
   }, [snapshot.lastOutcome?.seq]);
 
+  const onHostLayout = (e: LayoutChangeEvent) => {
+    const next = e.nativeEvent.layout.width;
+    if (next > 0 && Math.abs(next - hostW) > 1) setHostW(next);
+  };
+
   return (
-    <View style={styles.root}>
-      <Text style={[type.bodyLg, styles.prompt]} accessibilityRole="header">
+    <View style={[styles.root, compact && styles.rootCompact]} onLayout={compact ? onHostLayout : undefined}>
+      <Text style={[type.bodyLg, styles.prompt, compact && { fontSize: 16 }]} accessibilityRole="header">
         Match every pair
       </Text>
       <Text style={[type.bodySm, styles.sub]}>
         {state.matches}/{Math.floor(state.cards.length / 2)} pairs · {state.theme}
       </Text>
-      <Animated.View style={[shake, styles.grid, { width: size * COLS + gap * (COLS - 1) }]}>
+      <Animated.View style={[shake, styles.grid, compact && styles.gridCompact, { width: size * COLS + gap * (COLS - 1), gap }]}>
         {state.cards.map((card, i) => (
           <FlipCard
             key={card.id}
@@ -148,6 +158,12 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     gap: spacing.sm,
   },
+  rootCompact: {
+    paddingHorizontal: 0,
+    paddingTop: spacing.xs,
+    gap: spacing.xs,
+    justifyContent: "center",
+  },
   prompt: { color: colors.lilac, textAlign: "center" },
   sub: { color: colors.paper, textAlign: "center", opacity: 0.7, textTransform: "capitalize" },
   grid: {
@@ -156,6 +172,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.md,
     justifyContent: "center",
+  },
+  gridCompact: {
+    marginTop: spacing.xs,
   },
   press: { borderRadius: radius.lg },
   card: {

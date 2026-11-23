@@ -68,7 +68,14 @@ function AnswerTile({
 }
 
 /** Big equation hero + 2×2 answer grid (solve/blitz) or True/Trap duo (verify). */
-export function MathRushView({ state, dispatch, requestHint, snapshot }: EngineViewProps<QuizState, QuizAction>) {
+export function MathRushView({
+  state,
+  dispatch,
+  requestHint,
+  snapshot,
+  compact,
+  hideHints,
+}: EngineViewProps<QuizState, QuizAction>) {
   const { width } = useWindowDimensions();
   const q = state.q;
   const wrongSeq = snapshot.lastOutcome && !snapshot.lastOutcome.correct ? snapshot.lastOutcome.seq : 0;
@@ -87,8 +94,9 @@ export function MathRushView({ state, dispatch, requestHint, snapshot }: EngineV
   const expression = q.clues[0]?.value ?? "";
   const verify = q.options.length === 2 && q.options.some((o) => o.id === VERIFY_YES);
   const cols = 2;
-  const gap = spacing.sm;
-  const size = Math.floor((Math.min(width, 420) - spacing.margin * 2 - gap) / cols);
+  const gap = compact ? spacing.xs : spacing.sm;
+  const pad = compact ? spacing.sm : spacing.margin * 2;
+  const size = Math.floor((Math.min(width, compact ? 360 : 420) - pad - gap) / cols);
 
   const tileState = (id: string): TileState => {
     if (state.eliminated.includes(id)) return "eliminated";
@@ -101,21 +109,25 @@ export function MathRushView({ state, dispatch, requestHint, snapshot }: EngineV
   const streakHot = state.streak >= 3 && !answered;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, compact && styles.rootCompact]}>
       <Text style={[type.metadata, styles.prompt]} accessibilityRole="header">
         {q.prompt}
       </Text>
 
-      <Animated.View style={[shake, pulseStyle, styles.hero, streakHot && styles.heroHot]}>
+      <Animated.View style={[shake, pulseStyle, styles.hero, compact && styles.heroCompact, streakHot && styles.heroHot]}>
         <Text
-          style={[styles.expression, expression.length > 12 && { fontSize: 36, lineHeight: 42 }]}
+          style={[
+            styles.expression,
+            compact && styles.expressionCompact,
+            expression.length > 12 && { fontSize: compact ? 28 : 36, lineHeight: compact ? 34 : 42 },
+          ]}
           accessibilityLabel={`Equation: ${expression}`}
           adjustsFontSizeToFit
           numberOfLines={2}
         >
           {expression}
         </Text>
-        {!verify ? <Text style={styles.equals}>= ?</Text> : null}
+        {!verify ? <Text style={[styles.equals, compact && { fontSize: 18 }]}>= ?</Text> : null}
       </Animated.View>
 
       {q.clues.slice(1, state.revealed).map((c) => (
@@ -145,6 +157,7 @@ export function MathRushView({ state, dispatch, requestHint, snapshot }: EngineV
                   }}
                   style={({ pressed }) => [
                     styles.verifyBtn,
+                    compact && styles.verifyBtnCompact,
                     yes ? styles.verifyYes : styles.verifyNo,
                     st === "correct" && styles.correct,
                     st === "wrong" && styles.wrong,
@@ -152,7 +165,7 @@ export function MathRushView({ state, dispatch, requestHint, snapshot }: EngineV
                     pressed && !answered && { opacity: 0.9 },
                   ]}
                 >
-                  <Text style={styles.verifyGlyph}>{yes ? "✓" : "✕"}</Text>
+                  <Text style={[styles.verifyGlyph, compact && { fontSize: 22, lineHeight: 26 }]}>{yes ? "✓" : "✕"}</Text>
                   <Text style={[styles.verifyLabel, (st === "correct" || st === "wrong") && { color: colors.ink }]}>
                     {o.label}
                   </Text>
@@ -177,7 +190,7 @@ export function MathRushView({ state, dispatch, requestHint, snapshot }: EngineV
         </Animated.View>
       )}
 
-      <HintBar hints={snapshot.hints} onHint={requestHint} />
+      {hideHints ? null : <HintBar hints={snapshot.hints} onHint={requestHint} />}
 
       {answered && answered.optionId === null ? (
         <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]}>Time's up!</Text>
@@ -200,6 +213,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  rootCompact: {
+    paddingHorizontal: 0,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
   prompt: {
     color: colors.lilac,
     textAlign: "center",
@@ -218,6 +236,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs,
   },
+  heroCompact: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
   heroHot: {
     borderColor: colors.lime,
   },
@@ -228,6 +250,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.paper,
     textAlign: "center",
+  },
+  expressionCompact: {
+    fontSize: 34,
+    lineHeight: 40,
   },
   equals: {
     fontFamily: fonts.mono,
@@ -251,6 +277,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     alignItems: "center",
     gap: spacing.xs,
+  },
+  verifyBtnCompact: {
+    paddingVertical: spacing.md,
   },
   verifyYes: {
     backgroundColor: colors.limeFill,

@@ -16,6 +16,10 @@ export type EngineViewProps<S, A> = {
   content: ContentBundle;
   /** Resolves a content media URL to a cached local URI when available. */
   resolveAsset: (url: string) => string;
+  /** Feed card host: drop outer padding / shrink minHeights. Defaults false (GameHost). */
+  compact?: boolean;
+  /** Feed card host: skip wallet-backed hint UI. */
+  hideHints?: boolean;
 };
 
 export type EngineHowToProps = {

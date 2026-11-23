@@ -75,17 +75,6 @@ export function arrowCount(cells: readonly Cell[]): number {
   return n;
 }
 
-/** Next board after a clear: denser every time, and one size larger on odd clears, staying square. */
-export function nextBoardSize(cols: number, rows: number, fill: number, boardsCleared: number): { cols: number; rows: number; fill: number } {
-  const grow = boardsCleared % 2 === 1;
-  const next = Math.min(6, Math.max(cols, rows) + (grow ? 1 : 0));
-  return {
-    cols: next,
-    rows: next,
-    fill: Math.min(0.8, Math.round((fill + 0.03) * 100) / 100),
-  };
-}
-
 export function isCell(x: unknown): x is Cell {
   return x === null || (typeof x === "number" && isDir(x));
 }

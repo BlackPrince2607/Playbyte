@@ -1,0 +1,14 @@
+categories,subcategories (formats),Poll Types,Trivia Types,This or That,Find the Difference,Quiz Types
+Bollywood,"poll, trivia, this or that, quiz","casting, nostalgia, couples, endings, versus, prediction, dialogues, music","movie_guess, song_guess, dialogue, actors_name, who, which","actors, movies, eras, ott_vs_theatre",,"facts, records, awards, who, which"
+Mythology,"poll, trivia, this or that, quiz","ramayana, mahabharat, shiv, krishna, characters, morals, hypothetical, versus","characters, events, weapons, who, which","characters, qualities, choices",,"stories, characters, places, who, which"
+TV Serials,"poll, trivia, this or that, quiz","plots, characters, endings, versus, nostalgia, prediction","dialogue, cast, shows, who, which","shows, characters, tropes",,"facts, cast, who, which"
+Cricket,"poll, trivia, this or that, quiz","captaincy, ipl, rivalries, death_overs, versus, prediction, fan_behaviour","players, records, rules, who, which","players, formats, teams",,"rules, records, history, who, which"
+Math Puzzles,quiz,,,,,"number_puzzles, patterns, logic_lite, quick_calc"
+Memory Games,find the difference,,,,"objects, city, garden, space",
+Indian Foods,"poll, trivia, this or that, quiz","habits, regional, spice, street_food, versus, cravings","dishes, origins, ingredients, who, which","dishes, regions, sweet_vs_savoury",,"origins, ingredients, festivals, who, which"
+Football,"poll, trivia, this or that, quiz","clubs, rivalries, penalties, versus, prediction, fan_culture","players, tournaments, clubs, who, which","players, clubs, leagues",,"rules, history, records, who, which"
+General Knowledge,"poll, trivia, this or that, quiz","opinions, habits, india, internet, versus, social_debate","india, world, science_lite, who, which","habits, places, preferences",,"india, world, science_lite, who, which"
+Word Puzzles,quiz,,,,,"anagrams, missing_letters, synonyms, riddles"
+Maths,quiz,,,,,"arithmetic, percentages, ratios, quick_facts"
+K-pop,"poll, trivia, this or that, quiz","idols, comebacks, ships, versus, concepts, prediction","songs, groups, facts, who, which","groups, concepts, eras",,"discography, members, who, which"
+Boys & Girls,poll,"habits, texting, dating_playful, friendships, who_is_more_likely, social_debate",,,,

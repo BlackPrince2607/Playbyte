@@ -83,6 +83,121 @@ def test_taxonomy_boys_girls_is_poll_only() -> None:
     assert all(card.format == "poll" for card in stock)
 
 
+def test_puzzle_categories_are_quiz_only_no_polls() -> None:
+    from scripts.content_gen.agent import build_format_mix, mix_targets_for, puzzle_play_issue
+    from scripts.content_gen.catalog import question_types
+    from scripts.content_gen.taxonomy import FORMAT_QUIZ, formats_for, format_to_tags
+
+    for slug in ("word-puzzles", "math-puzzles", "maths"):
+        assert formats_for(slug) == [FORMAT_QUIZ], slug
+        assert question_types(slug, "poll") == set(), slug
+        targets = build_format_mix(slug, 10)
+        quiz_n, poll_n = mix_targets_for(slug, 10, targets)
+        assert quiz_n >= 1 and poll_n == 0, (slug, quiz_n, poll_n)
+        stock = generate_stock(slug)
+        assert stock, slug
+        assert all(card.format == "quiz" for card in stock), slug
+        assert all(card.scoring_mode == "correct_option" for card in stock), slug
+        assert all(
+            sum(1 for o in card.options if o["isCorrect"]) == 1 for card in stock
+        ), slug
+        assert format_to_tags("quiz", slug) == ["quiz"], slug
+        # No preference / opinion wording or meta definitions in evergreen stock.
+        for card in stock:
+            blob = (card.prompt + " " + " ".join(card.option_labels())).lower()
+            assert "you prefer" not in blob, card.prompt
+            assert "your favourite" not in blob, card.prompt
+            assert "your favorite" not in blob, card.prompt
+            assert puzzle_play_issue(slug, "quiz", card.prompt) is None, card.prompt
+        assert (
+            puzzle_play_issue(
+                slug,
+                "quiz",
+                "A short question that hides the answer in wordplay is a…",
+            )
+            == "meta-definition"
+        )
+        assert puzzle_play_issue(slug, "poll", "Any poll?") == "poll-in-puzzle"
+
+
+def test_puzzle_agent_rejects_polls_and_meta_definitions() -> None:
+    now = datetime(2026, 10, 30, tzinfo=UTC)
+    raw = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "word-puzzles",
+                "questionType": "opinion",
+                "type": "predict",
+                "prompt": "You prefer word puzzles that are…",
+                "options": [
+                    {"label": "Clever riddles", "isCorrect": False},
+                    {"label": "Straight definitions", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "quiz",
+                "category": "word-puzzles",
+                "questionType": "riddles",
+                "type": "pulse",
+                "prompt": "A short question that hides the answer in wordplay is a…",
+                "options": [
+                    {"label": "Riddle", "isCorrect": True},
+                    {"label": "Jersey", "isCorrect": False},
+                    {"label": "Powerplay", "isCorrect": False},
+                ],
+            },
+            {
+                "format": "quiz",
+                "category": "word-puzzles",
+                "questionType": "anagrams",
+                "type": "pulse",
+                "prompt": "Unscramble these letters to make a fruit: PLEAP",
+                "options": [
+                    {"label": "Apple", "isCorrect": True},
+                    {"label": "Grape", "isCorrect": False},
+                    {"label": "Mango", "isCorrect": False},
+                ],
+            },
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "word-puzzles", [], now=now)
+    assert any(item.endswith(":format") or item.endswith(":poll-in-puzzle") for item in dropped)
+    assert any(item.endswith(":meta-definition") for item in dropped)
+    assert [c.prompt for c in cards] == ["Unscramble these letters to make a fruit: PLEAP"]
+
+
+def test_find_the_difference_is_standalone_not_topic_tied() -> None:
+    """Spot themes live under memory-games only — not Bollywood / Mythology / etc."""
+    from scripts.content_gen.taxonomy import (
+        FORMAT_FIND_THE_DIFFERENCE,
+        formats_for,
+        types_for,
+    )
+
+    topic_slugs = (
+        "bollywood",
+        "mythology",
+        "tv-serials",
+        "cricket",
+        "indian-foods",
+        "football",
+        "general-knowledge",
+        "kpop",
+    )
+    for slug in topic_slugs:
+        assert FORMAT_FIND_THE_DIFFERENCE not in formats_for(slug), slug
+        assert types_for(slug, FORMAT_FIND_THE_DIFFERENCE) == [], slug
+
+    assert formats_for("memory-games") == [FORMAT_FIND_THE_DIFFERENCE]
+    assert types_for("memory-games", FORMAT_FIND_THE_DIFFERENCE) == [
+        "objects",
+        "city",
+        "garden",
+        "space",
+    ]
+
+
 def test_taxonomy_normalize_legacy_slugs() -> None:
     from scripts.content_gen.taxonomy import normalize_slug
 
@@ -608,15 +723,26 @@ def test_english_agent_rejects_devanagari_in_prompt() -> None:
 
 
 def test_hi_generate_system_is_generation_not_localization() -> None:
+    lowered = HI_GENERATE_SYSTEM.lower()
     assert "Hindi Content Generation Agent" in HI_GENERATE_SYSTEM
-    assert "NOT to translate" in HI_GENERATE_SYSTEM or "not translate" in HI_GENERATE_SYSTEM.lower()
+    assert "NOT to translate" in HI_GENERATE_SYSTEM or "not translate" in lowered
+    assert "do not translate" in lowered or "not translate" in lowered
     assert "separate hindi content generation agent" in EN_SYSTEM.lower() or "Hindi Content Generation" in EN_SYSTEM
+    assert "high-engagement" in lowered or "23/30" in lowered
+    assert "what_would_you_do" in lowered or "who_is_more_likely" in lowered
+    assert "devanagari" in lowered
     msgs = _messages_hi("indian-foods", 4, [])
     assert msgs[0]["content"] == HI_GENERATE_SYSTEM
     payload = json.loads(msgs[1]["content"])
     assert payload["contentLang"] == "hi"
     assert payload.get("allowedFormats")
+    assert payload.get("pollPlaybook", {}).get("slug") == "indian-foods"
+    assert payload["pollPlaybook"].get("lang") == "hi"
     assert any("HINDI ONLY" in r for r in payload["rules"])
+    assert "what_would_you_do" in payload["mix"]["preferPollTypes"]
+    myth = json.loads(_messages_hi("mythology", 4, [])[1]["content"])
+    angles = myth["pollPlaybook"].get("exampleAngles") or []
+    assert angles and any("कर्ण" in a or "हनुमान" in a or "रावण" in a for a in angles)
 
 
 def test_ensure_language_split_separates_en_and_hi() -> None:
@@ -915,7 +1041,8 @@ def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     assert "separate hindi content generation" in lowered or "hindi content generation agent" in lowered
     assert "swipe" in lowered
     assert "verifiedtrends" in lowered or "never invent" in lowered
-    assert "engagement mechanism" in lowered
+    assert "high-engagement" in lowered or "23/30" in lowered
+    assert "what_would_you_do" in lowered or "who_is_more_likely" in lowered
     assert "taxonomy" in lowered or "allowedformats" in lowered
     assert "quality beats quantity" in lowered
     msgs = _messages("indian-foods", 4, [], avoid_prompts=[], insights={})
@@ -926,13 +1053,40 @@ def test_english_agent_system_prompt_forbids_hindi_fields() -> None:
     assert "verifiedTrends" in payload
     assert "allowedFormats" in payload
     assert "typesByFormat" in payload
+    assert "pollPlaybook" in payload
     assert "hindiGood" not in payload
     assert "quizShare" in payload
     assert "categoryScope" in payload
     assert "engagement" in payload.lower()
-    food_scope = json.loads(payload)["categoryScope"]
+    data = json.loads(payload)
+    food_scope = data["categoryScope"]
     include = " ".join(food_scope.get("include") or []).lower()
     assert "food" in include or "street" in include or "spice" in include
+    assert data["pollPlaybook"]["slug"] == "indian-foods"
+    assert "what_would_you_do" in data["mix"]["preferPollTypes"]
+
+
+def test_sheet_style_poll_candidate_normalizes() -> None:
+    """New-prompt ChatGPT shape (question + string options + pollType) must validate."""
+    raw = {
+        "candidates": [
+            {
+                "category": "cricket",
+                "pollType": "VERSUS",
+                "question": "Who would you pick for the final over?",
+                "options": ["Jasprit Bumrah", "Mohammed Shami", "Hardik Pandya", "Arshdeep Singh"],
+                "language": "en",
+            }
+        ]
+    }
+    cards, dropped = validate_candidates(raw, "cricket", [])
+    assert not dropped, dropped
+    assert len(cards) == 1
+    assert cards[0].format == "poll"
+    assert cards[0].question_type == "versus"
+    assert cards[0].prompt.startswith("Who would you pick")
+    assert len(cards[0].options) == 4
+    assert all(opt.get("isCorrect") is False for opt in cards[0].options)
 
 
 def test_agent_candidates_requests_about_2x_need(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -987,6 +1141,8 @@ def test_mobile_prompt_issue_rejects_unreadable_copy() -> None:
 
 
 def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:
+    from scripts.content_gen.agent import opinion_in_knowledge_issue
+
     assert lazy_poll_issue("poll", "Who is your favourite actor?") == "lazy-poll"
     assert lazy_poll_issue("poll", "Chai or coffee?") == "lazy-poll"
     assert lazy_poll_issue("poll", "Sweet or spicy?") == "lazy-poll"
@@ -997,6 +1153,11 @@ def test_lazy_poll_and_quiz_poll_correctness_gates() -> None:
         lazy_poll_issue("poll", "Midnight craving hits. Street food or Maggi at home?")
         is None
     )
+    assert (
+        opinion_in_knowledge_issue("quiz", "You prefer word puzzles that are…")
+        == "opinion-in-knowledge"
+    )
+    assert opinion_in_knowledge_issue("quiz", "Unscramble PLEAP to make a fruit") is None
     now = datetime(2026, 10, 30, tzinfo=UTC)
     raw = {
         "candidates": [

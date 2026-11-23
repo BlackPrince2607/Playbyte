@@ -22,7 +22,7 @@ export type MomentStatusCopy = {
 };
 
 const DEFAULT_COPY = {
-  pickQuizAnswer: "Pick the answer you think is right",
+  pickQuizAnswer: "Pick the correct answer",
   pickPollAnswer: "Pick one to see how everyone voted",
   correctExclaim: "Correct!",
   notThisTime: "Not this time. The right answer is ticked.",

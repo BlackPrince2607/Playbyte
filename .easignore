@@ -41,11 +41,15 @@ node_modules/
 
 # Local native build outputs (were bloating the archive to ~287MB and breaking install).
 apps/mobile/android/app/build/
+apps/mobile/android/app/.cxx/
 apps/mobile/android/build/
 apps/mobile/android/.gradle/
 apps/mobile/android/.cxx/
+apps/mobile/android/.kotlin/
 **/android/**/build/
+**/android/**/.cxx/
 **/android/.gradle/
+**/android/.kotlin/
 **/ios/build/
 **/ios/Pods/
 
@@ -58,3 +62,8 @@ apps/mobile/android/.cxx/
 **/*.tsbuildinfo
 package-lock.json
 **/package-lock.json
+tmp-eas-install/
+tmp-eas-sim/
+tmp-fb-sdk/
+tmp-maja-new-unzip/
+tmp-maja-old-unzip/

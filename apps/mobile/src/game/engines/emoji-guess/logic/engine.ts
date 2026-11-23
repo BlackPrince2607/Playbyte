@@ -27,9 +27,9 @@ export const EMOJI_STRATEGIES: QuizStrategies = {
   brand: { types: ["emoji_brand"], prompt: "Which brand is this?", toPool: emojiToPool, minItems: 8 },
 };
 
-/** Decoding emoji takes longer than recognising a flag; text hints are extra help, not the puzzle. */
+/** Decoding emoji takes longer than recognising a flag; only the emoji shows up front — text hints stay behind "Next clue". */
 const EMOJI_DIMENSIONS = QUIZ_DIMENSIONS.map((d) =>
-  d.key === "timeLimitMs" ? { ...d, easy: 20_000, hard: 9_000 } : d.key === "startClues" ? { ...d, easy: 2, hard: 1 } : d,
+  d.key === "timeLimitMs" ? { ...d, easy: 20_000, hard: 9_000 } : d.key === "startClues" ? { ...d, easy: 1, hard: 1 } : d,
 );
 
 export const emojiGuessEngine = createQuizEngine({

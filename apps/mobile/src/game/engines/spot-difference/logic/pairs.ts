@@ -26,7 +26,6 @@ const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === 
 /** Remote https or bundled flat art (`asset:spot/<key>`). */
 const mediaUrl = (u: unknown): u is string =>
   typeof u === "string" && (/^https:\/\//.test(u) || /^asset:spot\//.test(u));
-const OPS: OverlayOp[] = ["blob", "ring", "dim", "bright", "badge", "hide"];
 
 const overlaps = (a: Difference, b: Difference) =>
   Math.abs(a.x - b.x) < a.hw + b.hw && Math.abs(a.y - b.y) < a.hh + b.hh;
@@ -51,16 +50,6 @@ function parseDiff(raw: unknown, i: number): Difference | null {
   return box;
 }
 
-function parseOverlay(raw: unknown, fallbackId: string): SpotOverlay | null {
-  if (!isObj(raw)) return null;
-  const id = typeof raw.id === "string" && raw.id ? raw.id : fallbackId;
-  const side = raw.side === "left" || raw.side === "right" ? raw.side : null;
-  const op = typeof raw.op === "string" && OPS.includes(raw.op as OverlayOp) ? (raw.op as OverlayOp) : null;
-  const color = typeof raw.color === "string" && raw.color ? raw.color : "#FFD84D";
-  if (!side || !op) return null;
-  return { id, side, op, color };
-}
-
 /** Parse a content item into a playable illustration pair, or null if malformed. */
 export function pairFromItem(item: ContentItem): SpotPair | null {
   const media = item.media ?? [];
@@ -80,19 +69,11 @@ export function pairFromItem(item: ContentItem): SpotPair | null {
     diffs.push(d);
   }
 
-  const rawOverlays = attrs.overlays;
+  // Never invent stamp overlays — painted blobs/dim rectangles look like free hints and
+  // make players tap “marks” instead of real scene differences. Pairs must bake changes
+  // into distinct left/right art (see docs/content/spot-pairs/bake_bundled_pairs.py).
+  if (leftUrl === rightUrl) return null;
   const overlays: SpotOverlay[] = [];
-  if (Array.isArray(rawOverlays)) {
-    for (let i = 0; i < rawOverlays.length; i++) {
-      const o = parseOverlay(rawOverlays[i], diffs[i]?.id ?? `d${i + 1}`);
-      if (o) overlays.push(o);
-    }
-  }
-  // Only invent blobs when both sides share one photo — otherwise the baked pair already differs
-  // and fake marks would spoil the round (same image + clickable dots).
-  if (!overlays.length && leftUrl === rightUrl) {
-    diffs.forEach((d, i) => overlays.push({ id: d.id, side: i % 2 === 0 ? "right" : "left", op: "blob", color: "#FF4D8D" }));
-  }
 
   const aspect = typeof attrs.aspect === "number" && attrs.aspect > 0.3 && attrs.aspect < 1.2 ? attrs.aspect : ASPECT;
   const title = typeof attrs.title === "string" ? attrs.title : item.id;

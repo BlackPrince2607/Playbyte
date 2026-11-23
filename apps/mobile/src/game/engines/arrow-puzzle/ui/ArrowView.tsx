@@ -16,29 +16,35 @@ const EMPTY = "#EEEAF6";
 const CORAL = "#FF4D6D";
 const TRACK = "#E4DFF3";
 
-const bestKey = (variation: string) => `maja_arrow_best_${variation}`;
+const bestKey = (variation: string) => `maja_arrow_best_ms_${variation}`;
 
-function useClock(deadline: number | undefined, limitMs: number, now: () => number, paused: boolean) {
+/** Format elapsed ms as 12.3s or 1:05.2. */
+export function formatElapsed(ms: number): string {
+  const t = Math.max(0, ms);
+  const whole = Math.floor(t / 1000);
+  const tenths = Math.floor((t % 1000) / 100);
+  if (whole < 60) return `${whole}.${tenths}s`;
+  const m = Math.floor(whole / 60);
+  const s = whole % 60;
+  return `${m}:${String(s).padStart(2, "0")}.${tenths}`;
+}
+
+function useStopwatch(startedAt: number, penaltyMs: number, finishedMs: number | null, now: () => number, paused: boolean) {
   const read = () => {
-    if (deadline === undefined) return { seconds: 0, pct: 0 };
-    const left = Math.max(0, deadline - now());
-    return { seconds: Math.ceil(left / 1000), pct: limitMs > 0 ? Math.min(1, left / limitMs) : 0 };
+    if (finishedMs != null) return finishedMs;
+    return Math.max(0, now() - startedAt) + penaltyMs;
   };
-  const [clock, setClock] = useState(read);
+  const [elapsed, setElapsed] = useState(read);
   useEffect(() => {
-    if (deadline === undefined) {
-      setClock({ seconds: 0, pct: 0 });
-      return;
-    }
-    const tick = () => setClock(read());
+    const tick = () => setElapsed(read());
     tick();
-    if (paused) return;
+    if (paused || finishedMs != null) return;
     const id = setInterval(tick, 100);
     return () => clearInterval(id);
-    // `now` is a stable session clock; `read` closes over the latest deadline.
+    // `now` is a stable session clock; `read` closes over the latest start/penalty.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deadline, limitMs, paused, now]);
-  return clock;
+  }, [startedAt, penaltyMs, finishedMs, paused, now]);
+  return elapsed;
 }
 
 function Pill({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
@@ -88,21 +94,23 @@ function FlyingArrow({ fly, onDone }: { fly: Fly; onDone: () => void }) {
   );
 }
 
-export function ArrowView({ state, dispatch, snapshot, now }: EngineViewProps<ArrowState, ArrowAction>) {
+export function ArrowView({ state, dispatch, snapshot, now, compact }: EngineViewProps<ArrowState, ArrowAction>) {
   const playing = snapshot.status === "playing" && !state.roundOver;
-  const { seconds, pct } = useClock(snapshot.deadline, state.roundLimitMs, now, !playing);
+  const elapsed = useStopwatch(state.roundStart, state.penaltyMs, state.finishMs, now, !playing);
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const [best, setBest] = useState(0);
+  const [bestMs, setBestMs] = useState<number | null>(null);
   const [fly, setFly] = useState<Fly | null>(null);
   const flyKey = useRef(0);
   const seq = snapshot.lastOutcome?.seq;
   const correct = snapshot.lastOutcome?.correct;
+  const left = Math.max(0, state.total - state.cleared);
+  const pct = state.total > 0 ? Math.min(1, state.cleared / state.total) : 0;
 
   useEffect(() => {
     let live = true;
     void AsyncStorage.getItem(bestKey(state.variation)).then((raw) => {
-      const n = raw ? Number(raw) : 0;
-      if (live && Number.isFinite(n)) setBest(Math.max(0, Math.floor(n)));
+      const n = raw ? Number(raw) : NaN;
+      if (live && Number.isFinite(n) && n > 0) setBestMs(Math.floor(n));
     });
     return () => {
       live = false;
@@ -110,18 +118,19 @@ export function ArrowView({ state, dispatch, snapshot, now }: EngineViewProps<Ar
   }, [state.variation]);
 
   useEffect(() => {
-    if (!state.roundOver || state.cleared <= best) return;
-    setBest(state.cleared);
-    void AsyncStorage.setItem(bestKey(state.variation), String(state.cleared));
-  }, [state.roundOver, state.cleared, state.variation, best]);
+    if (state.finishMs == null) return;
+    if (bestMs != null && state.finishMs >= bestMs) return;
+    setBestMs(state.finishMs);
+    void AsyncStorage.setItem(bestKey(state.variation), String(state.finishMs));
+  }, [state.finishMs, state.variation, bestMs]);
 
   useEffect(() => {
     if (seq === undefined) return;
     feedback(correct ? "success" : "error");
   }, [seq, correct]);
 
-  const gap = 8;
-  const pad = 14;
+  const gap = compact ? 5 : 8;
+  const pad = compact ? 8 : 14;
   const cols = state.cols;
   const rows = state.rows;
   const cell =
@@ -157,22 +166,28 @@ export function ArrowView({ state, dispatch, snapshot, now }: EngineViewProps<Ar
     dispatch({ type: "tap", index });
   };
 
+  const bestLabel = bestMs != null ? formatElapsed(bestMs) : "—";
+
   return (
-    <View style={styles.root}>
-      <View style={styles.pills}>
-        <Pill label="Cleared" value={String(state.cleared)} accent />
-        <Pill label="" value={`${seconds}s`} accent />
-        <Pill label="Best" value={String(Math.max(best, state.roundOver ? state.cleared : best))} />
+    <View style={[styles.root, compact && styles.rootCompact]}>
+      <View style={[styles.pills, compact && styles.pillsCompact]}>
+        <Pill label="Left" value={String(left)} accent />
+        <Pill label="" value={formatElapsed(elapsed)} accent />
+        <Pill label="Best" value={bestLabel} />
       </View>
-      <View style={styles.track} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: Math.round(pct * 100) }}>
-        <View style={[styles.fill, { width: `${Math.round(pct * 100)}%` }, seconds <= 5 && { backgroundColor: CORAL }]} />
+      <View
+        style={[styles.track, compact && styles.trackCompact]}
+        accessibilityRole="progressbar"
+        accessibilityValue={{ min: 0, max: 100, now: Math.round(pct * 100) }}
+      >
+        <View style={[styles.fill, { width: `${Math.round(pct * 100)}%` }]} />
       </View>
       <View style={styles.stage} onLayout={onLayout}>
         {cell > 8 ? (
           <View
-            style={[styles.board, { width: boardW, height: boardH, padding: pad, gap }]}
+            style={[styles.board, compact && styles.boardCompact, { width: boardW, height: boardH, padding: pad, gap }]}
             accessible
-            accessibilityLabel={`${cols} by ${rows} arrow board. ${state.cleared} cleared.`}
+            accessibilityLabel={`${cols} by ${rows} arrow board. ${left} left. ${formatElapsed(elapsed)} elapsed.`}
           >
             {Array.from({ length: rows }, (_, y) => (
               <View key={y} style={[styles.row, { gap }]}>
@@ -212,14 +227,20 @@ export function ArrowView({ state, dispatch, snapshot, now }: EngineViewProps<Ar
           </View>
         ) : null}
       </View>
-      <Text style={styles.hint}>{blocked >= 0 ? "Blocked — 1 second gone." : "Tap an arrow with a clear path. Blocked = −1s."}</Text>
+      {compact ? null : (
+        <Text style={styles.hint}>
+          {blocked >= 0 ? "Blocked — +1s on the clock." : "Tap an arrow with a clear path. Blocked = +1s."}
+        </Text>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: LAVENDER, paddingHorizontal: 20 },
+  rootCompact: { paddingHorizontal: 0, backgroundColor: "transparent" },
   pills: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 10, paddingTop: 8 },
+  pillsCompact: { gap: 6, paddingTop: 0 },
   pill: {
     backgroundColor: "#FFFFFF",
     borderRadius: 999,
@@ -231,8 +252,9 @@ const styles = StyleSheet.create({
   pillLabel: { color: INK, fontFamily: fonts.bodyMedium, fontSize: 14, lineHeight: 20 },
   pillValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: INK },
   track: { height: 8, borderRadius: 4, backgroundColor: TRACK, marginTop: 14, marginHorizontal: 8, overflow: "hidden" },
+  trackCompact: { marginTop: 8, marginHorizontal: 0, height: 6 },
   fill: { height: 8, borderRadius: 4, backgroundColor: PURPLE },
-  stage: { flex: 1, alignItems: "center", justifyContent: "center" },
+  stage: { flex: 1, alignItems: "center", justifyContent: "center", minHeight: 0 },
   board: {
     backgroundColor: "#FFFFFF",
     borderRadius: 28,
@@ -243,6 +265,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 3,
   },
+  boardCompact: { borderRadius: 16, elevation: 0, shadowOpacity: 0 },
   row: { flexDirection: "row" },
   tile: { borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: PURPLE },
   flyer: { position: "absolute", zIndex: 2 },

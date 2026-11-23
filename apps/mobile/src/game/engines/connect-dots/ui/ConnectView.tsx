@@ -22,7 +22,14 @@ const GridLines = memo(function GridLines({ size, cell }: { size: number; cell: 
   return <Path path={d} color={colors.line} style="stroke" strokeWidth={1} />;
 });
 
-export function ConnectView({ state, dispatch, snapshot, requestHint }: EngineViewProps<ConnectState, ConnectAction>) {
+export function ConnectView({
+  state,
+  dispatch,
+  snapshot,
+  requestHint,
+  compact,
+  hideHints,
+}: EngineViewProps<ConnectState, ConnectAction>) {
   const [board, setBoard] = useState(0);
   const size = state.size;
   const cell = size ? board / size : 0;
@@ -152,15 +159,15 @@ export function ConnectView({ state, dispatch, snapshot, requestHint }: EngineVi
   const fill = size ? Math.round((filledCells(state) / (size * size)) * 100) : 0;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, compact && styles.rootCompact]}>
       <View style={styles.header}>
-        <Text style={[type.bodySm, { color: colors.lilac }]}>
+        <Text style={[type.bodySm, { color: colors.lilac }]} numberOfLines={1}>
           Pairs <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold }}>{connected}/{state.pairs.length}</Text>
         </Text>
         <Text style={[type.bodySm, { color: fill === 100 ? colors.lime : colors.lilac }]}>Filled {fill}%</Text>
         <Text style={[type.bodySm, { color: colors.lilac }]}>Moves {state.moves}</Text>
       </View>
-      <View style={styles.boardWrap} onLayout={onLayout}>
+      <View style={[styles.boardWrap, compact && styles.boardWrapCompact]} onLayout={onLayout}>
         {board > 0 && size > 0 ? (
           <GestureDetector gesture={pan}>
             <View
@@ -204,7 +211,7 @@ export function ConnectView({ state, dispatch, snapshot, requestHint }: EngineVi
           </GestureDetector>
         ) : null}
       </View>
-      <HintBar hints={snapshot.hints} onHint={requestHint} />
+      {hideHints ? null : <HintBar hints={snapshot.hints} onHint={requestHint} />}
       {state.roundOver ? (
         <Text style={[type.bodyLg, { color: state.solved ? colors.lime : colors.pink, textAlign: "center", fontFamily: fonts.bodyBold }]} accessibilityLiveRegion="polite">
           {state.solved ? (state.perfect ? "Perfect! Every cell filled." : "All connected!") : "Time's up!"}
@@ -215,8 +222,10 @@ export function ConnectView({ state, dispatch, snapshot, requestHint }: EngineVi
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: spacing.margin, paddingBottom: spacing.md, gap: spacing.sm },
+  root: { flex: 1, paddingHorizontal: spacing.margin, paddingBottom: spacing.md, gap: spacing.sm, minHeight: 0 },
+  rootCompact: { paddingHorizontal: 0, paddingBottom: spacing.xs, gap: spacing.xs },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  boardWrap: { flex: 1, alignItems: "center", justifyContent: "center", borderRadius: radius.md, overflow: "hidden" },
+  boardWrap: { flex: 1, alignItems: "center", justifyContent: "center", borderRadius: radius.md, overflow: "hidden", minHeight: 0 },
+  boardWrapCompact: { flexGrow: 1, flexShrink: 1 },
   num: { position: "absolute", textAlign: "center", color: colors.ink, fontFamily: fonts.bodyBold },
 });

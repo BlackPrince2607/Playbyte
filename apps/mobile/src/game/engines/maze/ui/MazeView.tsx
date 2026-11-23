@@ -42,7 +42,14 @@ const Walls = memo(function Walls({ walls, size, cell }: { walls: number[]; size
   return <Path path={d} color={colors.paper} style="stroke" strokeWidth={Math.max(2, cell * 0.12)} strokeCap="round" />;
 });
 
-export function MazeView({ state, dispatch, snapshot, requestHint }: EngineViewProps<MazeState, MazeAction>) {
+export function MazeView({
+  state,
+  dispatch,
+  snapshot,
+  requestHint,
+  compact,
+  hideHints,
+}: EngineViewProps<MazeState, MazeAction>) {
   const [board, setBoard] = useState(0);
   const playing = snapshot.status === "playing" && !state.roundOver;
   const size = state.size;
@@ -122,16 +129,21 @@ export function MazeView({ state, dispatch, snapshot, requestHint }: EngineViewP
       disabled={!playing || !open(state.walls, state.pos, b)}
       accessibilityRole="button"
       accessibilityLabel={`Run ${b === N ? "up" : b === S ? "down" : b === E ? "right" : "left"}`}
-      style={({ pressed }) => [styles.pad, (!playing || !open(state.walls, state.pos, b)) && { opacity: 0.35 }, pressed && { backgroundColor: colors.cardAlt }]}
+      style={({ pressed }) => [
+        styles.pad,
+        compact && styles.padCompact,
+        (!playing || !open(state.walls, state.pos, b)) && { opacity: 0.35 },
+        pressed && { backgroundColor: colors.cardAlt },
+      ]}
     >
-      <Text style={styles.padText}>{b === N ? "▲" : b === S ? "▼" : b === E ? "▶" : "◀"}</Text>
+      <Text style={[styles.padText, compact && { fontSize: 16 }]}>{b === N ? "▲" : b === S ? "▼" : b === E ? "▶" : "◀"}</Text>
     </Pressable>
   );
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, compact && styles.rootCompact]}>
       <View style={styles.header}>
-        <Text style={[type.bodySm, { color: colors.lilac }]}>
+        <Text style={[type.bodySm, { color: colors.lilac }]} numberOfLines={1}>
           Steps <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold }}>{state.steps}</Text> · Best route {state.par}
         </Text>
         {state.gems.length ? (
@@ -140,7 +152,7 @@ export function MazeView({ state, dispatch, snapshot, requestHint }: EngineViewP
           </Text>
         ) : null}
       </View>
-      <View style={styles.boardWrap} onLayout={onLayout}>
+      <View style={[styles.boardWrap, compact && styles.boardWrapCompact]} onLayout={onLayout}>
         {board > 0 && size > 0 ? (
           <GestureDetector gesture={pan}>
             <View
@@ -181,11 +193,11 @@ export function MazeView({ state, dispatch, snapshot, requestHint }: EngineViewP
           </GestureDetector>
         ) : null}
       </View>
-      <View style={styles.controls}>
-        <HintBar hints={snapshot.hints} onHint={requestHint} />
-        <View style={styles.dpad}>
+      <View style={[styles.controls, compact && styles.controlsCompact]}>
+        {hideHints ? null : <HintBar hints={snapshot.hints} onHint={requestHint} />}
+        <View style={[styles.dpad, compact && { gap: spacing.xs }]}>
           {pad(W)}
-          <View style={{ gap: spacing.sm }}>
+          <View style={{ gap: compact ? spacing.xs : spacing.sm }}>
             {pad(N)}
             {pad(S)}
           </View>
@@ -202,12 +214,16 @@ export function MazeView({ state, dispatch, snapshot, requestHint }: EngineViewP
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: spacing.margin, paddingBottom: spacing.md, gap: spacing.sm },
+  root: { flex: 1, paddingHorizontal: spacing.margin, paddingBottom: spacing.md, gap: spacing.sm, minHeight: 0 },
+  rootCompact: { paddingHorizontal: 0, paddingBottom: spacing.xs, gap: spacing.xs },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  boardWrap: { flex: 1, alignItems: "center", justifyContent: "center", borderRadius: radius.md, overflow: "hidden" },
+  boardWrap: { flex: 1, alignItems: "center", justifyContent: "center", borderRadius: radius.md, overflow: "hidden", minHeight: 0 },
+  boardWrapCompact: { flexGrow: 1, flexShrink: 1 },
   emoji: { position: "absolute", textAlign: "center" },
   controls: { alignItems: "center", gap: spacing.sm },
+  controlsCompact: { gap: spacing.xs },
   dpad: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   pad: { width: 56, height: 48, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" },
+  padCompact: { width: 44, height: 40 },
   padText: { color: colors.paper, fontSize: 20 },
 });

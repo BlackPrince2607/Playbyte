@@ -30,13 +30,16 @@ TEXT_FORMATS = frozenset(
 OPINION_FORMATS = frozenset({FORMAT_POLL, FORMAT_THIS_OR_THAT})
 KNOWLEDGE_FORMATS = frozenset({FORMAT_TRIVIA, FORMAT_QUIZ})
 
-STANDARD_FORMATS = (
+# Topic interests (Bollywood, Mythology, …) — text/opinion formats only.
+# Find-the-difference is NOT topic-tied; it lives under memory-games as thematic
+# photo packs (objects / city / garden / space), same as the in-app Spot games.
+TOPIC_FORMATS = (
     FORMAT_POLL,
     FORMAT_TRIVIA,
     FORMAT_THIS_OR_THAT,
-    FORMAT_FIND_THE_DIFFERENCE,
     FORMAT_QUIZ,
 )
+STANDARD_FORMATS = TOPIC_FORMATS
 
 # Active interest / onboarding categories (user-facing).
 ONBOARDING_SLUGS: tuple[str, ...] = (
@@ -92,6 +95,9 @@ LEGACY_SLUG_MAP: dict[str, str] = {
 # Categories that still accept verified event briefs / trends.
 EVENT_SLUGS = frozenset({"cricket", "football", "bollywood", "kpop", "tv-serials"})
 
+# Skill / puzzle interests: scored quizzes only — never opinion polls, never "trivia" framing.
+QUIZ_ONLY_SLUGS = frozenset({"word-puzzles", "math-puzzles", "maths"})
+
 
 def _entry(
     *,
@@ -112,33 +118,39 @@ def _entry(
     }
 
 
+# High-engagement pollTypes (New prompt sheet) + legacy freeform labels.
 _STD_POLL = (
+    "pick_one",
+    "who_is_right",
+    "who_is_more_likely",
+    "what_would_you_do",
+    "prediction",
+    "versus",
+    "personality",
+    "unpopular_opinion",
+    "hypothetical",
+    "social_debate",
     "opinion",
     "debate",
     "hot",
-    "versus",
-    "hypothetical",
-    "prediction",
-    "unpopular_opinion",
-    "social_debate",
 )
 _STD_THIS = ("versus", "habits", "preferences", "nostalgia")
-_STD_FTD = ("scenes", "objects", "characters", "everyday")
+# Standalone Spot the Difference themes (not Bollywood / mythology / etc.).
+_FTD_THEMES = ("objects", "city", "garden", "space")
 _STD_QUIZ = ("rules", "facts", "who", "which", "records")
 _STD_TRIVIA = ("who", "which", "facts", "recognition")
 
 TAXONOMY: dict[str, dict[str, Any]] = {
     "bollywood": _entry(
         label="Bollywood",
-        formats=STANDARD_FORMATS,
+        formats=TOPIC_FORMATS,
         types={
             FORMAT_POLL: (
+                *_STD_POLL,
                 "casting",
                 "nostalgia",
                 "couples",
                 "endings",
-                "versus",
-                "prediction",
                 "dialogues",
                 "music",
             ),
@@ -151,7 +163,6 @@ TAXONOMY: dict[str, dict[str, Any]] = {
                 "which",
             ),
             FORMAT_THIS_OR_THAT: ("actors", "movies", "eras", "ott_vs_theatre"),
-            FORMAT_FIND_THE_DIFFERENCE: ("movie_scenes", "posters", "sets"),
             FORMAT_QUIZ: ("facts", "records", "awards", "who", "which"),
         },
         include=(
@@ -166,21 +177,19 @@ TAXONOMY: dict[str, dict[str, Any]] = {
     ),
     "mythology": _entry(
         label="Mythology",
-        formats=STANDARD_FORMATS,
+        formats=TOPIC_FORMATS,
         types={
             FORMAT_POLL: (
+                *_STD_POLL,
                 "ramayana",
                 "mahabharat",
                 "shiv",
                 "krishna",
                 "characters",
                 "morals",
-                "hypothetical",
-                "versus",
             ),
             FORMAT_TRIVIA: ("characters", "events", "weapons", "who", "which"),
             FORMAT_THIS_OR_THAT: ("characters", "qualities", "choices"),
-            FORMAT_FIND_THE_DIFFERENCE: ("temple_art", "scenes", "symbols"),
             FORMAT_QUIZ: ("stories", "characters", "places", "who", "which"),
         },
         include=(
@@ -198,19 +207,17 @@ TAXONOMY: dict[str, dict[str, Any]] = {
     ),
     "tv-serials": _entry(
         label="TV Serials",
-        formats=STANDARD_FORMATS,
+        formats=TOPIC_FORMATS,
         types={
             FORMAT_POLL: (
+                *_STD_POLL,
                 "plots",
                 "characters",
                 "endings",
-                "versus",
                 "nostalgia",
-                "prediction",
             ),
             FORMAT_TRIVIA: ("dialogue", "cast", "shows", "who", "which"),
             FORMAT_THIS_OR_THAT: ("shows", "characters", "tropes"),
-            FORMAT_FIND_THE_DIFFERENCE: ("sets", "scenes", "costumes"),
             FORMAT_QUIZ: ("facts", "cast", "who", "which"),
         },
         include=(
@@ -224,20 +231,18 @@ TAXONOMY: dict[str, dict[str, Any]] = {
     ),
     "cricket": _entry(
         label="Cricket",
-        formats=STANDARD_FORMATS,
+        formats=TOPIC_FORMATS,
         types={
             FORMAT_POLL: (
+                *_STD_POLL,
                 "captaincy",
                 "ipl",
                 "rivalries",
                 "death_overs",
-                "versus",
-                "prediction",
                 "fan_behaviour",
             ),
             FORMAT_TRIVIA: ("players", "records", "rules", "who", "which"),
             FORMAT_THIS_OR_THAT: ("players", "formats", "teams"),
-            FORMAT_FIND_THE_DIFFERENCE: ("stadiums", "kits", "moments"),
             FORMAT_QUIZ: ("rules", "records", "history", "who", "which"),
         },
         include=(
@@ -252,19 +257,18 @@ TAXONOMY: dict[str, dict[str, Any]] = {
     ),
     "indian-foods": _entry(
         label="Indian Foods",
-        formats=STANDARD_FORMATS,
+        formats=TOPIC_FORMATS,
         types={
             FORMAT_POLL: (
+                *_STD_POLL,
                 "habits",
                 "regional",
                 "spice",
                 "street_food",
-                "versus",
                 "cravings",
             ),
             FORMAT_TRIVIA: ("dishes", "origins", "ingredients", "who", "which"),
             FORMAT_THIS_OR_THAT: ("dishes", "regions", "sweet_vs_savoury"),
-            FORMAT_FIND_THE_DIFFERENCE: ("thalis", "street_stalls", "kitchens"),
             FORMAT_QUIZ: ("origins", "ingredients", "festivals", "who", "which"),
         },
         include=(
@@ -278,19 +282,17 @@ TAXONOMY: dict[str, dict[str, Any]] = {
     ),
     "football": _entry(
         label="Football",
-        formats=STANDARD_FORMATS,
+        formats=TOPIC_FORMATS,
         types={
             FORMAT_POLL: (
+                *_STD_POLL,
                 "clubs",
                 "rivalries",
                 "penalties",
-                "versus",
-                "prediction",
                 "fan_culture",
             ),
             FORMAT_TRIVIA: ("players", "tournaments", "clubs", "who", "which"),
             FORMAT_THIS_OR_THAT: ("players", "clubs", "leagues"),
-            FORMAT_FIND_THE_DIFFERENCE: ("kits", "stadiums", "celebrations"),
             FORMAT_QUIZ: ("rules", "history", "records", "who", "which"),
         },
         include=(
@@ -305,19 +307,17 @@ TAXONOMY: dict[str, dict[str, Any]] = {
     ),
     "general-knowledge": _entry(
         label="General Knowledge",
-        formats=STANDARD_FORMATS,
+        formats=TOPIC_FORMATS,
         types={
             FORMAT_POLL: (
+                *_STD_POLL,
                 "opinions",
                 "habits",
                 "india",
                 "internet",
-                "versus",
-                "social_debate",
             ),
             FORMAT_TRIVIA: ("india", "world", "science_lite", "who", "which"),
             FORMAT_THIS_OR_THAT: ("habits", "places", "preferences"),
-            FORMAT_FIND_THE_DIFFERENCE: ("landmarks", "maps", "objects"),
             FORMAT_QUIZ: ("india", "world", "science_lite", "who", "which"),
         },
         include=(
@@ -331,19 +331,17 @@ TAXONOMY: dict[str, dict[str, Any]] = {
     ),
     "kpop": _entry(
         label="K-pop",
-        formats=STANDARD_FORMATS,
+        formats=TOPIC_FORMATS,
         types={
             FORMAT_POLL: (
+                *_STD_POLL,
                 "idols",
                 "comebacks",
                 "ships",
-                "versus",
                 "concepts",
-                "prediction",
             ),
             FORMAT_TRIVIA: ("songs", "groups", "facts", "who", "which"),
             FORMAT_THIS_OR_THAT: ("groups", "concepts", "eras"),
-            FORMAT_FIND_THE_DIFFERENCE: ("stages", "outfits", "albums"),
             FORMAT_QUIZ: ("discography", "members", "who", "which"),
         },
         include=(
@@ -360,12 +358,11 @@ TAXONOMY: dict[str, dict[str, Any]] = {
         formats=(FORMAT_POLL,),
         types={
             FORMAT_POLL: (
+                *_STD_POLL,
                 "habits",
                 "texting",
                 "dating_playful",
                 "friendships",
-                "who_is_more_likely",
-                "social_debate",
             ),
         },
         include=(
@@ -389,16 +386,32 @@ TAXONOMY: dict[str, dict[str, Any]] = {
             FORMAT_QUIZ: ("number_puzzles", "patterns", "logic_lite", "quick_calc"),
         },
         include=("number puzzles", "patterns", "quick mental math", "logic-lite"),
-        exclude=("formal exam papers", "advanced university math"),
+        exclude=(
+            "formal exam papers",
+            "advanced university math",
+            "opinion polls",
+            "preference questions",
+            "meta definitions of puzzle types",
+        ),
+        scope_note="QUIZ ONLY — every card needs one objectively correct answer.",
     ),
     "memory-games": _entry(
         label="Memory Games",
         formats=(FORMAT_FIND_THE_DIFFERENCE,),
         types={
-            FORMAT_FIND_THE_DIFFERENCE: ("pairs", "sequences", "scenes", "objects"),
+            # Theme packs — not Bollywood/Mythology/etc. Matches in-app Spot variations.
+            FORMAT_FIND_THE_DIFFERENCE: _FTD_THEMES,
         },
-        include=("spot the difference", "memory pairs", "visual recall"),
-        exclude=("text-only trivia as the main format",),
+        include=(
+            "spot the difference",
+            "thematic photo packs (objects, city night, garden, space/galaxy)",
+            "visual recall",
+        ),
+        exclude=(
+            "topic-tied scenes (Bollywood posters, mythology art, sports kits)",
+            "text-only trivia as the main format",
+        ),
+        scope_note="Standalone visual game — themes are picture packs, not interest categories.",
     ),
     "word-puzzles": _entry(
         label="Word Puzzles",
@@ -407,7 +420,13 @@ TAXONOMY: dict[str, dict[str, Any]] = {
             FORMAT_QUIZ: ("anagrams", "missing_letters", "synonyms", "riddles"),
         },
         include=("anagrams", "word riddles", "missing letters", "synonyms"),
-        exclude=("long essay answers",),
+        exclude=(
+            "long essay answers",
+            "opinion polls",
+            "preference questions",
+            "meta definitions of puzzle types",
+        ),
+        scope_note="QUIZ ONLY — solvable word puzzles with one correct answer, not trivia polls.",
     ),
     "maths": _entry(
         label="Maths",
@@ -416,14 +435,20 @@ TAXONOMY: dict[str, dict[str, Any]] = {
             FORMAT_QUIZ: ("arithmetic", "percentages", "ratios", "quick_facts"),
         },
         include=("arithmetic", "percentages", "ratios", "everyday maths"),
-        exclude=("advanced calculus", "exam-cram proofs"),
+        exclude=(
+            "advanced calculus",
+            "exam-cram proofs",
+            "opinion polls",
+            "preference questions",
+        ),
+        scope_note="QUIZ ONLY — every card needs one objectively correct answer.",
     ),
 }
 
 
 def normalize_slug(slug: str) -> str:
     """Map legacy slugs onto the active taxonomy when possible."""
-    s = (slug or "").strip()
+    s = (slug or "").strip().lower()
     if s in TAXONOMY:
         return s
     return LEGACY_SLUG_MAP.get(s, s)
@@ -473,17 +498,23 @@ def format_to_scoring_mode(fmt: str) -> str:
     return "none"
 
 
-def format_to_tags(fmt: str) -> list[str]:
+def format_to_tags(fmt: str, slug: str | None = None) -> list[str]:
     if fmt == FORMAT_FIND_THE_DIFFERENCE:
         return ["game"]
-    # Feed badge + ranking copy call knowledge cards "trivia" (not "quiz").
     if fmt in KNOWLEDGE_FORMATS:
+        # Puzzle / maths skill cards are quizzes with a right answer — not topic trivia.
+        if slug and normalize_slug(slug) in QUIZ_ONLY_SLUGS:
+            return ["quiz"]
         return ["trivia"]
     return ["poll"]
 
 
 def is_opinion_format(fmt: str) -> bool:
     return fmt in OPINION_FORMATS
+
+
+def is_quiz_only_category(slug: str) -> bool:
+    return normalize_slug(slug) in QUIZ_ONLY_SLUGS
 
 
 def is_text_format(fmt: str) -> bool:

@@ -41,6 +41,12 @@ from scripts.content_gen.catalog import (
 )
 from scripts.content_gen.hi_generate_prompt import HI_GENERATE_SYSTEM
 from scripts.content_gen.hi_localize_prompt import HI_LOCALIZE_SYSTEM
+from scripts.content_gen.poll_prompt import (
+    ENGAGEMENT_POLL_TYPES,
+    build_en_system,
+    poll_playbook_for,
+    poll_playbook_for_hi,
+)
 from scripts.content_gen.taxonomy import (
     FORMAT_FIND_THE_DIFFERENCE,
     FORMAT_POLL,
@@ -54,6 +60,7 @@ from scripts.content_gen.taxonomy import (
     format_to_scoring_mode,
     format_to_tags,
     formats_for,
+    is_quiz_only_category,
     normalize_slug,
     taxonomy_payload,
     types_for,
@@ -126,6 +133,29 @@ _LAZY_POLL_RE = re.compile(
     r"(?:theatre|theater)\s+or\s+ott\s*\??\s*$"
     r")"
 )
+# Opinion / preference wording that must never appear on scored quiz/trivia cards.
+_OPINION_IN_KNOWLEDGE_RE = re.compile(
+    r"(?i)\b("
+    r"you\s+prefer|your\s+(?:favou?rite|vibe|mood|lane)|"
+    r"which\s+do\s+you|"
+    r"would\s+you\s+(?:rather|pick|choose)|"
+    r"pick\s+the\s+answer\s+you\s+think|"
+    r"what\s+feels?\s+(?:right|better)|"
+    r"rounds?\s+feel|"
+    r"you\s+prefer\s+word\s+puzzles"
+    r")\b"
+)
+# Meta definitions of puzzle types ("a riddle is a…") — not actual puzzles to solve.
+_META_PUZZLE_DEF_RE = re.compile(
+    r"(?i)\b("
+    r"(?:anagram|riddle|synonym|sudoku|puzzle)\s+(?:is|are)\s+(?:a|an)\b|"
+    r"hides?\s+the\s+answer\s+in\s+wordplay|"
+    r"rearranging\s+letters\s+to\s+form\s+a\s+new\s+word|"
+    r"a\s+short\s+question\s+that\s+hides|"
+    r"matching\s+two\s+identical\s+cards|"
+    r"finding\s+changes\s+between\s+two\s+similar"
+    r")\b"
+)
 # Claims that something is trending/viral require verifiedTrends or a brief.
 _TREND_CLAIM_RE = re.compile(
     r"(?i)\b("
@@ -139,42 +169,8 @@ _TREND_CLAIM_RE = re.compile(
 )
 _HI_FIELD_KEYS = frozenset({"promptHi", "prompt_hi", "labelHi", "label_hi", "optionsHi", "options_hi"})
 
-EN_SYSTEM = (
-    "You are the English Content Generation Agent for MAJA, an India-first social entertainment "
-    "app where every swipe is a game.\n\n"
-    "MAJA is not a news app, exam app, or survey platform. Cards should feel like fun conversations "
-    "with friends that Indian users (18–35, metros + Tier-2/3) genuinely want to answer, share, and "
-    "debate.\n\n"
-    "Ideal reactions: \"I have to answer this!\", \"I wonder what others think.\", "
-    "\"I need to send this to my friend.\", \"I strongly disagree!\", \"Let's see which side wins.\", "
-    "\"I know this.\", \"Wait, really?\".\n\n"
-    "TAXONOMY (critical): generate for ONE requested category. Only use formats listed in "
-    "allowedFormats. For each card pick contentType from typesByFormat[format]. Never invent "
-    "formats or types outside those lists.\n\n"
-    "FORMATS:\n"
-    "- poll: opinion-driven, no correct answer. Debate, versus, prediction, habits, morals.\n"
-    "- this_or_that: two (or few) vivid A-vs-B choices with stakes; no correct answer.\n"
-    "- trivia: knowable recognition / who / which / facts with exactly one correct option.\n"
-    "- quiz: short fair knowledge check with exactly one correct option (rules, maths, words).\n"
-    "- find_the_difference: do NOT invent image pairs in text — skip unless the payload asks "
-    "for FTD text placeholders; prefer other allowed formats.\n\n"
-    "ENGAGEMENT: before each card pick a hook — recognition, curiosity, challenge, identity, "
-    "debate, prediction, social_comparison, nostalgia, humour, competition, or surprise. "
-    "Mix poll formats deliberately (versus, what-would-you-do, who-is-more-likely, unpopular "
-    "opinion, hypothetical, social debate). Prefer specificity over vague favourites.\n\n"
-    "TRENDS: ground timely cards ONLY in verifiedTrends. Never invent viral claims. When empty, "
-    "ship strong evergreen play without fake trending framing.\n\n"
-    "WRITING: natural conversational English; prompts ~6–16 words; options ~1–7 words; 2–4 options. "
-    "No All/None of the above. No clickbait like \"99% get this wrong\". No gambling words. "
-    "Be respectful for mythology and boys-girls (playful, never insulting).\n\n"
-    "Never generate Hindi, Hinglish, Devanagari, promptHi, labelHi, or optionsHi. "
-    "A separate Hindi Content Generation Agent invents its own Hindi cards for the Hindi feed.\n\n"
-    "ENGAGEMENT MECHANISM still applies: silently pick a primary hook before writing each card. "
-    "Quality beats quantity — return fewer strong candidates rather than pad with weak ones.\n\n"
-    "Reply with JSON only: {\"candidates\":[...]} . Each candidate has format, category, "
-    "questionType (same as contentType), type (predict|pulse), prompt, options[{label,isCorrect}], "
-    "briefId. briefId is null unless using a verified brief."
-)
+# High-engagement poll playbook from spreadsheet "New prompt" tab (poll_prompt.py).
+EN_SYSTEM = build_en_system()
 _STOP_TOKENS = frozenset(
     {
         "the",
@@ -230,64 +226,69 @@ def _category_scope(slug: str) -> dict[str, Any]:
 
 def _category_rules(slug: str) -> list[str]:
     key = normalize_slug(slug)
+    playbook = poll_playbook_for(key)
     shared = [
         "Stay inside categoryScope for this slug only.",
-        "Only use allowedFormats and typesByFormat from the user payload.",
-        "If verifiedTrends is empty for this category: ship strong evergreen PLAY "
-        "(scenarios, recognition, sharp debates) — do NOT fake viral framing.",
-        "Every card needs a clear engagement mechanism — not just category fit.",
+        "Only use allowedFormats and typesByFormat from the user payload "
+        "(polls may use engagement pollTypes from pollPlaybook / POLLS standard).",
+        "If verifiedTrends is empty: ship strong evergreen PLAY — do NOT fake viral framing.",
+        "Polls: follow pollPlaybook explore angles and tone. Aim for 23/30+ engagement quality.",
         "Vary formats across the batch when multiple formats are allowed.",
     ]
     specific: dict[str, list[str]] = {
         "football": [
             "SCOPE (critical): football only — never cricket/IPL/T20 as the main topic.",
-            "GOOD: club rivalries, penalties, player versus, verified upcoming predictions.",
         ],
         "cricket": [
             "SCOPE: IPL, internationals, formats, rules, debates — not football as the main topic.",
-            "BAD name spam: three cards all about Kohli / Rohit / Dhoni. Rotate angles.",
-            "Use poll types like captaincy / ipl when relevant.",
+            "Rotate star names — do not spam Kohli / Rohit / Dhoni across the batch.",
         ],
         "bollywood": [
-            "GOOD: casting debates, nostalgia, endings, movie/song/dialogue trivia.",
-            "BAD: endless 'who is your favourite actor?' with no situation.",
+            "Do not make every poll about a favourite actor — mix nostalgia, debate, hypothetical.",
         ],
         "mythology": [
             "Respect religious beliefs and regional versions. Never insult.",
-            "Use poll types ramayana / mahabharat / shiv / morals / hypothetical.",
+            "Cover both Mahabharat and Ramayana angles across batches.",
         ],
         "tv-serials": [
-            "GOOD: plot twists, character debates, nostalgia, cast trivia.",
+            "Plot twists, character debates, nostalgia — Indian TV serials only.",
         ],
         "indian-foods": [
-            "GOOD: late-night dilemma with stakes, regional loyalty, familiar-food surprise fact.",
-            "BAD: bare 'chai or coffee?' with no situation.",
+            "Late-night dilemmas with stakes, regional loyalty — not bare chai-or-coffee.",
         ],
         "general-knowledge": [
-            "GOOD: India/world recognition, light science, share-or-verify habits.",
-            "BAD: party politics or exam-cram capital dumps.",
+            "India/world opinions and shareable habits — no party politics or exam-cram dumps.",
         ],
         "kpop": [
-            "GOOD: concept/comeback debates, fandom rituals, recognition trivia.",
+            "Concept/comeback debates and fandom rituals — stay inside K-pop.",
         ],
         "boys-girls": [
-            "POLL ONLY. Playful balanced 'who is more likely' — never insult either gender.",
+            "POLL ONLY. Playful balanced who-is-more-likely / daily dilemmas — never insult either gender.",
             "Never present stereotypes as facts.",
         ],
         "math-puzzles": [
-            "QUIZ ONLY. Fair quick number/pattern puzzles — not university exams.",
+            "QUIZ ONLY — never polls or preferences. Every card needs one objectively correct answer.",
+            "Ship solvable number/pattern puzzles (sequences, odd-one-out, quick calc) — not meta definitions.",
         ],
         "memory-games": [
             "Prefer find_the_difference / memory themes; skip inventing fake image URLs.",
+            "Never invent opinion polls about memory games.",
         ],
         "word-puzzles": [
-            "QUIZ ONLY. Anagrams, riddles, missing letters — short and fair.",
+            "QUIZ ONLY — never polls or 'which do you prefer' opinions. One correct answer every time.",
+            "Ship solvable puzzles: anagrams to unscramble, riddles to solve, missing letters, synonyms.",
+            "BAD: meta definitions like 'A short question that hides the answer in wordplay is a…'.",
+            "GOOD: 'Unscramble PLEAP' / 'I have keys but no locks — what am I?' / 'Fill in C_FF__'.",
         ],
         "maths": [
-            "QUIZ ONLY. Everyday arithmetic, percentages, ratios.",
+            "QUIZ ONLY — never polls. Everyday arithmetic, percentages, ratios with one correct answer.",
         ],
     }
-    return [*shared, *specific.get(key, [])]
+    tone = str(playbook.get("tone") or "").strip()
+    extras = list(specific.get(key, []))
+    if tone:
+        extras.append(f"POLL TONE: {tone}")
+    return [*shared, *extras]
 
 
 def normalize_verified_trends(briefs: list[dict[str, Any]], *, today: date | None = None) -> list[dict[str, Any]]:
@@ -419,10 +420,14 @@ def build_shared_system_rules(
             "Within each format, vary contentType / questionType from typesByFormat — "
             "do not repeat the same type more than twice in the batch."
         )
+        if poll_target == 0:
+            mix_rule += " Opinion polls / this_or_that are NOT allowed for this category."
     else:
         mix_rule = (
             f"MIX (soft target): about {quiz_target} knowledge cards and {poll_target} opinion cards. "
             "Quality beats quotas — fewer strong cards beat weak fill."
+            if poll_target
+            else f"MIX: about {quiz_target} knowledge/puzzle cards only — no opinion polls."
         )
     return [
         "Return JSON with a candidates array. English fields only — never promptHi, labelHi, or optionsHi.",
@@ -451,24 +456,21 @@ def build_shared_system_rules(
 
 
 def build_interaction_rules() -> list[str]:
+    """Lean rules — creative bar for polls lives in EN_SYSTEM / pollPlaybook (New prompt)."""
     return [
-        "ENGAGEMENT MECHANISM (critical): each card needs a primary hook — recognition, curiosity, challenge, "
-        "identity, debate, prediction, social_comparison, nostalgia, humour, competition, or surprise. "
-        "Vary hooks across the batch.",
-        "INTERACTION DIVERSITY (critical): vary patterns — recognition quiz, misconception trivia, who/which, "
-        "situational poll, A vs B with stakes, hot take, upcoming prediction (only if valid), nostalgia, "
-        "odd-one-out, category-specific formats. Do not repeat the same interaction pattern.",
-        "Prefer specific situations over abstract preferences. Prefer real trade-offs over obvious choices.",
-        "BAD batch: ten similar preference polls ('How do you watch movies?', 'Favourite snack?', 'Happy ending or cliffhanger?').",
-        "BAD lazy polls: 'Who is your favourite…?', 'Do you like X?', 'Which do you prefer?', bare 'chai or coffee?', "
-        "'sweet or spicy?', 'Android or iPhone?', bare 'theatre or OTT?' — unless framed as a vivid situation with stakes.",
-        "GOOD polls create tension, identity, disagreement, or a meaningful choice "
-        "(friend cancels plans — relieved or disappointed?; worth the hype?; keep only one forever).",
-        "GOOD quizzes reward recognition, a surprising-but-fair fact, a common misconception, or a clear rule — "
+        "POLLS: apply the POLLS high-engagement standard in the system prompt. "
+        "Mix questionTypes across pick_one / who_is_right / who_is_more_likely / what_would_you_do / "
+        "versus / personality / unpopular_opinion / hypothetical / social_debate "
+        "(prediction only when verified and open).",
+        "Prefer specific situations with stakes over abstract favourites. "
+        "Reject bare 'Who is your favourite…?', 'Do you like X?', 'Which do you prefer?', "
+        "or bare chai/coffee / sweet/spicy / Android/iPhone / theatre-or-OTT with no situation.",
+        "Only keep polls you would score ≥23/30 on hook + relatability + participation + "
+        "option quality + debate/social comparison + freshness.",
+        "Knowledge cards (trivia/quiz): recognition, surprising-but-fair fact, or clear rule — "
         "not capital/date exam recall.",
-        "GOOD batch: mix of recognition/trivia quizzes, who/which, and a few sharp debate polls on DIFFERENT topics.",
-        "One verified trend should normally produce ONE strong angle — not five paraphrases.",
-        "Possible angles when using a trend: FACT, CHOICE, DEBATE, REACTION, CONTEXT, IDENTIFY, PREDICTION (upcoming only).",
+        "One verified trend → normally ONE strong angle — not five paraphrases.",
+        "Vary interaction patterns across the batch so consecutive cards feel different.",
     ]
 
 
@@ -497,7 +499,8 @@ def build_event_fact_rules(today: str) -> list[str]:
         "OK predictions: only UPCOMING fixtures (tonight / this weekend / next match) that have not started — "
         "and only with briefId when questionType is prediction.",
         "If unsure whether an event is still open, write an opinion/debate/hot poll instead of a prediction.",
-        "Polls use questionType opinion, debate, or hot for freeform India-trend options.",
+        "Polls use engagement questionTypes (versus, what_would_you_do, social_debate, …) "
+        "or opinion/debate/hot for freeform India-trend options.",
         "Trend quizzes use questionType trivia, who, or which with STABLE well-known facts only (rules, definitions, permanent records) "
         "OR facts listed on a verifiedTrends row.",
         "NEVER write a freeform quiz about who currently holds an office (CM, PM, president, captain, coach, CEO) — those need a verified briefId.",
@@ -559,10 +562,8 @@ def _messages(
     today = today_date.isoformat()
     slug = normalize_slug(slug)
     format_targets = build_format_mix(slug, need)
-    knowledge_n = sum(format_targets.get(f, 0) for f in KNOWLEDGE_FORMATS)
-    opinion_n = sum(format_targets.get(f, 0) for f in OPINION_FORMATS)
-    quiz_target = max(1, knowledge_n) if knowledge_n else max(1, round(need * 0.6))
-    poll_target = max(1, opinion_n) if opinion_n else max(1, need - quiz_target)
+    quiz_target, poll_target = mix_targets_for(slug, need, format_targets)
+    quiz_only = is_quiz_only_category(slug)
     trends = merge_verified_trends(slug, briefs, manual_rows=manual_trends, now=now)
     tax = taxonomy_payload(slug)
     # LLM text formats only in preferFormats (FTD via pack).
@@ -581,22 +582,35 @@ def _messages(
             "polls": poll_target,
             "quizShare": round(quiz_target / max(need, 1), 2),
             "pollShare": round(poll_target / max(need, 1), 2),
-            "predictionsMaxShare": 0.1,
-            "preferQuizTypes": ["trivia", "who", "which"],
-            "preferPollTypes": sorted(TREND_POLL_TYPES),
+            "predictionsMaxShare": 0.0 if quiz_only else 0.1,
+            "preferQuizTypes": (
+                sorted(question_types(slug, FORMAT_QUIZ))
+                if quiz_only
+                else ["trivia", "who", "which"]
+            ),
+            "preferPollTypes": [] if poll_target == 0 else list(ENGAGEMENT_POLL_TYPES),
             "preferFormats": text_formats,
             "maxSameContentType": 2,
         },
         "market": (
             "India English feed for Gen-Z (metros + Tier-2/3). "
-            "Fast swipe interactions across poll / trivia / this_or_that / quiz. "
-            "Hindi is a separate generation agent with its own card pool — never mix."
+            + (
+                "QUIZ ONLY for this category — solvable puzzles with one correct answer. No polls."
+                if quiz_only
+                else "Fast swipe interactions across poll / trivia / this_or_that / quiz. "
+            )
+            + " Hindi is a separate generation agent with its own card pool — never mix."
+        ),
+        "pollPlaybook": (
+            {"slug": slug, "explore": [], "disabled": True, "reason": "quiz-only-category"}
+            if poll_target == 0
+            else poll_playbook_for(slug)
         ),
         "pollQuestionTypes": sorted(question_types(slug, FORMAT_POLL)),
         "quizQuestionTypes": sorted(question_types(slug, FORMAT_QUIZ)),
         "triviaQuestionTypes": sorted(question_types(slug, FORMAT_TRIVIA)),
         "thisOrThatTypes": sorted(question_types(slug, FORMAT_THIS_OR_THAT)),
-        "trendQuizTypes": sorted(TREND_QUIZ_TYPES),
+        "trendQuizTypes": [] if quiz_only else sorted(TREND_QUIZ_TYPES),
         "evergreenBank": bank_text(slug),
         "verifiedTrends": [
             {k: v for k, v in t.items() if k != "brief"} for t in trends
@@ -608,33 +622,53 @@ def _messages(
         )[:40],
         "engagementInsights": insights or {},
         "voiceExamples": {
-            "englishGood": [
-                "Midnight craving hits. Street food or Maggi at home?",
-                "Your friend cancels movie plans last minute. Relieved or disappointed?",
-                "How many balls are there in a standard over?",
-                "DRS reviews left. Burn one now or save it?",
-                "Worth the hype or overrated — this weekend's release?",
-                "What does OTT stand for in streaming?",
-                "You can keep only ONE forever: biryani, dosa, chole bhature, or momos?",
-            ],
+            "englishGood": (
+                [
+                    "Unscramble these letters to make a fruit: PLEAP",
+                    "I have keys but no locks, space but no room. What am I?",
+                    "What comes next: 2, 4, 8, 16, …?",
+                    "Fill in the blanks: C_FF__",
+                    "Which number does not belong: 3, 5, 7, 9, 11?",
+                    "Half of 100 is…",
+                ]
+                if quiz_only
+                else [
+                    "Who would you pick for the last over: Bumrah or Shami?",
+                    "Was Karna's loyalty his greatest strength or weakness?",
+                    "Which Bollywood actor can pull off a negative role best?",
+                    "You receive ₹10,000 unexpectedly. What do you do first?",
+                    "Who is more likely to reread an old chat?",
+                    "Your phone battery is at 1%. What is your first move?",
+                    "Midnight craving hits. Street food or Maggi at home?",
+                    "How many balls are there in a standard over?",
+                ]
+            ),
             "englishBad": [
-                "Kya scene hai for the release?",
-                "Kitne excited ho for the match?",
-                "What's your vibe yaar?",
-                "What is your preferred late-night dining option?",
+                "A short question that hides the answer in wordplay is a…",
+                "You prefer word puzzles that are…",
+                "Anagram rounds feel…",
                 "Who is your favourite actor?",
                 "Do you like cricket?",
                 "Which do you prefer?",
                 "Chai or coffee?",
-                "Sweet or spicy?",
-                "This is trending everywhere in India right now — guess why?",
+                *(
+                    []
+                    if quiz_only
+                    else [
+                        "Kya scene hai for the release?",
+                        "What is your preferred late-night dining option?",
+                        "Sweet or spicy?",
+                        "What is your favourite festival?",
+                        "This is trending everywhere in India right now — guess why?",
+                    ]
+                ),
             ],
         },
         "rules": [
             *build_shared_system_rules(today, quiz_target, poll_target, format_targets=format_targets),
-            *build_interaction_rules(),
+            *([] if quiz_only else build_interaction_rules()),
             *build_uniqueness_rules(),
-            *build_event_fact_rules(today),
+            *([] if quiz_only else build_event_fact_rules(today)),
             *build_english_purity_rules(),
             *build_output_contract(need),
             *_category_rules(slug),
@@ -661,10 +695,8 @@ def _messages_hi(
     today = now.date().isoformat()
     slug = normalize_slug(slug)
     format_targets = build_format_mix(slug, need)
-    knowledge_n = sum(format_targets.get(f, 0) for f in KNOWLEDGE_FORMATS)
-    opinion_n = sum(format_targets.get(f, 0) for f in OPINION_FORMATS)
-    quiz_target = max(1, knowledge_n) if knowledge_n else max(1, round(need * 0.6))
-    poll_target = max(1, opinion_n) if opinion_n else max(1, need - quiz_target)
+    quiz_target, poll_target = mix_targets_for(slug, need, format_targets)
+    quiz_only = is_quiz_only_category(slug)
     trends = merge_verified_trends(slug, briefs, manual_rows=manual_trends, now=now)
     tax = taxonomy_payload(slug)
     text_formats = [f for f in tax["allowedFormats"] if f in TEXT_FORMATS]
@@ -680,6 +712,10 @@ def _messages_hi(
         "Return JSON with a candidates array. Hindi Devanagari in prompt/label only — never promptHi/labelHi.",
     )
     shared.append("Only use allowedFormats and typesByFormat from this payload.")
+    if quiz_only:
+        shared.append(
+            "QUIZ ONLY — solvable puzzles with one correct answer. Never invent polls or preference questions."
+        )
     hi_output = [
         "Output schema per candidate: format, category, questionType, type, prompt, options[{label,isCorrect}], briefId.",
         "prompt and options[].label are Devanagari Hindi. Do NOT include promptHi, labelHi, or optionsHi.",
@@ -701,25 +737,43 @@ def _messages_hi(
             "polls": poll_target,
             "quizShare": round(quiz_target / max(need, 1), 2),
             "pollShare": round(poll_target / max(need, 1), 2),
-            "predictionsMaxShare": 0.1,
-            "preferQuizTypes": ["trivia", "who", "which"],
-            "preferPollTypes": sorted(TREND_POLL_TYPES),
+            "predictionsMaxShare": 0.0 if quiz_only else 0.1,
+            "preferQuizTypes": (
+                sorted(question_types(slug, FORMAT_QUIZ))
+                if quiz_only
+                else ["trivia", "who", "which"]
+            ),
+            "preferPollTypes": [] if poll_target == 0 else list(ENGAGEMENT_POLL_TYPES),
             "preferFormats": text_formats,
             "maxSameContentType": 2,
         },
         "market": (
             "India Hindi feed for Gen-Z (metros + Tier-2/3). "
-            "Invent original Devanagari Hinglish cards — not translations of English. "
-            "English is a separate generation agent with its own pool."
+            + (
+                "QUIZ ONLY — solvable puzzles with one correct answer. No polls. "
+                if quiz_only
+                else "Invent original Devanagari Hinglish cards — not translations of English. "
+            )
+            + "English is a separate generation agent with its own pool."
+        ),
+        "pollPlaybook": (
+            {"slug": slug, "explore": [], "disabled": True, "reason": "quiz-only-category"}
+            if poll_target == 0
+            else poll_playbook_for_hi(slug)
         ),
         "pollQuestionTypes": sorted(question_types(slug, FORMAT_POLL)),
         "quizQuestionTypes": sorted(question_types(slug, FORMAT_QUIZ)),
         "triviaQuestionTypes": sorted(question_types(slug, FORMAT_TRIVIA)),
         "thisOrThatTypes": sorted(question_types(slug, FORMAT_THIS_OR_THAT)),
-        "trendQuizTypes": sorted(TREND_QUIZ_TYPES),
+        "trendQuizTypes": [] if quiz_only else sorted(TREND_QUIZ_TYPES),
         "evergreenBank": (
             "English bank is topic reference only. Do NOT copy English bank prompts/labels. "
-            "Invent original Hindi freeform quizzes and polls (trivia/who/which/opinion/debate/hot)."
+            + (
+                "Invent original Hindi solvable puzzles (anagrams, riddles, number patterns) with one correct answer."
+                if quiz_only
+                else "Invent original Hindi freeform quizzes and polls "
+                "(versus / what_would_you_do / who_is_more_likely / trivia/who/which)."
+            )
         ),
         "verifiedTrends": [{k: v for k, v in t.items() if k != "brief"} for t in trends],
         "briefs": briefs,
@@ -729,33 +783,56 @@ def _messages_hi(
         )[:40],
         "engagementInsights": insights or {},
         "voiceExamples": {
-            "hindiGood": [
-                "रात को भूख लगी — स्ट्रीट फूड या घर की मैगी?",
-                "दोस्त ने मूवी प्लान कैंसल किया — राहत या गुस्सा?",
-                "एक ओवर में कितनी गेंदें होती हैं?",
-                "DRS बचा के रखोगे या अभी जला दोगे?",
-                "इस वीकेंड की रिलीज़ — हाइप के लायक या ओवररेटेड?",
-                "ओटीटी का मतलब क्या होता है?",
-                "ज़िंदगी भर सिर्फ़ एक: बिरयानी, डोसा, छोले भटूरे, या मोमोज?",
-            ],
+            "hindiGood": (
+                [
+                    "अक्षर जोड़कर फल बनाओ: PLEAP",
+                    "चाबी है ताला नहीं, जगह है कमरा नहीं — क्या हूँ?",
+                    "आगे क्या: 2, 4, 8, 16, …?",
+                    "खाली जगह भरो: C_FF__",
+                    "कौन-सा नंबर फिट नहीं: 3, 5, 7, 9, 11?",
+                    "100 का आधा कितना?",
+                ]
+                if quiz_only
+                else [
+                    "लास्ट ओवर किसे दोगे — बुमराह या शमी?",
+                    "कर्ण की वफ़ादारी ताकत थी या कमज़ोरी?",
+                    "नेगेटिव रोल सबसे अच्छा कौन निभाएगा?",
+                    "अचानक ₹10,000 मिले तो पहले क्या करोगे?",
+                    "पुराना चैट दोबारा पढ़ने की संभावना किसकी ज़्यादा?",
+                    "फ़ोन बैटरी 1% — पहला मूव क्या?",
+                    "रात को भूख लगी — स्ट्रीट फूड या घर की मैगी?",
+                    "एक ओवर में कितनी गेंदें होती हैं?",
+                ]
+            ),
             "hindiBad": [
                 "What's your vibe for the release?",
                 "Kya scene hai for the match?",
                 "Kitne excited ho?",
                 "Excited! / कितने एक्साइटेड हो?",
                 "Who is your favourite actor?",
+                "आपका favourite एक्टर कौन है?",
+                "क्या आपको क्रिकेट पसंद है?",
+                "चाय या कॉफ़ी?",
                 "This is trending everywhere — guess why?",
             ],
         },
         "rules": [
             *shared,
-            *build_interaction_rules(),
+            *([] if quiz_only else build_interaction_rules()),
             *build_uniqueness_rules(),
-            *build_event_fact_rules(today),
+            *([] if quiz_only else build_event_fact_rules(today)),
             *build_hindi_purity_rules(),
             *hi_output,
-            "Predictions: include प्रेडिक्शन or Prediction in the Hindi prompt when questionType is prediction.",
-            "Prefer freeform trend questionTypes (trivia/who/which/opinion/debate/hot) — do not copy English evergreen bank wording.",
+            *(
+                []
+                if quiz_only
+                else [
+                    "Predictions: include प्रेडिक्शन or Prediction in the Hindi prompt when questionType is prediction.",
+                    "Prefer engagement pollTypes (versus / what_would_you_do / who_is_more_likely / …) "
+                    "and freeform trivia/who/which — do not copy English evergreen bank wording.",
+                    "Only keep Hindi polls you would score ≥23/30. Follow pollPlaybook Hindi exampleAngles for voice.",
+                ]
+            ),
             *_category_rules(slug),
         ],
     }
@@ -930,6 +1007,40 @@ def lazy_poll_issue(fmt: str, prompt: str) -> str | None:
     return None
 
 
+def opinion_in_knowledge_issue(fmt: str, prompt: str) -> str | None:
+    """Scored quiz/trivia must be real questions — not preference/opinion prompts."""
+    if fmt not in KNOWLEDGE_FORMATS:
+        return None
+    if _OPINION_IN_KNOWLEDGE_RE.search(prompt or ""):
+        return "opinion-in-knowledge"
+    return None
+
+
+def puzzle_play_issue(slug: str, fmt: str, prompt: str) -> str | None:
+    """Quiz-only puzzle categories: real solvable puzzles, never polls or meta definitions."""
+    if not is_quiz_only_category(slug):
+        return None
+    if fmt in OPINION_FORMATS or fmt == FORMAT_POLL:
+        return "poll-in-puzzle"
+    if fmt in KNOWLEDGE_FORMATS and _META_PUZZLE_DEF_RE.search(prompt or ""):
+        return "meta-definition"
+    return None
+
+
+def mix_targets_for(slug: str, need: int, format_targets: dict[str, int]) -> tuple[int, int]:
+    """Quiz vs poll soft targets. Quiz-only categories never request polls."""
+    knowledge_n = sum(format_targets.get(f, 0) for f in KNOWLEDGE_FORMATS)
+    opinion_n = sum(format_targets.get(f, 0) for f in OPINION_FORMATS)
+    if is_quiz_only_category(slug) or (knowledge_n and not opinion_n):
+        return max(1, knowledge_n or need), 0
+    if opinion_n and not knowledge_n:
+        return 0, max(1, opinion_n)
+    if knowledge_n and opinion_n:
+        return max(1, knowledge_n), max(1, opinion_n)
+    quiz_target = max(1, round(need * 0.6))
+    return quiz_target, max(1, need - quiz_target)
+
+
 # Feed cards must stay readable on a phone — long prompts crowd answer rows.
 _MAX_PROMPT_CHARS = 90
 _MAX_PROMPT_WORDS = 20
@@ -1024,10 +1135,13 @@ def score_candidate(
             score += 1.5
     elif fmt == FORMAT_THIS_OR_THAT:
         score += 2.2
-    elif card.question_type in {"debate", "hot", "versus", "social_debate"}:
-        score += 2.0
-    elif card.question_type == "prediction":
-        score += 1.0
+    elif card.question_type in set(ENGAGEMENT_POLL_TYPES) or card.question_type in {
+        "debate",
+        "hot",
+        "opinion",
+    }:
+        # High-engagement poll types — do not under-rank vs trivia.
+        score += 2.4 if card.question_type in set(ENGAGEMENT_POLL_TYPES) else 2.0
     else:
         score += 1.5
     # Boost formats that are under their target so the batch fills each subcategory.
@@ -1175,8 +1289,11 @@ def validate_candidates(
             continue
         # Never trust the other language's fields on either agent.
         cleaned = discard_localization_fields(item)
+        cleaned = _normalize_candidate_options(cleaned)
         cleaned = _hindi_only_fields(cleaned) if lang == "hi" else _english_only_fields(cleaned)
-        cleaned["format"] = _normalize_candidate_format(cleaned)
+        cleaned["format"] = _normalize_candidate_format(cleaned) or (
+            FORMAT_POLL if cleaned.get("pollType") or cleaned.get("question") else ""
+        )
         cleaned["questionType"] = _candidate_content_type(cleaned)
         cleaned["category"] = normalize_slug(str(cleaned.get("category") or slug))
         reason = _reject(cleaned, slug, by_id, allowed_bank, today=today, content_lang=lang)
@@ -1190,6 +1307,13 @@ def validate_candidates(
             continue
         if lazy_poll_issue(fmt, prompt):
             dropped.append(f"{index}:lazy-poll")
+            continue
+        if opinion_in_knowledge_issue(fmt, prompt):
+            dropped.append(f"{index}:opinion-in-knowledge")
+            continue
+        puzzle_issue = puzzle_play_issue(slug, fmt, prompt)
+        if puzzle_issue:
+            dropped.append(f"{index}:{puzzle_issue}")
             continue
         option_labels = [
             str(opt.get("label") or "").strip()
@@ -1238,7 +1362,7 @@ def validate_candidates(
             prompt=prompt,
             options=mapped_options,
             scoring_mode=format_to_scoring_mode(fmt),
-            tags=format_to_tags(fmt),
+            tags=format_to_tags(fmt, slug),
             ends_at=_ends_at(brief, now, default_hours=freshness_hours),
             brief_id=str(brief_id) if brief_id else None,
             event_date=str(brief.get("eventDate") or "") if brief else None,
@@ -1305,8 +1429,56 @@ def _normalize_candidate_format(item: dict[str, Any]) -> str:
     return aliases.get(raw, raw)
 
 
+_POLL_TYPE_ALIASES = {
+    "PICK_ONE": "pick_one",
+    "WHO_IS_RIGHT": "who_is_right",
+    "WHO_IS_MORE_LIKELY": "who_is_more_likely",
+    "WHAT_WOULD_YOU_DO": "what_would_you_do",
+    "PREDICTION": "prediction",
+    "VERSUS": "versus",
+    "PERSONALITY": "personality",
+    "UNPOPULAR_OPINION": "unpopular_opinion",
+    "HYPOTHETICAL": "hypothetical",
+    "SOCIAL_DEBATE": "social_debate",
+}
+
+
 def _candidate_content_type(item: dict[str, Any]) -> str:
-    return str(item.get("contentType") or item.get("questionType") or "").strip()
+    raw = str(
+        item.get("contentType")
+        or item.get("questionType")
+        or item.get("pollType")
+        or ""
+    ).strip()
+    if not raw:
+        return ""
+    if raw in _POLL_TYPE_ALIASES:
+        return _POLL_TYPE_ALIASES[raw]
+    upper = raw.upper()
+    if upper in _POLL_TYPE_ALIASES:
+        return _POLL_TYPE_ALIASES[upper]
+    return raw
+
+
+def _normalize_candidate_options(item: dict[str, Any]) -> dict[str, Any]:
+    """Accept sheet-style polls: question + string options → prompt + [{label, isCorrect}]."""
+    out = dict(item)
+    if not str(out.get("prompt") or "").strip() and out.get("question"):
+        out["prompt"] = str(out["question"]).strip()
+    options = out.get("options")
+    if not isinstance(options, list) or not options:
+        return out
+    if all(isinstance(opt, dict) for opt in options):
+        return out
+    if not all(isinstance(opt, str) for opt in options):
+        return out
+    mapped = [{"label": opt.strip(), "isCorrect": False} for opt in options if str(opt).strip()]
+    out["options"] = mapped
+    if not str(out.get("format") or "").strip():
+        out["format"] = FORMAT_POLL
+    if not str(out.get("type") or "").strip():
+        out["type"] = "predict" if len(mapped) == 2 else "pulse"
+    return out
 
 
 def _reject(

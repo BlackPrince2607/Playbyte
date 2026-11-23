@@ -11,7 +11,7 @@ import { SwipeHintOverlay } from "../../components/SwipeHintOverlay";
 import { isMoment, useApp } from "../../context/AppContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { capture } from "../../lib/analytics";
-import { getDailyFeaturedGame } from "../../lib/dailyFeatured";
+import { getDailyFeaturedGame, markDailyFeaturedPlayed } from "../../lib/dailyFeatured";
 import { prefetchGame } from "../../game/platform/prefetchGame";
 import type { CompletedPlay } from "../../game/session/types";
 import { FEED_PREFETCH_AHEAD, feedKeys } from "../../lib/feedPages";
@@ -77,6 +77,8 @@ export function FeedScreen({
   const listRef = useRef<FlatList<FeedItem>>(null);
   /** Page the list is showing, so programmatic jumps (Live tab, refresh) only scroll when needed. */
   const shownIndex = useRef(feedIndex);
+  /** Last Feed-tab “jump to top” nonce we handled — ignore later length/layout churn. */
+  const handledTopNonce = useRef(0);
   const itemsRef = useRef(items);
   itemsRef.current = items;
   const viewedIds = useRef(new Set<string>());
@@ -84,6 +86,8 @@ export function FeedScreen({
   const [swipeHintFrom, setSwipeHintFrom] = useState<number | null>(null);
   const [featured, setFeatured] = useState<FeedGame | null>(null);
   const featuredTracked = useRef(false);
+  /** Lock paging while in-feed trivia is mid-round so PLAY can't accidentally swipe away. */
+  const [guessLocked, setGuessLocked] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -136,8 +140,12 @@ export function FeedScreen({
   }, [feedIndex, items.length, pageH]);
 
   // Feed tab pressed again while already on Feed → jump to the first card.
+  // Only consume each nonce once; deps include pageH/items so we can wait until the list is ready
+  // without re-jumping when soft-refresh / load-more grows the feed.
   useEffect(() => {
-    if (!feedTopNonce || !pageH || items.length === 0) return;
+    if (!feedTopNonce || feedTopNonce === handledTopNonce.current) return;
+    if (!pageH || items.length === 0) return;
+    handledTopNonce.current = feedTopNonce;
     shownIndex.current = 0;
     setFeedIndex(0);
     listRef.current?.scrollToIndex({ index: 0, animated: true });
@@ -171,7 +179,7 @@ export function FeedScreen({
   }, []);
 
   const onPull = useCallback(() => {
-    if (pullLock.current) return;
+    if (guessLocked || pullLock.current) return;
     pullLock.current = true;
     setPulling(true);
     // Drop the native spinner immediately so the feed isn't frozen waiting on the network.
@@ -188,9 +196,21 @@ export function FeedScreen({
         setPulling(false);
         pullLock.current = false;
       });
-  }, [refreshFeed, setFeedIndex]);
+  }, [guessLocked, refreshFeed, setFeedIndex]);
 
   const onLayout = (e: LayoutChangeEvent) => setPageH(Math.round(e.nativeEvent.layout.height));
+
+  // Locking scroll mid-gesture can leave the list between pages (blank ink). Snap back.
+  useEffect(() => {
+    if (!guessLocked || !pageH || itemsRef.current.length === 0) return;
+    const index = Math.min(Math.max(0, shownIndex.current), itemsRef.current.length - 1);
+    const snap = () => listRef.current?.scrollToIndex({ index, animated: false });
+    try {
+      snap();
+    } catch {
+      requestAnimationFrame(snap);
+    }
+  }, [guessLocked, pageH]);
 
   if (feedLoading && items.length === 0) {
     return (
@@ -231,7 +251,12 @@ export function FeedScreen({
           ref={listRef}
           data={items}
           keyExtractor={(_, index) => keys[index]}
-          extraData={`${feedIndex}:${isFeedTabActive}`}
+          extraData={`${feedIndex}:${isFeedTabActive}:${guessLocked ? 1 : 0}`}
+          onScrollToIndexFailed={({ index }) => {
+            requestAnimationFrame(() => {
+              listRef.current?.scrollToIndex({ index, animated: false });
+            });
+          }}
           renderItem={({ item, index }) => {
             if (isMoment(item)) {
               return (
@@ -254,6 +279,7 @@ export function FeedScreen({
                     onChallengeGame ? (challenge) => onChallengeGame(item, challenge) : undefined
                   }
                   onSignIn={onSignIn}
+                  onPlayingChange={setGuessLocked}
                 />
               );
             }
@@ -273,6 +299,10 @@ export function FeedScreen({
           getItemLayout={(_, index) => ({ length: pageH, offset: pageH * index, index })}
           initialScrollIndex={Math.min(Math.max(0, feedIndex), items.length - 1)}
           pagingEnabled
+          scrollEnabled={!guessLocked}
+          // Android defaults this true; with paging + scroll lock it can detach the
+          // visible cell after PLAY and leave a blank ink page under the chrome.
+          removeClippedSubviews={false}
           decelerationRate="fast"
           showsVerticalScrollIndicator={false}
           initialNumToRender={3}
@@ -287,6 +317,9 @@ export function FeedScreen({
             <RefreshControl
               refreshing={pulling}
               onRefresh={onPull}
+              // Keep mounted while locked — swapping RefreshControl out jumps the list and
+              // flickers viewability, which blanked / reset in-feed PLAY.
+              enabled={!guessLocked}
               tintColor={colors.lime}
               colors={[colors.lime]}
               progressBackgroundColor={colors.card}
@@ -305,6 +338,8 @@ export function FeedScreen({
             game={featured}
             onPlay={(game) => {
               capture("daily_featured_played", { game_id: game.key });
+              setFeatured(null);
+              void markDailyFeaturedPlayed();
               onPlayGame(game);
             }}
           />

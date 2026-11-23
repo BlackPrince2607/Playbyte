@@ -1,7 +1,5 @@
-from io import BytesIO
 from uuid import UUID, uuid4
 
-from PIL import Image, ImageDraw
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +8,7 @@ from app.common.errors import AppError
 from app.infrastructure.postgres.models import GamePlay, MiniGame, Moment, MomentOption, Response, ShareCard
 from app.infrastructure.storage.objects import get_object_storage
 from app.modules.games.scoring import percentile
+from app.modules.sharing.render import CARD_VERSION, render_moment_card, render_play_card
 
 
 def _storage_or_503():
@@ -39,7 +38,10 @@ async def _upload_png(storage, key: str, png: bytes) -> str:
 async def moment_share_card(session: AsyncSession, actor: Actor, moment_id: UUID) -> dict:
     storage = _storage_or_503()
 
-    stmt = select(ShareCard).where(ShareCard.moment_id == moment_id)
+    stmt = select(ShareCard).where(
+        ShareCard.moment_id == moment_id,
+        ShareCard.asset_key.like(f"share/{CARD_VERSION}/%"),
+    )
     if actor.user_id:
         stmt = stmt.where(ShareCard.user_id == actor.user_id)
     else:
@@ -63,8 +65,8 @@ async def moment_share_card(session: AsyncSession, actor: Actor, moment_id: UUID
     if response is None:
         raise AppError("forbidden", "Share is available after you respond.", 403)
     option = await session.get(MomentOption, response.option_id)
-    png = _render_moment(moment.prompt, option.label if option else "?")
-    key = f"share/{moment_id}/{uuid4().hex}.png"
+    png = render_moment_card(moment.prompt, option.label if option else "?")
+    key = f"share/{CARD_VERSION}/{moment_id}/{uuid4().hex}.png"
     url = await _upload_png(storage, key, png)
     session.add(
         ShareCard(
@@ -90,8 +92,11 @@ async def play_share_card(session: AsyncSession, actor: Actor, game_key: str, pl
     if not owns:
         raise AppError("forbidden", "Share is available for your own plays.", 403)
 
-    # One cached card per play path: reuse if we already rendered this exact play.
-    stmt = select(ShareCard).where(ShareCard.game_key == game_key, ShareCard.asset_key.like(f"share/plays/{play_id}/%"))
+    # One cached card per play + design version: reuse only matching vN assets.
+    stmt = select(ShareCard).where(
+        ShareCard.game_key == game_key,
+        ShareCard.asset_key.like(f"share/{CARD_VERSION}/plays/{play_id}/%"),
+    )
     if actor.user_id:
         stmt = stmt.where(ShareCard.user_id == actor.user_id)
     else:
@@ -124,8 +129,8 @@ async def play_share_card(session: AsyncSession, actor: Actor, game_key: str, pl
         pct = percentile(play.score, scores, lower_is_better=direction == "lower_is_better")
         pct_line = f"Better than {pct:.0f}% of players"
 
-    png = _render_play(title, play.score, detail=line, brag=pct_line)
-    key = f"share/plays/{play_id}/{uuid4().hex}.png"
+    png = render_play_card(title, play.score, detail=line, brag=pct_line)
+    key = f"share/{CARD_VERSION}/plays/{play_id}/{uuid4().hex}.png"
     url = await _upload_png(storage, key, png)
     session.add(
         ShareCard(
@@ -139,41 +144,11 @@ async def play_share_card(session: AsyncSession, actor: Actor, game_key: str, pl
     return {"assetUrl": url, "deepLink": f"maja://games/{game_key}"}
 
 
-def _render_moment(prompt: str, answer: str) -> bytes:
-    img = Image.new("RGB", (1080, 1350), "#150E2B")
-    draw = ImageDraw.Draw(img)
-    draw.rounded_rectangle((60, 80, 1020, 1270), radius=48, fill="#211540")
-    draw.text((100, 140), "MAJA", fill="#FF4D8D")
-    draw.text((100, 280), prompt[:80], fill="#F5F0FF")
-    draw.text((100, 520), f"I chose {answer}", fill="#C6FF3D")
-    draw.text((100, 1100), "Join the crowd", fill="#8F7FC0")
-    buf = BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
+# Back-compat for existing tests
+def _render(prompt: str, answer: str) -> bytes:
+    return render_moment_card(prompt, answer)
 
 
 def _render_play(title: str, score: int, *, detail: str | None = None, brag: str | None = None) -> bytes:
-    img = Image.new("RGB", (1080, 1350), "#150E2B")
-    draw = ImageDraw.Draw(img)
-    draw.rounded_rectangle((60, 80, 1020, 1270), radius=48, fill="#211540")
-    draw.text((100, 140), "MAJA", fill="#FF4D8D")
-    draw.text((100, 260), (title or "Game")[:48], fill="#F5F0FF")
-    draw.text((100, 420), "I scored", fill="#8F7FC0")
-    draw.text((100, 520), str(score), fill="#C6FF3D")
-    y = 700
-    if detail:
-        draw.text((100, y), detail[:60], fill="#F5F0FF")
-        y += 80
-    if brag:
-        draw.text((100, y), brag[:60], fill="#F5F0FF")
-    draw.text((100, 1100), "Can you beat me?", fill="#8F7FC0")
-    draw.text((100, 1180), "Play on MAJA", fill="#FF4D8D")
-    buf = BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
-
-
-# Back-compat for existing tests
-def _render(prompt: str, answer: str) -> bytes:
-    return _render_moment(prompt, answer)
+    return render_play_card(title, score, detail=detail, brag=brag)
 

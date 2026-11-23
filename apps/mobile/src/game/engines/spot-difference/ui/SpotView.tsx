@@ -154,12 +154,21 @@ function Picture({
   );
 }
 
-export function SpotView({ state, dispatch, requestHint, snapshot, resolveAsset }: EngineViewProps<SpotState, SpotAction>) {
+export function SpotView({
+  state,
+  dispatch,
+  requestHint,
+  snapshot,
+  resolveAsset,
+  compact,
+  hideHints,
+}: EngineViewProps<SpotState, SpotAction>) {
   const { t } = useLanguage();
   const [box, setBox] = useState({ w: 0, h: 0 });
   const onLayout = (e: LayoutChangeEvent) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
   const aspect = state.aspect || ASPECT;
-  const width = Math.floor(Math.min(box.w, Math.max(0, box.h - spacing.sm) / (2 * aspect)));
+  const stackGap = compact ? spacing.xs : spacing.sm;
+  const width = Math.floor(Math.min(box.w, Math.max(0, box.h - stackGap) / (2 * aspect)));
   const playing = snapshot.status === "playing";
 
   const foundN = state.found.length;
@@ -176,16 +185,18 @@ export function SpotView({ state, dispatch, requestHint, snapshot, resolveAsset 
   const rightUri = state.rightUrl ? resolveAsset(state.rightUrl) : "";
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: spacing.margin, gap: spacing.sm }}>
+    <View style={{ flex: 1, paddingHorizontal: compact ? 0 : spacing.margin, gap: compact ? spacing.xs : spacing.sm, minHeight: 0 }}>
       <View style={styles.header}>
-        <Text style={[type.bodySm, { color: colors.lilac }]}>{t("spotTapHint")}</Text>
+        <Text style={[type.bodySm, { color: colors.lilac, flex: 1 }]} numberOfLines={compact ? 1 : 2}>
+          {t("spotTapHint")}
+        </Text>
         <View style={styles.dots} accessibilityLabel={`${foundN} of ${state.diffs.length} found`}>
           {state.diffs.map((d, i) => (
-            <View key={d.id} style={[styles.dot, i < foundN && { backgroundColor: colors.lime, borderColor: colors.lime }]} />
+            <View key={d.id} style={[styles.dot, compact && styles.dotCompact, i < foundN && { backgroundColor: colors.lime, borderColor: colors.lime }]} />
           ))}
         </View>
       </View>
-      <View style={{ flex: 1, alignItems: "center", gap: spacing.sm }} onLayout={onLayout}>
+      <View style={{ flex: 1, alignItems: "center", gap: stackGap, minHeight: 0 }} onLayout={onLayout}>
         {width > 0 ? (
           <>
             <Picture uri={leftUri} side="left" width={width} aspect={aspect} label="A" state={state} onTap={tap} enabled={playing} />
@@ -193,7 +204,7 @@ export function SpotView({ state, dispatch, requestHint, snapshot, resolveAsset 
           </>
         ) : null}
       </View>
-      <HintBar hints={snapshot.hints} onHint={requestHint} />
+      {hideHints ? null : <HintBar hints={snapshot.hints} onHint={requestHint} />}
       {state.roundOver ? (
         <Text style={[type.bodyLg, { color: foundN >= state.diffs.length ? colors.lime : colors.pink, textAlign: "center" }]} accessibilityLiveRegion="polite">
           {foundN >= state.diffs.length
@@ -209,6 +220,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   dots: { flexDirection: "row", gap: 6 },
   dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: colors.lilac },
+  dotCompact: { width: 9, height: 9, borderRadius: 5 },
   picture: { borderRadius: radius.md, overflow: "hidden", borderWidth: 1, borderColor: colors.line, backgroundColor: colors.ink },
   placeholder: { position: "absolute", left: 0, top: 0, backgroundColor: "#1b1440" },
   errorBox: { alignItems: "center", justifyContent: "center", padding: spacing.sm },

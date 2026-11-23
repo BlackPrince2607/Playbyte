@@ -1,15 +1,15 @@
-import type { EngineEvent, EngineMeta, GameEngine, ReduceResult } from "../../../core/engine";
+import type { EngineEvent, EngineMeta, GameEngine } from "../../../core/engine";
 import { Json, Result, err, invalid, ok, valid } from "../../../core/types";
 import { interpolate } from "../../../difficulty/controllers";
 import type { DifficultyModel, DimensionSpec } from "../../../difficulty/types";
 import { addBreakdown, applyPct, difficultyMultiplier, streakBonus } from "../../../scoring";
-import { Cell, Dir, arrowCount, generateBoard, isCell, isFree, nextBoardSize } from "./board";
+import { Cell, Dir, arrowCount, generateBoard, isCell, isFree } from "./board";
 
 export type ArrowParams = { size: number; fill: number };
 export type ArrowAction = { type: "tap"; index: number };
 
 export type ArrowState = {
-  v: 1;
+  v: 2;
   variation: string;
   round: number;
   score: number;
@@ -18,18 +18,20 @@ export type ArrowState = {
   cleared: number;
   attempts: number;
   misses: number;
-  boards: number;
+  /** Arrows on the board when the round started (for progress UI). */
+  total: number;
   cols: number;
   rows: number;
   fill: number;
   cells: Cell[];
   /** Last tap, so the view can flash a blocked arrow. */
   flash: { index: number; ok: boolean } | null;
-  limitMs: number;
   lastAt: number;
   roundStart: number;
-  roundEnd: number;
-  roundLimitMs: number;
+  /** Extra ms added to finish time for blocked taps. */
+  penaltyMs: number;
+  /** Wall+penalty ms when the board cleared; null while playing. */
+  finishMs: number | null;
   roundOver: boolean;
   level: number;
   breakdown: Record<string, number>;
@@ -43,24 +45,26 @@ export const ARROW_DIMENSIONS: (DimensionSpec & { key: keyof ArrowParams })[] = 
 export const ARROW_POINTS = 10;
 export const STREAK_STEP = 1;
 export const STREAK_CAP = 5;
-export const BOARD_BONUS = 40;
+export const CLEAR_BONUS = 40;
 export const BLOCK_MS = 1000;
+/** Platform score = this minus finish ms, so faster clears rank higher. */
+export const TIME_SCORE_CAP = 180_000;
 
-/** Fastest plausible tap, and the smallest board, used only to cap the theoretical score. */
-const MIN_TAP_MS = 120;
-const MIN_BOARD_ARROWS = 8;
-/** Soft ceiling for maxScore: skilled runs clear many boards with a fresh clock each time. */
-const MAX_SCORE_BOARDS = 20;
-
-export type ArrowVariation = { /** Per-board clock; resets when a board is cleared. */ durationMs: number };
+export type ArrowVariation = {
+  /** Added to difficulty size before clamping (harder boards). */
+  sizeBoost?: number;
+  /** Added to fill density (harder boards). */
+  fillBoost?: number;
+};
 
 const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
 
 function isArrowState(x: unknown): x is ArrowState {
-  if (!isObj(x) || x.v !== 1 || typeof x.variation !== "string") return false;
-  const nums = ["round", "score", "streak", "bestStreak", "cleared", "attempts", "misses", "boards", "cols", "rows", "fill", "limitMs", "lastAt", "roundStart", "roundEnd", "roundLimitMs", "level"];
+  if (!isObj(x) || x.v !== 2 || typeof x.variation !== "string") return false;
+  const nums = ["round", "score", "streak", "bestStreak", "cleared", "attempts", "misses", "total", "cols", "rows", "fill", "lastAt", "roundStart", "penaltyMs", "level"];
   if (!nums.every((k) => typeof x[k] === "number" && Number.isFinite(x[k] as number))) return false;
   if (typeof x.roundOver !== "boolean" || !Array.isArray(x.cells)) return false;
+  if (x.finishMs !== null && (typeof x.finishMs !== "number" || !Number.isFinite(x.finishMs))) return false;
   const cols = x.cols as number;
   const rows = x.rows as number;
   if (cols < 1 || rows < 1 || x.cells.length !== cols * rows) return false;
@@ -70,11 +74,15 @@ function isArrowState(x: unknown): x is ArrowState {
   return isObj(x.breakdown);
 }
 
-export function maxArrowScore(perBoardMs: number): number {
-  const taps = Math.floor((perBoardMs * MAX_SCORE_BOARDS) / MIN_TAP_MS);
+export function maxArrowScore(): number {
+  // Theoretical ceiling: near-instant clear of a dense 6×6 with full streak + clear bonus.
+  const taps = 36;
   const per = applyPct(ARROW_POINTS + STREAK_CAP, difficultyMultiplier(1));
-  const boards = Math.ceil(taps / MIN_BOARD_ARROWS);
-  return taps * per + boards * BOARD_BONUS;
+  return taps * per + CLEAR_BONUS + TIME_SCORE_CAP;
+}
+
+export function finishScore(finishMs: number): number {
+  return Math.max(0, TIME_SCORE_CAP - Math.max(0, Math.round(finishMs)));
 }
 
 export function createArrowEngine(meta: EngineMeta, variations: Record<string, ArrowVariation>): GameEngine<ArrowState, ArrowAction, ArrowParams> {
@@ -84,14 +92,6 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
     defaultController: "staircase",
   };
   const vOf = (id: string) => variations[id];
-
-  function close(s: ArrowState): ReduceResult<ArrowState> {
-    return {
-      state: { ...s, roundOver: true, flash: null, streak: 0 },
-      outcome: { correct: false, responseMs: 0, mistakes: 1 },
-      events: [{ name: "arrow_timeout", props: { cleared: s.cleared, boards: s.boards } }],
-    };
-  }
 
   return {
     meta,
@@ -106,16 +106,11 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
 
     contentNeeds: () => [],
 
-    maxScore(def) {
-      const v = vOf(def.variation);
-      return v ? maxArrowScore(v.durationMs) : 1;
-    },
+    maxScore: () => maxArrowScore(),
 
     init(ctx) {
-      const v = vOf(ctx.def.variation);
-      const limitMs = Math.round((ctx.def.timeLimitSec ?? v.durationMs / 1000) * 1000);
       return {
-        v: 1,
+        v: 2,
         variation: ctx.def.variation,
         round: 0,
         score: 0,
@@ -124,17 +119,16 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
         cleared: 0,
         attempts: 0,
         misses: 0,
-        boards: 0,
+        total: 0,
         cols: 0,
         rows: 0,
         fill: 0,
         cells: [],
         flash: null,
-        limitMs,
         lastAt: ctx.now,
         roundStart: ctx.now,
-        roundEnd: ctx.now,
-        roundLimitMs: limitMs,
+        penaltyMs: 0,
+        finishMs: null,
         roundOver: false,
         level: ctx.def.difficulty.start,
         breakdown: {},
@@ -142,23 +136,26 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
     },
 
     generateRound(s, { rng, params, level, now }) {
-      const size = Math.max(4, Math.min(6, Math.round(params.size)));
+      const v = vOf(s.variation) ?? {};
+      const size = Math.max(4, Math.min(6, Math.round(params.size + (v.sizeBoost ?? 0))));
       const cols = size;
       const rows = size;
-      const fill = Math.round(params.fill * 100) / 100;
+      const fill = Math.round(Math.min(0.85, params.fill + (v.fillBoost ?? 0)) * 100) / 100;
+      const cells = generateBoard(rng, cols, rows, fill);
       return {
         ...s,
         round: s.round + 1,
         cols,
         rows,
         fill,
-        cells: generateBoard(rng, cols, rows, fill),
+        cells,
+        total: arrowCount(cells),
         flash: null,
         streak: 0,
         lastAt: now,
         roundStart: now,
-        roundEnd: now + s.limitMs,
-        roundLimitMs: s.limitMs,
+        penaltyMs: 0,
+        finishMs: null,
         roundOver: false,
         level,
       };
@@ -172,11 +169,9 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
       return valid;
     },
 
-    reduce(s, a, { rng, now }) {
+    reduce(s, a, { now }) {
       const dir = s.cells[a.index] as Dir;
       if (!isFree(s.cells, s.cols, s.rows, a.index)) {
-        const roundEnd = s.roundEnd - BLOCK_MS;
-        const over = roundEnd <= now;
         return {
           state: {
             ...s,
@@ -184,12 +179,11 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
             attempts: s.attempts + 1,
             streak: 0,
             lastAt: now,
-            roundEnd: over ? now : roundEnd,
-            roundOver: over,
-            flash: over ? null : { index: a.index, ok: false },
+            penaltyMs: s.penaltyMs + BLOCK_MS,
+            flash: { index: a.index, ok: false },
           },
           outcome: { correct: false, responseMs: Math.max(0, now - s.lastAt), mistakes: 1 },
-          events: [{ name: over ? "arrow_timeout" : "arrow_blocked", props: { index: a.index, dir } }],
+          events: [{ name: "arrow_blocked", props: { index: a.index, dir } }],
         };
       }
 
@@ -198,37 +192,34 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
       const streak = s.streak + 1;
       const base = applyPct(ARROW_POINTS, difficultyMultiplier(s.level));
       const streakPts = streakBonus(streak, STREAK_STEP, STREAK_CAP);
-      let boardBonus = 0;
-      let cols = s.cols;
-      let rows = s.rows;
-      let fill = s.fill;
-      let boards = s.boards;
-      let nextCells = cells;
-      if (arrowCount(cells) === 0) {
-        boards += 1;
-        boardBonus = BOARD_BONUS;
-        const grown = nextBoardSize(cols, rows, fill, boards);
-        cols = grown.cols;
-        rows = grown.rows;
-        fill = grown.fill;
-        nextCells = generateBoard(rng, cols, rows, fill);
-      }
-      const points = base + streakPts + boardBonus;
-      const breakdown = addBreakdown(s.breakdown, { base, streak: streakPts, ...(boardBonus ? { clear: boardBonus } : {}) });
+      const remaining = arrowCount(cells);
+      const clearedBoard = remaining === 0;
+      let clearBonus = 0;
+      let timePts = 0;
+      let finishMs: number | null = null;
+      let roundOver = false;
       const events: EngineEvent[] = [{ name: "arrow_clear", props: { index: a.index, dir } }];
-      if (boardBonus) events.push({ name: "arrow_board", props: { boards } });
-      // Fresh board → fresh clock (same as quiz/choice per-screen timers).
-      const nextClock = boardBonus
-        ? { roundStart: now, roundEnd: now + s.limitMs, roundLimitMs: s.limitMs }
-        : {};
+
+      if (clearedBoard) {
+        finishMs = Math.max(0, now - s.roundStart) + s.penaltyMs;
+        clearBonus = CLEAR_BONUS;
+        timePts = finishScore(finishMs);
+        roundOver = true;
+        events.push({ name: "arrow_board", props: { finishMs, penaltyMs: s.penaltyMs } });
+      }
+
+      const points = base + streakPts + clearBonus + timePts;
+      const breakdown = addBreakdown(s.breakdown, {
+        base,
+        streak: streakPts,
+        ...(clearBonus ? { clear: clearBonus } : {}),
+        ...(timePts ? { speed: timePts } : {}),
+      });
+
       return {
         state: {
           ...s,
-          cells: nextCells,
-          cols,
-          rows,
-          fill,
-          boards,
+          cells,
           cleared: s.cleared + 1,
           attempts: s.attempts + 1,
           streak,
@@ -236,17 +227,17 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
           score: s.score + points,
           lastAt: now,
           flash: { index: a.index, ok: true },
+          finishMs,
+          roundOver,
           breakdown,
-          ...nextClock,
         },
         outcome: { correct: true, responseMs: Math.max(0, now - s.lastAt), points },
         events,
       };
     },
 
-    tick(s, { now }) {
-      if (s.roundOver || now < s.roundEnd) return { state: s };
-      return close(s);
+    tick(s) {
+      return { state: s };
     },
 
     hints: () => [],
@@ -255,10 +246,10 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
 
     progress: (s) => ({
       round: Math.max(1, s.round),
-      totalRounds: null,
+      totalRounds: 1,
       score: s.score,
       streak: s.streak,
-      deadline: s.roundOver ? undefined : s.roundEnd,
+      deadline: undefined,
     }),
 
     result: (s) => ({
@@ -269,7 +260,8 @@ export function createArrowEngine(meta: EngineMeta, variations: Record<string, A
         ...s.breakdown,
         cleared: s.cleared,
         ...(s.misses ? { blocked: s.misses } : {}),
-        ...(s.boards ? { boards: s.boards } : {}),
+        ...(s.finishMs != null ? { finishMs: s.finishMs } : {}),
+        ...(s.penaltyMs ? { penaltyMs: s.penaltyMs } : {}),
         ...(s.bestStreak ? { bestStreak: s.bestStreak } : {}),
       },
     }),

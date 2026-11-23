@@ -24,10 +24,13 @@ import { localizeGame } from "./i18n/games";
 import { nextGame } from "./game/discovery";
 import { startGameAnalytics } from "./game/platform/analytics";
 import { randomSeed } from "./game/core/rng";
+import { engineRegistry } from "./game/engines";
+import { registerEngines } from "./game/engines/manifest";
 import { sessionStore, submitQueue } from "./game/platform/services";
 import { savePlay as submitAndDescribe, type SaveOutcome } from "./game/session/submitQueue";
 import type { CompletedPlay, GameSession } from "./game/session/types";
 import { GameHost } from "./game/ui/GameHost";
+import type { EngineHowToProps } from "./game/ui/types";
 import { FeedScreen } from "./screens/feed/FeedScreen";
 import { PostGameResultScreen } from "./screens/feed/PostGameResultScreen";
 import { StreakScreen } from "./screens/feed/StreakScreen";
@@ -43,6 +46,11 @@ import { SettingsScreen } from "./screens/profile/SettingsScreen";
 import { WeeklyRecapScreen } from "./screens/profile/WeeklyRecapScreen";
 import { SignInScreen } from "./screens/auth/SignInScreen";
 import { useAuth } from "./context/AuthContext";
+import {
+  hasSeenEngineHowTo,
+  markEngineHowToSeen,
+  shouldOfferPostPlayHowTo,
+} from "./lib/howtoStorage";
 import { clearLocalSupabaseSession, isSupabaseConfigured } from "./lib/supabase";
 import {
   capture,
@@ -61,6 +69,11 @@ type DuelOpponent = { displayName: string; avatarKey: string | null };
 type ActiveChallenge = { id: string; seed: string; opponent?: DuelOpponent };
 type ActiveMatch = { id: string; seed: string; opponent?: DuelOpponent };
 type GameResult = SaveOutcome & { game: FeedGame; play: CompletedPlay };
+type PendingPostPlayHowTo = {
+  engineId: string;
+  title: string;
+  HowTo: ComponentType<EngineHowToProps>;
+};
 
 function rivalFromMatch(m: OnlineMatch | ActiveMatch | null | undefined): DuelOpponent | undefined {
   if (!m) return undefined;
@@ -184,6 +197,8 @@ export function MainShell() {
   const [activeMatch, setActiveMatch] = useState<ActiveMatch | null>(null);
   const [onlineSearchGame, setOnlineSearchGame] = useState<FeedGame | null>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
+  /** First completed inline play of an engine — HowTo before result. */
+  const [pendingPostPlayHowTo, setPendingPostPlayHowTo] = useState<PendingPostPlayHowTo | null>(null);
   const [retryingSave, setRetryingSave] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showInterests, setShowInterests] = useState(false);
@@ -391,6 +406,7 @@ export function MainShell() {
       play: CompletedPlay,
       challenge?: ActiveChallenge | null,
       match?: ActiveMatch | null,
+      opts?: { offerPostPlayHowTo?: boolean },
     ) => {
       let tagged = play;
       if (challenge && !tagged.challengeId) tagged = { ...tagged, challengeId: challenge.id };
@@ -438,7 +454,27 @@ export function MainShell() {
               opponentAvatarKey: challenge.opponent?.avatarKey ?? null,
             }
           : undefined;
+
+      let teach: PendingPostPlayHowTo | null = null;
+      if (opts?.offerPostPlayHowTo && tagged.engine) {
+        try {
+          const alreadySeen = await hasSeenEngineHowTo(tagged.engine);
+          registerEngines();
+          const mod = await engineRegistry.load(tagged.engine);
+          if (shouldOfferPostPlayHowTo({ hasHowTo: !!mod.HowTo, alreadySeen }) && mod.HowTo) {
+            teach = {
+              engineId: tagged.engine,
+              title: localizeGame(game, language).title,
+              HowTo: mod.HowTo,
+            };
+          }
+        } catch {
+          teach = null;
+        }
+      }
+
       // Result screen before clearing submitting so inline Guess never flashes the feed.
+      setPendingPostPlayHowTo(teach);
       setGameResult({
         ...outcome,
         game,
@@ -457,7 +493,7 @@ export function MainShell() {
         playId: tagged.sessionId,
       });
     },
-    [savePlay, noteEarn],
+    [savePlay, noteEarn, language],
   );
 
   const submitGamePlay = useCallback(
@@ -470,10 +506,16 @@ export function MainShell() {
 
   const submitInlineGuess = useCallback(
     async (game: FeedGame, play: CompletedPlay) => {
-      await finishPlay(game, play, null);
+      await finishPlay(game, play, null, null, { offerPostPlayHowTo: true });
     },
     [finishPlay],
   );
+
+  const dismissPostPlayHowTo = useCallback(() => {
+    const engineId = pendingPostPlayHowTo?.engineId;
+    setPendingPostPlayHowTo(null);
+    if (engineId) void markEngineHowToSeen(engineId);
+  }, [pendingPostPlayHowTo?.engineId]);
 
   const retrySave = useCallback(async () => {
     if (!gameResult || retryingSave) return;
@@ -541,7 +583,12 @@ export function MainShell() {
         // GameHost owns back while a game is on screen (pause menu / exit).
         return false;
       }
+      if (gameResult && pendingPostPlayHowTo) {
+        dismissPostPlayHowTo();
+        return true;
+      }
       if (gameResult) {
+        setPendingPostPlayHowTo(null);
         setGameResult(null);
         return true;
       }
@@ -577,6 +624,8 @@ export function MainShell() {
     playing,
     gameSubmitting,
     gameResult,
+    pendingPostPlayHowTo,
+    dismissPostPlayHowTo,
     showLeaderboard,
     showNotif,
     showInterests,
@@ -789,6 +838,15 @@ export function MainShell() {
     );
   }
 
+  if (gameResult && pendingPostPlayHowTo) {
+    const HowTo = pendingPostPlayHowTo.HowTo;
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.ink }}>
+        <HowTo title={pendingPostPlayHowTo.title} onDone={dismissPostPlayHowTo} />
+      </View>
+    );
+  }
+
   if (gameResult) {
     const upNext = nextGame(
       items.filter((i): i is FeedGame => i.type === "mini_game"),
@@ -848,6 +906,7 @@ export function MainShell() {
                 : undefined
           }
           onBackToFeed={() => {
+            setPendingPostPlayHowTo(null);
             setGameResult(null);
             void refreshWallet();
             void maybeDay0Appointment();
