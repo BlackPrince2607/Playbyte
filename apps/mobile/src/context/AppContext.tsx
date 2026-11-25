@@ -805,9 +805,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const current = itemsRef.current.find(
         (i): i is FeedMoment => i.type === "moment" && i.id === momentId,
       );
-      if (current && !current.myOptionId) {
+      const isScoredQuiz =
+        current?.scoringMode === "correct_option" ||
+        Boolean(current?.tags?.some((t) => t.slug === "quiz" || t.slug === "trivia"));
+      // Polls paint instantly. Quizzes wait for correctOptionId so UI can jump to correct/wrong.
+      if (current && !current.myOptionId && !isScoredQuiz) {
         setItems((prev) => patchMoment(prev, momentId, scoreLocalVote(current, optionId)));
-      } else if (current && current.myOptionId !== optionId) {
+      } else if (current && current.myOptionId && current.myOptionId !== optionId) {
         setItems((prev) => patchMoment(prev, momentId, { myOptionId: optionId }));
       }
       void saveLocalResponse(momentId, optionId).catch(() => {});
@@ -830,6 +834,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         const message = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : tRef.current("couldNotSubmit");
         // Keep the local pick + scored result so the card stays answered offline.
+        if (current && !current.myOptionId && isScoredQuiz) {
+          setItems((prev) => patchMoment(prev, momentId, scoreLocalVote(current, optionId)));
+        }
         return { ok: false, message };
       } finally {
         respondingRef.current.delete(momentId);

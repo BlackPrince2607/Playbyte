@@ -16,6 +16,7 @@ import { formatCount } from "../../api";
 import { AvatarImage } from "../../components/AvatarImage";
 import { FeedTopBar } from "../../components/FeedTopBar";
 import { useApp } from "../../context/AppContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { prefersReducedMotion } from "../../game/ui/feedback";
 import { colors, radius, spacing, surface } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
@@ -60,7 +61,8 @@ function MysteryFace() {
 export function BattleHomeScreen({ onPlayRandom, onChallengeFriend, onHistory, onProfile }: Props) {
   const insets = useSafeAreaInsets();
   const { me, friends, wallet, streak } = useApp();
-  const youName = me?.displayName ?? "You";
+  const { t, fonts: ui } = useLanguage();
+  const youName = me?.displayName ?? t("youName");
   const friendCount = friends.length;
   const reduced = prefersReducedMotion();
 
@@ -87,7 +89,7 @@ export function BattleHomeScreen({ onPlayRandom, onChallengeFriend, onHistory, o
           </View>
           <View style={styles.countPill}>
             <Ionicons name="people" size={14} color={surface.lime} />
-            <Text style={[type.metadata, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
+            <Text style={[type.metadata, { color: colors.paper, fontFamily: ui.bodyBold }]}>
               {friendCount > 0 ? `${formatCount(friendCount)} friends` : "Ready"}
             </Text>
           </View>
@@ -118,7 +120,7 @@ export function BattleHomeScreen({ onPlayRandom, onChallengeFriend, onHistory, o
             style={({ pressed }) => [styles.ctaPink, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
           >
             <Ionicons name="game-controller" size={22} color={colors.paper} />
-            <Text style={[type.button, { color: colors.paper }]}>Play Now</Text>
+            <Text style={[type.button, { color: colors.paper, fontFamily: ui.bodyBold }]}>{t("playTrivia")}</Text>
           </Pressable>
         </Animated.View>
 
@@ -137,7 +139,7 @@ export function BattleHomeScreen({ onPlayRandom, onChallengeFriend, onHistory, o
               </View>
             </View>
           </View>
-          <Text style={[type.gameQuestion, styles.cardTitle]}>Challenge Friend</Text>
+          <Text style={[type.gameQuestion, styles.cardTitle]}>{t("challengeFriend")}</Text>
           <Text style={[type.bodySm, styles.cardHint]}>Pick someone from your friends list</Text>
           <Pressable
             accessibilityRole="button"
@@ -148,7 +150,7 @@ export function BattleHomeScreen({ onPlayRandom, onChallengeFriend, onHistory, o
             style={({ pressed }) => [styles.ctaLime, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
           >
             <Ionicons name="send" size={20} color={colors.ink} />
-            <Text style={[type.button, { color: colors.ink }]}>Challenge</Text>
+            <Text style={[type.button, { color: colors.ink, fontFamily: ui.bodyBold }]}>{t("challenge")}</Text>
           </Pressable>
         </Animated.View>
 
@@ -159,8 +161,8 @@ export function BattleHomeScreen({ onPlayRandom, onChallengeFriend, onHistory, o
             style={({ pressed }) => [styles.historyBtn, pressed && { opacity: 0.85 }]}
           >
             <Ionicons name="time-outline" size={18} color={colors.lilac} />
-            <Text style={[type.bodySm, { color: colors.lilac, fontFamily: fonts.bodyMedium }]}>
-              Battle History
+            <Text style={[type.bodySm, { color: colors.lilac, fontFamily: ui.bodyMedium }]}>
+              {t("battleHistoryTitle")}
             </Text>
             <Ionicons name="chevron-forward" size={16} color={colors.lilac} />
           </Pressable>

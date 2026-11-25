@@ -1,0 +1,966 @@
+{
+  "packId": "landmark",
+  "title": "लैंडमार्क्स",
+  "items": [
+    {
+      "id": "lm.taj_mahal.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "ताज महल",
+      "difficulty": 0.05,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🕌🤍"
+        }
+      ],
+      "hints": [
+        "सफ़ेद संगमरमर का मकबरा",
+        "शाहजहाँ ने मुमताज़ के लिए बनवाया",
+        "आगरा में खड़ा है"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.qutub_minar.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "कुतुब मीनार",
+      "difficulty": 0.25,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🗼🧱"
+        }
+      ],
+      "hints": [
+        "73 मीटर की ईंट मीनार",
+        "1199 में शुरू हुई",
+        "दिल्ली में है"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.india_gate.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "इंडिया गेट",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏛️🔥"
+        }
+      ],
+      "hints": [
+        "युद्ध स्मारक आर्क",
+        "नीचे अमर ज्योति जलती है",
+        "दिल्ली के कर्तव्य पथ पर"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.gateway.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "गेटवे ऑफ़ इंडिया",
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏛️🌊"
+        }
+      ],
+      "hints": [
+        "समुद्र किनारे का आर्क",
+        "किंग जॉर्ज पंचम के स्वागत में बना",
+        "मुंबई में अरब सागर की तरफ़"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.charminar.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "चारमीनार",
+      "difficulty": 0.25,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🕌4️⃣"
+        }
+      ],
+      "hints": [
+        "नाम का मतलब चार मीनारें",
+        "1591 में बना",
+        "हैदराबाद का सिंबल"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.hawa_mahal.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "हवा महल",
+      "difficulty": 0.3,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏰💨"
+        }
+      ],
+      "hints": [
+        "हवाओं का महल",
+        "953 छोटी खिड़कियाँ हैं",
+        "जयपुर में खड़ा है"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.golden_temple.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "स्वर्ण मंदिर",
+      "aliases": [
+        "हरमंदिर साहिब"
+      ],
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🛕✨"
+        }
+      ],
+      "hints": [
+        "लंगर रोज़ लगभग लाख लोगों को खिलाता है",
+        "पवित्र सरोवर से घिरा",
+        "अमृतसर में है"
+      ],
+      "distractorGroup": "india_temple",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.konark.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "कोणार्क सूर्य मंदिर",
+      "difficulty": 0.45,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "☀️🛕🛞"
+        }
+      ],
+      "hints": [
+        "विशाल रथ जैसा आकार",
+        "पत्थर के पहिए धूपघड़ी भी हैं",
+        "ओडिशा में है"
+      ],
+      "distractorGroup": "india_temple",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.meenakshi.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "मीनाक्षी मंदिर",
+      "difficulty": 0.45,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🛕🌈"
+        }
+      ],
+      "hints": [
+        "गोपुरम रंग-बिरंगी मूर्तियों से भरे",
+        "पार्वती और शिव को समर्पित",
+        "मदुरै में है"
+      ],
+      "distractorGroup": "india_temple",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.lotus_temple.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "लोटस टेम्पल",
+      "difficulty": 0.3,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🪷🏛️"
+        }
+      ],
+      "hints": [
+        "बहाई उपासना स्थल",
+        "27 पंखुड़ियों वाला फूल जैसा",
+        "दिल्ली में है"
+      ],
+      "distractorGroup": "india_temple",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.hampi.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "हम्पी",
+      "difficulty": 0.5,
+      "popularity": 0.65,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🪨🛕"
+        }
+      ],
+      "hints": [
+        "विजयनगर की राजधानी के खंडहर",
+        "पत्थर का रथ फेमस",
+        "कर्नाटक में है"
+      ],
+      "distractorGroup": "india_temple",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.victoria_memorial.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "विक्टोरिया मेमोरियल",
+      "difficulty": 0.4,
+      "popularity": 0.75,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏛️👑"
+        }
+      ],
+      "hints": [
+        "सफ़ेद संगमरमर का म्यूज़ियम हॉल",
+        "ब्रिटिश रानी को समर्पित",
+        "कोलकाता में है"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.statue_unity.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "स्टैच्यू ऑफ़ यूनिटी",
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🗿📏"
+        }
+      ],
+      "hints": [
+        "दुनिया की सबसे ऊँची मूर्ति",
+        "सरदार वल्लभभाई पटेल की",
+        "गुजरात में है"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.mysore_palace.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "मैसूर पैलेस",
+      "difficulty": 0.4,
+      "popularity": 0.75,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏰💡"
+        }
+      ],
+      "hints": [
+        "त्योहार पर लगभग लाख बल्ब जलते हैं",
+        "वाडियार वंश की सीट",
+        "कर्नाटक में है"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.red_fort.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "लाल क़िला",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏯🔴"
+        }
+      ],
+      "hints": [
+        "हर स्वतंत्रता दिवस पर पीएम यहीं बोलते हैं",
+        "शाहजहाँ ने बनवाया",
+        "पुरानी दिल्ली में है"
+      ],
+      "distractorGroup": "india_monument",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.eiffel.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "एफिल टॉवर",
+      "difficulty": 0.02,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🗼🇫🇷"
+        }
+      ],
+      "hints": [
+        "लोहे की जाली वाला टॉवर",
+        "1889 वर्ल्ड फ़ेयर के लिए बना",
+        "पेरिस में खड़ा है"
+      ],
+      "distractorGroup": "world_tower",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.burj_khalifa.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "बुर्ज खलीफ़ा",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏙️📏"
+        }
+      ],
+      "hints": [
+        "दुनिया की सबसे ऊँची बिल्डिंग",
+        "800 मीटर से ऊपर",
+        "दुबई में है"
+      ],
+      "distractorGroup": "world_tower",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.big_ben.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "बिग बेन",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🕰️🇬🇧"
+        }
+      ],
+      "hints": [
+        "असल में एक घंटी का नाम है",
+        "वेस्टमिंस्टर पैलेस का हिस्सा",
+        "लंदन में है"
+      ],
+      "distractorGroup": "world_tower",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.leaning_pisa.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "पीसा की झुकी मीनार",
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🗼↗️"
+        }
+      ],
+      "hints": [
+        "झुकी हुई घंटियों की मीनार",
+        "बनने में करीब 200 साल लगे",
+        "इटली में है"
+      ],
+      "distractorGroup": "world_tower",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.cn_tower.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "सीएन टॉवर",
+      "difficulty": 0.6,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🗼🇨🇦"
+        }
+      ],
+      "hints": [
+        "553 मीटर का कम्यूनिकेशन टॉवर",
+        "काँच का फ़्लोर है जहाँ खड़े हो सकते हो",
+        "टोरंटो में है"
+      ],
+      "distractorGroup": "world_tower",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.statue_liberty.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "स्टैच्यू ऑफ़ लिबर्टी",
+      "difficulty": 0.05,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🗽"
+        }
+      ],
+      "hints": [
+        "फ़्रांस का तोहफ़ा",
+        "हाथ में मशाल उठाए",
+        "न्यूयॉर्क हार्बर में"
+      ],
+      "distractorGroup": "world_statue",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.christ_redeemer.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "क्राइस्ट द रिडीमर",
+      "difficulty": 0.3,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "✝️⛰️"
+        }
+      ],
+      "hints": [
+        "खुली बाँहों वाली आर्ट डेको मूर्ति",
+        "फेमस बीच सिटी पर नज़र रखती है",
+        "रियो में है"
+      ],
+      "distractorGroup": "world_statue",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.sphinx.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "गिज़ा का महान स्फ़िंक्स",
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🦁🏜️"
+        }
+      ],
+      "hints": [
+        "शेर का शरीर, इंसान का सिर",
+        "चूना पत्थर से तराशा",
+        "मिस्र के पिरामिडों की रखवाली"
+      ],
+      "distractorGroup": "world_statue",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.moai.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "ईस्टर आइलैंड के मोआई",
+      "difficulty": 0.6,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🗿🌊"
+        }
+      ],
+      "hints": [
+        "करीब 900 विशाल पत्थर सिर",
+        "रापा नुई लोगों ने तराशा",
+        "प्रशांत का रिमोट द्वीप"
+      ],
+      "distractorGroup": "world_statue",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.great_wall.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "चीन की महान दीवार",
+      "difficulty": 0.05,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧱🐉"
+        }
+      ],
+      "hints": [
+        "20,000 किमी से ज़्यादा लंबी",
+        "कई राजवंशों में बनी",
+        "उत्तरी चीन में घूमती है"
+      ],
+      "distractorGroup": "world_ancient",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.pyramids.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "गिज़ा के पिरामिड",
+      "difficulty": 0.1,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔺🏜️"
+        }
+      ],
+      "hints": [
+        "इकलौता बचा प्राचीन अजूबा",
+        "फ़िरौनों की कब्रें",
+        "काहिरा के पास"
+      ],
+      "distractorGroup": "world_ancient",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.colosseum.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "कोलोसियम",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏟️🏛️"
+        }
+      ],
+      "hints": [
+        "ग्लैडिएटर लड़ाइयों का एम्फ़ीथिएटर",
+        "50,000 दर्शक समा सकते थे",
+        "रोम में है"
+      ],
+      "distractorGroup": "world_ancient",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.machu_picchu.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "माचू पिच्चू",
+      "difficulty": 0.3,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⛰️🦙"
+        }
+      ],
+      "hints": [
+        "15वीं सदी का इंका क़िला",
+        "एंडीज़ की ऊँचाइयों पर",
+        "पेरू में है"
+      ],
+      "distractorGroup": "world_ancient",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.angkor_wat.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "अंगकोर वाट",
+      "difficulty": 0.45,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🛕🌅"
+        }
+      ],
+      "hints": [
+        "दुनिया का सबसे बड़ा धार्मिक स्मारक",
+        "देश के झंडे पर भी दिखता है",
+        "कंबोडिया में है"
+      ],
+      "distractorGroup": "world_ancient",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.petra.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "पेट्रा",
+      "difficulty": 0.55,
+      "popularity": 0.65,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏜️🏛️"
+        }
+      ],
+      "hints": [
+        "गुलाबी चट्टान में तराशा शहर",
+        "नबातियन लोगों ने बनाया",
+        "जॉर्डन में है"
+      ],
+      "distractorGroup": "world_ancient",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.sydney_opera.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "सिडनी ओपेरा हाउस",
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎭⛵"
+        }
+      ],
+      "hints": [
+        "छत पाल जैसी दिखती है",
+        "1973 में खुला",
+        "ऑस्ट्रेलिया के हार्बर पर"
+      ],
+      "distractorGroup": "world_modern",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.golden_gate.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "गोल्डन गेट ब्रिज",
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌉🟥"
+        }
+      ],
+      "hints": [
+        "इंटरनेशनल ऑरेंज रंग का सस्पेंशन ब्रिज",
+        "अक्सर कोहरे में छिप जाता है",
+        "सैन फ़्रांसिस्को की स्ट्रेट पर"
+      ],
+      "distractorGroup": "world_modern",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "lm.tower_bridge.hi",
+      "type": "landmark",
+      "categories": [
+        "geo",
+        "world"
+      ],
+      "answer": "टावर ब्रिज",
+      "difficulty": 0.4,
+      "popularity": 0.75,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌉🏰"
+        }
+      ],
+      "hints": [
+        "दो टावर वाला बास्क्यूल ब्रिज",
+        "अक्सर लंदन ब्रिज से उलझाया जाता है",
+        "थेम्स नदी पार करता है"
+      ],
+      "distractorGroup": "world_modern",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

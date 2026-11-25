@@ -1,0 +1,1372 @@
+{
+  "packId": "emoji_movie",
+  "title": "इमोजी में फ़िल्में",
+  "items": [
+    {
+      "id": "em.sholay.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "शोले",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔥🔥🐴🤠"
+        }
+      ],
+      "hints": [
+        "1975 की बॉलीवुड क्लासिक",
+        "गब्बर सिंह खलनायक है"
+      ],
+      "distractorGroup": "bollywood_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.ddlj.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "दिलवाले दुल्हनिया ले जाएँगे",
+      "aliases": [
+        "डीडीएलजे"
+      ],
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "❤️👰🚂🌻"
+        }
+      ],
+      "hints": [
+        "1995 की रोमांस फ़िल्म",
+        "राज-सिमरन और सरसों के खेत में ट्रेन"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.three_idiots.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "3 इडियट्स",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "3️⃣🤪🎓"
+        }
+      ],
+      "hints": [
+        "2009 की कैंपस कॉमेडी",
+        "ऑल इज़ वेल"
+      ],
+      "distractorGroup": "bollywood_comedy",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.lagaan.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "लगान",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏏☀️👑💰"
+        }
+      ],
+      "hints": [
+        "ऑस्कर नॉमिनेटेड 2001 फ़िल्म",
+        "टैक्स बचाने के लिए ब्रिटिश से क्रिकेट"
+      ],
+      "distractorGroup": "bollywood_sports",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.chak_de.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "चक दे! इंडिया",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏑🇮🇳👩‍👩‍👧‍👧"
+        }
+      ],
+      "hints": [
+        "2007 का स्पोर्ट्स ड्रामा",
+        "कोच महिलाओं की हॉकी टीम को लीड करता है"
+      ],
+      "distractorGroup": "bollywood_sports",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.dangal.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "दंगल",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🤼‍♀️👨‍👧‍👧🥇"
+        }
+      ],
+      "hints": [
+        "2016 का स्पोर्ट्स बायोपिक",
+        "बाप बेटियों को कुश्ती सिखाता है"
+      ],
+      "distractorGroup": "bollywood_sports",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.bhaag_milkha.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "भाग मिल्खा भाग",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏃‍♂️🏃‍♂️🏃‍♂️🇮🇳"
+        }
+      ],
+      "hints": [
+        "2013 का बायोपिक",
+        "फ़्लाइंग सिख की कहानी"
+      ],
+      "distractorGroup": "bollywood_sports",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.ms_dhoni.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "एम.एस. धोनी: द अनटोल्ड स्टोरी",
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏏🚂🎫7️⃣"
+        }
+      ],
+      "hints": [
+        "2016 का बायोपिक",
+        "टिकट कलेक्टर से भारत का कप्तान"
+      ],
+      "distractorGroup": "bollywood_sports",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.eighty_three.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "८३",
+      "difficulty": 0.45,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏏🏆🇮🇳🥇"
+        }
+      ],
+      "hints": [
+        "2021 का स्पोर्ट्स ड्रामा",
+        "भारत का पहला क्रिकेट वर्ल्ड कप"
+      ],
+      "distractorGroup": "bollywood_sports",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      },
+      "aliases": [
+        "83"
+      ]
+    },
+    {
+      "id": "em.mughal_e_azam.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "मुग़ल-ए-आज़म",
+      "difficulty": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👑💃🏰⚔️"
+        }
+      ],
+      "hints": [
+        "1960 की ऐतिहासिक एपिक",
+        "सलीम अनारकली से प्यार करता है"
+      ],
+      "distractorGroup": "bollywood_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.mother_india.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "मदर इंडिया",
+      "difficulty": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👩‍🌾🌾🇮🇳"
+        }
+      ],
+      "hints": [
+        "1957 की क्लासिक",
+        "भारत की पहली ऑस्कर एंट्री"
+      ],
+      "distractorGroup": "bollywood_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.kkhh.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "कुछ कुछ होता है",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏀❤️👧👦"
+        }
+      ],
+      "hints": [
+        "1998 की रोमांस",
+        "राहुल, अंजलि और टीना"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.k3g.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "कभी ख़ुशी कभी ग़म",
+      "aliases": [
+        "के3जी"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "😀😢👨‍👩‍👦‍👦🏰"
+        }
+      ],
+      "hints": [
+        "2001 का फ़ैमिली ड्रामा",
+        "माता-पिता से प्यार की कहानी"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.jab_we_met.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "जब वी मेट",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🚂👧👦💬"
+        }
+      ],
+      "hints": [
+        "2007 की रॉम-कॉम",
+        "गीत ट्रेन में आदित्य से मिलती है"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.yjhd.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "ये जवानी है दीवानी",
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏔️🎒👫💃"
+        }
+      ],
+      "hints": [
+        "2013 की रॉम-कॉम",
+        "बनी-नैना मनाली ट्रेक पर मिलते हैं"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.veer_zaara.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "वीर-ज़ारा",
+      "difficulty": 0.45,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇮🇳❤️🇵🇰⏳"
+        }
+      ],
+      "hints": [
+        "2004 की रोमांस",
+        "एयर फ़ोर्स पायलट और बॉर्डर पार की लड़की"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.munna_bhai.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "मुन्ना भाई एम.बी.बी.एस.",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🩺🕶️🤗"
+        }
+      ],
+      "hints": [
+        "2003 की कॉमेडी",
+        "गैंगस्टर मेडिकल कॉलेज में एडमिशन लेता है"
+      ],
+      "distractorGroup": "bollywood_comedy",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.pk.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "पीके",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👽📻🙏"
+        }
+      ],
+      "hints": [
+        "2014 की सैटायर",
+        "एलियन का रिमोट खो जाता है"
+      ],
+      "distractorGroup": "bollywood_comedy",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.taare_zameen_par.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "तारे ज़मीन पर",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⭐🌍👦🎨"
+        }
+      ],
+      "hints": [
+        "2007 का ड्रामा",
+        "आर्ट टीचर डिसलेक्सिया वाले बच्चे की मदद करता है"
+      ],
+      "distractorGroup": "bollywood_drama",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.hera_pheri.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "हेरा फेरी",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "📞💰😂"
+        }
+      ],
+      "hints": [
+        "2000 की कॉमेडी",
+        "राजू, श्याम और बाबूराव"
+      ],
+      "distractorGroup": "bollywood_comedy",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.andhadhun.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "अंधाधुन",
+      "difficulty": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎹🕶️🔪"
+        }
+      ],
+      "hints": [
+        "2018 का थ्रिलर",
+        "पियानिस्ट अंधा होने का नाटक करता है"
+      ],
+      "distractorGroup": "bollywood_drama",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.queen.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "क्वीन",
+      "difficulty": 0.45,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👸✈️🇫🇷🇳🇱"
+        }
+      ],
+      "hints": [
+        "2014 का ड्रामा",
+        "रानी अकेली हनीमून पर जाती है"
+      ],
+      "distractorGroup": "bollywood_drama",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.znmd.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood"
+      ],
+      "answer": "ज़िंदगी न मिलेगी दोबारा",
+      "aliases": [
+        "जेडएनएमडी"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🚗👨👨👨🇪🇸"
+        }
+      ],
+      "hints": [
+        "2011 की रोड-ट्रिप फ़िल्म",
+        "तीन दोस्त स्पेन बैचलर ट्रिप पर"
+      ],
+      "distractorGroup": "bollywood_drama",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.baahubali.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood",
+        "south"
+      ],
+      "answer": "बाहुबली",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🗿💪🏞️❓"
+        }
+      ],
+      "hints": [
+        "2015 की एपिक",
+        "कटप्पा ने उसे क्यों मारा?"
+      ],
+      "distractorGroup": "south_epic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.rrr.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood",
+        "south"
+      ],
+      "answer": "आरआरआर",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔥💧🏍️🐅"
+        }
+      ],
+      "hints": [
+        "2022 की एक्शन एपिक",
+        "नाटू नाटू गाने ने ऑस्कर जीता"
+      ],
+      "distractorGroup": "south_epic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.kgf.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood",
+        "south"
+      ],
+      "answer": "केजीएफ़",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⛏️💰👑"
+        }
+      ],
+      "hints": [
+        "2018 की कन्नड़ एक्शन फ़िल्म",
+        "रॉकी सोने की खदानों में ऊपर उठता है"
+      ],
+      "distractorGroup": "south_epic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.pushpa.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "bollywood",
+        "south"
+      ],
+      "answer": "पुष्पा",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌲🪵🔥🧔"
+        }
+      ],
+      "hints": [
+        "2021 की एक्शन फ़िल्म",
+        "चंदन तस्कर जो झुकेगा नहीं"
+      ],
+      "distractorGroup": "south_epic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.finding_nemo.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "फ़ाइंडिंग नेमो",
+      "difficulty": 0.05,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔍🐠"
+        }
+      ],
+      "hints": [
+        "2003 की पिक्सर फ़िल्म",
+        "क्लाउनफ़िश बाप समुद्र में ढूँढता है"
+      ],
+      "distractorGroup": "hollywood_animated",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.lion_king.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "द लायन किंग",
+      "difficulty": 0.05,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🦁👑"
+        }
+      ],
+      "hints": [
+        "1994 की डिज़्नी फ़िल्म",
+        "हकुना मटाटा"
+      ],
+      "distractorGroup": "hollywood_animated",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.frozen.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "फ़्रोज़न",
+      "difficulty": 0.05,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "❄️👸⛄"
+        }
+      ],
+      "hints": [
+        "2013 की डिज़्नी फ़िल्म",
+        "लेट इट गो"
+      ],
+      "distractorGroup": "hollywood_animated",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.toy_story.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "टॉय स्टोरी",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧸🤠🚀"
+        }
+      ],
+      "hints": [
+        "1995 की पिक्सर फ़िल्म",
+        "वुडी और बज़"
+      ],
+      "distractorGroup": "hollywood_animated",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.up.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "अप",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎈🏠👴"
+        }
+      ],
+      "hints": [
+        "2009 की पिक्सर फ़िल्म",
+        "गुब्बारों से उड़ता घर"
+      ],
+      "distractorGroup": "hollywood_animated",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.kung_fu_panda.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "कुंग फ़ू पांडा",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥋🐼"
+        }
+      ],
+      "hints": [
+        "2008 की ड्रीमवर्क्स फ़िल्म",
+        "पो ड्रैगन वॉरियर बनता है"
+      ],
+      "distractorGroup": "hollywood_animated",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.ratatouille.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "रैटाटुई",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐀👨‍🍳🇫🇷"
+        }
+      ],
+      "hints": [
+        "2007 की पिक्सर फ़िल्म",
+        "पेरिस में खाना बनाने वाला चूहा"
+      ],
+      "distractorGroup": "hollywood_animated",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.shrek.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "श्रेक",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🟢👹🫏"
+        }
+      ],
+      "hints": [
+        "2001 की ड्रीमवर्क्स फ़िल्म",
+        "ओगर और बात करने वाला गधा"
+      ],
+      "distractorGroup": "hollywood_animated",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.titanic.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "टाइटैनिक",
+      "difficulty": 0.05,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🚢🧊💔"
+        }
+      ],
+      "hints": [
+        "1997 की रोमांस",
+        "जैक और रोज़"
+      ],
+      "distractorGroup": "hollywood_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.jurassic_park.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "जुरासिक पार्क",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🦖🏝️🚙"
+        }
+      ],
+      "hints": [
+        "1993 का एडवेंचर",
+        "एम्बर से क्लोन डायनासोर"
+      ],
+      "distractorGroup": "hollywood_action",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.harry_potter.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "हैरी पॉटर",
+      "difficulty": 0.05,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⚡👓🧙‍♂️"
+        }
+      ],
+      "hints": [
+        "जादूगर लड़के की फ़िल्म सीरीज़",
+        "हॉग्वर्ट्स में सेट"
+      ],
+      "distractorGroup": "hollywood_fantasy",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.lotr.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "द लॉर्ड ऑफ़ द रिंग्स",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💍🌋🧙"
+        }
+      ],
+      "hints": [
+        "फ़ैंटसी ट्रिलॉजी",
+        "एक रिंग सबको राज करे"
+      ],
+      "distractorGroup": "hollywood_fantasy",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.spider_man.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "स्पाइडर-मैन",
+      "difficulty": 0.05,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🕷️👨🏙️"
+        }
+      ],
+      "hints": [
+        "सुपरहीरो फ़िल्म",
+        "बड़ी ताक़त के साथ बड़ी ज़िम्मेदारी"
+      ],
+      "distractorGroup": "hollywood_action",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.jaws.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "जॉज़",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🦈🏖️😱"
+        }
+      ],
+      "hints": [
+        "1975 का थ्रिलर",
+        "बड़ी नाव चाहिए होगी"
+      ],
+      "distractorGroup": "hollywood_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.matrix.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "द मैट्रिक्स",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💊🔴🔵🕶️"
+        }
+      ],
+      "hints": [
+        "1999 की साइ-फ़ाय",
+        "लाल गोली या नीली?"
+      ],
+      "distractorGroup": "hollywood_action",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.home_alone.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "होम अलोन",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏠👦🎄🪤"
+        }
+      ],
+      "hints": [
+        "1990 की कॉमेडी",
+        "लड़का घर को चोरों से बचाता है"
+      ],
+      "distractorGroup": "hollywood_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.star_wars.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "स्टार वॉर्स",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⭐⚔️🌌"
+        }
+      ],
+      "hints": [
+        "स्पेस सागा",
+        "मे द फ़ोर्स बी विद यू"
+      ],
+      "distractorGroup": "hollywood_fantasy",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.pirates.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "पाइरेट्स ऑफ़ द कैरिबियन",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏴‍☠️🚢💀"
+        }
+      ],
+      "hints": [
+        "2003 का एडवेंचर",
+        "कैप्टन जैक स्पैरो"
+      ],
+      "distractorGroup": "hollywood_fantasy",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.avatar.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "अवतार",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔵👽🌳"
+        }
+      ],
+      "hints": [
+        "2009 की साइ-फ़ाय",
+        "पेंडोरा और ना'वी"
+      ],
+      "distractorGroup": "hollywood_action",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.inception.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "इंसेप्शन",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💤🌀🏙️"
+        }
+      ],
+      "hints": [
+        "2010 की साइ-फ़ाय",
+        "सपनों के अंदर सपने"
+      ],
+      "distractorGroup": "hollywood_action",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.wizard_of_oz.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "द विज़र्ड ऑफ़ ओज़",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌪️👠🦁🌈"
+        }
+      ],
+      "hints": [
+        "1939 का म्यूज़िकल",
+        "पीली ईंट वाली सड़क पर चलो"
+      ],
+      "distractorGroup": "hollywood_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.jumanji.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "जुमानजी",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎲🌴🐘"
+        }
+      ],
+      "hints": [
+        "1995 का एडवेंचर",
+        "बोर्ड गेम ज़िंदा हो जाता है"
+      ],
+      "distractorGroup": "hollywood_fantasy",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "em.ghostbusters.hi",
+      "type": "emoji_movie",
+      "categories": [
+        "movies",
+        "hollywood"
+      ],
+      "answer": "घोस्टबस्टर्स",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👻🚫🔫"
+        }
+      ],
+      "hints": [
+        "1984 की कॉमेडी",
+        "किसे बुलाओगे?"
+      ],
+      "distractorGroup": "hollywood_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

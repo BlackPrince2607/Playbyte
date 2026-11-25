@@ -1,7 +1,11 @@
-"""Create hi-IN content_items from English pack JSON (or DB-ready items).
+"""DEPRECATED — prefer bundled Hindi-native packs under packs/hi/.
 
+Ship Hindi game copy as editorial seeds:
+    apps/mobile/src/game/content/packs/hi/*.json
+    python -m scripts.import_content
+
+Legacy OpenAI translate path (one-off ops only):
     python -m scripts.localize_content_hi --dry-run
-    python -m scripts.localize_content_hi
     python -m scripts.localize_content_hi path/to/fact.json --batch-size 20
 
 Requires OPENAI_API_KEY. Everyday spoken Hindi (bolchal) with common English loanwords.

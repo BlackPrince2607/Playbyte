@@ -16,8 +16,9 @@ For `memory`, `arrow_puzzle`, `spot_difference`, `word_search`, `maze`, `connect
 
 - [ ] Card shows glass PLAY (not intro-only)
 - [ ] PLAY starts round; feed cannot swipe away mid-round
-- [ ] Complete first time → HowTo → dismiss → PostGameResultScreen
+- [ ] Complete first time → HowTo → dismiss → PostGameResultScreen (must not stick on "Board cleared!" / last-answer feedback)
 - [ ] Complete second time → straight to result (no HowTo)
+- [ ] Fact/Fake & quiz 10/10 Correct → result within ~1s (not stuck on the last card)
 - [ ] Leave / swipe-away mid-round → no HowTo mark; idle glass returns
 - [ ] Compact UI: board + HUD fit card (no clipped primary controls)
 

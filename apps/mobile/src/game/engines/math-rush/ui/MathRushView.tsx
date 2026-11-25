@@ -9,6 +9,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { useLanguage } from "../../../../context/LanguageContext";
+import { localizeChrome } from "../../../../i18n/chrome";
 import { colors, radius, spacing } from "../../../../theme/colors";
 import { fonts, type } from "../../../../theme/typography";
 import { HintBar, TileState } from "../../../ui/kit";
@@ -76,6 +78,7 @@ export function MathRushView({
   compact,
   hideHints,
 }: EngineViewProps<QuizState, QuizAction>) {
+  const { language } = useLanguage();
   const { width } = useWindowDimensions();
   const q = state.q;
   const wrongSeq = snapshot.lastOutcome && !snapshot.lastOutcome.correct ? snapshot.lastOutcome.seq : 0;
@@ -111,7 +114,7 @@ export function MathRushView({
   return (
     <View style={[styles.root, compact && styles.rootCompact]}>
       <Text style={[type.metadata, styles.prompt]} accessibilityRole="header">
-        {q.prompt}
+        {localizeChrome(q.prompt, language)}
       </Text>
 
       <Animated.View style={[shake, pulseStyle, styles.hero, compact && styles.heroCompact, streakHot && styles.heroHot]}>

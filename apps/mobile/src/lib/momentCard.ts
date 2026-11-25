@@ -45,7 +45,9 @@ export function momentStatus(s: MomentStatusInput, copy: MomentStatusCopy = {}):
   if (!s.answered) {
     return { text: s.isQuiz ? c.pickQuizAnswer : c.pickPollAnswer, tone: "muted" };
   }
-  if (s.isQuiz && s.correctKnown) {
+  if (s.isQuiz) {
+    // Quizzes jump straight to correct/wrong — never flash "Your answer: …" while waiting.
+    if (!s.correctKnown) return null;
     return s.gotItRight
       ? { text: c.correctExclaim, tone: "good" }
       : { text: c.notThisTime, tone: "muted" };

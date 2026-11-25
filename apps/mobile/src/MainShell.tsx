@@ -144,10 +144,11 @@ function LazyIntroSlides(props: IntroSlidesProps) {
 }
 
 function BootLoading({ onRetry }: { onRetry: () => void }) {
+  const { t } = useLanguage();
   const [showRetry, setShowRetry] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setShowRetry(true), 8_000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setShowRetry(true), 8_000);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -159,7 +160,7 @@ function BootLoading({ onRetry }: { onRetry: () => void }) {
           <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>
             Still starting up. You can retry — this clears a stuck sign-in session if needed.
           </Text>
-          <PrimaryButton label="Retry" onPress={onRetry} />
+          <PrimaryButton label={t("retry")} onPress={onRetry} />
         </View>
       ) : null}
     </View>

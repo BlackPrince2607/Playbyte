@@ -31,6 +31,8 @@ test("quiz feedback, then friend activity, then your answer", () => {
     tone: "good",
   });
   assert.equal(momentStatus({ ...answered, isQuiz: true, correctKnown: true })?.tone, "muted");
+  // Quizzes stay quiet until the correct option is known — no "Your answer" flash.
+  assert.equal(momentStatus({ ...answered, isQuiz: true, correctKnown: false }), null);
   assert.equal(momentStatus({ ...answered, friend: { name: "Ria", choice: "Coffee" } })?.text, "Ria chose Coffee");
   assert.equal(momentStatus(answered)?.text, "Your answer: Tea");
 });

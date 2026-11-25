@@ -10,6 +10,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { useLanguage } from "../../context/LanguageContext";
+import { localizeChrome } from "../../i18n/chrome";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 import { hintCoinCost } from "../../lib/economy";
@@ -158,6 +160,8 @@ function HintChip({
   paid: boolean;
   onHint: (id: string) => void;
 }) {
+  const { language } = useLanguage();
+  const label = localizeChrome(hint.label, language);
   const scale = useSharedValue(1);
   const flash = useSharedValue(0);
   const reduced = prefersReducedMotion();
@@ -170,7 +174,7 @@ function HintChip({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={tag ? `${hint.label}, ${tag}` : `${hint.label}${hint.cost ? `, costs ${hint.cost} points` : ""}`}
+      accessibilityLabel={tag ? `${label}, ${tag}` : `${label}${hint.cost ? `, costs ${hint.cost} points` : ""}`}
       hitSlop={10}
       style={styles.hintPressable}
       android_ripple={{ color: "rgba(198,255,61,0.28)" }}
@@ -191,7 +195,7 @@ function HintChip({
     >
       <Animated.View style={[styles.hint, anim]}>
         <Text style={[type.metadata, { color: colors.paper, fontFamily: fonts.bodyBold }]}>
-          💡 {hint.label}
+          💡 {label}
           {tag ? <Text style={{ color: paid ? colors.lilac : colors.lime }}>{`  ${tag}`}</Text> : null}
           {!tag && hint.cost ? <Text style={{ color: colors.lilac }}>{`  −${hint.cost}`}</Text> : null}
         </Text>

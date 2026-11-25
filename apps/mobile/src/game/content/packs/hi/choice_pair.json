@@ -1,0 +1,1033 @@
+{
+  "packId": "choice_pair",
+  "title": "ये या वो",
+  "items": [
+    {
+      "id": "choice.chai_coffee.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "सुबह की फ़्यूल?",
+        "a": {
+          "label": "चाय",
+          "emoji": "🍵"
+        },
+        "b": {
+          "label": "कॉफ़ी",
+          "emoji": "☕"
+        },
+        "split": 68
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.biryani_pulao.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "डिनर में क्या लेगा?",
+        "a": {
+          "label": "बिरयानी",
+          "emoji": "🍗"
+        },
+        "b": {
+          "label": "पुलाव",
+          "emoji": "🍚"
+        },
+        "split": 82
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.samosa_vadapav.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "शाम का नाश्ता?",
+        "a": {
+          "label": "समोसा",
+          "emoji": "🔺"
+        },
+        "b": {
+          "label": "वड़ा पाव",
+          "emoji": "🍔"
+        },
+        "split": 55
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.idli_dosa.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "साउथ इंडियन ब्रेकफ़ास्ट?",
+        "a": {
+          "label": "इडली",
+          "emoji": "⚪"
+        },
+        "b": {
+          "label": "डोसा",
+          "emoji": "🥞"
+        },
+        "split": 38
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.pizza_burger.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food"
+      ],
+      "attributes": {
+        "prompt": "चीट डे?",
+        "a": {
+          "label": "पिज़्ज़ा",
+          "emoji": "🍕"
+        },
+        "b": {
+          "label": "बर्गर",
+          "emoji": "🍔"
+        },
+        "split": 61
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.sweet_spicy.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food"
+      ],
+      "attributes": {
+        "prompt": "स्नैक मूड?",
+        "a": {
+          "label": "मीठा",
+          "emoji": "🍩"
+        },
+        "b": {
+          "label": "तीखा",
+          "emoji": "🌶️"
+        },
+        "split": 42
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.mango_watermelon.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "गर्मी का फ़्रूट?",
+        "a": {
+          "label": "आम",
+          "emoji": "🥭"
+        },
+        "b": {
+          "label": "तरबूज़",
+          "emoji": "🍉"
+        },
+        "split": 79
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.jamun_rasgulla.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "मिठाई?",
+        "a": {
+          "label": "गुलाब जामुन",
+          "emoji": "🟤"
+        },
+        "b": {
+          "label": "रसगुल्ला",
+          "emoji": "⚪"
+        },
+        "split": 64
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.momos_panipuri.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "स्ट्रीट फ़ूड?",
+        "a": {
+          "label": "मोमोज",
+          "emoji": "🥟"
+        },
+        "b": {
+          "label": "पानी पूरी",
+          "emoji": "💧"
+        },
+        "split": 47
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.maggi_omelette.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "आधी रात का स्नैक?",
+        "a": {
+          "label": "मैगी",
+          "emoji": "🍜"
+        },
+        "b": {
+          "label": "ब्रेड ऑमलेट",
+          "emoji": "🍳"
+        },
+        "split": 71
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.home_restaurant.hi",
+      "type": "choice_pair",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "आज रात का खाना?",
+        "a": {
+          "label": "घर का खाना",
+          "emoji": "🍛"
+        },
+        "b": {
+          "label": "रेस्टोरेंट",
+          "emoji": "🍽️"
+        },
+        "split": 56
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.mountains_beach.hi",
+      "type": "choice_pair",
+      "categories": [
+        "travel",
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "हॉलिडे?",
+        "a": {
+          "label": "पहाड़",
+          "emoji": "🏔️"
+        },
+        "b": {
+          "label": "बीच",
+          "emoji": "🏖️"
+        },
+        "split": 52
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.goa_manali.hi",
+      "type": "choice_pair",
+      "categories": [
+        "travel",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "दोस्तों के साथ ट्रिप?",
+        "a": {
+          "label": "गोवा",
+          "emoji": "🌴"
+        },
+        "b": {
+          "label": "मनाली",
+          "emoji": "❄️"
+        },
+        "split": 58
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.train_flight.hi",
+      "type": "choice_pair",
+      "categories": [
+        "travel",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "लंबी यात्रा?",
+        "a": {
+          "label": "ट्रेन",
+          "emoji": "🚆"
+        },
+        "b": {
+          "label": "फ़्लाइट",
+          "emoji": "✈️"
+        },
+        "split": 44
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.window_aisle.hi",
+      "type": "choice_pair",
+      "categories": [
+        "travel"
+      ],
+      "attributes": {
+        "prompt": "तुम्हारी सीट?",
+        "a": {
+          "label": "विंडो",
+          "emoji": "🪟"
+        },
+        "b": {
+          "label": "आइल",
+          "emoji": "🚶"
+        },
+        "split": 76
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.metro_auto.hi",
+      "type": "choice_pair",
+      "categories": [
+        "travel",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "रोज़ का कम्यूट?",
+        "a": {
+          "label": "मेट्रो",
+          "emoji": "🚇"
+        },
+        "b": {
+          "label": "ऑटो",
+          "emoji": "🛺"
+        },
+        "split": 61
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.early_night.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "तुम हो...",
+        "a": {
+          "label": "अर्ली बर्ड",
+          "emoji": "🌅"
+        },
+        "b": {
+          "label": "नाइट आउल",
+          "emoji": "🦉"
+        },
+        "split": 35
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.call_text.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle",
+        "tech"
+      ],
+      "attributes": {
+        "prompt": "दोस्त तक पहुँचना है?",
+        "a": {
+          "label": "कॉल",
+          "emoji": "📞"
+        },
+        "b": {
+          "label": "टेक्स्ट",
+          "emoji": "💬"
+        },
+        "split": 33
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.dogs_cats.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "पेट?",
+        "a": {
+          "label": "डॉग्स",
+          "emoji": "🐶"
+        },
+        "b": {
+          "label": "कैट्स",
+          "emoji": "🐱"
+        },
+        "split": 70
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.summer_winter.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "पसंदीदा सीज़न?",
+        "a": {
+          "label": "गर्मी",
+          "emoji": "☀️"
+        },
+        "b": {
+          "label": "सर्दी",
+          "emoji": "❄️"
+        },
+        "split": 29
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.monsoon_winter.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "परफ़ेक्ट मौसम?",
+        "a": {
+          "label": "मानसून बारिश",
+          "emoji": "🌧️"
+        },
+        "b": {
+          "label": "सर्दी की धूप",
+          "emoji": "🌤️"
+        },
+        "split": 57
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.wfh_office.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "कहाँ बेहतर काम होता है?",
+        "a": {
+          "label": "घर",
+          "emoji": "🏠"
+        },
+        "b": {
+          "label": "ऑफ़िस",
+          "emoji": "🏢"
+        },
+        "split": 63
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.money_time.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "क्या चुनोगे...",
+        "a": {
+          "label": "ज़्यादा पैसे",
+          "emoji": "💰"
+        },
+        "b": {
+          "label": "ज़्यादा फ़्री टाइम",
+          "emoji": "⏳"
+        },
+        "split": 57
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.fly_invisible.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "सुपरपावर?",
+        "a": {
+          "label": "उड़ना",
+          "emoji": "🦅"
+        },
+        "b": {
+          "label": "इनविज़िबिलिटी",
+          "emoji": "👻"
+        },
+        "split": 62
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.past_future.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "टाइम मशीन: कहाँ?",
+        "a": {
+          "label": "अतीत",
+          "emoji": "🏛️"
+        },
+        "b": {
+          "label": "भविष्य",
+          "emoji": "🚀"
+        },
+        "split": 45
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.books_podcasts.hi",
+      "type": "choice_pair",
+      "categories": [
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "सीखना चाहते हो...",
+        "a": {
+          "label": "किताबों से",
+          "emoji": "📚"
+        },
+        "b": {
+          "label": "पॉडकास्ट से",
+          "emoji": "🎙️"
+        },
+        "split": 51
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.movie_series.hi",
+      "type": "choice_pair",
+      "categories": [
+        "entertainment"
+      ],
+      "attributes": {
+        "prompt": "वीकेंड बिंग?",
+        "a": {
+          "label": "मूवी",
+          "emoji": "🎬"
+        },
+        "b": {
+          "label": "वेब सीरीज़",
+          "emoji": "📺"
+        },
+        "split": 41
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.theatre_ott.hi",
+      "type": "choice_pair",
+      "categories": [
+        "entertainment",
+        "movies"
+      ],
+      "attributes": {
+        "prompt": "नई रिलीज़?",
+        "a": {
+          "label": "थिएटर",
+          "emoji": "🍿"
+        },
+        "b": {
+          "label": "घर पर ओटीटी",
+          "emoji": "🛋️"
+        },
+        "split": 46
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.srk_salman.hi",
+      "type": "choice_pair",
+      "categories": [
+        "entertainment",
+        "movies",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "कौन सा खान?",
+        "a": {
+          "label": "शाहरुख़",
+          "emoji": "👐"
+        },
+        "b": {
+          "label": "सलमान",
+          "emoji": "💪"
+        },
+        "split": 60
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.action_comedy.hi",
+      "type": "choice_pair",
+      "categories": [
+        "entertainment",
+        "movies"
+      ],
+      "attributes": {
+        "prompt": "मूवी नाइट का जॉनर?",
+        "a": {
+          "label": "एक्शन",
+          "emoji": "💥"
+        },
+        "b": {
+          "label": "कॉमेडी",
+          "emoji": "😂"
+        },
+        "split": 48
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.old_new_songs.hi",
+      "type": "choice_pair",
+      "categories": [
+        "entertainment",
+        "music"
+      ],
+      "attributes": {
+        "prompt": "रोड ट्रिप प्लेलिस्ट?",
+        "a": {
+          "label": "पुराने क्लासिक्स",
+          "emoji": "📻"
+        },
+        "b": {
+          "label": "नए हिट्स",
+          "emoji": "🎧"
+        },
+        "split": 54
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.cricket_football.hi",
+      "type": "choice_pair",
+      "categories": [
+        "sports",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "क्या देख रहे हो?",
+        "a": {
+          "label": "क्रिकेट",
+          "emoji": "🏏"
+        },
+        "b": {
+          "label": "फ़ुटबॉल",
+          "emoji": "⚽"
+        },
+        "split": 74
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.test_t20.hi",
+      "type": "choice_pair",
+      "categories": [
+        "sports",
+        "cricket"
+      ],
+      "attributes": {
+        "prompt": "बेस्ट क्रिकेट फ़ॉर्मैट?",
+        "a": {
+          "label": "टेस्ट",
+          "emoji": "🏏"
+        },
+        "b": {
+          "label": "टी20",
+          "emoji": "⚡"
+        },
+        "split": 27
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.gym_yoga.hi",
+      "type": "choice_pair",
+      "categories": [
+        "sports",
+        "lifestyle"
+      ],
+      "attributes": {
+        "prompt": "वर्कआउट?",
+        "a": {
+          "label": "जिम",
+          "emoji": "🏋️"
+        },
+        "b": {
+          "label": "योग",
+          "emoji": "🧘"
+        },
+        "split": 53
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.bat_bowl.hi",
+      "type": "choice_pair",
+      "categories": [
+        "sports",
+        "cricket"
+      ],
+      "attributes": {
+        "prompt": "गली क्रिकेट में तुम...",
+        "a": {
+          "label": "बैट",
+          "emoji": "🏏"
+        },
+        "b": {
+          "label": "बॉल",
+          "emoji": "🎯"
+        },
+        "split": 66
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.android_iphone.hi",
+      "type": "choice_pair",
+      "categories": [
+        "tech"
+      ],
+      "attributes": {
+        "prompt": "फ़ोन?",
+        "a": {
+          "label": "एंड्रॉइड",
+          "emoji": "🤖"
+        },
+        "b": {
+          "label": "आईफ़ोन",
+          "emoji": "🍎"
+        },
+        "split": 72
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.dark_light.hi",
+      "type": "choice_pair",
+      "categories": [
+        "tech"
+      ],
+      "attributes": {
+        "prompt": "स्क्रीन मोड?",
+        "a": {
+          "label": "डार्क मोड",
+          "emoji": "🌙"
+        },
+        "b": {
+          "label": "लाइट मोड",
+          "emoji": "☀️"
+        },
+        "split": 78
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.upi_cash.hi",
+      "type": "choice_pair",
+      "categories": [
+        "tech",
+        "india"
+      ],
+      "attributes": {
+        "prompt": "चाय की दुकान पर पेमेंट?",
+        "a": {
+          "label": "यूपीआई",
+          "emoji": "📱"
+        },
+        "b": {
+          "label": "कैश",
+          "emoji": "💵"
+        },
+        "split": 81
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.reels_youtube.hi",
+      "type": "choice_pair",
+      "categories": [
+        "tech",
+        "entertainment"
+      ],
+      "attributes": {
+        "prompt": "एंडलेस स्क्रॉल?",
+        "a": {
+          "label": "रील्स",
+          "emoji": "📱"
+        },
+        "b": {
+          "label": "यूट्यूब",
+          "emoji": "▶️"
+        },
+        "split": 49
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "choice.diwali_holi.hi",
+      "type": "choice_pair",
+      "categories": [
+        "india",
+        "festivals"
+      ],
+      "attributes": {
+        "prompt": "पसंदीदा त्योहार?",
+        "a": {
+          "label": "दिवाली",
+          "emoji": "🪔"
+        },
+        "b": {
+          "label": "होली",
+          "emoji": "🎨"
+        },
+        "split": 58
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

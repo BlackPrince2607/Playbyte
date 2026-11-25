@@ -1,0 +1,1892 @@
+{
+  "packId": "fact",
+  "title": "सच या झूठ",
+  "items": [
+    {
+      "id": "fact.taj_mahal.hi",
+      "type": "fact",
+      "categories": [
+        "india",
+        "history"
+      ],
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🕌"
+        }
+      ],
+      "facts": [
+        {
+          "text": "ताज महल शाहजहाँ ने अपनी बीवी मुमताज़ महल की याद में बनवाया था।",
+          "isTrue": true,
+          "explanation": "निर्माण करीब 1632 में आगरा में शुरू हुआ।"
+        },
+        {
+          "text": "ताज महल ज़्यादातर लाल बलुआ पत्थर से बना है।",
+          "isTrue": false,
+          "explanation": "ये सफ़ेद मकराना संगमरमर का है। आगरा का लाल क़िला लाल बलुआ पत्थर का है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.national_animal.hi",
+      "type": "fact",
+      "categories": [
+        "india",
+        "animals"
+      ],
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐅"
+        }
+      ],
+      "facts": [
+        {
+          "text": "बाघ भारत का राष्ट्रीय पशु है।",
+          "isTrue": true,
+          "explanation": "बंगाल टाइगर 1973 से राष्ट्रीय पशु है।"
+        },
+        {
+          "text": "मोर भारत का राष्ट्रीय पशु है।",
+          "isTrue": false,
+          "explanation": "मोर राष्ट्रीय पक्षी है। बाघ राष्ट्रीय पशु है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.ganga.hi",
+      "type": "fact",
+      "categories": [
+        "india",
+        "geography"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌊"
+        }
+      ],
+      "facts": [
+        {
+          "text": "गंगा उत्तराखंड के गंगोत्री ग्लेशियर से निकलती है।",
+          "isTrue": true,
+          "explanation": "स्रोत धारा भागीरथी ग्लेशियर के मुहाने गौमुख से बहती है।"
+        },
+        {
+          "text": "गंगा अरब सागर में गिरती है।",
+          "isTrue": false,
+          "explanation": "ये सुंदरबन डेल्टा से होकर बंगाल की खाड़ी में मिलती है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.isro.hi",
+      "type": "fact",
+      "categories": [
+        "india",
+        "science",
+        "space"
+      ],
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🚀"
+        }
+      ],
+      "facts": [
+        {
+          "text": "भारत का मंगलयान 2014 में पहली कोशिश में मंगल ऑर्बिट पहुँचा।",
+          "isTrue": true,
+          "explanation": "मंगल ऑर्बिट पहुँचने वाला एशिया का पहला देश भारत बना।"
+        },
+        {
+          "text": "चंद्रयान-3 चाँद के उत्तरी ध्रुव के पास उतरा।",
+          "isTrue": false,
+          "explanation": "अगस्त 2023 में ये चंद्र दक्षिणी ध्रुव के पास उतरा।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.world_cup_83.hi",
+      "type": "fact",
+      "categories": [
+        "sports",
+        "cricket",
+        "india"
+      ],
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏏"
+        }
+      ],
+      "facts": [
+        {
+          "text": "भारत ने 1983 का क्रिकेट वर्ल्ड कप कपिल देव की कप्तानी में जीता।",
+          "isTrue": true,
+          "explanation": "फ़ाइनल में लॉर्ड्स पर वेस्टइंडीज़ हारा।"
+        },
+        {
+          "text": "भारत ने अपना पहला टी20 वर्ल्ड कप 2011 में जीता।",
+          "isTrue": false,
+          "explanation": "पहला टी20 वर्ल्ड कप 2007 में जीता। 2011 ओडीआई वर्ल्ड कप था।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.sachin.hi",
+      "type": "fact",
+      "categories": [
+        "sports",
+        "cricket",
+        "india"
+      ],
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💯"
+        }
+      ],
+      "facts": [
+        {
+          "text": "सचिन तेंदुलकर ने अंतरराष्ट्रीय क्रिकेट में 100 सेंचुरियाँ बनाईं।",
+          "isTrue": true,
+          "explanation": "टेस्ट में 51 और ओडीआई में 49।"
+        },
+        {
+          "text": "सचिन ने कभी ओडीआई में डबल सेंचुरी नहीं बनाई।",
+          "isTrue": false,
+          "explanation": "2010 में दक्षिण अफ़्रीका के ख़िलाफ़ पुरुषों की पहली ओडीआई डबल सेंचुरी उन्हीं की थी।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.octopus.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "animals"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐙"
+        }
+      ],
+      "facts": [
+        {
+          "text": "ऑक्टोपस के तीन दिल होते हैं।",
+          "isTrue": true,
+          "explanation": "दो गिल्स से खून भेजते हैं, एक शरीर में घुमाता है।"
+        },
+        {
+          "text": "ऑक्टोपस की बाँहों में हड्डियाँ होती हैं।",
+          "isTrue": false,
+          "explanation": "इनमें हड्डी ही नहीं होती, इसलिए छोटे गैप से निकल जाते हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.honey.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "food"
+      ],
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍯"
+        }
+      ],
+      "facts": [
+        {
+          "text": "सील बंद शहद हज़ारों साल खाने लायक रह सकता है।",
+          "isTrue": true,
+          "explanation": "कम नमी और अम्लता बैक्टीरिया को बढ़ने नहीं देती।"
+        },
+        {
+          "text": "मधुमक्खियाँ पेड़ के रस से शहद बनाती हैं।",
+          "isTrue": false,
+          "explanation": "शहद फूलों के अमृत से बनता है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.venus.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "space"
+      ],
+      "difficulty": 0.55,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌕"
+        }
+      ],
+      "facts": [
+        {
+          "text": "शुक्र पर एक दिन उसके साल से लंबा होता है।",
+          "isTrue": true,
+          "explanation": "शुक्र इतनी धीरे घूमता है कि एक चक्कर सूर्य की परिक्रमा से लंबा पड़ता है।"
+        },
+        {
+          "text": "मंगल सौरमंडल का सबसे गर्म ग्रह है।",
+          "isTrue": false,
+          "explanation": "शुक्र सबसे गर्म है: मोटी एटमॉस्फ़ियर गर्मी रोकती है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.moonlight.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "space"
+      ],
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌙"
+        }
+      ],
+      "facts": [
+        {
+          "text": "सूरज की रोशनी धरती तक पहुँचने में करीब आठ मिनट लगते हैं।",
+          "isTrue": true,
+          "explanation": "सूरज करीब 15 करोड़ किमी दूर है।"
+        },
+        {
+          "text": "चाँद अपनी खुद की रोशनी पैदा करता है।",
+          "isTrue": false,
+          "explanation": "चाँदनी सूरज की रोशनी का चाँद की सतह से परावर्तन है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.bones.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "body"
+      ],
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🦴"
+        }
+      ],
+      "facts": [
+        {
+          "text": "वयस्क इंसान के कंकाल में 206 हड्डियाँ होती हैं।",
+          "isTrue": true,
+          "explanation": "जैसे-जैसे हड्डियाँ जुड़ती हैं, गिनती 206 पर रुकती है।"
+        },
+        {
+          "text": "बच्चे वयस्कों से कम हड्डियों के साथ पैदा होते हैं।",
+          "isTrue": false,
+          "explanation": "बच्चों में करीब 300 हड्डियाँ होती हैं; कई बाद में जुड़ जाती हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.water.hi",
+      "type": "fact",
+      "categories": [
+        "science"
+      ],
+      "difficulty": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💧"
+        }
+      ],
+      "facts": [
+        {
+          "text": "ऊँचाई पर पानी कम तापमान पर उबलता है।",
+          "isTrue": true,
+          "explanation": "कम दबाव से पानी जल्दी उबलता है, इसलिए पहाड़ों पर खाना देर से पकता है।"
+        },
+        {
+          "text": "शुद्ध पानी बिजली का अच्छा चालक है।",
+          "isTrue": false,
+          "explanation": "शुद्ध पानी खराब चालक है। घुले नमक करंट ले जाते हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.first_film.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment",
+        "movies",
+        "india"
+      ],
+      "difficulty": 0.45,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎬"
+        }
+      ],
+      "facts": [
+        {
+          "text": "राजा हरिश्चंद्र (1913) को भारत की पहली फ़ुल-लेंथ फ़ीचर फ़िल्म माना जाता है।",
+          "isTrue": true,
+          "explanation": "इसे दादासाहेब फाल्के ने बनाया था।"
+        },
+        {
+          "text": "लगान ने बेस्ट फ़ॉरेन लैंग्वेज फ़िल्म का ऑस्कर जीता।",
+          "isTrue": false,
+          "explanation": "लगान 2002 में नॉमिनेट हुआ था, जीता नहीं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.naatu.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment",
+        "music",
+        "movies"
+      ],
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎵"
+        }
+      ],
+      "facts": [
+        {
+          "text": "आरआरआर का गाना नाटू नाटू बेस्ट ओरिजिनल सॉन्ग का ऑस्कर जीता।",
+          "isTrue": true,
+          "explanation": "2023 एकेडमी अवॉर्ड्स में जीता।"
+        },
+        {
+          "text": "जय हो गाना पहले लगान फ़िल्म में सुनाई दिया।",
+          "isTrue": false,
+          "explanation": "जय हो स्लमडॉग मिलियनेयर से है, वहीं ऑस्कर जीता।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.chess.hi",
+      "type": "fact",
+      "categories": [
+        "sports",
+        "india",
+        "history"
+      ],
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "♟️"
+        }
+      ],
+      "facts": [
+        {
+          "text": "शतरंज का मूल भारतीय खेल चतुरंग माना जाता है।",
+          "isTrue": true,
+          "explanation": "चतुरंग भारत में करीब छठी सदी में खेला जाता था।"
+        },
+        {
+          "text": "विश्वनाथन आनंद कभी विश्व शतरंज चैंपियन नहीं बने।",
+          "isTrue": false,
+          "explanation": "आनंद कई बार विश्व चैंपियन रहे, जिनमें 2007 से 2013 शामिल।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.hockey.hi",
+      "type": "fact",
+      "categories": [
+        "sports",
+        "india"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏑"
+        }
+      ],
+      "facts": [
+        {
+          "text": "नीरज चोपड़ा ने टोक्यो 2020 में जैवलिन में ओलंपिक गोल्ड जीता।",
+          "isTrue": true,
+          "explanation": "एथलेटिक्स में भारत का पहला ओलंपिक गोल्ड था।"
+        },
+        {
+          "text": "भारत ने कभी हॉकी में ओलंपिक गोल्ड नहीं जीता।",
+          "isTrue": false,
+          "explanation": "पुरुष हॉकी में भारत ने आठ ओलंपिक गोल्ड जीते हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.tea.hi",
+      "type": "fact",
+      "categories": [
+        "food",
+        "india",
+        "geography"
+      ],
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍵"
+        }
+      ],
+      "facts": [
+        {
+          "text": "असम दुनिया के सबसे बड़े चाय उत्पादक इलाकों में से एक है।",
+          "isTrue": true,
+          "explanation": "असम की ब्रह्मपुत्र घाटी भारत की बड़ी चाय पैदा करती है।"
+        },
+        {
+          "text": "दार्जिलिंग चाय केरल में उगाई जाती है।",
+          "isTrue": false,
+          "explanation": "दार्जिलिंग पश्चिम बंगाल की पहाड़ियों में है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.chilli.hi",
+      "type": "fact",
+      "categories": [
+        "food",
+        "history"
+      ],
+      "difficulty": 0.55,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌶️"
+        }
+      ],
+      "facts": [
+        {
+          "text": "मिर्च अमेरिका से पुर्तगाली व्यापारियों के ज़रिए भारत आई।",
+          "isTrue": true,
+          "explanation": "सोलहवीं सदी में आई और जल्दी भारतीय खाने में छा गई।"
+        },
+        {
+          "text": "आलू भारत का मूल निवासी है।",
+          "isTrue": false,
+          "explanation": "आलू दक्षिण अमेरिका के एंडीज़ से आता है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.banana.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "food"
+      ],
+      "difficulty": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍌"
+        }
+      ],
+      "facts": [
+        {
+          "text": "वनस्पति विज्ञान में केला एक बेरी है।",
+          "isTrue": true,
+          "explanation": "एक फूल और एक अंडाशय से बनता है, इसलिए बेरी माना जाता है।"
+        },
+        {
+          "text": "वनस्पति विज्ञान में स्ट्रॉबेरी असली बेरी है।",
+          "isTrue": false,
+          "explanation": "स्ट्रॉबेरी असली बेरी नहीं। बीज बाहर बैठे होते हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.cheetah.hi",
+      "type": "fact",
+      "categories": [
+        "animals",
+        "india"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐆"
+        }
+      ],
+      "facts": [
+        {
+          "text": "चीता ज़मीन का सबसे तेज़ जानवर है।",
+          "isTrue": true,
+          "explanation": "शॉर्ट बर्स्ट में करीब 100 किमी/घंटा दौड़ सकता है।"
+        },
+        {
+          "text": "चीते कभी भारत में नहीं रहे।",
+          "isTrue": false,
+          "explanation": "एशियाई चीते कभी भारत में घूमते थे; 2022 में कूनो में लाए गए।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.elephant.hi",
+      "type": "fact",
+      "categories": [
+        "animals"
+      ],
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐘"
+        }
+      ],
+      "facts": [
+        {
+          "text": "हाथी करीब दो साल तक गर्भवती रहती है।",
+          "isTrue": true,
+          "explanation": "गर्भावस्था करीब 22 महीने — ज़मीनी जानवरों में सबसे लंबी।"
+        },
+        {
+          "text": "हाथी की गर्भावस्था इंसान की तरह करीब नौ महीने की होती है।",
+          "isTrue": false,
+          "explanation": "ये करीब 22 महीने चलती है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.everest.hi",
+      "type": "fact",
+      "categories": [
+        "geography"
+      ],
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏔️"
+        }
+      ],
+      "facts": [
+        {
+          "text": "माउंट एवरेस्ट नेपाल और चीन की सीमा पर है।",
+          "isTrue": true,
+          "explanation": "शिखर की रिज नेपाल और तिब्बत को बाँटती है।"
+        },
+        {
+          "text": "के2 माउंट एवरेस्ट से ऊँचा है।",
+          "isTrue": false,
+          "explanation": "एवरेस्ट करीब 8849 मीटर; के2 करीब 8611 मीटर।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.desert.hi",
+      "type": "fact",
+      "categories": [
+        "geography",
+        "science"
+      ],
+      "difficulty": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏜️"
+        }
+      ],
+      "facts": [
+        {
+          "text": "अंटार्कटिका धरती का सबसे बड़ा रेगिस्तान है।",
+          "isTrue": true,
+          "explanation": "रेगिस्तान कम बारिश से परिभाषित होता है, और अंटार्कटिका में बहुत कम बारिश होती है।"
+        },
+        {
+          "text": "सहारा दुनिया का सबसे ठंडा रेगिस्तान है।",
+          "isTrue": false,
+          "explanation": "सहारा सबसे गर्म में से एक है। अंटार्कटिका सबसे ठंडा है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.great_wall.hi",
+      "type": "fact",
+      "categories": [
+        "history",
+        "geography"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧱"
+        }
+      ],
+      "facts": [
+        {
+          "text": "चीन की महान दीवार हज़ारों किलोमीटर लंबी है।",
+          "isTrue": true,
+          "explanation": "सारे सेक्शन मिलाकर 20,000 किमी से ऊपर।"
+        },
+        {
+          "text": "चीन की महान दीवार चाँद से नंगी आँखों से आसानी से दिखती है।",
+          "isTrue": false,
+          "explanation": "ये इतनी पतली है कि चाँद से दिख ही नहीं सकती।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.goldfish.hi",
+      "type": "fact",
+      "categories": [
+        "animals",
+        "science"
+      ],
+      "difficulty": 0.45,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐠"
+        }
+      ],
+      "facts": [
+        {
+          "text": "गोल्डफ़िश महीनों तक चीज़ें याद रख सकती है।",
+          "isTrue": true,
+          "explanation": "इन्हें आवाज़ और रोशनी पर रिएक्ट करने की ट्रेनिंग दी जा सकती है।"
+        },
+        {
+          "text": "गोल्डफ़िश की याददाश्त सिर्फ़ तीन सेकंड की होती है।",
+          "isTrue": false,
+          "explanation": "ये मिथक है। एक्सपेरिमेंट बताते हैं कि महीनों याद रहती है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.lightning.hi",
+      "type": "fact",
+      "categories": [
+        "science"
+      ],
+      "difficulty": 0.45,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⚡"
+        }
+      ],
+      "facts": [
+        {
+          "text": "बिजली का करंट सूरज की सतह से भी गर्म होता है।",
+          "isTrue": true,
+          "explanation": "करंट हवा को करीब 30,000 केल्विन तक गरम कर सकता है — सूरज की सतह से लगभग पाँच गुना।"
+        },
+        {
+          "text": "बिजली एक जगह दो बार नहीं गिरती।",
+          "isTrue": false,
+          "explanation": "एम्पायर स्टेट जैसी ऊँची बिल्डिंग्स पर साल में कई बार गिरती है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.diamond.hi",
+      "type": "fact",
+      "categories": [
+        "science"
+      ],
+      "difficulty": 0.55,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💎"
+        }
+      ],
+      "facts": [
+        {
+          "text": "हीरे कार्बन से बने होते हैं।",
+          "isTrue": true,
+          "explanation": "कार्बन परमाणु बहुत मज़बूत क्रिस्टल स्ट्रक्चर में बँधे होते हैं।"
+        },
+        {
+          "text": "हीरे दबे हुए कोयले से बनते हैं।",
+          "isTrue": false,
+          "explanation": "ज़्यादातर हीरे धरती के मेंटल में कार्बन से बनते हैं, कोयले से नहीं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.railways.hi",
+      "type": "fact",
+      "categories": [
+        "india",
+        "history"
+      ],
+      "difficulty": 0.45,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🚆"
+        }
+      ],
+      "facts": [
+        {
+          "text": "भारतीय रेलवे दुनिया के सबसे बड़े नियोक्ताओं में से एक है।",
+          "isTrue": true,
+          "explanation": "इसमें दस लाख से ज़्यादा लोग काम करते हैं।"
+        },
+        {
+          "text": "भारत की पहली पैसेंजर ट्रेन दिल्ली से आगरा चली।",
+          "isTrue": false,
+          "explanation": "1853 में बॉम्बे के बोरी बंदर से ठाणे चली थी।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.republic.hi",
+      "type": "fact",
+      "categories": [
+        "india",
+        "history"
+      ],
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "📜"
+        }
+      ],
+      "facts": [
+        {
+          "text": "भारत का संविधान दुनिया का सबसे लंबा लिखा हुआ राष्ट्रीय संविधान है।",
+          "isTrue": true,
+          "explanation": "सैकड़ों अनुच्छेद और कई अनुसूचियाँ हैं।"
+        },
+        {
+          "text": "भारत 15 अगस्त 1947 को गणराज्य बना।",
+          "isTrue": false,
+          "explanation": "वो स्वतंत्रता दिवस था। गणराज्य 26 जनवरी 1950 को बना।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.languages.hi",
+      "type": "fact",
+      "categories": [
+        "india"
+      ],
+      "difficulty": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🗣️"
+        }
+      ],
+      "facts": [
+        {
+          "text": "भारत के संविधान में 22 अनुसूचित भाषाएँ हैं।",
+          "isTrue": true,
+          "explanation": "ये आठवीं अनुसूची में सूचीबद्ध हैं।"
+        },
+        {
+          "text": "अंग्रेज़ी को भारत में कोई आधिकारिक दर्जा नहीं है।",
+          "isTrue": false,
+          "explanation": "अंग्रेज़ी संघ सरकार की आधिकारिक भाषा है, हिंदी के साथ।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.zero.hi",
+      "type": "fact",
+      "categories": [
+        "india",
+        "science",
+        "history"
+      ],
+      "difficulty": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "0️⃣"
+        }
+      ],
+      "facts": [
+        {
+          "text": "भारतीय गणितज्ञ ब्रह्मगुप्त ने शून्य से गणना के नियम लिखे।",
+          "isTrue": true,
+          "explanation": "सातवीं सदी में इन्हें रखा।"
+        },
+        {
+          "text": "आर्यभट मुग़ल बादशाह थे।",
+          "isTrue": false,
+          "explanation": "आर्यभट पाँचवीं सदी के गणितज्ञ और खगोलशास्त्री थे।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.yoga.hi",
+      "type": "fact",
+      "categories": [
+        "india"
+      ],
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧘"
+        }
+      ],
+      "facts": [
+        {
+          "text": "अंतरराष्ट्रीय योग दिवस 21 जून को मनाया जाता है।",
+          "isTrue": true,
+          "explanation": "यूएन ने 2014 में घोषित किया; 21 जून उत्तरी गोलार्ध का सबसे लंबा दिन है।"
+        },
+        {
+          "text": "अंतरराष्ट्रीय योग दिवस 2 अक्टूबर को पड़ता है।",
+          "isTrue": false,
+          "explanation": "2 अक्टूबर गांधी जयंती है। योग दिवस 21 जून है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.ipl.hi",
+      "type": "fact",
+      "categories": [
+        "sports",
+        "cricket",
+        "india"
+      ],
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏆"
+        }
+      ],
+      "facts": [
+        {
+          "text": "पहला आईपीएल सीज़न 2008 में खेला गया।",
+          "isTrue": true,
+          "explanation": "आठ फ़्रैंचाइज़ी शामिल थीं।"
+        },
+        {
+          "text": "चेन्नई सुपर किंग्स ने पहला आईपीएल जीता।",
+          "isTrue": false,
+          "explanation": "2008 में राजस्थान रॉयल्स ने पहला सीज़न जीता।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.football.hi",
+      "type": "fact",
+      "categories": [
+        "sports"
+      ],
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⚽"
+        }
+      ],
+      "facts": [
+        {
+          "text": "फ़ुटबॉल मैच के दो हाफ़ होते हैं, हर एक 45 मिनट।",
+          "isTrue": true,
+          "explanation": "हर हाफ़ के अंत में स्टॉपेज टाइम जुड़ता है।"
+        },
+        {
+          "text": "ब्राज़ील ने कभी फ़ीफ़ा वर्ल्ड कप नहीं जीता।",
+          "isTrue": false,
+          "explanation": "ब्राज़ील ने पाँच बार जीता — किसी भी देश से ज़्यादा।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.sindhu.hi",
+      "type": "fact",
+      "categories": [
+        "sports",
+        "india"
+      ],
+      "difficulty": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏸"
+        }
+      ],
+      "facts": [
+        {
+          "text": "पी.वी. सिंधु ने बैडमिंटन में दो ओलंपिक मेडल जीते हैं।",
+          "isTrue": true,
+          "explanation": "रियो 2016 में सिल्वर, टोक्यो 2020 में ब्रॉन्ज़।"
+        },
+        {
+          "text": "बैडमिंटन शटलकॉक पारंपरिक रूप से मुर्गी के पंखों से बनते हैं।",
+          "isTrue": false,
+          "explanation": "पारंपरिक शटलकॉक हंस या बत्तख के पंखों से बनते हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.moon_side.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "space"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌕"
+        }
+      ],
+      "facts": [
+        {
+          "text": "चाँद का एक ही पहलू हमेशा धरती की तरफ़ रहता है।",
+          "isTrue": true,
+          "explanation": "चाँद हर परिक्रमा में एक बार घूमता है, इसलिए वही चेहरा दिखता है।"
+        },
+        {
+          "text": "चाँद पर गुरुत्वाकर्षण नहीं होता।",
+          "isTrue": false,
+          "explanation": "चाँद का गुरुत्वाकर्षण धरती का करीब छठा हिस्सा है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.saturn.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "space"
+      ],
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🪐"
+        }
+      ],
+      "facts": [
+        {
+          "text": "शनि पानी से कम घनत्व वाला है।",
+          "isTrue": true,
+          "explanation": "ज़्यादातर हाइड्रोजन और हीलियम का बना है।"
+        },
+        {
+          "text": "शनि ही इकलौता ग्रह है जिस पर छल्ले हैं।",
+          "isTrue": false,
+          "explanation": "बृहस्पति, यूरेनस और नेप्च्यून पर भी छल्ले हैं, बस कम दिखते हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.heart.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "body"
+      ],
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "❤️"
+        }
+      ],
+      "facts": [
+        {
+          "text": "इंसान का दिल दिन में करीब एक लाख बार धड़कता है।",
+          "isTrue": true,
+          "explanation": "मिनट में करीब 70 धड़कनें मिलाकर लगभग एक लाख होती हैं।"
+        },
+        {
+          "text": "इंसान दिमाग़ का सिर्फ़ 10% इस्तेमाल करते हैं।",
+          "isTrue": false,
+          "explanation": "ब्रेन स्कैन बताते हैं कि लगभग पूरा दिमाग़ इस्तेमाल होता है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.tongue.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "body"
+      ],
+      "difficulty": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👅"
+        }
+      ],
+      "facts": [
+        {
+          "text": "हमारी जीभ मीठा, खट्टा, नमकीन, कड़वा और उमामी पहचान सकती है।",
+          "isTrue": true,
+          "explanation": "उमामी टमाटर-मशरूम जैसी सैवरी टेस्ट है।"
+        },
+        {
+          "text": "जीभ का हर हिस्सा सिर्फ़ एक स्वाद पहचानता है।",
+          "isTrue": false,
+          "explanation": "टंग मैप मिथक है। हर इलाका हर स्वाद महसूस कर सकता है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.ddlj.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment",
+        "movies",
+        "india"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎞️"
+        }
+      ],
+      "facts": [
+        {
+          "text": "दिलवाले दुल्हनिया ले जाएँगे मुंबई के एक सिनेमा में 20 साल से ज़्यादा चली।",
+          "isTrue": true,
+          "explanation": "1995 से 2010 के दशक तक मराठा मंदिर में चली।"
+        },
+        {
+          "text": "शोले 2000 के दशक में रिलीज़ हुई।",
+          "isTrue": false,
+          "explanation": "शोले 1975 में आई थी।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.baahubali.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment",
+        "movies",
+        "india"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⚔️"
+        }
+      ],
+      "facts": [
+        {
+          "text": "बाहुबली तेलुगु और तमिल में एक साथ शूट हुई।",
+          "isTrue": true,
+          "explanation": "बाद में हिंदी, मलयालम और अन्य भाषाओं में डब हुई।"
+        },
+        {
+          "text": "बाहुबली: द बिगिनिंग बाहुबली 2 के बाद आई।",
+          "isTrue": false,
+          "explanation": "बिगिनिंग 2015 में, द कंक्लूज़न 2017 में रिलीज़ हुई।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.rahman.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment",
+        "music",
+        "india"
+      ],
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎹"
+        }
+      ],
+      "facts": [
+        {
+          "text": "ए.आर. रहमान ने स्लमडॉग मिलियनेयर के लिए दो ऑस्कर जीते।",
+          "isTrue": true,
+          "explanation": "बेस्ट ओरिजिनल स्कोर और जय हो के लिए बेस्ट ओरिजिनल सॉन्ग।"
+        },
+        {
+          "text": "लता मंगेशकर ने कभी फ़िल्मी गाना नहीं गाया।",
+          "isTrue": false,
+          "explanation": "उन्होंने सात दशकों में हज़ारों फ़िल्मी गाने रिकॉर्ड किए।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.festivals.hi",
+      "type": "fact",
+      "categories": [
+        "india",
+        "festivals"
+      ],
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🪔"
+        }
+      ],
+      "facts": [
+        {
+          "text": "दिवाली को रोशनी का त्योहार कहा जाता है।",
+          "isTrue": true,
+          "explanation": "घर दीयों और लैंपों से सजाए जाते हैं।"
+        },
+        {
+          "text": "होली सर्दी की शुरुआत में मनाई जाती है।",
+          "isTrue": false,
+          "explanation": "होली बसंत के आगमन का त्योहार है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.states.hi",
+      "type": "fact",
+      "categories": [
+        "india",
+        "geography"
+      ],
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌴"
+        }
+      ],
+      "facts": [
+        {
+          "text": "केरल को गॉड्स ओन कंट्री कहा जाता है।",
+          "isTrue": true,
+          "explanation": "ये राज्य का टूरिज़्म स्लोगन है।"
+        },
+        {
+          "text": "गोवा एरिया से भारत का सबसे बड़ा राज्य है।",
+          "isTrue": false,
+          "explanation": "गोवा सबसे छोटा है। राजस्थान सबसे बड़ा है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.mango.hi",
+      "type": "fact",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥭"
+        }
+      ],
+      "facts": [
+        {
+          "text": "आम भारत का राष्ट्रीय फल है।",
+          "isTrue": true,
+          "explanation": "भारत में अल्फ़ांसो से लंगड़ा तक सैकड़ों किस्में उगती हैं।"
+        },
+        {
+          "text": "भारत बहुत कम आम उगाता है।",
+          "isTrue": false,
+          "explanation": "भारत दुनिया का सबसे बड़ा आम उत्पादक है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.penguin.hi",
+      "type": "fact",
+      "categories": [
+        "animals"
+      ],
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐧"
+        }
+      ],
+      "facts": [
+        {
+          "text": "पेंगुइन ऐसे पक्षी हैं जो उड़ नहीं सकते।",
+          "isTrue": true,
+          "explanation": "उनके पंख तैरने के लिए फ़्लिपर बन गए हैं।"
+        },
+        {
+          "text": "जंगली पेंगुइन उत्तरी ध्रुव पर रहते हैं।",
+          "isTrue": false,
+          "explanation": "जंगली पेंगुइन लगभग सिर्फ़ दक्षिणी गोलार्ध में रहते हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.bat.hi",
+      "type": "fact",
+      "categories": [
+        "animals",
+        "science"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🦇"
+        }
+      ],
+      "facts": [
+        {
+          "text": "चमगादड़ इकलौते स्तनधारी हैं जो सच में उड़ सकते हैं।",
+          "isTrue": true,
+          "explanation": "फ़्लाइंग स्क्विरल सिर्फ़ ग्लाइड करते हैं।"
+        },
+        {
+          "text": "चमगादड़ पूरी तरह अंधे होते हैं।",
+          "isTrue": false,
+          "explanation": "सभी चमगादड़ देख सकते हैं। कई इकोलोकेशन भी इस्तेमाल करते हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.kabaddi.hi",
+      "type": "fact",
+      "categories": [
+        "sports",
+        "india"
+      ],
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🤼"
+        }
+      ],
+      "facts": [
+        {
+          "text": "कबड्डी भारत में जन्मा संपर्क वाला खेल है।",
+          "isTrue": true,
+          "explanation": "सदियों से दक्षिण एशिया में खेला जाता रहा है।"
+        },
+        {
+          "text": "प्रो कबड्डी लीग मैच घास पर खेले जाते हैं।",
+          "isTrue": false,
+          "explanation": "प्रो कबड्डी इंडोर मैट्स पर खेली जाती है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.olympics.hi",
+      "type": "fact",
+      "categories": [
+        "sports"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏅"
+        }
+      ],
+      "facts": [
+        {
+          "text": "समर ओलंपिक्स हर चार साल में होते हैं।",
+          "isTrue": true,
+          "explanation": "अब समर और विंटर गेम्स बारी-बारी, दो साल के अंतर पर।"
+        },
+        {
+          "text": "आधुनिक ओलंपिक गेम्स 1950 में शुरू हुए।",
+          "isTrue": false,
+          "explanation": "पहले आधुनिक ओलंपिक 1896 में एथेंस में हुए।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.dhoni.hi",
+      "type": "fact",
+      "categories": [
+        "sports",
+        "cricket",
+        "india"
+      ],
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧤"
+        }
+      ],
+      "facts": [
+        {
+          "text": "एमएस धोनी ने भारत को टी20 वर्ल्ड कप, ओडीआई वर्ल्ड कप और चैंपियंस ट्रॉफ़ी दिलाई।",
+          "isTrue": true,
+          "explanation": "भारत ने ये 2007, 2011 और 2013 में जीते।"
+        },
+        {
+          "text": "एमएस धोनी भारत के लिए तेज़ गेंदबाज़ थे।",
+          "isTrue": false,
+          "explanation": "धोनी विकेटकीपर-बैटर थे।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.tennis.hi",
+      "type": "fact",
+      "categories": [
+        "sports"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎾"
+        }
+      ],
+      "facts": [
+        {
+          "text": "विंबलडन घास के कोर्ट पर खेला जाता है।",
+          "isTrue": true,
+          "explanation": "ये दुनिया का सबसे पुराना टेनिस टूर्नामेंट है।"
+        },
+        {
+          "text": "फ़्रेंच ओपन घास के कोर्ट पर खेला जाता है।",
+          "isTrue": false,
+          "explanation": "रोलैंड-गैरोस पर लाल मिट्टी पर खेला जाता है।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.whisperers.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment",
+        "movies",
+        "india"
+      ],
+      "difficulty": 0.45,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐘"
+        }
+      ],
+      "facts": [
+        {
+          "text": "द एलिफ़ेंट विस्पर्स ने बेस्ट डॉक्युमेंटरी शॉर्ट फ़िल्म का ऑस्कर जीता।",
+          "isTrue": true,
+          "explanation": "2023 एकेडमी अवॉर्ड्स में जीता।"
+        },
+        {
+          "text": "किसी भारतीय फ़िल्म को कभी ऑस्कर नॉमिनेशन नहीं मिला।",
+          "isTrue": false,
+          "explanation": "मदर इंडिया, सलाम बॉम्बे! और लगान सब नॉमिनेट हुईं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.kishore.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment",
+        "music",
+        "india"
+      ],
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎤"
+        }
+      ],
+      "facts": [
+        {
+          "text": "किशोर कुमार फ़िल्म अभिनेता और निर्देशक भी थे।",
+          "isTrue": true,
+          "explanation": "चलती का नाम गाड़ी जैसे हिट्स में अभिनय किया।"
+        },
+        {
+          "text": "मोहम्मद रफ़ी ने सिर्फ़ हिंदी में गाया।",
+          "isTrue": false,
+          "explanation": "रफ़ी ने कई भारतीय भाषाओं में गाने रिकॉर्ड किए।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.ray.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment",
+        "movies",
+        "india"
+      ],
+      "difficulty": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏆"
+        }
+      ],
+      "facts": [
+        {
+          "text": "सत्यजित रे को उनके जीवन कार्य के लिए ऑनररी ऑस्कर मिला।",
+          "isTrue": true,
+          "explanation": "1992 में मिला, निधन से ठीक पहले।"
+        },
+        {
+          "text": "सत्यजित रे ने ज़्यादातर फ़िल्में तमिल में बनाईं।",
+          "isTrue": false,
+          "explanation": "रे ने ज़्यादातर फ़िल्में बांग्ला में बनाईं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.bollywood.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment",
+        "movies",
+        "india"
+      ],
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎥"
+        }
+      ],
+      "facts": [
+        {
+          "text": "बॉलीवुड नाम बॉम्बे और हॉलीवुड मिलाकर बना है।",
+          "isTrue": true,
+          "explanation": "बॉम्बे मुंबई का पुराना नाम है, हिंदी फ़िल्म इंडस्ट्री का घर।"
+        },
+        {
+          "text": "बॉलीवुड भारत की इकलौती फ़िल्म इंडस्ट्री है।",
+          "isTrue": false,
+          "explanation": "तेलुगु, तमिल, मलयालम, कन्नड़, बांग्ला और अन्य इंडस्ट्रीज़ भी फल-फूल रही हैं।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.mickey.hi",
+      "type": "fact",
+      "categories": [
+        "entertainment"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐭"
+        }
+      ],
+      "facts": [
+        {
+          "text": "मिकी माउस पहली बार 1928 में स्क्रीन पर आया।",
+          "isTrue": true,
+          "explanation": "ब्रेकआउट फ़िल्म स्टीमबोट विली थी।"
+        },
+        {
+          "text": "मिकी माउस वार्नर ब्रदर्स ने बनाया।",
+          "isTrue": false,
+          "explanation": "वॉल्ट डिज़्नी और उब आइवर्क्स ने मिकी बनाया।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "fact.internet.hi",
+      "type": "fact",
+      "categories": [
+        "science",
+        "tech"
+      ],
+      "difficulty": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💻"
+        }
+      ],
+      "facts": [
+        {
+          "text": "पहला ईमेल 1970 के दशक की शुरुआत में भेजा गया।",
+          "isTrue": true,
+          "explanation": "रे टॉमलिंसन ने 1971 में ARPAnet पर भेजा।"
+        },
+        {
+          "text": "वर्ल्ड वाइड वेब और इंटरनेट एक ही चीज़ हैं।",
+          "isTrue": false,
+          "explanation": "वेब इंटरनेट पर चलने वाली एक सर्विस है, जैसे ईमेल।"
+        }
+      ],
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

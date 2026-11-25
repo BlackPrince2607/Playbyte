@@ -777,7 +777,7 @@ export function FriendsScreen({
               Send your invite link. Friends who open it are added straight away.
             </Text>
             <PrimaryButton
-              label="Invite friends"
+              label={t("inviteFriends")}
               icon="share-outline"
               onPress={() => void inviteFriends()}
               style={{ alignSelf: "stretch", marginTop: spacing.xs }}

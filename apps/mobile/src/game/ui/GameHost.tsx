@@ -513,8 +513,8 @@ function ActiveSession({
   if (snap.error) {
     return (
       <View style={styles.center}>
-        <ErrorState title="Something went wrong" message="This game hit a problem and had to stop." />
-        <PrimaryButton label="Back to feed" onPress={quit} />
+        <ErrorState title={t("somethingWrong")} message={t("gameStopped")} />
+        <PrimaryButton label={t("backToFeed")} onPress={quit} />
       </View>
     );
   }

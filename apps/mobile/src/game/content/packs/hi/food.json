@@ -1,0 +1,1021 @@
+{
+  "packId": "food",
+  "title": "खाना और व्यंजन",
+  "items": [
+    {
+      "id": "food.biryani.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "बिरयानी",
+      "difficulty": 0.05,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍚🍗🔥"
+        }
+      ],
+      "hints": [
+        "दम पर पकाया लेयर्ड चावल",
+        "हैदराबाद और लखनऊ दोनों अपना बेस्ट मानते हैं"
+      ],
+      "distractorGroup": "rice",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.pulao.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "पुलाव",
+      "difficulty": 0.4,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍚🥕🫛"
+        }
+      ],
+      "hints": [
+        "बिरयानी का हल्का कज़िन",
+        "स्टॉक में चावल-सब्ज़ी साथ पकाते हैं"
+      ],
+      "distractorGroup": "rice",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.khichdi.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "खिचड़ी",
+      "difficulty": 0.35,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍚🫘🤒"
+        }
+      ],
+      "hints": [
+        "चावल-दाल नरम पकाई जाती है",
+        "बीमार होने पर सबसे पसंदीदा आराम का खाना"
+      ],
+      "distractorGroup": "rice",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.curd_rice.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "दही चावल",
+      "difficulty": 0.4,
+      "popularity": 0.75,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍚🥛🌶️"
+        }
+      ],
+      "hints": [
+        "साउथ का कूलिंग एंडिंग",
+        "राई और करी पत्ता से तड़का"
+      ],
+      "distractorGroup": "rice",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.dosa.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "डोसा",
+      "difficulty": 0.05,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥞🥥🌶️"
+        }
+      ],
+      "hints": [
+        "क्रिस्पी फ़र्मेंटेड क्रेप",
+        "सांबर-चटनी के साथ"
+      ],
+      "distractorGroup": "south_tiffin",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.idli.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "इडली",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⚪⚪☁️"
+        }
+      ],
+      "hints": [
+        "नरम स्टीम्ड चावल के केक",
+        "अक्सर सांबर के साथ"
+      ],
+      "distractorGroup": "south_tiffin",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.vada.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "मेदू वड़ा",
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍩🫘🥥"
+        }
+      ],
+      "hints": [
+        "दाल का नमकीन डोनट",
+        "बाहर क्रिस्पी, अंदर फ़्लफ़ी"
+      ],
+      "distractorGroup": "south_tiffin",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.uttapam.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "उत्तपम",
+      "difficulty": 0.5,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥞🧅🍅"
+        }
+      ],
+      "hints": [
+        "प्याज़-टमाटर वाला मोटा पैनकेक",
+        "डोसा बैटर से बनता है"
+      ],
+      "distractorGroup": "south_tiffin",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.appam.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "अप्पम",
+      "difficulty": 0.6,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥣🥥🥞"
+        }
+      ],
+      "hints": [
+        "केरल का जालीदार बाउल पैनकेक",
+        "अक्सर स्ट्यू के साथ"
+      ],
+      "distractorGroup": "south_tiffin",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.pav_bhaji.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "पाव भाजी",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍞🍛🧈"
+        }
+      ],
+      "hints": [
+        "मक्खन वाले पाव वाली मुंबई स्ट्रीट फ़ूड",
+        "तवे पर मैश सब्ज़ी करी"
+      ],
+      "distractorGroup": "street",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.vada_pav.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "वड़ा पाव",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍔🥔🌶️"
+        }
+      ],
+      "hints": [
+        "मुंबई का बर्गर कहा जाता है",
+        "मसालेदार आलू वड़ा पाव में"
+      ],
+      "distractorGroup": "street",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.pani_puri.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "पानी पूरी",
+      "aliases": [
+        "गोलगप्पा",
+        "फ़ुचका"
+      ],
+      "difficulty": 0.1,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🫧💧🌶️"
+        }
+      ],
+      "hints": [
+        "खोखली क्रिस्पी पूरी, फ़्लेवर्ड पानी से भरी",
+        "देश में कई नामों से जानी जाती है"
+      ],
+      "distractorGroup": "street",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.samosa.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "समोसा",
+      "difficulty": 0.05,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔺🥔🍵"
+        }
+      ],
+      "hints": [
+        "तिकोना तला पेस्ट्री",
+        "अक्सर मसालेदार आलू से भरा"
+      ],
+      "distractorGroup": "street",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.chole_bhature.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "छोले भटूरे",
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🫘🎈🧅"
+        }
+      ],
+      "hints": [
+        "तीखे छोले और फूले भटूरे",
+        "दिल्ली-पंजाब का फ़ेवरेट"
+      ],
+      "distractorGroup": "street",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.dhokla.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "ढोकला",
+      "difficulty": 0.3,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🟨🧽🌶️"
+        }
+      ],
+      "hints": [
+        "गुजरात का स्पंजी स्टीम्ड स्नैक",
+        "बेसन के फ़र्मेंटेड बैटर से"
+      ],
+      "distractorGroup": "street",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.kachori.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "कचौरी",
+      "difficulty": 0.4,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥟🫘🔥"
+        }
+      ],
+      "hints": [
+        "गोल फ़्लेकी तला स्नैक",
+        "अक्सर मसालेदार दाल भरी"
+      ],
+      "distractorGroup": "street",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.momos.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "मोमोज",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥟🥟🌶️"
+        }
+      ],
+      "hints": [
+        "हिमालय से स्टीम्ड डंपलिंग्स",
+        "तीखी लाल चटनी के साथ"
+      ],
+      "distractorGroup": "street",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.butter_chicken.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "बटर चिकन",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍗🧈🍅"
+        }
+      ],
+      "hints": [
+        "क्रीमी टमाटर ग्रेवी में चिकन",
+        "दिल्ली में इन्वेंट हुआ"
+      ],
+      "distractorGroup": "curry",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.paneer_tikka.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "पनीर टिक्का",
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧀🔥🫑"
+        }
+      ],
+      "hints": [
+        "मैरिनेटेड पनीर तंदूर में ग्रिल",
+        "पुदीना चटनी के साथ"
+      ],
+      "distractorGroup": "curry",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.rajma_chawal.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "राजमा चावल",
+      "difficulty": 0.25,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🫘🍚❤️"
+        }
+      ],
+      "hints": [
+        "ग्रेवी वाले राजमा के साथ चावल",
+        "नॉर्थ इंडियन संडे लंच क्लासिक"
+      ],
+      "distractorGroup": "curry",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.dal_makhani.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "दाल मखनी",
+      "difficulty": 0.35,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🫘🧈🖤"
+        }
+      ],
+      "hints": [
+        "मक्खन-क्रीम में स्लो-कुक्ड काली दाल",
+        "पंजाबी ढाबा स्टेपल"
+      ],
+      "distractorGroup": "curry",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.sambar.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "सांबर",
+      "difficulty": 0.25,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍲🥕🫘"
+        }
+      ],
+      "hints": [
+        "खट्टी दाल-सब्ज़ी स्ट्यू",
+        "इमली से खट्टापन आता है"
+      ],
+      "distractorGroup": "curry",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.rogan_josh.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "रोगन जोश",
+      "difficulty": 0.55,
+      "popularity": 0.65,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍖🌶️🏔️"
+        }
+      ],
+      "hints": [
+        "खुशबूदार लाल गोश्त करी",
+        "कश्मीर का सिग्नेचर डिश"
+      ],
+      "distractorGroup": "curry",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.fish_curry.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "माछेर झोल",
+      "difficulty": 0.65,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐟🍲🌿"
+        }
+      ],
+      "hints": [
+        "हल्की बंगाली मछली करी",
+        "भात के साथ बेस्ट"
+      ],
+      "distractorGroup": "curry",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.gulab_jamun.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "गुलाब जामुन",
+      "difficulty": 0.1,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🟤🍯🌹"
+        }
+      ],
+      "hints": [
+        "तले खोए के गोले चाशनी में",
+        "नाम में गुलाब जल छिपा है"
+      ],
+      "distractorGroup": "sweet",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.jalebi.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "जलेबी",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌀🍯🧡"
+        }
+      ],
+      "hints": [
+        "नारंगी क्रिस्पी सर्पिल, चाशनी में भीगी",
+        "रबड़ी या फ़ाफ़ड़ा के साथ"
+      ],
+      "distractorGroup": "sweet",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.rasgulla.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "रसगुल्ला",
+      "aliases": [
+        "रसोगोल्ला"
+      ],
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⚪🍯💦"
+        }
+      ],
+      "hints": [
+        "हल्की चाशनी में सफ़ेद स्पंजी गोले",
+        "बंगाल और ओडिशा दोनों क्लेम करते हैं"
+      ],
+      "distractorGroup": "sweet",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.modak.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "मोदक",
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥟🥥🐘"
+        }
+      ],
+      "hints": [
+        "नारियल-गुड़ भरा मीठा डंपलिंग",
+        "गणेश जी का फ़ेवरेट कहा जाता है"
+      ],
+      "distractorGroup": "sweet",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.kheer.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "खीर",
+      "difficulty": 0.25,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍚🥛🌰"
+        }
+      ],
+      "hints": [
+        "दूध में स्लो-कुक्ड चावल की पुडिंग",
+        "मेवे और इलायची ऊपर"
+      ],
+      "distractorGroup": "sweet",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.mysore_pak.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "मैसूर पाक",
+      "difficulty": 0.5,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🟨🧈👑"
+        }
+      ],
+      "hints": [
+        "बेसन-घी की रिच मिठाई",
+        "रॉयल किचन में बनी थी"
+      ],
+      "distractorGroup": "sweet",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.pizza.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "world"
+      ],
+      "answer": "पिज़्ज़ा",
+      "difficulty": 0.02,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍕"
+        }
+      ],
+      "hints": [
+        "टमाटर-चीज़ वाला फ़्लैटब्रेड",
+        "जन्मस्थान: नेपल्स"
+      ],
+      "distractorGroup": "world",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.sushi.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "world"
+      ],
+      "answer": "सुशी",
+      "difficulty": 0.15,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍣"
+        }
+      ],
+      "hints": [
+        "सिरके वाले चावल के साथ मछली",
+        "जापानी क्लासिक"
+      ],
+      "distractorGroup": "world",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.tacos.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "world"
+      ],
+      "answer": "टैकोस",
+      "difficulty": 0.15,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌮"
+        }
+      ],
+      "hints": [
+        "फ़िलिंग वाली मुड़ी टॉर्टिला",
+        "मेक्सिकन स्ट्रीट फ़ेवरेट"
+      ],
+      "distractorGroup": "world",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.ramen.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "world"
+      ],
+      "answer": "रामेन",
+      "difficulty": 0.25,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍜"
+        }
+      ],
+      "hints": [
+        "रिच ब्रॉथ में नूडल्स",
+        "जापान ने इसे क्रेज़ बनाया"
+      ],
+      "distractorGroup": "world",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.croissant.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "world"
+      ],
+      "answer": "क्रॉइसैंट",
+      "difficulty": 0.2,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥐"
+        }
+      ],
+      "hints": [
+        "फ़्लेकी अर्धचंद्राकार पेस्ट्री",
+        "फ़्रेंच ब्रेकफ़ास्ट स्टेपल"
+      ],
+      "distractorGroup": "world",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "food.burger.hi",
+      "type": "food",
+      "categories": [
+        "food",
+        "world"
+      ],
+      "answer": "बर्गर",
+      "difficulty": 0.02,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍔"
+        }
+      ],
+      "hints": [
+        "कटी बुन में पैटी",
+        "अमेरिकी फ़ास्ट-फ़ूड आइकन"
+      ],
+      "distractorGroup": "world",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

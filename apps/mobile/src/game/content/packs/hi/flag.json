@@ -1,0 +1,1921 @@
+{
+  "packId": "flag",
+  "title": "देशों के झंडे",
+  "items": [
+    {
+      "id": "flag.in.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "भारत",
+      "difficulty": 0.02,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇮🇳"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: नई दिल्ली"
+      ],
+      "distractorGroup": "south_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.pk.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "पाकिस्तान",
+      "difficulty": 0.2,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇵🇰"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: इस्लामाबाद"
+      ],
+      "distractorGroup": "south_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.bd.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "बांग्लादेश",
+      "difficulty": 0.3,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇧🇩"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: ढाका"
+      ],
+      "distractorGroup": "south_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.lk.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "श्रीलंका",
+      "difficulty": 0.35,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇱🇰"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: श्री जयवर्धनेपुरा कोट्टे"
+      ],
+      "distractorGroup": "south_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.np.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "नेपाल",
+      "difficulty": 0.2,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇳🇵"
+        }
+      ],
+      "hints": [
+        "दुनिया का इकलौता नॉन-रेक्टैंगलर झंडा",
+        "राजधानी: काठमांडू"
+      ],
+      "distractorGroup": "south_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.bt.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "भूटान",
+      "difficulty": 0.45,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇧🇹"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: थिंपू"
+      ],
+      "distractorGroup": "south_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.af.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "अफ़ग़ानिस्तान",
+      "difficulty": 0.55,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇦🇫"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: काबुल"
+      ],
+      "distractorGroup": "south_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.mv.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "मालदीव",
+      "difficulty": 0.6,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇲🇻"
+        }
+      ],
+      "hints": [
+        "हिंद महासागर का द्वीप देश",
+        "राजधानी: माले"
+      ],
+      "distractorGroup": "south_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.us.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "संयुक्त राज्य अमेरिका",
+      "aliases": [
+        "अमेरिका",
+        "यूएसए",
+        "यूएस"
+      ],
+      "difficulty": 0.05,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇺🇸"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: उत्तर अमेरिका",
+        "राजधानी: वाशिंगटन डी.सी."
+      ],
+      "distractorGroup": "stars_stripes",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.lr.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "लाइबेरिया",
+      "difficulty": 0.8,
+      "popularity": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇱🇷"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: अफ़्रीका",
+        "राजधानी: मोनरोविया"
+      ],
+      "distractorGroup": "stars_stripes",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.my.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "मलेशिया",
+      "difficulty": 0.45,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇲🇾"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: कुआलालंपुर"
+      ],
+      "distractorGroup": "stars_stripes",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.gb.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "यूनाइटेड किंगडम",
+      "aliases": [
+        "ब्रिटेन",
+        "यूके",
+        "ग्रेट ब्रिटेन"
+      ],
+      "difficulty": 0.1,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇬🇧"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: लंदन"
+      ],
+      "distractorGroup": "union_jack",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.au.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "ऑस्ट्रेलिया",
+      "difficulty": 0.25,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇦🇺"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: ओशिनिया",
+        "राजधानी: कैनबरा"
+      ],
+      "distractorGroup": "union_jack",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.nz.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "न्यूज़ीलैंड",
+      "difficulty": 0.5,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇳🇿"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: ओशिनिया",
+        "राजधानी: वेलिंगटन"
+      ],
+      "distractorGroup": "union_jack",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.fj.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "फ़िजी",
+      "difficulty": 0.75,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇫🇯"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: ओशिनिया",
+        "राजधानी: सुवा"
+      ],
+      "distractorGroup": "union_jack",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.fr.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "फ़्रांस",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇫🇷"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: पेरिस"
+      ],
+      "distractorGroup": "vertical_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.it.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "इटली",
+      "difficulty": 0.15,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇮🇹"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: रोम"
+      ],
+      "distractorGroup": "vertical_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ie.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "आयरलैंड",
+      "difficulty": 0.45,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇮🇪"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: डबलिन"
+      ],
+      "distractorGroup": "vertical_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.be.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "बेल्जियम",
+      "difficulty": 0.45,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇧🇪"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: ब्रसेल्स"
+      ],
+      "distractorGroup": "vertical_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ro.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "रोमानिया",
+      "difficulty": 0.7,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇷🇴"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: बुखारेस्ट"
+      ],
+      "distractorGroup": "vertical_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ci.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "आइवरी कोस्ट",
+      "aliases": [
+        "कोत द'इव्वार"
+      ],
+      "difficulty": 0.8,
+      "popularity": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇨🇮"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: अफ़्रीका",
+        "राजधानी: यामूसूक्रो"
+      ],
+      "distractorGroup": "vertical_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.mx.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "मेक्सिको",
+      "difficulty": 0.3,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇲🇽"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: उत्तर अमेरिका",
+        "राजधानी: मेक्सिको सिटी"
+      ],
+      "distractorGroup": "vertical_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.de.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "जर्मनी",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇩🇪"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: बर्लिन"
+      ],
+      "distractorGroup": "horizontal_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.nl.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "नीदरलैंड्स",
+      "aliases": [
+        "हॉलैंड"
+      ],
+      "difficulty": 0.4,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇳🇱"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: एम्स्टर्डम"
+      ],
+      "distractorGroup": "horizontal_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ru.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "रूस",
+      "difficulty": 0.3,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇷🇺"
+        }
+      ],
+      "hints": [
+        "एरिया से सबसे बड़ा देश",
+        "राजधानी: मॉस्को"
+      ],
+      "distractorGroup": "horizontal_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.at.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "ऑस्ट्रिया",
+      "difficulty": 0.55,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇦🇹"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: वियना"
+      ],
+      "distractorGroup": "horizontal_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.hu.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "हंगरी",
+      "difficulty": 0.7,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇭🇺"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: बुडापेस्ट"
+      ],
+      "distractorGroup": "horizontal_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.lu.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "लक्ज़मबर्ग",
+      "difficulty": 0.85,
+      "popularity": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇱🇺"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: लक्ज़मबर्ग सिटी"
+      ],
+      "distractorGroup": "horizontal_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.bg.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "बुल्गारिया",
+      "difficulty": 0.8,
+      "popularity": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇧🇬"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: सोफ़िया"
+      ],
+      "distractorGroup": "horizontal_tricolour",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.se.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "स्वीडन",
+      "difficulty": 0.35,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇸🇪"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: स्टॉकहोम"
+      ],
+      "distractorGroup": "nordic_cross",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.no.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "नॉर्वे",
+      "difficulty": 0.45,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇳🇴"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: ओस्लो"
+      ],
+      "distractorGroup": "nordic_cross",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.dk.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "डेनमार्क",
+      "difficulty": 0.5,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇩🇰"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: कोपेनहेगन"
+      ],
+      "distractorGroup": "nordic_cross",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.fi.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "फ़िनलैंड",
+      "difficulty": 0.55,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇫🇮"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: हेलसिंकी"
+      ],
+      "distractorGroup": "nordic_cross",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.is.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "आइसलैंड",
+      "difficulty": 0.7,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇮🇸"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: रेक्जाविक"
+      ],
+      "distractorGroup": "nordic_cross",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.jp.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "जापान",
+      "difficulty": 0.05,
+      "popularity": 1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇯🇵"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: टोक्यो"
+      ],
+      "distractorGroup": "red_white",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.id.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "इंडोनेशिया",
+      "difficulty": 0.5,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇮🇩"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: जकार्ता"
+      ],
+      "distractorGroup": "red_white",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.mc.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "मोनाको",
+      "difficulty": 0.85,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇲🇨"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "ग्रैंड प्रिक्स के लिए फेमस"
+      ],
+      "distractorGroup": "red_white",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.pl.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "पोलैंड",
+      "difficulty": 0.5,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇵🇱"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: वारसॉ"
+      ],
+      "distractorGroup": "red_white",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.sg.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "सिंगापुर",
+      "difficulty": 0.4,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇸🇬"
+        }
+      ],
+      "hints": [
+        "दक्षिण-पूर्व एशिया का सिटी-स्टेट",
+        "मरीना बे सैंड्स के लिए जाना जाता है"
+      ],
+      "distractorGroup": "red_white",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ca.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "कनाडा",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇨🇦"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: उत्तर अमेरिका",
+        "राजधानी: ओटावा"
+      ],
+      "distractorGroup": "red_white",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ch.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "स्विट्ज़रलैंड",
+      "difficulty": 0.3,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇨🇭"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: बर्न"
+      ],
+      "distractorGroup": "red_white",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.br.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "ब्राज़ील",
+      "difficulty": 0.15,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇧🇷"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: दक्षिण अमेरिका",
+        "राजधानी: ब्रासीलिया"
+      ],
+      "distractorGroup": "latin_america",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ar.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "अर्जेंटीना",
+      "difficulty": 0.3,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇦🇷"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: दक्षिण अमेरिका",
+        "राजधानी: ब्यूनस आयर्स"
+      ],
+      "distractorGroup": "latin_america",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.uy.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "उरुग्वे",
+      "difficulty": 0.75,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇺🇾"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: दक्षिण अमेरिका",
+        "राजधानी: मोंटेवीडियो"
+      ],
+      "distractorGroup": "latin_america",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.cl.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "चिली",
+      "difficulty": 0.6,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇨🇱"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: दक्षिण अमेरिका",
+        "राजधानी: सैंटियागो"
+      ],
+      "distractorGroup": "latin_america",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.co.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "कोलंबिया",
+      "difficulty": 0.6,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇨🇴"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: दक्षिण अमेरिका",
+        "राजधानी: बोगोटा"
+      ],
+      "distractorGroup": "latin_america",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.pe.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "पेरू",
+      "difficulty": 0.65,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇵🇪"
+        }
+      ],
+      "hints": [
+        "माचू पिच्चू यहीं है",
+        "राजधानी: लीमा"
+      ],
+      "distractorGroup": "latin_america",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.cu.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "क्यूबा",
+      "difficulty": 0.6,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇨🇺"
+        }
+      ],
+      "hints": [
+        "कैरिबियन का द्वीप देश",
+        "राजधानी: हवाना"
+      ],
+      "distractorGroup": "latin_america",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.jm.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "जमैका",
+      "difficulty": 0.45,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇯🇲"
+        }
+      ],
+      "hints": [
+        "कैरिबियन का द्वीप देश",
+        "राजधानी: किंग्स्टन"
+      ],
+      "distractorGroup": "latin_america",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.sa.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "सऊदी अरब",
+      "difficulty": 0.35,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇸🇦"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: रियाद"
+      ],
+      "distractorGroup": "arab",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ae.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "संयुक्त अरब अमीरात",
+      "aliases": [
+        "यूएई"
+      ],
+      "difficulty": 0.4,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇦🇪"
+        }
+      ],
+      "hints": [
+        "बुर्ज खलीफ़ा यहीं है",
+        "राजधानी: अबू धाबी"
+      ],
+      "distractorGroup": "arab",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.eg.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "मिस्र",
+      "difficulty": 0.4,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇪🇬"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: अफ़्रीका",
+        "राजधानी: काहिरा"
+      ],
+      "distractorGroup": "arab",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.qa.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "क़तर",
+      "difficulty": 0.6,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇶🇦"
+        }
+      ],
+      "hints": [
+        "2022 फ़ीफ़ा वर्ल्ड कप होस्ट किया",
+        "राजधानी: दोहा"
+      ],
+      "distractorGroup": "arab",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.jo.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "जॉर्डन",
+      "difficulty": 0.75,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇯🇴"
+        }
+      ],
+      "hints": [
+        "पेट्रा यहीं है",
+        "राजधानी: अम्मान"
+      ],
+      "distractorGroup": "arab",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.kw.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "कुवैत",
+      "difficulty": 0.8,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇰🇼"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: कुवैत सिटी"
+      ],
+      "distractorGroup": "arab",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.om.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "ओमान",
+      "difficulty": 0.8,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇴🇲"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: मस्कट"
+      ],
+      "distractorGroup": "arab",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.za.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "दक्षिण अफ़्रीका",
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇿🇦"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: अफ़्रीका",
+        "तीन कैपिटल सिटीज़ हैं"
+      ],
+      "distractorGroup": "africa",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ke.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "केन्या",
+      "difficulty": 0.5,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇰🇪"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: अफ़्रीका",
+        "राजधानी: नैरोबी"
+      ],
+      "distractorGroup": "africa",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ng.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "नाइजीरिया",
+      "difficulty": 0.55,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇳🇬"
+        }
+      ],
+      "hints": [
+        "अफ़्रीका का सबसे ज़्यादा आबादी वाला देश",
+        "राजधानी: अबुजा"
+      ],
+      "distractorGroup": "africa",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.gh.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "घाना",
+      "difficulty": 0.65,
+      "popularity": 0.5,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇬🇭"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: अफ़्रीका",
+        "राजधानी: अकरा"
+      ],
+      "distractorGroup": "africa",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.et.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "इथियोपिया",
+      "difficulty": 0.7,
+      "popularity": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇪🇹"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: अफ़्रीका",
+        "राजधानी: अदीस अबाबा"
+      ],
+      "distractorGroup": "africa",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.cn.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "चीन",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇨🇳"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: बीजिंग"
+      ],
+      "distractorGroup": "east_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.kr.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "दक्षिण कोरिया",
+      "aliases": [
+        "कोरिया"
+      ],
+      "difficulty": 0.3,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇰🇷"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: सियोल"
+      ],
+      "distractorGroup": "east_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.vn.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "वियतनाम",
+      "difficulty": 0.4,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇻🇳"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: हनोई"
+      ],
+      "distractorGroup": "east_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.th.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "थाईलैंड",
+      "difficulty": 0.45,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇹🇭"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: बैंकॉक"
+      ],
+      "distractorGroup": "east_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.ph.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "फ़िलिपींस",
+      "difficulty": 0.55,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇵🇭"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: एशिया",
+        "राजधानी: मनीला"
+      ],
+      "distractorGroup": "east_asia",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.es.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "स्पेन",
+      "difficulty": 0.25,
+      "popularity": 0.85,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇪🇸"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: मैड्रिड"
+      ],
+      "distractorGroup": "europe_other",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.pt.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "पुर्तगाल",
+      "difficulty": 0.4,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇵🇹"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: लिस्बन"
+      ],
+      "distractorGroup": "europe_other",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.gr.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "ग्रीस",
+      "difficulty": 0.45,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇬🇷"
+        }
+      ],
+      "hints": [
+        "महाद्वीप: यूरोप",
+        "राजधानी: एथेंस"
+      ],
+      "distractorGroup": "europe_other",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "flag.tr.hi",
+      "type": "flag",
+      "categories": [
+        "geo"
+      ],
+      "answer": "तुर्की",
+      "aliases": [
+        "टर्की"
+      ],
+      "difficulty": 0.35,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇹🇷"
+        }
+      ],
+      "hints": [
+        "यूरोप और एशिया दोनों में फैला",
+        "राजधानी: अंकारा"
+      ],
+      "distractorGroup": "europe_other",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

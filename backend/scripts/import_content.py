@@ -16,6 +16,14 @@ from pathlib import Path
 from app.modules.content.validation import validate_items
 
 DEFAULT_DIR = Path(__file__).resolve().parents[2] / "apps" / "mobile" / "src" / "game" / "content" / "packs"
+HI_DIR = DEFAULT_DIR / "hi"
+
+
+def default_pack_paths() -> list[Path]:
+    """English seeds at packs/*.json plus Hindi-native seeds at packs/hi/*.json."""
+    en = sorted(DEFAULT_DIR.glob("*.json"))
+    hi = sorted(HI_DIR.glob("*.json")) if HI_DIR.is_dir() else []
+    return [*en, *hi]
 
 
 def load_pack_file(path: Path) -> tuple[dict, list[dict], list[str]]:
@@ -25,7 +33,7 @@ def load_pack_file(path: Path) -> tuple[dict, list[dict], list[str]]:
     items, errors = validate_items(data["items"])
     if data.get("packId") != path.stem:
         errors.append(f"{path.name}: packId must equal the file name")
-    return data, items, [f"{path.name}: {e}" for e in errors]
+    return data, items, [f"{path.as_posix()}: {e}" for e in errors]
 
 
 async def _write(packs: list[tuple[dict, list[dict]]]) -> None:
@@ -47,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("paths", nargs="*", type=Path)
     parser.add_argument("--dry-run", action="store_true", help="validate only")
     args = parser.parse_args(argv)
-    paths = args.paths or sorted(DEFAULT_DIR.glob("*.json"))
+    paths = args.paths or default_pack_paths()
     if not paths:
         print("no pack files found", file=sys.stderr)
         return 1

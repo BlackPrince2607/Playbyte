@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { LayoutChangeEvent, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { useLanguage } from "../../../../context/LanguageContext";
+import { localizeChrome } from "../../../../i18n/chrome";
 import { colors, spacing } from "../../../../theme/colors";
 import { type } from "../../../../theme/typography";
 import { GridTile, HintBar, TileState } from "../../../ui/kit";
@@ -19,6 +21,7 @@ export function OddGridView({
   compact,
   hideHints,
 }: EngineViewProps<QuizState, QuizAction>) {
+  const { language } = useLanguage();
   const { width: windowW } = useWindowDimensions();
   const [hostW, setHostW] = useState(0);
   const q = state.q;
@@ -52,7 +55,7 @@ export function OddGridView({
   const body = (
     <>
       <Text style={[type.bodyLg, { color: colors.lilac, textAlign: "center" }]} accessibilityRole="header">
-        {q.prompt}
+        {localizeChrome(q.prompt, language)}
       </Text>
       {q.clues.slice(1, state.revealed).map((c) => (
         <Animated.Text key={c.value} entering={FadeIn} style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>

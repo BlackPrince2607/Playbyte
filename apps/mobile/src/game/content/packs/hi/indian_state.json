@@ -1,0 +1,653 @@
+{
+  "packId": "indian_state",
+  "title": "भारतीय राज्य",
+  "items": [
+    {
+      "id": "state.rj.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "राजस्थान",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "hints": [
+        "एरिया से भारत का सबसे बड़ा राज्य",
+        "थार रेगिस्तान यहीं है",
+        "राजधानी: जयपुर, पिंक सिटी"
+      ],
+      "distractorGroup": "north_west",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.gj.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "गुजरात",
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "hints": [
+        "भारत की सबसे लंबी तटरेखा",
+        "गिर के शेर यहीं रहते हैं",
+        "राजधानी: गांधीनगर"
+      ],
+      "distractorGroup": "north_west",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.pb.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "पंजाब",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "hints": [
+        "नाम का मतलब है पाँच नदियों की भूमि",
+        "स्वर्ण मंदिर यहीं है",
+        "भांगड़ा के लिए फेमस"
+      ],
+      "distractorGroup": "north_west",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.hr.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "हरियाणा",
+      "difficulty": 0.4,
+      "popularity": 0.8,
+      "hints": [
+        "पड़ोसी के साथ कैपिटल शेयर करता है",
+        "गुरुग्राम बिज़नेस हब है",
+        "कुरुक्षेत्र का मैदान यहीं है"
+      ],
+      "distractorGroup": "north_west",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.hp.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "हिमाचल प्रदेश",
+      "difficulty": 0.3,
+      "popularity": 0.85,
+      "hints": [
+        "सेबों वाला पहाड़ी राज्य",
+        "मनाली और धर्मशाला यहीं हैं",
+        "राजधानी: शिमला"
+      ],
+      "distractorGroup": "himalayan",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.uk.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "उत्तराखंड",
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "hints": [
+        "देवभूमि कहा जाता है",
+        "ऋषिकेश और हरिद्वार यहीं हैं",
+        "राजधानी: देहरादून"
+      ],
+      "distractorGroup": "himalayan",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.sk.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "सिक्किम",
+      "difficulty": 0.6,
+      "popularity": 0.6,
+      "hints": [
+        "भारत का पहला पूरी तरह ऑर्गेनिक राज्य",
+        "कंचनजंगा यहीं नज़र आता है",
+        "राजधानी: गंगटोक"
+      ],
+      "distractorGroup": "himalayan",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.up.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "उत्तर प्रदेश",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "hints": [
+        "सबसे ज़्यादा आबादी वाला राज्य",
+        "ताज महल यहीं है",
+        "राजधानी: लखनऊ"
+      ],
+      "distractorGroup": "central_north",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.mp.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "मध्य प्रदेश",
+      "difficulty": 0.3,
+      "popularity": 0.85,
+      "hints": [
+        "भारत का दिल कहा जाता है",
+        "खजुराहो के मंदिर यहीं हैं",
+        "राजधानी: भोपाल"
+      ],
+      "distractorGroup": "central_north",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.cg.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "छत्तीसगढ़",
+      "difficulty": 0.6,
+      "popularity": 0.6,
+      "hints": [
+        "साल 2000 में बना",
+        "भारत का चावल का कटोरा",
+        "राजधानी: रायपुर"
+      ],
+      "distractorGroup": "central_north",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.br.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "बिहार",
+      "difficulty": 0.25,
+      "popularity": 0.9,
+      "hints": [
+        "प्राचीन नालंदा विश्वविद्यालय यहीं था",
+        "बोधगया यहीं है",
+        "राजधानी: पटना"
+      ],
+      "distractorGroup": "east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.jh.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "झारखंड",
+      "difficulty": 0.5,
+      "popularity": 0.7,
+      "hints": [
+        "कोयला और लौह अयस्क से भरपूर",
+        "साल 2000 में बना",
+        "राजधानी: रांची"
+      ],
+      "distractorGroup": "east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.wb.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "पश्चिम बंगाल",
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "hints": [
+        "रसोगोल्ला और दुर्गा पूजा फेमस",
+        "सुंदरबन यहीं है",
+        "राजधानी: कोलकाता"
+      ],
+      "distractorGroup": "east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.od.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "ओडिशा",
+      "aliases": [
+        "उड़ीसा"
+      ],
+      "difficulty": 0.4,
+      "popularity": 0.75,
+      "hints": [
+        "कोणार्क का सूर्य मंदिर यहीं है",
+        "पुरी में जगन्नाथ रथ यात्रा",
+        "राजधानी: भुवनेश्वर"
+      ],
+      "distractorGroup": "east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.mh.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "महाराष्ट्र",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "hints": [
+        "GDP से सबसे अमीर राज्य",
+        "अजंता-एलोरा गुफाएँ यहीं हैं",
+        "राजधानी: मुंबई"
+      ],
+      "distractorGroup": "west",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.ga.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "गोवा",
+      "difficulty": 0.1,
+      "popularity": 0.95,
+      "hints": [
+        "एरिया से सबसे छोटा राज्य",
+        "बीच और फेनी के लिए फेमस",
+        "राजधानी: पणजी"
+      ],
+      "distractorGroup": "west",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.ka.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "कर्नाटक",
+      "difficulty": 0.25,
+      "popularity": 0.9,
+      "hints": [
+        "हम्पी के खंडहर यहीं हैं",
+        "मैसूर पाक यहीं का",
+        "राजधानी: बेंगलुरु"
+      ],
+      "distractorGroup": "south",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.kl.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "केरल",
+      "difficulty": 0.15,
+      "popularity": 0.95,
+      "hints": [
+        "गॉड्स ओन कंट्री कहा जाता है",
+        "बैकवाटर्स और हाउसबोट फेमस",
+        "राजधानी: तिरुवनंतपुरम"
+      ],
+      "distractorGroup": "south",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.tn.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "तमिलनाडु",
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "hints": [
+        "भरतनाट्यम की भूमि",
+        "मदुरै का मीनाक्षी मंदिर यहीं",
+        "राजधानी: चेन्नई"
+      ],
+      "distractorGroup": "south",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.ap.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "आंध्र प्रदेश",
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "hints": [
+        "तिरुपति का वेंकटेश्वर मंदिर यहीं",
+        "गुंटूर की मिर्ची फेमस",
+        "नई राजधानी: अमरावती"
+      ],
+      "distractorGroup": "south",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.ts.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "तेलंगाना",
+      "difficulty": 0.4,
+      "popularity": 0.8,
+      "hints": [
+        "2014 में बना सबसे युवा राज्य",
+        "बिरयानी और चारमीनार फेमस",
+        "राजधानी: हैदराबाद"
+      ],
+      "distractorGroup": "south",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.as.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "असम",
+      "difficulty": 0.3,
+      "popularity": 0.85,
+      "hints": [
+        "भारत की आधी से ज़्यादा चाय यहीं",
+        "काज़ीरंगा के एक सींग वाले गैंडे",
+        "राजधानी: दिसपुर"
+      ],
+      "distractorGroup": "north_east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.ml.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "मेघालय",
+      "difficulty": 0.5,
+      "popularity": 0.65,
+      "hints": [
+        "नाम का मतलब बादलों का घर",
+        "जीवित जड़ पुल यहीं उगते हैं",
+        "राजधानी: शिलांग"
+      ],
+      "distractorGroup": "north_east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.ar.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "अरुणाचल प्रदेश",
+      "difficulty": 0.55,
+      "popularity": 0.6,
+      "hints": [
+        "भारत का सबसे पूर्वी राज्य",
+        "सूर्योदय की भूमि कहा जाता है",
+        "तवांग मठ यहीं है"
+      ],
+      "distractorGroup": "north_east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.nl.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "नागालैंड",
+      "difficulty": 0.6,
+      "popularity": 0.6,
+      "hints": [
+        "हॉर्नबिल फेस्टिवल यहीं होता है",
+        "राजा मिर्ची मिर्च यहीं उगती है",
+        "राजधानी: कोहिमा"
+      ],
+      "distractorGroup": "north_east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.mn.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "मणिपुर",
+      "difficulty": 0.6,
+      "popularity": 0.6,
+      "hints": [
+        "लोक्ताक झील के तैरते द्वीप यहीं",
+        "आधुनिक पोलो की जन्मभूमि",
+        "राजधानी: इंफाल"
+      ],
+      "distractorGroup": "north_east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.mz.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "मिज़ोरम",
+      "difficulty": 0.7,
+      "popularity": 0.5,
+      "hints": [
+        "नाम का मतलब पहाड़ी लोगों की भूमि",
+        "चेराव बांस नृत्य फेमस",
+        "राजधानी: आइज़ॉल"
+      ],
+      "distractorGroup": "north_east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "state.tr.hi",
+      "type": "indian_state",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "त्रिपुरा",
+      "difficulty": 0.7,
+      "popularity": 0.5,
+      "hints": [
+        "तीन तरफ़ बांग्लादेश से घिरा",
+        "उज्जयंत पैलेस यहीं है",
+        "राजधानी: अगरतला"
+      ],
+      "distractorGroup": "north_east",
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

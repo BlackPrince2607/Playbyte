@@ -1,0 +1,801 @@
+{
+  "packId": "emoji_word",
+  "title": "इमोजी में शब्द",
+  "items": [
+    {
+      "id": "ew.sunflower.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "सूरजमुखी",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "☀️🌸"
+        }
+      ],
+      "hints": [
+        "दो शब्दों से बना नाम",
+        "लंबा पीला फूल"
+      ],
+      "distractorGroup": "word_nature",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.bookworm.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "बुकवर्म",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "📚🪱"
+        }
+      ],
+      "hints": [
+        "किताबों का दीवाना",
+        "पढ़ने का शौकीन"
+      ],
+      "distractorGroup": "word_people",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.rainbow.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "इंद्रधनुष",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌧️🎀"
+        }
+      ],
+      "hints": [
+        "बारिश के बाद दिखता है",
+        "सात रंग"
+      ],
+      "distractorGroup": "word_nature",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.butterfly.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "तितली",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧈🪰"
+        }
+      ],
+      "hints": [
+        "पहले इल्ली होती है",
+        "रंग-बिरंगी उड़ने वाली"
+      ],
+      "distractorGroup": "word_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.starfish.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "स्टारफ़िश",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⭐🐟"
+        }
+      ],
+      "hints": [
+        "पाँच बाँहों वाला समुद्री जीव",
+        "तारे जैसा"
+      ],
+      "distractorGroup": "word_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.football.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "फ़ुटबॉल",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🦶⚪"
+        }
+      ],
+      "hints": [
+        "दुनिया का सबसे पॉपुलर खेल",
+        "पैर से खेला जाता है"
+      ],
+      "distractorGroup": "word_things",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      },
+      "aliases": [
+        "सॉकर"
+      ]
+    },
+    {
+      "id": "ew.popcorn.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "पॉपकॉर्न",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💥🌽"
+        }
+      ],
+      "hints": [
+        "सिनेमा वाला स्नैक",
+        "मक्का फूटकर बनता है"
+      ],
+      "distractorGroup": "word_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.cupcake.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "कपकैक",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "☕🎂"
+        }
+      ],
+      "hints": [
+        "छोटी फ्रॉस्टेड मिठाई",
+        "कप जैसा केक"
+      ],
+      "distractorGroup": "word_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.pancake.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "पैनकेक",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍳🎂"
+        }
+      ],
+      "hints": [
+        "चपटा गोल नाश्ता",
+        "सिरप के साथ"
+      ],
+      "distractorGroup": "word_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.hotdog.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "हॉटडॉग",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔥🐕"
+        }
+      ],
+      "hints": [
+        "बुन में सॉसेज",
+        "स्ट्रिट फ़ूड क्लासिक"
+      ],
+      "distractorGroup": "word_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.snowman.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "स्नोमैन",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "❄️👨"
+        }
+      ],
+      "hints": [
+        "सर्दी में बनता है",
+        "गाजर की नाक"
+      ],
+      "distractorGroup": "word_nature",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.firefly.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "जुगनू",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔥🪰"
+        }
+      ],
+      "hints": [
+        "रात में चमकता कीड़ा",
+        "अँधेरे में रोशनी"
+      ],
+      "distractorGroup": "word_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.keyboard.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "कीबोर्ड",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔑🛹"
+        }
+      ],
+      "hints": [
+        "इस पर टाइप करते हो",
+        "चाबी + बोर्ड"
+      ],
+      "distractorGroup": "word_things",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.doorbell.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "डोरबेल",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🚪🔔"
+        }
+      ],
+      "hints": [
+        "मेहमान इसे बजाते हैं",
+        "दरवाज़े की घंटी"
+      ],
+      "distractorGroup": "word_home",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.toothbrush.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "टूथब्रश",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🦷🖌️"
+        }
+      ],
+      "hints": [
+        "दिन में दो बार इस्तेमाल",
+        "दाँत साफ़ करने वाला"
+      ],
+      "distractorGroup": "word_home",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.bedroom.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "बेडरूम",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🛏️🏠"
+        }
+      ],
+      "hints": [
+        "जहाँ सोते हो",
+        "बिस्तर वाला कमरा"
+      ],
+      "distractorGroup": "word_home",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      },
+      "aliases": [
+        "शयनकक्ष"
+      ]
+    },
+    {
+      "id": "ew.earring.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "कान की बाली",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👂💍"
+        }
+      ],
+      "hints": [
+        "कान पर पहना जाता है",
+        "जेवरात"
+      ],
+      "distractorGroup": "word_things",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      },
+      "aliases": [
+        "ईयररिंग"
+      ]
+    },
+    {
+      "id": "ew.eyeball.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "आँख का गोला",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👁️⚽"
+        }
+      ],
+      "hints": [
+        "देखने वाला अंग",
+        "आईबॉल"
+      ],
+      "distractorGroup": "word_people",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      },
+      "aliases": [
+        "आईबॉल"
+      ]
+    },
+    {
+      "id": "ew.handbag.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "हैंडबैग",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "✋👜"
+        }
+      ],
+      "hints": [
+        "वॉलेट-चाबी इसमें",
+        "हाथ में पकड़ने वाला बैग"
+      ],
+      "distractorGroup": "word_things",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.mailbox.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "मेलबॉक्स",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "📧📦"
+        }
+      ],
+      "hints": [
+        "चिट्ठियाँ इसमें डाली जाती हैं",
+        "डाक का डब्बा"
+      ],
+      "distractorGroup": "word_home",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.watermelon.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "तरबूज़",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💧🍈"
+        }
+      ],
+      "hints": [
+        "बाहर हरा, अंदर लाल",
+        "गर्मी का फ्रूट"
+      ],
+      "distractorGroup": "word_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.honeymoon.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "हनीमून",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍯🌙"
+        }
+      ],
+      "hints": [
+        "शादी के बाद की ट्रिप",
+        "नवविवाहितों की छुट्टी"
+      ],
+      "distractorGroup": "word_people",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.moonlight.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "चाँदनी",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌙💡"
+        }
+      ],
+      "hints": [
+        "रात को रोशनी देती है",
+        "चाँद की रोशनी"
+      ],
+      "distractorGroup": "word_nature",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.goldfish.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "गोल्डफ़िश",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🥇🐟"
+        }
+      ],
+      "hints": [
+        "एक्वेरियम का पॉपुलर पेट",
+        "सुनहरी मछली"
+      ],
+      "distractorGroup": "word_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.jellyfish.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "जेलीफ़िश",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍮🐟"
+        }
+      ],
+      "hints": [
+        "डंक मार सकती है",
+        "समुद्री जेली जैसा जीव"
+      ],
+      "distractorGroup": "word_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.pineapple.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "अनानास",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌲🍎"
+        }
+      ],
+      "hints": [
+        "काँटेदार ट्रॉपिकल फ्रूट",
+        "पाइन + एपल जैसा नाम"
+      ],
+      "distractorGroup": "word_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.carpet.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "कार्पेट",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🚗🐶"
+        }
+      ],
+      "hints": [
+        "फ़र्श पर बिछाते हैं",
+        "कार + पेट"
+      ],
+      "distractorGroup": "word_home",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      },
+      "aliases": [
+        "गलीचा"
+      ]
+    },
+    {
+      "id": "ew.lipstick.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "लिपस्टिक",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👄🏒"
+        }
+      ],
+      "hints": [
+        "होंठों का मेकअप",
+        "लिप + स्टिक"
+      ],
+      "distractorGroup": "word_things",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.horseshoe.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "हॉर्सशू",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐎👞"
+        }
+      ],
+      "hints": [
+        "शुभ माना जाता है",
+        "घोड़े की नाल"
+      ],
+      "distractorGroup": "word_things",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ew.seahorse.hi",
+      "type": "emoji_word",
+      "categories": [
+        "words"
+      ],
+      "answer": "सीहॉर्स",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌊🐎"
+        }
+      ],
+      "hints": [
+        "बाप अंडे रखता है",
+        "समुद्री घोड़ा"
+      ],
+      "distractorGroup": "word_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import { Directory, File, Paths } from "expo-file-system";
 import { getApiBaseUrl } from "../../lib/env";
 import type { GameDefinition } from "../core/definition";
 import { CachedPack, PackCache, PackResponse, createContentRepository } from "../content/repository";
-import { FALLBACK_PACKS } from "../content/packs";
+import { FALLBACK_PACKS, FALLBACK_PACKS_HI } from "../content/packs";
 import { ContentBundle, ContentQuery } from "../content/types";
 import { getContentLocale, onContentLocaleChange } from "../../i18n/contentLocale";
 import { prefetchAssets } from "./assetCache";
@@ -12,8 +12,9 @@ export { resolveAsset } from "./assetCache";
 
 const safeName = (packId: string) => packId.replace(/[^a-z0-9_.-]/gi, "_");
 
+/** Locale-scoped cache. v3: prefer bundled HI seeds; never reuse EN cached as hi-IN. */
 function cacheName(packId: string) {
-  return `${safeName(packId)}__${getContentLocale()}.json`;
+  return `${safeName(packId)}__${getContentLocale()}__v3.json`;
 }
 
 function packDir(): Directory {
@@ -52,16 +53,27 @@ async function fetchPack(packId: string, etag?: string): Promise<PackResponse> {
       if (hi.status === 304) return hi;
       if (hi.status === 200 && Array.isArray(hi.items) && hi.items.length > 0) return hi;
     } catch {
-      // No Hindi pack yet — play the English one.
+      // No hi-IN pack on the server yet — repository uses bundled HI seeds.
     }
+    // Do not fetch/cache English under the hi-IN key.
+    throw new Error(`pack ${packId}: hi-IN unavailable`);
   }
   return requestPack(packId, etag);
+}
+
+function fallbackPack(packId: string): Promise<unknown | null> {
+  if (getContentLocale() === "hi-IN") {
+    const hi = FALLBACK_PACKS_HI[packId];
+    if (hi) return hi();
+  }
+  const en = FALLBACK_PACKS[packId];
+  return en ? en() : Promise.resolve(null);
 }
 
 const repository = createContentRepository({
   fetchPack,
   cache: fileCache,
-  fallback: async (packId) => (FALLBACK_PACKS[packId] ? FALLBACK_PACKS[packId]() : null),
+  fallback: fallbackPack,
   onReject: (packId, rejected) => {
     if (__DEV__) console.warn(`[content] ${packId}: ${rejected.length} item(s) rejected`, rejected.slice(0, 3));
   },

@@ -1,6 +1,8 @@
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
+import { useLanguage } from "../../../../context/LanguageContext";
+import { localizeChrome } from "../../../../i18n/chrome";
 import { colors, spacing } from "../../../../theme/colors";
 import { type } from "../../../../theme/typography";
 import { ClueCard, HintBar, OptionTile, TileState } from "../../../ui/kit";
@@ -24,6 +26,7 @@ export function QuizView({
   hideHints,
   compact,
 }: Props) {
+  const { language } = useLanguage();
   const q = state.q;
   const wrongSeq = snapshot.lastOutcome && !snapshot.lastOutcome.correct ? snapshot.lastOutcome.seq : 0;
   const shake = useShake(wrongSeq);
@@ -43,7 +46,7 @@ export function QuizView({
   const body = (
     <>
       <Text style={[type.bodyLg, { color: colors.lilac, textAlign: "center" }]} accessibilityRole="header">
-        {q.prompt}
+        {localizeChrome(q.prompt, language)}
       </Text>
       <Animated.View style={shake}>
         <ClueCard clues={q.clues} revealed={state.revealed} resolveAsset={resolveAsset} compact={compact} />
@@ -64,7 +67,9 @@ export function QuizView({
         ))}
       </View>
       {answered && answered.optionId === null ? (
-        <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]}>Time's up!</Text>
+        <Text style={[type.bodySm, { color: colors.pink, textAlign: "center" }]}>
+          {localizeChrome("Time's up!", language)}
+        </Text>
       ) : null}
       {answered && q.explanation ? (
         <Text style={[type.bodySm, { color: colors.paper, textAlign: "center" }]}>{q.explanation}</Text>

@@ -1,0 +1,815 @@
+{
+  "packId": "emoji_phrase",
+  "title": "इमोजी में कहावतें",
+  "items": [
+    {
+      "id": "ep.raining_cats.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "बिल्लियों और कुत्तों की बारिश",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌧️🐈🐕"
+        }
+      ],
+      "hints": [
+        "मौसम वाली कहावत",
+        "मूसलधार बरस रहा है"
+      ],
+      "distractorGroup": "idiom_nature",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.time_is_money.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "समय ही धन है",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⏰🟰💰"
+        }
+      ],
+      "hints": [
+        "एक कहावत",
+        "समय बर्बाद मत करो"
+      ],
+      "distractorGroup": "saying",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.busy_bee.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "मधुमक्खी जैसा व्यस्त",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐝💼"
+        }
+      ],
+      "hints": [
+        "एक उपमा",
+        "बहुत मेहनती"
+      ],
+      "distractorGroup": "idiom_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.break_ice.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "बर्फ तोड़ना",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔨🧊"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "बातचीत शुरू करना"
+      ],
+      "distractorGroup": "idiom_action",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.piece_of_cake.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "केक का टुकड़ा",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧩🍰"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "बहुत आसान काम"
+      ],
+      "distractorGroup": "idiom_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.spill_beans.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "राज खोल देना",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🫗🫘"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "सीक्रेट बता देना"
+      ],
+      "distractorGroup": "idiom_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      },
+      "aliases": [
+        "बीन्स गिरा देना"
+      ]
+    },
+    {
+      "id": "ep.cool_cucumber.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "खीरे जितना कूल",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "😎🥒"
+        }
+      ],
+      "hints": [
+        "एक उपमा",
+        "बहुत शांत"
+      ],
+      "distractorGroup": "idiom_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.apple_eye.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "आँखों का तारा",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍎👁️"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "बहुत प्यारा इंसान"
+      ],
+      "distractorGroup": "idiom_body",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.arm_and_leg.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "बाँह और टाँग की क़ीमत",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💰💪🦵"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "बहुत महँगा"
+      ],
+      "distractorGroup": "idiom_body",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.blue_moon.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "नीले चाँद पर एक बार",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "1️⃣🔵🌙"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "बहुत कम कभी"
+      ],
+      "distractorGroup": "idiom_nature",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.under_weather.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "मौसम के नीचे",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "⬇️⛅🤒"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "तबियत ठीक नहीं"
+      ],
+      "distractorGroup": "idiom_nature",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.cat_out_bag.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "बिल्ली बैग से बाहर",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐈👜"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "गलती से राज खुल जाना"
+      ],
+      "distractorGroup": "idiom_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.elephant_room.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "कमरे में हाथी",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐘🛋️"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "सब जानते हैं पर कोई नहीं बोलता"
+      ],
+      "distractorGroup": "idiom_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.two_birds.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "एक तीर दो शिकार",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "2️⃣🐦1️⃣🪨"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "एक साथ दो काम हो जाएँ"
+      ],
+      "distractorGroup": "idiom_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.money_trees.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "पैसे पेड़ पर नहीं उगते",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💰🚫🌳"
+        }
+      ],
+      "hints": [
+        "एक कहावत",
+        "ख़र्च सोच-समझकर करो"
+      ],
+      "distractorGroup": "saying",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.pigs_fly.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "जब सूअर उड़ेंगे",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐖🪽"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "कभी नहीं होने वाला"
+      ],
+      "distractorGroup": "idiom_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.butterflies.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "पेट में तितलियाँ",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🦋🦋😬"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "नर्वस फ़ीलिंग"
+      ],
+      "distractorGroup": "idiom_body",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.hit_sack.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "बिस्तर पकड़ना",
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👊🛌"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "सोने चले जाना"
+      ],
+      "distractorGroup": "idiom_action",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.break_leg.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "टाँग तोड़ना",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💥🦵"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "परफ़ॉर्मर्स को शुभकामना"
+      ],
+      "distractorGroup": "idiom_body",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.fuel_fire.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "आग में घी डालना",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "➕⛽🔥"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "मामला और बिगाड़ना"
+      ],
+      "distractorGroup": "idiom_action",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.actions_louder.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "काम बातों से ज़्यादा बोलते हैं",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏃🔊💬"
+        }
+      ],
+      "hints": [
+        "एक कहावत",
+        "करके दिखाओ, सिर्फ़ बोलो मत"
+      ],
+      "distractorGroup": "saying",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.early_bird.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "सुबह वाली चिड़िया केंचुआ पकड़ती है",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌅🐦🪱"
+        }
+      ],
+      "hints": [
+        "एक कहावत",
+        "जल्दी शुरू करो तो जीत"
+      ],
+      "distractorGroup": "saying",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.slow_steady.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "धीरे और स्थिर जीतता है",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐢🏁🏆"
+        }
+      ],
+      "hints": [
+        "एक कहावत",
+        "कछुआ और खरगोश वाली"
+      ],
+      "distractorGroup": "saying",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.practice_perfect.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "अभ्यास से होता है कमाल",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔁💯"
+        }
+      ],
+      "hints": [
+        "एक कहावत",
+        "लगे रहो"
+      ],
+      "distractorGroup": "saying",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.silver_lining.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "हर बादल की चाँदी सी धार",
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "☁️✨🥈"
+        }
+      ],
+      "hints": [
+        "एक कहावत",
+        "बुराई में भी कुछ अच्छा"
+      ],
+      "distractorGroup": "saying",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.wrong_tree.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "गलत पेड़ पर भौंकना",
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐕🗯️❌🌳"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "गलत जगह ढूँढ रहे हो"
+      ],
+      "distractorGroup": "idiom_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.cloud_nine.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "नौवें बादल पर",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "☁️9️⃣"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "बहुत ख़ुश"
+      ],
+      "distractorGroup": "idiom_nature",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.tip_iceberg.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "आइसबर्ग की नोक",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔝🧊🌊"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "बड़ी समस्या का छोटा हिस्सा"
+      ],
+      "distractorGroup": "idiom_nature",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.midnight_oil.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "आधी रात का तेल जलाना",
+      "difficulty": 0.4,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔥🕛🛢️"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "रात भर काम करना"
+      ],
+      "distractorGroup": "idiom_action",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.hold_horses.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "घोड़े थामो",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "✋🐎🐎"
+        }
+      ],
+      "hints": [
+        "एक मुहावरा",
+        "रुको, सब्र रखो"
+      ],
+      "distractorGroup": "idiom_animal",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "ep.spilt_milk.hi",
+      "type": "emoji_phrase",
+      "categories": [
+        "phrases"
+      ],
+      "answer": "गिरा दूध लेकर मत रोओ",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🚫😭🥛"
+        }
+      ],
+      "hints": [
+        "एक कहावत",
+        "जो हो गया सो हो गया"
+      ],
+      "distractorGroup": "idiom_food",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

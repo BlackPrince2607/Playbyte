@@ -1,0 +1,987 @@
+{
+  "packId": "emoji_song",
+  "title": "इमोजी में गाने",
+  "items": [
+    {
+      "id": "es.kal_ho_naa_ho.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "कल हो ना हो",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "📅❌❤️"
+        }
+      ],
+      "hints": [
+        "2003 का शाहरुख़ खान टाइटल ट्रैक",
+        "हर दिन आख़िरी दिन की तरह जियो"
+      ],
+      "distractorGroup": "bollywood_ballad",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.tum_hi_ho.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "तुम ही हो",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🫵❤️🎶"
+        }
+      ],
+      "hints": [
+        "आशिक़ी 2 से",
+        "अरिजित का ब्रेकथ्रू हिट"
+      ],
+      "distractorGroup": "bollywood_ballad",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.kesariya.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "केसरिया",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧡🏜️💍"
+        }
+      ],
+      "hints": [
+        "ब्रह्मास्त्र से",
+        "केसरिया रंग वाला लव सॉन्ग"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.naatu_naatu.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "नाटू नाटू",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🕺🕺🔥🏆"
+        }
+      ],
+      "hints": [
+        "आरआरआर से",
+        "बेस्ट ओरिजिनल सॉन्ग का ऑस्कर"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.jai_ho.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "जय हो",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🙌🇮🇳🏆🎬"
+        }
+      ],
+      "hints": [
+        "स्लमडॉग मिलियनेयर से",
+        "ए.आर. रहमान का ऑस्कर विनर"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.channa_mereya.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "छन्ना मेरेया",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "😢💒🚶‍♂️"
+        }
+      ],
+      "hints": [
+        "ऐ दिल है मुश्किल से",
+        "टूटे दिल वाला शादी वाला गाना"
+      ],
+      "distractorGroup": "bollywood_ballad",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.gerua.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "गेरुआ",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧡🇮🇸❄️💑"
+        }
+      ],
+      "hints": [
+        "दिलवाले से",
+        "आइसलैंड में एसआरके-काजोल शूट"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.badtameez_dil.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "बदतमीज़ दिल",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "😈❤️💃"
+        }
+      ],
+      "hints": [
+        "ये जवानी है दीवानी से",
+        "शरारती दिल नाचना चाहता है"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.gallan_goodiyan.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "गल्लां गुदियाँ",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎉🗣️💃🏠"
+        }
+      ],
+      "hints": [
+        "दिल धड़कने दो से",
+        "फ़ैमिली पार्टी एंथम"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.senorita.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "सेनोरिता",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🇪🇸💃👨‍🎤🎤"
+        }
+      ],
+      "hints": [
+        "ज़िंदगी न मिलेगी दोबारा से",
+        "तीन दोस्त स्पेन में गाते हैं"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.kabira.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "कबीरा",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🚂👋😢"
+        }
+      ],
+      "hints": [
+        "ये जवानी है दीवानी से",
+        "ट्रेन प्लेटफ़ॉर्म पर विदाई"
+      ],
+      "distractorGroup": "bollywood_ballad",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.ae_dil_hai_mushkil.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "ऐ दिल है मुश्किल",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💔😅🎵"
+        }
+      ],
+      "hints": [
+        "2016 रोमांस का टाइटल ट्रैक",
+        "दिल को प्यार मुश्किल लगता है"
+      ],
+      "distractorGroup": "bollywood_ballad",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.apna_bana_le.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "अपना बना ले",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🤞❤️🏠"
+        }
+      ],
+      "hints": [
+        "भेड़िया से",
+        "मुझे अपना बना लो"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.what_jhumka.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "व्हाट झुमका?",
+      "aliases": [
+        "व्हाट झुमका"
+      ],
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "❓💎👂💃"
+        }
+      ],
+      "hints": [
+        "रॉकी और रानी से",
+        "झुमकों वाला मज़ेदार गाना"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.besharam_rang.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "बेशरम रंग",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧡👙💃🔥"
+        }
+      ],
+      "hints": [
+        "पठान से",
+        "नारंगी डांस नंबर"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.srivalli.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "श्रीवल्ली",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌲👧❤️🧔"
+        }
+      ],
+      "hints": [
+        "पुष्पा से",
+        "जंगल वाला नरम लव सॉन्ग"
+      ],
+      "distractorGroup": "bollywood_romance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.oo_antava.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "ओओ अंतवा ओओ ओओ अंतवा",
+      "aliases": [
+        "ओओ अंतवा"
+      ],
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💃🔥👀🧔"
+        }
+      ],
+      "hints": [
+        "पुष्पा से",
+        "छेड़छाड़ वाला डांस नंबर"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.tip_tip.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "टिप टिप बरसा पानी",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🌧️💃🔥"
+        }
+      ],
+      "hints": [
+        "क्लासिक बारिश वाला गाना",
+        "मोहरा में रवीना टैंडन"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.dhoom_machale.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "धूम मचाले",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏍️💨🎉"
+        }
+      ],
+      "hints": [
+        "धूम फ़्रैंचाइज़ी का एनर्जी",
+        "तूफ़ान मचा दो"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.lunatic.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "bollywood"
+      ],
+      "answer": "लुंगी डांस",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🩳💃🔥🎤"
+        }
+      ],
+      "hints": [
+        "चेन्नई एक्सप्रेस से",
+        "हनी सिंह पार्टी ट्रैक"
+      ],
+      "distractorGroup": "bollywood_dance",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.despacito.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "डेस्पासीतो",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🐢💃🇵🇷"
+        }
+      ],
+      "hints": [
+        "2017 का स्पैनिश मेगाहिट",
+        "धीरे से…"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.shape_of_you.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "शेप ऑफ़ यू",
+      "difficulty": 0.1,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "📐🫵💃"
+        }
+      ],
+      "hints": [
+        "एड शीरन हिट",
+        "आई एम इन लव विद योर बॉडी"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.blinding_lights.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "ब्लाइंडिंग लाइट्स",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🕶️🌃🚗"
+        }
+      ],
+      "hints": [
+        "द वीकेंड सिंथवेव हिट",
+        "शहर की अंधा कर देने वाली लाइट्स"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.levitating.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "लेविटेटिंग",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🛸💃✨"
+        }
+      ],
+      "hints": [
+        "डुआ लीपा डिस्को हिट",
+        "अगर मेरे साथ भागना चाहो"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.as_it_was.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "ऐज़ इट वॉज़",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🔄🏠😢"
+        }
+      ],
+      "hints": [
+        "हैरी स्टाइल्स हिट",
+        "इस दुनिया में सिर्फ़ हम"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.flowers.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "फ़्लावर्स",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💐🪞💃"
+        }
+      ],
+      "hints": [
+        "माइली साइरस हिट",
+        "मैं ख़ुद ख़रीद सकती हूँ…"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.stay.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "स्टे",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏠🥺🎤"
+        }
+      ],
+      "hints": [
+        "द किड लरोई और जस्टिन बीबर",
+        "वही करता हूँ जो कहा था…"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.peaches.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "पीचेस",
+      "difficulty": 0.35,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🍑🇨🇦🏠"
+        }
+      ],
+      "hints": [
+        "जस्टिन बीबर ट्रैक",
+        "साउथ में मेरे…"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.bad_guy.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "बैड गाय",
+      "aliases": [
+        "बैड गाय"
+      ],
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "😈💅🎵"
+        }
+      ],
+      "hints": [
+        "बिली आइलिश हिट",
+        "डह"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.uptown_funk.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "अपटाउन फ़ंक",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🏙️🕺🎷"
+        }
+      ],
+      "hints": [
+        "ब्रूनो मार्स और मार्क रोंसन",
+        "मानो नहीं तो देखो"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.happy.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "हैप्पी",
+      "difficulty": 0.15,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "😊☀️👏"
+        }
+      ],
+      "hints": [
+        "फ़ैरेल विलियम्स हिट",
+        "ताली बजाओ अगर लग रहा हो…"
+      ],
+      "distractorGroup": "global_pop",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.someone_like_you.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "समवन लाइक यू",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🎹😢💍"
+        }
+      ],
+      "hints": [
+        "एडेल बैलाड",
+        "कोई बात नहीं, मुझे मिल जाएगा…"
+      ],
+      "distractorGroup": "global_ballad",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.bohemian.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "बोहीमियन रैпсоडी",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "👑🎤🎭🎸"
+        }
+      ],
+      "hints": [
+        "क्वीन की एपिक",
+        "क्या ये असली ज़िंदगी है?"
+      ],
+      "distractorGroup": "global_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.thriller.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "थ्रिलर",
+      "difficulty": 0.2,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "🧟‍♂️🌙🕺"
+        }
+      ],
+      "hints": [
+        "माइकल जैक्सन क्लासिक",
+        "रात के जीव"
+      ],
+      "distractorGroup": "global_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.billie_jean.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "बिली जीन",
+      "difficulty": 0.25,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💃👟💡"
+        }
+      ],
+      "hints": [
+        "माइकल जैक्सन हिट",
+        "वो बच्चा मेरा बेटा नहीं"
+      ],
+      "distractorGroup": "global_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "es.imagine.hi",
+      "type": "emoji_song",
+      "categories": [
+        "music",
+        "global"
+      ],
+      "answer": "इमैजिन",
+      "difficulty": 0.3,
+      "media": [
+        {
+          "kind": "emoji",
+          "value": "💭🌍☮️"
+        }
+      ],
+      "hints": [
+        "जॉन लेनन क्लासिक",
+        "न देश, न मारने-मरने की बात"
+      ],
+      "distractorGroup": "global_classic",
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

@@ -47,8 +47,10 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const [respondError, setRespondError] = useState("");
   const [shareError, setShareError] = useState("");
   const [sharing, setSharing] = useState(false);
+  const [pendingOptionId, setPendingOptionId] = useState<string | null>(null);
   const shareInflight = useRef(false);
   const answered = Boolean(local.myOptionId);
+  const picking = Boolean(pendingOptionId);
   const crowd = withSeededCrowd(local);
   const total = crowd.totalResponses;
   const isQuiz =
@@ -64,6 +66,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
     setLocal(item);
     setRespondError("");
     setShareError("");
+    if (item.myOptionId) setPendingOptionId(null);
   }, [item]);
 
   useEffect(() => {
@@ -107,11 +110,14 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   }, [isActive, answered, item.id, mounted]);
 
   async function pick(optionId: string) {
-    if (answered) return;
+    if (answered || picking) return;
     setRespondError("");
-    // Paint results immediately; server sync + coins land in the background.
-    setLocal((prev) => scoreLocalVote(prev, optionId));
-    if (!isQuiz) {
+    if (isQuiz) {
+      // Hold the card until correct/wrong arrives so we never flash "Your answer".
+      setPendingOptionId(optionId);
+    } else {
+      // Polls: paint results immediately; server sync + coins land in the background.
+      setLocal((prev) => scoreLocalVote(prev, optionId));
       capture("poll_voted", {
         poll_id: item.id,
         category: local.category?.slug ?? null,
@@ -132,10 +138,12 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           correctOptionId: snap.correctOptionId,
         },
       }));
-    } else if (!outcome.ok) {
-      // Keep the instant local result; one quiet retry for flaky networks.
-      void respond(item.id, optionId);
+    } else {
+      // Lock the pick locally; one quiet retry for flaky networks.
+      setLocal((prev) => scoreLocalVote(prev, optionId));
+      if (!outcome.ok) void respond(item.id, optionId);
     }
+    setPendingOptionId(null);
   }
 
   async function toggleLike() {
@@ -242,13 +250,16 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           imageUrl={o.imageUrl}
           tile={tile}
           compact={local.options.length > 4}
+          selected={pendingOptionId === o.id}
+          disabled={picking}
           onPress={() => void pick(o.id)}
         />
       );
     }
     const count = crowd.optionCounts[o.id] ?? 0;
-    const isCorrect = correctId === o.id;
+    const isCorrect = Boolean(correctId) && correctId === o.id;
     const isMine = local.myOptionId === o.id;
+    const revealQuiz = isQuiz && Boolean(correctId);
     return (
       <AnswerButton
         key={o.id}
@@ -258,10 +269,10 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
         compact={local.options.length > 4}
         percent={total > 0 ? Math.round((count / total) * 100) : 0}
         selected={isMine}
-        correct={isQuiz ? isCorrect : false}
-        incorrect={isQuiz && isMine && !isCorrect}
+        correct={revealQuiz ? isCorrect : false}
+        incorrect={revealQuiz && isMine && !isCorrect}
         disabled
-        showCheck={isMine || (isQuiz && isCorrect)}
+        showCheck={isMine || (revealQuiz && isCorrect)}
       />
     );
   }

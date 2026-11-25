@@ -1,0 +1,1106 @@
+{
+  "packId": "word_group",
+  "title": "शब्द समूह",
+  "items": [
+    {
+      "id": "wg.fruits.hi",
+      "type": "word_group",
+      "categories": [
+        "food"
+      ],
+      "answer": "फल",
+      "difficulty": 0.1,
+      "distractorGroup": "food",
+      "attributes": {
+        "members": [
+          "Apple",
+          "Banana",
+          "Mango",
+          "Grapes",
+          "Pineapple",
+          "Watermelon",
+          "Cherry",
+          "Strawberry",
+          "Lemon",
+          "Pear"
+        ],
+        "emoji": [
+          "🍎",
+          "🍌",
+          "🥭",
+          "🍇",
+          "🍍",
+          "🍉",
+          "🍒",
+          "🍓",
+          "🍋",
+          "🍐"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.vegetables.hi",
+      "type": "word_group",
+      "categories": [
+        "food"
+      ],
+      "answer": "सब्ज़ियाँ",
+      "difficulty": 0.15,
+      "distractorGroup": "food",
+      "attributes": {
+        "members": [
+          "Carrot",
+          "Potato",
+          "Onion",
+          "Broccoli",
+          "Cucumber",
+          "Corn",
+          "Garlic",
+          "Aubergine",
+          "Capsicum",
+          "Cabbage"
+        ],
+        "emoji": [
+          "🥕",
+          "🥔",
+          "🧅",
+          "🥦",
+          "🥒",
+          "🌽",
+          "🧄",
+          "🍆",
+          "🫑",
+          "🥬"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.sweets.hi",
+      "type": "word_group",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "भारतीय मिठाइयाँ",
+      "difficulty": 0.3,
+      "distractorGroup": "food",
+      "attributes": {
+        "members": [
+          "Jalebi",
+          "Laddoo",
+          "Rasgulla",
+          "Gulab Jamun",
+          "Barfi",
+          "Kaju Katli",
+          "Peda",
+          "Halwa"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.drinks.hi",
+      "type": "word_group",
+      "categories": [
+        "food"
+      ],
+      "answer": "पेय",
+      "difficulty": 0.1,
+      "distractorGroup": "food",
+      "attributes": {
+        "members": [
+          "Tea",
+          "Coffee",
+          "Milk",
+          "Juice",
+          "Soda",
+          "Bubble tea"
+        ],
+        "emoji": [
+          "🍵",
+          "☕",
+          "🥛",
+          "🧃",
+          "🥤",
+          "🧋"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.fast_food.hi",
+      "type": "word_group",
+      "categories": [
+        "food"
+      ],
+      "answer": "फ़ास्ट फ़ूड",
+      "difficulty": 0.1,
+      "distractorGroup": "food",
+      "attributes": {
+        "members": [
+          "Pizza",
+          "Burger",
+          "Fries",
+          "Hotdog",
+          "Taco",
+          "Sandwich",
+          "Burrito"
+        ],
+        "emoji": [
+          "🍕",
+          "🍔",
+          "🍟",
+          "🌭",
+          "🌮",
+          "🥪",
+          "🌯"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.spices.hi",
+      "type": "word_group",
+      "categories": [
+        "food",
+        "india"
+      ],
+      "answer": "मसाले",
+      "difficulty": 0.45,
+      "distractorGroup": "food",
+      "attributes": {
+        "members": [
+          "Turmeric",
+          "Cumin",
+          "Cardamom",
+          "Clove",
+          "Cinnamon",
+          "Saffron",
+          "Coriander",
+          "Fenugreek"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.farm.hi",
+      "type": "word_group",
+      "categories": [
+        "animals"
+      ],
+      "answer": "पालतू जानवर",
+      "difficulty": 0.1,
+      "distractorGroup": "animal",
+      "attributes": {
+        "members": [
+          "Cow",
+          "Pig",
+          "Sheep",
+          "Goat",
+          "Horse",
+          "Donkey",
+          "Buffalo",
+          "Llama"
+        ],
+        "emoji": [
+          "🐄",
+          "🐖",
+          "🐑",
+          "🐐",
+          "🐎",
+          "🫏",
+          "🐃",
+          "🦙"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.wild.hi",
+      "type": "word_group",
+      "categories": [
+        "animals"
+      ],
+      "answer": "जंगली जानवर",
+      "difficulty": 0.1,
+      "distractorGroup": "animal",
+      "attributes": {
+        "members": [
+          "Lion",
+          "Tiger",
+          "Elephant",
+          "Giraffe",
+          "Zebra",
+          "Rhino",
+          "Gorilla",
+          "Leopard",
+          "Hippo"
+        ],
+        "emoji": [
+          "🦁",
+          "🐅",
+          "🐘",
+          "🦒",
+          "🦓",
+          "🦏",
+          "🦍",
+          "🐆",
+          "🦛"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.birds.hi",
+      "type": "word_group",
+      "categories": [
+        "animals"
+      ],
+      "answer": "पक्षी",
+      "difficulty": 0.15,
+      "distractorGroup": "animal",
+      "attributes": {
+        "members": [
+          "Parrot",
+          "Eagle",
+          "Owl",
+          "Peacock",
+          "Penguin",
+          "Flamingo",
+          "Swan",
+          "Dove"
+        ],
+        "emoji": [
+          "🦜",
+          "🦅",
+          "🦉",
+          "🦚",
+          "🐧",
+          "🦩",
+          "🦢",
+          "🕊️"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.sea.hi",
+      "type": "word_group",
+      "categories": [
+        "animals"
+      ],
+      "answer": "समुद्री जीव",
+      "difficulty": 0.2,
+      "distractorGroup": "animal",
+      "attributes": {
+        "members": [
+          "Octopus",
+          "Whale",
+          "Shark",
+          "Dolphin",
+          "Crab",
+          "Lobster",
+          "Squid",
+          "Seal"
+        ],
+        "emoji": [
+          "🐙",
+          "🐋",
+          "🦈",
+          "🐬",
+          "🦀",
+          "🦞",
+          "🦑",
+          "🦭"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.insects.hi",
+      "type": "word_group",
+      "categories": [
+        "animals"
+      ],
+      "answer": "कीड़े-मकोड़े",
+      "difficulty": 0.25,
+      "distractorGroup": "animal",
+      "attributes": {
+        "members": [
+          "Ant",
+          "Bee",
+          "Butterfly",
+          "Ladybird",
+          "Mosquito",
+          "Beetle",
+          "Housefly"
+        ],
+        "emoji": [
+          "🐜",
+          "🐝",
+          "🦋",
+          "🐞",
+          "🦟",
+          "🪲",
+          "🪰"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.indian_cities.hi",
+      "type": "word_group",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "भारतीय शहर",
+      "difficulty": 0.2,
+      "distractorGroup": "place",
+      "attributes": {
+        "members": [
+          "Mumbai",
+          "Delhi",
+          "Chennai",
+          "Kolkata",
+          "Bengaluru",
+          "Hyderabad",
+          "Pune",
+          "Jaipur",
+          "Lucknow",
+          "Ahmedabad"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.countries.hi",
+      "type": "word_group",
+      "categories": [
+        "geo"
+      ],
+      "answer": "देश",
+      "difficulty": 0.2,
+      "distractorGroup": "place",
+      "attributes": {
+        "members": [
+          "France",
+          "Brazil",
+          "Japan",
+          "Egypt",
+          "Canada",
+          "Kenya",
+          "Mexico",
+          "Italy",
+          "Russia",
+          "Australia"
+        ],
+        "emoji": [
+          "🇫🇷",
+          "🇧🇷",
+          "🇯🇵",
+          "🇪🇬",
+          "🇨🇦",
+          "🇰🇪",
+          "🇲🇽",
+          "🇮🇹",
+          "🇷🇺",
+          "🇦🇺"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.planets.hi",
+      "type": "word_group",
+      "categories": [
+        "science"
+      ],
+      "answer": "ग्रह",
+      "difficulty": 0.3,
+      "distractorGroup": "place",
+      "attributes": {
+        "members": [
+          "Mercury",
+          "Venus",
+          "Earth",
+          "Mars",
+          "Jupiter",
+          "Saturn",
+          "Uranus",
+          "Neptune"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.rivers.hi",
+      "type": "word_group",
+      "categories": [
+        "geo",
+        "india"
+      ],
+      "answer": "भारतीय नदियाँ",
+      "difficulty": 0.45,
+      "distractorGroup": "place",
+      "attributes": {
+        "members": [
+          "Ganga",
+          "Yamuna",
+          "Godavari",
+          "Krishna",
+          "Narmada",
+          "Kaveri",
+          "Brahmaputra",
+          "Mahanadi"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.capitals.hi",
+      "type": "word_group",
+      "categories": [
+        "geo"
+      ],
+      "answer": "विश्व राजधानियाँ",
+      "difficulty": 0.4,
+      "distractorGroup": "place",
+      "attributes": {
+        "members": [
+          "Paris",
+          "Tokyo",
+          "London",
+          "Cairo",
+          "Moscow",
+          "Beijing",
+          "Ottawa",
+          "Canberra",
+          "Nairobi"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.vehicles.hi",
+      "type": "word_group",
+      "categories": [
+        "things"
+      ],
+      "answer": "वाहन",
+      "difficulty": 0.05,
+      "distractorGroup": "thing",
+      "attributes": {
+        "members": [
+          "Car",
+          "Bus",
+          "Train",
+          "Bicycle",
+          "Aeroplane",
+          "Ship",
+          "Scooter",
+          "Truck",
+          "Helicopter",
+          "Auto rickshaw"
+        ],
+        "emoji": [
+          "🚗",
+          "🚌",
+          "🚆",
+          "🚲",
+          "✈️",
+          "🚢",
+          "🛵",
+          "🚚",
+          "🚁",
+          "🛺"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.instruments.hi",
+      "type": "word_group",
+      "categories": [
+        "things",
+        "music"
+      ],
+      "answer": "संगीत वाद्य",
+      "difficulty": 0.2,
+      "distractorGroup": "thing",
+      "attributes": {
+        "members": [
+          "Guitar",
+          "Piano",
+          "Drum",
+          "Violin",
+          "Trumpet",
+          "Saxophone",
+          "Banjo",
+          "Accordion"
+        ],
+        "emoji": [
+          "🎸",
+          "🎹",
+          "🥁",
+          "🎻",
+          "🎺",
+          "🎷",
+          "🪕",
+          "🪗"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.furniture.hi",
+      "type": "word_group",
+      "categories": [
+        "things"
+      ],
+      "answer": "फ़र्नीचर",
+      "difficulty": 0.15,
+      "distractorGroup": "thing",
+      "attributes": {
+        "members": [
+          "Chair",
+          "Bed",
+          "Sofa",
+          "Table",
+          "Wardrobe",
+          "Desk",
+          "Stool",
+          "Bookshelf"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.clothes.hi",
+      "type": "word_group",
+      "categories": [
+        "things"
+      ],
+      "answer": "कपड़े",
+      "difficulty": 0.1,
+      "distractorGroup": "thing",
+      "attributes": {
+        "members": [
+          "Shirt",
+          "Jeans",
+          "Dress",
+          "Saree",
+          "Socks",
+          "Coat",
+          "Scarf",
+          "Gloves",
+          "Shorts"
+        ],
+        "emoji": [
+          "👕",
+          "👖",
+          "👗",
+          "🥻",
+          "🧦",
+          "🧥",
+          "🧣",
+          "🧤",
+          "🩳"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.stationery.hi",
+      "type": "word_group",
+      "categories": [
+        "things"
+      ],
+      "answer": "स्टेशनरी",
+      "difficulty": 0.25,
+      "distractorGroup": "thing",
+      "attributes": {
+        "members": [
+          "Pencil",
+          "Pen",
+          "Ruler",
+          "Scissors",
+          "Notebook",
+          "Crayon",
+          "Paperclip",
+          "Pushpin"
+        ],
+        "emoji": [
+          "✏️",
+          "🖊️",
+          "📏",
+          "✂️",
+          "📓",
+          "🖍️",
+          "📎",
+          "📌"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.tools.hi",
+      "type": "word_group",
+      "categories": [
+        "things"
+      ],
+      "answer": "औज़ार",
+      "difficulty": 0.25,
+      "distractorGroup": "thing",
+      "attributes": {
+        "members": [
+          "Hammer",
+          "Wrench",
+          "Screwdriver",
+          "Saw",
+          "Axe",
+          "Ladder"
+        ],
+        "emoji": [
+          "🔨",
+          "🔧",
+          "🪛",
+          "🪚",
+          "🪓",
+          "🪜"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.sports.hi",
+      "type": "word_group",
+      "categories": [
+        "sports"
+      ],
+      "answer": "खेल",
+      "difficulty": 0.1,
+      "distractorGroup": "sport",
+      "attributes": {
+        "members": [
+          "Football",
+          "Tennis",
+          "Hockey",
+          "Badminton",
+          "Basketball",
+          "Volleyball",
+          "Golf",
+          "Boxing"
+        ],
+        "emoji": [
+          "⚽",
+          "🎾",
+          "🏑",
+          "🏸",
+          "🏀",
+          "🏐",
+          "⛳",
+          "🥊"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.cricket_terms.hi",
+      "type": "word_group",
+      "categories": [
+        "sports",
+        "cricket"
+      ],
+      "answer": "क्रिकेट शब्द",
+      "difficulty": 0.5,
+      "distractorGroup": "sport",
+      "attributes": {
+        "members": [
+          "Wicket",
+          "Bouncer",
+          "Yorker",
+          "Maiden",
+          "Googly",
+          "Stumps",
+          "Boundary",
+          "Innings"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.colours.hi",
+      "type": "word_group",
+      "categories": [
+        "nature"
+      ],
+      "answer": "रंग",
+      "difficulty": 0.05,
+      "distractorGroup": "nature",
+      "attributes": {
+        "members": [
+          "Red",
+          "Blue",
+          "Green",
+          "Yellow",
+          "Purple",
+          "Brown",
+          "Black",
+          "White"
+        ],
+        "emoji": [
+          "🟥",
+          "🟦",
+          "🟩",
+          "🟨",
+          "🟪",
+          "🟫",
+          "⬛",
+          "⬜"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.flowers.hi",
+      "type": "word_group",
+      "categories": [
+        "nature"
+      ],
+      "answer": "फूल",
+      "difficulty": 0.25,
+      "distractorGroup": "nature",
+      "attributes": {
+        "members": [
+          "Rose",
+          "Tulip",
+          "Sunflower",
+          "Hibiscus",
+          "Jasmine",
+          "Marigold",
+          "Lily",
+          "Lotus"
+        ],
+        "emoji": [
+          "🌹",
+          "🌷",
+          "🌻",
+          "🌺",
+          "🌸",
+          "🌼",
+          "💮",
+          "🪷"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.weather.hi",
+      "type": "word_group",
+      "categories": [
+        "nature"
+      ],
+      "answer": "मौसम",
+      "difficulty": 0.2,
+      "distractorGroup": "nature",
+      "attributes": {
+        "members": [
+          "Rain",
+          "Snow",
+          "Thunder",
+          "Fog",
+          "Wind",
+          "Tornado",
+          "Rainbow",
+          "Sunshine"
+        ],
+        "emoji": [
+          "🌧️",
+          "❄️",
+          "⚡",
+          "🌫️",
+          "💨",
+          "🌪️",
+          "🌈",
+          "☀️"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.body.hi",
+      "type": "word_group",
+      "categories": [
+        "body"
+      ],
+      "answer": "शरीर के अंग",
+      "difficulty": 0.05,
+      "distractorGroup": "body",
+      "attributes": {
+        "members": [
+          "Hand",
+          "Foot",
+          "Ear",
+          "Nose",
+          "Eye",
+          "Mouth",
+          "Leg",
+          "Tooth"
+        ],
+        "emoji": [
+          "✋",
+          "🦶",
+          "👂",
+          "👃",
+          "👁️",
+          "👄",
+          "🦵",
+          "🦷"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.jobs.hi",
+      "type": "word_group",
+      "categories": [
+        "people"
+      ],
+      "answer": "नौकरियाँ",
+      "difficulty": 0.15,
+      "distractorGroup": "people",
+      "attributes": {
+        "members": [
+          "Doctor",
+          "Teacher",
+          "Farmer",
+          "Chef",
+          "Pilot",
+          "Firefighter",
+          "Police officer",
+          "Astronaut",
+          "Mechanic"
+        ],
+        "emoji": [
+          "🧑‍⚕️",
+          "🧑‍🏫",
+          "🧑‍🌾",
+          "🧑‍🍳",
+          "🧑‍✈️",
+          "🧑‍🚒",
+          "👮",
+          "🧑‍🚀",
+          "🧑‍🔧"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.days.hi",
+      "type": "word_group",
+      "categories": [
+        "time"
+      ],
+      "answer": "हफ़्ते के दिन",
+      "difficulty": 0.05,
+      "distractorGroup": "time",
+      "attributes": {
+        "members": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "wg.months.hi",
+      "type": "word_group",
+      "categories": [
+        "time"
+      ],
+      "answer": "महीने",
+      "difficulty": 0.05,
+      "distractorGroup": "time",
+      "attributes": {
+        "members": [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December"
+        ]
+      },
+      "locale": "hi-IN",
+      "status": "approved",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

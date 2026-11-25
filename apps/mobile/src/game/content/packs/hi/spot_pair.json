@@ -1,0 +1,1302 @@
+{
+  "packId": "spot_pair",
+  "title": "फ़र्क़ ढूँढो",
+  "items": [
+    {
+      "id": "spot.shapes.desk_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "shapes"
+      ],
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/shapes_desk_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/shapes_desk_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "ऑफिस डेस्क",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/shapes_desk_1_left",
+        "rightUrl": "asset:spot/shapes_desk_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0643,
+            "hh": 0.0643
+          },
+          {
+            "id": "d2",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d3",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0705,
+            "hh": 0.0705
+          },
+          {
+            "id": "d4",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0643,
+            "hh": 0.0643
+          },
+          {
+            "id": "d5",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0617,
+            "hh": 0.0617
+          },
+          {
+            "id": "d6",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0605,
+            "hh": 0.0605
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.shapes.kitchen_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "shapes"
+      ],
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/shapes_kitchen_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/shapes_kitchen_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "किचन काउंटर",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/shapes_kitchen_1_left",
+        "rightUrl": "asset:spot/shapes_kitchen_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0717,
+            "hh": 0.0717
+          },
+          {
+            "id": "d2",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0755,
+            "hh": 0.0755
+          },
+          {
+            "id": "d3",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0717,
+            "hh": 0.0717
+          },
+          {
+            "id": "d4",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0617,
+            "hh": 0.0617
+          },
+          {
+            "id": "d5",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0705,
+            "hh": 0.0705
+          },
+          {
+            "id": "d6",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0717,
+            "hh": 0.0717
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.shapes.living_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "shapes"
+      ],
+      "difficulty": 0.5,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/shapes_living_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/shapes_living_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "लिविंग रूम",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/shapes_living_1_left",
+        "rightUrl": "asset:spot/shapes_living_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.068,
+            "hh": 0.068
+          },
+          {
+            "id": "d2",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0742,
+            "hh": 0.0742
+          },
+          {
+            "id": "d3",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0692,
+            "hh": 0.0692
+          },
+          {
+            "id": "d4",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0605,
+            "hh": 0.0605
+          },
+          {
+            "id": "d5",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d6",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0655,
+            "hh": 0.0655
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.shapes.shelf_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "shapes"
+      ],
+      "difficulty": 0.65,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/shapes_shelf_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/shapes_shelf_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "बुक शेल्फ़",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/shapes_shelf_1_left",
+        "rightUrl": "asset:spot/shapes_shelf_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.068,
+            "hh": 0.068
+          },
+          {
+            "id": "d2",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.073,
+            "hh": 0.073
+          },
+          {
+            "id": "d3",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0755,
+            "hh": 0.0755
+          },
+          {
+            "id": "d4",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.068,
+            "hh": 0.068
+          },
+          {
+            "id": "d5",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.063,
+            "hh": 0.063
+          },
+          {
+            "id": "d6",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0705,
+            "hh": 0.0705
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.city.skyline_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "city"
+      ],
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/city_skyline_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/city_skyline_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "सिटी स्काइलाइन",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/city_skyline_1_left",
+        "rightUrl": "asset:spot/city_skyline_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0655,
+            "hh": 0.0655
+          },
+          {
+            "id": "d2",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0643,
+            "hh": 0.0643
+          },
+          {
+            "id": "d3",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.063,
+            "hh": 0.063
+          },
+          {
+            "id": "d4",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d5",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d6",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0605,
+            "hh": 0.0605
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.city.street_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "city"
+      ],
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/city_street_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/city_street_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "व्यस्त सड़क",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/city_street_1_left",
+        "rightUrl": "asset:spot/city_street_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0617,
+            "hh": 0.0617
+          },
+          {
+            "id": "d2",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.063,
+            "hh": 0.063
+          },
+          {
+            "id": "d3",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0655,
+            "hh": 0.0655
+          },
+          {
+            "id": "d4",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0643,
+            "hh": 0.0643
+          },
+          {
+            "id": "d5",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.063,
+            "hh": 0.063
+          },
+          {
+            "id": "d6",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.073,
+            "hh": 0.073
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.city.night_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "city"
+      ],
+      "difficulty": 0.5,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/city_night_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/city_night_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "रात की लाइट्स",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/city_night_1_left",
+        "rightUrl": "asset:spot/city_night_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d2",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.063,
+            "hh": 0.063
+          },
+          {
+            "id": "d3",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0705,
+            "hh": 0.0705
+          },
+          {
+            "id": "d4",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.073,
+            "hh": 0.073
+          },
+          {
+            "id": "d5",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.063,
+            "hh": 0.063
+          },
+          {
+            "id": "d6",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.073,
+            "hh": 0.073
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.city.market_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "city"
+      ],
+      "difficulty": 0.65,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/city_market_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/city_market_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "शहरी बाज़ार",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/city_market_1_left",
+        "rightUrl": "asset:spot/city_market_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0692,
+            "hh": 0.0692
+          },
+          {
+            "id": "d2",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0717,
+            "hh": 0.0717
+          },
+          {
+            "id": "d3",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0617,
+            "hh": 0.0617
+          },
+          {
+            "id": "d4",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0655,
+            "hh": 0.0655
+          },
+          {
+            "id": "d5",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.063,
+            "hh": 0.063
+          },
+          {
+            "id": "d6",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0668,
+            "hh": 0.0668
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.garden.flowers_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "garden"
+      ],
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/garden_flowers_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/garden_flowers_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "फूलों की क्यारी",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/garden_flowers_1_left",
+        "rightUrl": "asset:spot/garden_flowers_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0605,
+            "hh": 0.0605
+          },
+          {
+            "id": "d2",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0605,
+            "hh": 0.0605
+          },
+          {
+            "id": "d3",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d4",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.073,
+            "hh": 0.073
+          },
+          {
+            "id": "d5",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.063,
+            "hh": 0.063
+          },
+          {
+            "id": "d6",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.073,
+            "hh": 0.073
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.garden.park_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "garden"
+      ],
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/garden_park_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/garden_park_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "पार्क का लॉन",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/garden_park_1_left",
+        "rightUrl": "asset:spot/garden_park_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0705,
+            "hh": 0.0705
+          },
+          {
+            "id": "d2",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.068,
+            "hh": 0.068
+          },
+          {
+            "id": "d3",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0742,
+            "hh": 0.0742
+          },
+          {
+            "id": "d4",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0717,
+            "hh": 0.0717
+          },
+          {
+            "id": "d5",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.073,
+            "hh": 0.073
+          },
+          {
+            "id": "d6",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.073,
+            "hh": 0.073
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.garden.path_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "garden"
+      ],
+      "difficulty": 0.5,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/garden_path_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/garden_path_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "गार्डन का रास्ता",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/garden_path_1_left",
+        "rightUrl": "asset:spot/garden_path_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0705,
+            "hh": 0.0705
+          },
+          {
+            "id": "d2",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0717,
+            "hh": 0.0717
+          },
+          {
+            "id": "d3",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0692,
+            "hh": 0.0692
+          },
+          {
+            "id": "d4",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.068,
+            "hh": 0.068
+          },
+          {
+            "id": "d5",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0655,
+            "hh": 0.0655
+          },
+          {
+            "id": "d6",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.068,
+            "hh": 0.068
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.garden.greenhouse_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "garden"
+      ],
+      "difficulty": 0.65,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/garden_greenhouse_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/garden_greenhouse_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "ग्रीनहाउस",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/garden_greenhouse_1_left",
+        "rightUrl": "asset:spot/garden_greenhouse_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0655,
+            "hh": 0.0655
+          },
+          {
+            "id": "d2",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d3",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0643,
+            "hh": 0.0643
+          },
+          {
+            "id": "d4",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0742,
+            "hh": 0.0742
+          },
+          {
+            "id": "d5",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0605,
+            "hh": 0.0605
+          },
+          {
+            "id": "d6",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0717,
+            "hh": 0.0717
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.space.nebula_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "space"
+      ],
+      "difficulty": 0.2,
+      "popularity": 0.9,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/space_nebula_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/space_nebula_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "नेब्युला",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/space_nebula_1_left",
+        "rightUrl": "asset:spot/space_nebula_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0605,
+            "hh": 0.0605
+          },
+          {
+            "id": "d2",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.073,
+            "hh": 0.073
+          },
+          {
+            "id": "d3",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0755,
+            "hh": 0.0755
+          },
+          {
+            "id": "d4",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0705,
+            "hh": 0.0705
+          },
+          {
+            "id": "d5",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d6",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0717,
+            "hh": 0.0717
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.space.milky_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "space"
+      ],
+      "difficulty": 0.35,
+      "popularity": 0.8,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/space_milky_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/space_milky_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "आकाशगंगा",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/space_milky_1_left",
+        "rightUrl": "asset:spot/space_milky_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d2",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0705,
+            "hh": 0.0705
+          },
+          {
+            "id": "d3",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0742,
+            "hh": 0.0742
+          },
+          {
+            "id": "d4",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0655,
+            "hh": 0.0655
+          },
+          {
+            "id": "d5",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0617,
+            "hh": 0.0617
+          },
+          {
+            "id": "d6",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0655,
+            "hh": 0.0655
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.space.earth_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "space"
+      ],
+      "difficulty": 0.5,
+      "popularity": 0.7,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/space_earth_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/space_earth_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "ऑर्बिट से धरती",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/space_earth_1_left",
+        "rightUrl": "asset:spot/space_earth_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0605,
+            "hh": 0.0605
+          },
+          {
+            "id": "d2",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0742,
+            "hh": 0.0742
+          },
+          {
+            "id": "d3",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0655,
+            "hh": 0.0655
+          },
+          {
+            "id": "d4",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0742,
+            "hh": 0.0742
+          },
+          {
+            "id": "d5",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.068,
+            "hh": 0.068
+          },
+          {
+            "id": "d6",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0617,
+            "hh": 0.0617
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    },
+    {
+      "id": "spot.space.stars_1.hi",
+      "type": "spot_pair",
+      "categories": [
+        "space"
+      ],
+      "difficulty": 0.65,
+      "popularity": 0.6,
+      "media": [
+        {
+          "kind": "image",
+          "url": "asset:spot/space_stars_1_left",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर अ"
+        },
+        {
+          "kind": "image",
+          "url": "asset:spot/space_stars_1_right",
+          "w": 800,
+          "h": 500,
+          "alt": "तस्वीर ब"
+        }
+      ],
+      "attributes": {
+        "title": "तारों का मैदान",
+        "aspect": 0.625,
+        "leftUrl": "asset:spot/space_stars_1_left",
+        "rightUrl": "asset:spot/space_stars_1_right",
+        "diffs": [
+          {
+            "id": "d1",
+            "x": 0.82,
+            "y": 0.22,
+            "hw": 0.0668,
+            "hh": 0.0668
+          },
+          {
+            "id": "d2",
+            "x": 0.5,
+            "y": 0.16,
+            "hw": 0.0605,
+            "hh": 0.0605
+          },
+          {
+            "id": "d3",
+            "x": 0.18,
+            "y": 0.2,
+            "hw": 0.0655,
+            "hh": 0.0655
+          },
+          {
+            "id": "d4",
+            "x": 0.22,
+            "y": 0.42,
+            "hw": 0.0655,
+            "hh": 0.0655
+          },
+          {
+            "id": "d5",
+            "x": 0.72,
+            "y": 0.4,
+            "hw": 0.0755,
+            "hh": 0.0755
+          },
+          {
+            "id": "d6",
+            "x": 0.48,
+            "y": 0.5,
+            "hw": 0.0668,
+            "hh": 0.0668
+          }
+        ]
+      },
+      "status": "approved",
+      "locale": "hi-IN",
+      "source": {
+        "kind": "seed",
+        "ref": "hi-native"
+      }
+    }
+  ]
+}

@@ -37,6 +37,7 @@ import { capture, gamePlayProps } from "../../lib/analytics";
 import { createChallenge } from "../../lib/challenges";
 import { colors, radius, spacing } from "../../theme/colors";
 import { type } from "../../theme/typography";
+import { completionHandoffPlan } from "./completionHandoff";
 
 export { isInlineFeedGame } from "../../game/inlineFeed";
 
@@ -319,12 +320,20 @@ function ActiveGuess({
   const snap = useSyncExternalStore(runner.subscribe, runner.getSnapshot);
   const scorePop = usePop(snap.score);
   const finished = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
   /** Hide glass immediately on tap — don't wait a frame for the store (avoids "PLAY stuck"). */
   const [playArmed, setPlayArmed] = useState(false);
   const now = useCallback(() => clock.now(), [clock]);
   const idle = snap.status === "ready" && !playArmed;
+  // Keep the feed locked through "completed" until the result handoff fires — unlocking
+  // earlier re-rendered the parent and used to clear the onComplete timeout.
   const live =
-    snap.status === "playing" || snap.status === "roundOver" || snap.status === "paused" || playArmed;
+    snap.status === "playing" ||
+    snap.status === "roundOver" ||
+    snap.status === "paused" ||
+    snap.status === "completed" ||
+    playArmed;
 
   useEffect(() => {
     if (snap.status !== "ready") setPlayArmed(false);
@@ -375,14 +384,20 @@ function ActiveGuess({
     feedback(correct ? "success" : "error");
   }, [quiet, seq, correct]);
 
+  // Completion handoff: unlocking the feed (live→false) re-renders FeedScreen with a new
+  // onComplete identity. If we clearTimeout on that churn while finished stays true, the
+  // result screen never opens — same pattern as GameHost (ref + status-only deps).
   useEffect(() => {
-    if (snap.status !== "completed" || finished.current) return;
-    finished.current = true;
-    feedback("complete");
-    void levelStore.set(definition.engine, definition.variation, snap.level).catch(() => {});
-    const seen = usedIdsFromState(snap.state);
-    if (seen.length) {
-      void recentIdsStore.record(definition.engine, definition.variation, seen).catch(() => {});
+    const plan = completionHandoffPlan(snap.status, finished.current);
+    if (!plan.scheduleHandoff) return;
+    if (plan.runSideEffects) {
+      finished.current = true;
+      feedback("complete");
+      void levelStore.set(definition.engine, definition.variation, snap.level).catch(() => {});
+      const seen = usedIdsFromState(snap.state);
+      if (seen.length) {
+        void recentIdsStore.record(definition.engine, definition.variation, seen).catch(() => {});
+      }
     }
     const r = snap.result;
     const serialized = runner.serialize();
@@ -401,9 +416,11 @@ function ActiveGuess({
       breakdown: r?.breakdown,
       rounds: runner.rounds,
     };
-    const id = setTimeout(() => onComplete(play), 900);
+    const id = setTimeout(() => onCompleteRef.current(play), 900);
     return () => clearTimeout(id);
-  }, [snap.status, snap.score, snap.level, snap.result, snap.state, runner, mod, definition.engine, definition.variation, gameKey, onComplete]);
+    // Snapshot is final once status is "completed"; identity churn must not drop the handoff.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snap.status]);
 
   const startPlay = useCallback(() => {
     if (runner.getSnapshot().status !== "ready") return;
