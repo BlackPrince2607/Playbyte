@@ -471,8 +471,8 @@ export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRec
               onSignIn={isSupabaseConfigured() ? onSignIn : undefined}
             />
           </View>
-          {preferences}
           {community}
+          {preferences}
           {support}
         </>
       ) : loading && !me ? (
@@ -622,6 +622,7 @@ export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRec
             </View>
           ) : null}
 
+          {community}
           {preferences}
 
           <SectionCard title={t("notifications")}>
@@ -695,7 +696,6 @@ export function SettingsScreen({ onOpenNotifications, onOpenInterests, onOpenRec
           </SectionCard>
           {dataStatus ? <Text style={[type.bodySm, styles.dataStatus]}>{dataStatus}</Text> : null}
 
-          {community}
           {support}
 
           <Pressable

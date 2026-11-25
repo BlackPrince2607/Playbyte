@@ -25,6 +25,6 @@ describe("links", () => {
   });
 
   it("builds a tel link for the support phone", () => {
-    assert.equal(supportTel("7022831039"), "tel:+917022831039");
+    assert.equal(supportTel("9131119711"), "tel:+919131119711");
   });
 });

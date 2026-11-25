@@ -1,7 +1,7 @@
 export const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() || "support@maja.app";
 
 /** Support phone shown in Settings. Override with EXPO_PUBLIC_SUPPORT_PHONE if needed. */
-export const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE?.trim() || "7022831039";
+export const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE?.trim() || "9131119711";
 
 /** Android package / Play Store listing id (matches app.json android.package). */
 export const ANDROID_PACKAGE = "app.maja.mobile";
