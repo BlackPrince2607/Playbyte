@@ -36,12 +36,20 @@ import {
   declineChallenge,
   listChallenges,
 } from "../../lib/challenges";
+import {
+  challengeCanShowResult,
+  effectiveMatchStatus,
+  matchCanShowResult,
+  matchHistorySubtitle,
+  matchIsFinished,
+} from "../../lib/battleHistory";
 import { resolveFeedGame } from "../../lib/gameCatalog";
 import { listMyMatches } from "../../lib/matchmaking";
 import { withSeededCrowd } from "../../lib/seededEngagement";
 import { shareAppInvite } from "../../lib/shareInvite";
 import { useLanguage } from "../../context/LanguageContext";
 import { fill } from "../../i18n/strings";
+import { BattleResultScreen } from "../battle/BattleResultScreen";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
 
@@ -100,6 +108,18 @@ export function FriendsScreen({
   const [sending, setSending] = useState(false);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [onlineMatches, setOnlineMatches] = useState<OnlineMatch[]>([]);
+  const [viewingResult, setViewingResult] = useState<
+    | {
+        kind: "match" | "challenge";
+        gameTitle: string;
+        myScore: number;
+        theirScore: number | null;
+        opponentName: string;
+        opponentAvatarKey: string | null;
+        status: string;
+      }
+    | null
+  >(null);
 
   const parsedCode = parseFriendCode(addInput);
   const inputInvalid = addInput.trim().length >= 8 && !parsedCode;
@@ -146,7 +166,7 @@ export function FriendsScreen({
   const actionableMatches = useMemo(
     () =>
       onlineMatches.filter(
-        (m) => (m.status === "ready" || m.status === "playing") && !m.iHavePlayed,
+        (m) => !matchIsFinished(m) && (m.status === "ready" || m.status === "playing") && !m.iHavePlayed,
       ),
     [onlineMatches],
   );
@@ -154,7 +174,7 @@ export function FriendsScreen({
   const historyMatches = useMemo(
     () =>
       onlineMatches
-        .filter((m) => m.status === "completed" || m.iHavePlayed)
+        .filter((m) => matchIsFinished(m) || m.iHavePlayed)
         .slice(0, 8),
     [onlineMatches],
   );
@@ -452,6 +472,20 @@ export function FriendsScreen({
       <View style={styles.wrap}>
         <ErrorState message={friendsError} onRetry={() => void reloadAll()} />
       </View>
+    );
+  }
+
+  if (viewingResult) {
+    return (
+      <BattleResultScreen
+        gameTitle={viewingResult.gameTitle}
+        myScore={viewingResult.myScore}
+        theirScore={viewingResult.theirScore}
+        opponentName={viewingResult.opponentName}
+        opponentAvatarKey={viewingResult.opponentAvatarKey}
+        status={viewingResult.status}
+        onClose={() => setViewingResult(null)}
+      />
     );
   }
 
@@ -792,6 +826,7 @@ export function FriendsScreen({
           <View style={styles.list}>
             {waitingOrDoneChallenges.map((c, i) => {
               const other = c.role === "challenger" ? c.opponent : c.challenger;
+              const canSee = challengeCanShowResult(c);
               return (
                 <PersonRow
                   key={c.id}
@@ -800,23 +835,39 @@ export function FriendsScreen({
                   avatarKey={other.avatarKey}
                   subtitle={challengeSubtitle(c)}
                 >
-                  {c.status === "completed" ? (
-                    <Text style={[type.micro, { color: colors.lilac }]}>{t("seeChallengeResult")}</Text>
+                  {canSee ? (
+                    <Pressable
+                      onPress={() =>
+                        setViewingResult({
+                          kind: "challenge",
+                          gameTitle: c.gameTitle,
+                          myScore: c.myScore ?? 0,
+                          theirScore: c.theirScore ?? null,
+                          opponentName: other.displayName,
+                          opponentAvatarKey: other.avatarKey ?? null,
+                          status: c.status,
+                        })
+                      }
+                      style={({ pressed }) => [styles.resultChip, pressed && { opacity: 0.8 }]}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("seeChallengeResult")}
+                    >
+                      <Text style={styles.resultChipText}>{t("seeChallengeResult")}</Text>
+                    </Pressable>
                   ) : null}
                 </PersonRow>
               );
             })}
             {historyMatches.map((m, i) => {
-              const name = m.opponent?.displayName ?? t("opponent");
               const first = waitingOrDoneChallenges.length === 0 && i === 0;
-              const subtitle =
-                m.status === "completed"
-                  ? fill(t("challengeCompleted"), {
-                      my: m.myScore ?? "—",
-                      their: m.theirScore ?? "—",
-                      name,
-                    })
-                  : fill(t("waitingForOpponent"), { name });
+              const canSee = matchCanShowResult(m);
+              const subtitle = matchHistorySubtitle(m, {
+                opponent: t("opponent"),
+                waiting: (name) => fill(t("waitingForOpponent"), { name }),
+                matched: (name) => fill(t("matchFoundVs"), { name }),
+                scored: (my, their, name) => fill(t("challengeCompleted"), { my, their, name }),
+                cancelled: t("matchCancelled"),
+              });
               return (
                 <PersonRow
                   key={m.id}
@@ -825,8 +876,25 @@ export function FriendsScreen({
                   avatarKey={m.opponent?.avatarKey ?? null}
                   subtitle={subtitle}
                 >
-                  {m.status === "completed" ? (
-                    <Text style={[type.micro, { color: colors.lilac }]}>{t("seeChallengeResult")}</Text>
+                  {canSee ? (
+                    <Pressable
+                      onPress={() =>
+                        setViewingResult({
+                          kind: "match",
+                          gameTitle: m.gameTitle,
+                          myScore: m.myScore ?? 0,
+                          theirScore: m.theirScore ?? null,
+                          opponentName: m.opponent?.displayName ?? t("opponent"),
+                          opponentAvatarKey: m.opponent?.avatarKey ?? null,
+                          status: effectiveMatchStatus(m),
+                        })
+                      }
+                      style={({ pressed }) => [styles.resultChip, pressed && { opacity: 0.8 }]}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("seeChallengeResult")}
+                    >
+                      <Text style={styles.resultChipText}>{t("seeChallengeResult")}</Text>
+                    </Pressable>
                   ) : null}
                 </PersonRow>
               );
@@ -1187,6 +1255,13 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   textButtonLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.lilac },
+  resultChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.cardAlt,
+  },
+  resultChipText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
   empty: { alignItems: "center", paddingVertical: spacing.lg, gap: spacing.sm },
   emptyIcon: {
     width: 52,

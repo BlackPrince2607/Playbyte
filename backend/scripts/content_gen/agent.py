@@ -30,6 +30,7 @@ from scripts.content_gen.catalog import (
     briefs_for,
     fact_issues,
     generate_stock,
+    has_arabic,
     has_devanagari,
     has_hinglish_latin,
     load_briefs,
@@ -515,9 +516,11 @@ def build_event_fact_rules(today: str) -> list[str]:
 
 
 def build_english_purity_rules() -> list[str]:
+    """Mirrors EN_SYSTEM / English Content Generation Agent prompt — Latin English only."""
     return [
         "ENGLISH ONLY (critical): prompt and option.label must be natural English. Latin script only.",
         "Never generate Hindi, Hinglish, Devanagari, Hindi transliteration, promptHi, labelHi, or optionsHi.",
+        "Never use Arabic/Urdu script (ا ب پ …) in English fields.",
         "NO Hinglish in English fields: never use Hindi words or Latin transliteration "
         "(yaar, kya, kitna, bahut, nahi, scene hai, full on, etc.).",
         "English must read like English a fluent speaker would write — not Hindi written in Latin letters.",
@@ -527,12 +530,15 @@ def build_english_purity_rules() -> list[str]:
 
 
 def build_hindi_purity_rules() -> list[str]:
+    """Mirrors HI_GENERATE_SYSTEM / Hindi Content Generation Agent prompt — Devanagari only."""
     return [
         "HINDI ONLY (critical): prompt and option.label must be Devanagari Hindi/Hinglish.",
         "Every prompt and every option label must contain Devanagari. Reject Latin-only copy.",
         "Never write English-only sentences. Never write Latin-script Hinglish as the whole card "
         "('Kya scene hai', 'Kitne excited ho').",
         "No bilingual fields ('Excited! / एक्साइटेड'). No promptHi, labelHi, or optionsHi.",
+        "Never use Arabic/Urdu script (ا ب پ …). Names like Real Madrid must be fully Devanagari "
+        "(रियल मैड्रिड), never mixed scripts like रियल مدريد.",
         "Short Latin brands/acronyms inside Hindi (IPL, OTT, DRS, Maggi) are OK; long English leftovers are not.",
         "Invent ORIGINAL Hindi cards — do not translate or mirror English sibling prompts.",
     ]
@@ -1290,6 +1296,26 @@ def validate_candidates(
         # Never trust the other language's fields on either agent.
         cleaned = discard_localization_fields(item)
         cleaned = _normalize_candidate_options(cleaned)
+        # Script purity must fail before strip helpers empty fields (EN + HI agent prompts).
+        raw_prompt = str(cleaned.get("prompt") or "")
+        raw_labels = [
+            str(opt.get("label") or "")
+            for opt in (cleaned.get("options") or [])
+            if isinstance(opt, dict)
+        ]
+        if has_arabic(raw_prompt) or any(has_arabic(label) for label in raw_labels):
+            dropped.append(f"{index}:arabic-script")
+            continue
+        if lang == "hi":
+            if not has_devanagari(raw_prompt) or any(
+                not has_devanagari(label) for label in raw_labels
+            ):
+                dropped.append(f"{index}:hindi-script")
+                continue
+        else:
+            if has_devanagari(raw_prompt) or any(has_devanagari(label) for label in raw_labels):
+                dropped.append(f"{index}:english-script")
+                continue
         cleaned = _hindi_only_fields(cleaned) if lang == "hi" else _english_only_fields(cleaned)
         cleaned["format"] = _normalize_candidate_format(cleaned) or (
             FORMAT_POLL if cleaned.get("pollType") or cleaned.get("question") else ""
@@ -1521,6 +1547,8 @@ def _reject(
     if not prompt:
         return "prompt"
     lang = "hi" if content_lang == "hi" else "en"
+    if has_arabic(prompt) or any(has_arabic(label) for label in labels):
+        return "arabic-script"
     if lang == "en":
         if has_devanagari(prompt) or any(has_devanagari(label) for label in labels):
             return "english-script"

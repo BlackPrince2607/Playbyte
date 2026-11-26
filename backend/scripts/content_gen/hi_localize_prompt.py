@@ -148,6 +148,7 @@ You are a localization expert only. You do NOT invent cards, redesign questions,
 - Write Hindi ONLY in promptHi / labelHi (or optionsHi) — never change or return English prompt/labels.
 - Never change format, category, questionType, type, briefId, option count, option order, or isCorrect.
 - Every promptHi and labelHi entry must be Devanagari (Hinglish loanwords OK). No Latin-script Hinglish. No bilingual "Excited! / एक्साइटेड" fields.
+- Never use Arabic/Urdu script. Proper nouns must be fully Devanagari (रियल मैड्रिड, not रियल مدريد).
 - Hinglish energy belongs only in Hindi fields.
 
 ## Core Principle

@@ -57,6 +57,7 @@ GAMBLING_WORDS = ("odds", "payout", "bet", "stake", "wager")
 SMALL_WORDS = frozenset({"The", "A", "An", "It", "Who", "How", "What", "Which", "Prediction", "Fair"})
 # Devanagari belongs on Hindi-native cards (content_lang=hi) only — never in English prompt/label fields.
 _DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]+")
+_ARABIC_RE = re.compile(r"[\u0600-\u06FF]+")
 _MULTI_SPACE_RE = re.compile(r"\s{2,}")
 # Latin-script Hindi / Hinglish tokens that must not appear in English prompt/label fields.
 _HINGLISH_LATIN_RE = re.compile(
@@ -76,14 +77,20 @@ def has_devanagari(text: str) -> bool:
     return bool(_DEVANAGARI_RE.search(text or ""))
 
 
+def has_arabic(text: str) -> bool:
+    """True when Arabic/Urdu script leaked into EN or HI copy (banned by both agent prompts)."""
+    return bool(_ARABIC_RE.search(text or ""))
+
+
 def has_hinglish_latin(text: str) -> bool:
     """True when English fields contain Hindi/Hinglish written in Latin letters."""
     return bool(_HINGLISH_LATIN_RE.search(text or ""))
 
 
 def strip_devanagari(text: str) -> str:
-    """Remove Devanagari runs so English fields stay language-clean for lang=en."""
+    """English agent fields: strip Devanagari + Arabic so Latin English stays clean."""
     cleaned = _DEVANAGARI_RE.sub(" ", text or "")
+    cleaned = _ARABIC_RE.sub(" ", cleaned)
     cleaned = re.sub(r"\s*[|/·]+\s*", " ", cleaned)
     cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip(" -")
     cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned)
@@ -98,19 +105,22 @@ _LATIN_ENGLISH_LEFTOVER_RE = re.compile(
 
 
 def prefer_devanagari(text: str) -> str:
-    """Keep Hindi/Devanagari Hinglish; drop Latin-only bilingual halves / English leftovers."""
+    """Hindi agent fields: keep Devanagari; drop Arabic, Latin bilingual halves, English leftovers."""
     raw = (text or "").strip()
-    if not raw or not has_devanagari(raw):
-        return raw
-    parts = [p.strip() for p in re.split(r"\s*[|/·]+\s*", raw) if p.strip()]
+    if not raw:
+        return ""
+    cleaned = _ARABIC_RE.sub(" ", raw)
+    if not has_devanagari(cleaned):
+        return ""
+    parts = [p.strip() for p in re.split(r"\s*[|/·]+\s*", cleaned) if p.strip()]
     if len(parts) > 1:
         # Prefer the most Devanagari-heavy half (Hinglish loanwords stay with that half).
         parts.sort(key=lambda p: (-len(_DEVANAGARI_RE.findall(p)), len(p)))
-        raw = parts[0]
-    cleaned = _LATIN_ENGLISH_LEFTOVER_RE.sub(" ", raw)
+        cleaned = parts[0]
+    cleaned = _LATIN_ENGLISH_LEFTOVER_RE.sub(" ", cleaned)
     cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip()
     cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned).strip()
-    return cleaned or raw
+    return cleaned if has_devanagari(cleaned) else ""
 
 
 @dataclass

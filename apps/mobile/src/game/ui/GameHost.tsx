@@ -169,7 +169,7 @@ type SessionProps = {
 };
 
 function SdkSession({ gameKey, title, definition, restore, seed, sharedSeed, duel, onComplete, onExit }: SessionProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [boot, setBoot] = useState<Boot>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
   useBackToExit(onExit, boot.phase !== "ready");
@@ -224,7 +224,8 @@ function SdkSession({ gameKey, title, definition, restore, seed, sharedSeed, due
     return () => {
       cancelled = true;
     };
-  }, [attempt, definition, gameKey, restore, seed, sharedSeed]);
+    // language → content locale; rebuild packs when Settings language changes.
+  }, [attempt, definition, gameKey, language, restore, seed, sharedSeed]);
 
   if (boot.phase === "loading") {
     return <ScreenLoading label={t("loadingGame")} />;

@@ -117,7 +117,7 @@ function Picture({
         <Image
           source={source}
           style={{ width, height }}
-          resizeMode="cover"
+          resizeMode="stretch"
           onLoad={() => setStatus("ready")}
           onError={() => setStatus("error")}
           accessibilityIgnoresInvertColors

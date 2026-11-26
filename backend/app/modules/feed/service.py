@@ -35,36 +35,41 @@ MOMENT_JITTER = 100.0
 # so the feed does not collapse to games-only.
 UNANSWERED_BOOST = 10_000.0
 _DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]+")
+_ARABIC_RE = re.compile(r"[\u0600-\u06FF]+")
 _MULTI_SPACE_RE = re.compile(r"\s{2,}")
-
-
-def _latin_display(text: str | None) -> str:
-    """English UI: strip Devanagari that leaked into the English prompt/label columns."""
-    if not text:
-        return ""
-    cleaned = _DEVANAGARI_RE.sub(" ", text)
-    cleaned = re.sub(r"\s*[|/·]+\s*", " ", cleaned)
-    cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip(" -")
-    # Drop a second trailing ? / ! left behind after removing the Hindi half.
-    cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned)
-    return cleaned.strip()
-
-
+_HAS_LATIN_RE = re.compile(r"[A-Za-z0-9]")
 _LATIN_TOKEN_RE = re.compile(r"(?:^|\s)[A-Za-z][A-Za-z0-9''!?.%&-]{0,40}(?=\s|$)")
 
 
+def _latin_display(text: str | None) -> str:
+    """English UI (EN agent prompt): Latin only — never fall back to Devanagari/Arabic raw."""
+    if not text:
+        return ""
+    cleaned = _DEVANAGARI_RE.sub(" ", text)
+    cleaned = _ARABIC_RE.sub(" ", cleaned)
+    cleaned = re.sub(r"\s*[|/·]+\s*", " ", cleaned)
+    cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip(" -")
+    cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned).strip()
+    if not cleaned or not _HAS_LATIN_RE.search(cleaned):
+        return ""
+    return cleaned
+
+
 def _hindi_display(text: str | None) -> str:
-    """Hindi UI: keep Devanagari; drop Latin-only bilingual halves like 'Excited! / एक्साइटेड'."""
+    """Hindi UI (HI agent / localize prompts): Devanagari only — never fall back to Latin-only raw."""
     if not text:
         return ""
     raw = text.strip()
-    if not _DEVANAGARI_RE.search(raw):
-        return raw
-    cleaned = re.sub(r"\s*[|/·]+\s*", " ", raw)
+    cleaned = _ARABIC_RE.sub(" ", raw)
+    if not _DEVANAGARI_RE.search(cleaned):
+        return ""
+    cleaned = re.sub(r"\s*[|/·]+\s*", " ", cleaned)
     cleaned = _LATIN_TOKEN_RE.sub(" ", cleaned)
     cleaned = _MULTI_SPACE_RE.sub(" ", cleaned).strip()
     cleaned = re.sub(r"([?!])\s*[?!]+$", r"\1", cleaned).strip()
-    return cleaned or raw
+    if not cleaned or not _DEVANAGARI_RE.search(cleaned):
+        return ""
+    return cleaned
 
 
 def media_url(key: str | None) -> str | None:
@@ -340,29 +345,21 @@ def serialize_moment(
     prompt_hi = getattr(m, "prompt_hi", None)
 
     if content_lang == "hi":
-        # Hindi-native card: primary prompt/label are Devanagari — never Latinize.
-        prompt = _hindi_display(m.prompt) or m.prompt
+        # Hindi-native card: Devanagari only — never fall back to Latin raw.
+        prompt = _hindi_display(m.prompt)
     elif hindi:
-        # Legacy bilingual EN card: prefer prompt_hi; fall back to English only if missing.
-        hi_prompt = _hindi_display(prompt_hi)
-        if hi_prompt and _DEVANAGARI_RE.search(hi_prompt):
-            prompt = hi_prompt
-        else:
-            prompt = _latin_display(m.prompt) or m.prompt
+        # Legacy bilingual EN card: Hindi fields only for Hindi UI (no English fallback).
+        prompt = _hindi_display(prompt_hi)
     else:
-        # English settings / English-native card: Latin only — never Devanagari.
-        prompt = _latin_display(m.prompt) or m.prompt
+        # English settings: Latin only — never fall back to Devanagari raw.
+        prompt = _latin_display(m.prompt)
 
     def _option_label(o: Any) -> str:
         if content_lang == "hi":
-            return _hindi_display(o.label) or (o.label or "")
+            return _hindi_display(o.label)
         if hindi:
-            label_hi = getattr(o, "label_hi", None)
-            hi = _hindi_display(label_hi) if label_hi else ""
-            if hi and _DEVANAGARI_RE.search(hi):
-                return hi
-            return _latin_display(o.label) or o.label or ""
-        return _latin_display(o.label) or o.label or ""
+            return _hindi_display(getattr(o, "label_hi", None))
+        return _latin_display(o.label)
 
     return {
         "type": "moment",

@@ -16,10 +16,17 @@ import { CloseButton } from "../../components/CloseButton";
 import { useApp } from "../../context/AppContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { fill } from "../../i18n/strings";
+import {
+  effectiveMatchStatus,
+  matchCanShowResult,
+  matchHistorySubtitle,
+  matchIsFinished,
+} from "../../lib/battleHistory";
 import { resolveFeedGame } from "../../lib/gameCatalog";
 import { listMyMatches } from "../../lib/matchmaking";
 import { colors, radius, spacing } from "../../theme/colors";
 import { fonts, type } from "../../theme/typography";
+import { BattleResultScreen } from "./BattleResultScreen";
 
 type Props = {
   onClose: () => void;
@@ -41,6 +48,7 @@ export function BattleHistoryScreen({ onClose, onPlayMatch, onProfile }: Props) 
   const [matches, setMatches] = useState<OnlineMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewing, setViewing] = useState<OnlineMatch | null>(null);
 
   const feed = items.filter((i): i is FeedGame => i.type === "mini_game");
 
@@ -65,6 +73,31 @@ export function BattleHistoryScreen({ onClose, onPlayMatch, onProfile }: Props) 
     } finally {
       setRefreshing(false);
     }
+  }
+
+  function subtitleFor(m: OnlineMatch): string {
+    return matchHistorySubtitle(m, {
+      opponent: t("opponent"),
+      waiting: (name) => fill(t("waitingForOpponent"), { name }),
+      matched: (name) => fill(t("matchFoundVs"), { name }),
+      scored: (my, their, name) => fill(t("challengeCompleted"), { my, their, name }),
+      cancelled: t("matchCancelled"),
+    });
+  }
+
+  if (viewing) {
+    const status = effectiveMatchStatus(viewing);
+    return (
+      <BattleResultScreen
+        gameTitle={viewing.gameTitle}
+        myScore={viewing.myScore ?? 0}
+        theirScore={viewing.theirScore ?? null}
+        opponentName={viewing.opponent?.displayName ?? t("opponent")}
+        opponentAvatarKey={viewing.opponent?.avatarKey ?? null}
+        status={status}
+        onClose={() => setViewing(null)}
+      />
+    );
   }
 
   return (
@@ -100,24 +133,39 @@ export function BattleHistoryScreen({ onClose, onPlayMatch, onProfile }: Props) 
         ) : (
           <View style={styles.list}>
             {matches.map((m, i) => {
-              const name = m.opponent?.displayName ?? t("opponent");
+              const finished = matchIsFinished(m);
               const canPlay =
-                (m.status === "ready" || m.status === "playing") && !m.iHavePlayed && Boolean(onPlayMatch);
-              const subtitle =
-                m.status === "completed"
-                  ? fill(t("challengeCompleted"), {
-                      my: m.myScore ?? "—",
-                      their: m.theirScore ?? "—",
-                      name,
-                    })
-                  : m.iHavePlayed
-                    ? fill(t("waitingForOpponent"), { name })
-                    : fill(t("matchFoundVs"), { name });
+                !finished &&
+                (m.status === "ready" || m.status === "playing") &&
+                !m.iHavePlayed &&
+                Boolean(onPlayMatch);
+              const canSee = matchCanShowResult(m);
+              const subtitle = subtitleFor(m);
               return (
-                <View key={m.id} style={[styles.row, i > 0 && styles.rowDivider]}>
-                  <AvatarImage displayName={name} avatarKey={m.opponent?.avatarKey ?? null} size={44} />
+                <Pressable
+                  key={m.id}
+                  disabled={!canSee}
+                  onPress={() => {
+                    if (canSee) setViewing(m);
+                  }}
+                  style={({ pressed }) => [
+                    styles.row,
+                    i > 0 && styles.rowDivider,
+                    canSee && pressed && { opacity: 0.85 },
+                  ]}
+                  accessibilityRole={canSee ? "button" : undefined}
+                  accessibilityLabel={canSee ? t("seeChallengeResult") : undefined}
+                >
+                  <AvatarImage
+                    displayName={m.opponent?.displayName ?? t("opponent")}
+                    avatarKey={m.opponent?.avatarKey ?? null}
+                    size={44}
+                  />
                   <View style={{ flex: 1 }}>
-                    <Text style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]} numberOfLines={1}>
+                    <Text
+                      style={[type.bodyLg, { color: colors.paper, fontFamily: fonts.bodyBold }]}
+                      numberOfLines={1}
+                    >
                       {m.gameTitle}
                     </Text>
                     <Text style={[type.metadata, { color: colors.lilac }]} numberOfLines={1}>
@@ -156,10 +204,12 @@ export function BattleHistoryScreen({ onClose, onPlayMatch, onProfile }: Props) 
                     >
                       <Text style={styles.playChipText}>{t("playChallenge")}</Text>
                     </Pressable>
-                  ) : m.status === "completed" ? (
-                    <Text style={[type.micro, { color: colors.lilac }]}>{t("seeChallengeResult")}</Text>
+                  ) : canSee ? (
+                    <View style={styles.resultChip}>
+                      <Text style={styles.resultChipText}>{t("seeChallengeResult")}</Text>
+                    </View>
                   ) : null}
-                </View>
+                </Pressable>
               );
             })}
           </View>
@@ -222,6 +272,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pink,
   },
   playChipText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.paper },
+  resultChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.cardAlt,
+  },
+  resultChipText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
   empty: {
     marginTop: spacing.xl,
     alignItems: "center",

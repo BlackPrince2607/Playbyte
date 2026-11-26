@@ -1,12 +1,16 @@
 import type { Rng } from "../../../core/rng";
 import type { PoolItem, QuizOption } from "./types";
 
+/**
+ * Case-fold + collapse punctuation for duplicate checks.
+ * Keeps letters/marks/digits across scripts (Latin + Devanagari matras) so Hindi
+ * answers never normalize to "" (which broke Flag Guess distractors).
+ */
 export const normLabel = (s: string) =>
   s
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFC")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ")
     .trim();
 
 /**

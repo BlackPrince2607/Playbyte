@@ -18,7 +18,6 @@ export type MomentStatusCopy = {
   correctExclaim?: string;
   notThisTime?: string;
   friendChose?: string;
-  yourAnswer?: string;
 };
 
 const DEFAULT_COPY = {
@@ -27,7 +26,6 @@ const DEFAULT_COPY = {
   correctExclaim: "Correct!",
   notThisTime: "Not this time. The right answer is ticked.",
   friendChose: "{name} chose {choice}",
-  yourAnswer: "Your answer: {choice}",
 } as const;
 
 function fill(template: string, vars: Record<string, string>): string {
@@ -46,14 +44,14 @@ export function momentStatus(s: MomentStatusInput, copy: MomentStatusCopy = {}):
     return { text: s.isQuiz ? c.pickQuizAnswer : c.pickPollAnswer, tone: "muted" };
   }
   if (s.isQuiz) {
-    // Quizzes jump straight to correct/wrong — never flash "Your answer: …" while waiting.
+    // Quizzes jump straight to correct/wrong — stay quiet until the key is known.
     if (!s.correctKnown) return null;
     return s.gotItRight
       ? { text: c.correctExclaim, tone: "good" }
       : { text: c.notThisTime, tone: "muted" };
   }
+  // Polls: selection is shown on the option itself — no "Your answer: …" line.
   if (s.friend) return { text: fill(c.friendChose, { name: s.friend.name, choice: s.friend.choice }), tone: "muted" };
-  if (s.myChoice) return { text: fill(c.yourAnswer, { choice: s.myChoice }), tone: "good" };
   return null;
 }
 

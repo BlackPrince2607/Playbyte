@@ -83,6 +83,12 @@ const HI: Record<string, string> = {
   "True or trap?": "ट्रू या ट्रैप?",
   "Next clue": "अगला क्लू",
   "50/50": "50/50",
+  // In-game HUD (maze / connect)
+  Pairs: "जोड़े",
+  Filled: "भरा",
+  Moves: "चालें",
+  Steps: "स्टेप्स",
+  "Best route": "बेस्ट रूट",
 };
 
 export function localizeChrome(text: string, lang: AppLang): string {

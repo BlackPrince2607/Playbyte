@@ -9,6 +9,9 @@ from typing import Any
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9_.:-]{0,79}$")
 TYPE_RE = re.compile(r"^[a-z][a-z0-9_]{1,39}$")
 STATUSES = {"draft", "approved", "retired"}
+_DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]")
+_ARABIC_RE = re.compile(r"[\u0600-\u06FF]")
+_COPY_KEYS = frozenset({"answer", "hints", "members", "distractors", "prompt", "label", "title", "text", "explanation"})
 
 BLOCKLIST = ("fuck", "shit", "bitch", "rape", "nazi", "porn", "slut", "chutiya", "madarchod", "behenchod")
 _BLOCK_RES = [re.compile(rf"(^|[^a-z]){w}([^a-z]|$)") for w in BLOCKLIST]
@@ -33,6 +36,53 @@ def _texts(x: Any, depth: int = 0) -> list[str]:
     if isinstance(x, dict):
         return [s for v in x.values() for s in _texts(v, depth + 1)]
     return []
+
+
+def _player_facing_copy(raw: dict, attributes: dict) -> list[str]:
+    out: list[str] = []
+
+    def push(v: Any) -> None:
+        if isinstance(v, str) and v.strip():
+            out.append(v)
+
+    push(raw.get("answer"))
+    for h in raw.get("hints") or []:
+        push(h)
+    for f in raw.get("facts") or []:
+        if isinstance(f, dict):
+            push(f.get("text"))
+
+    def walk(v: Any, key: str | None = None) -> None:
+        if isinstance(v, str):
+            if key in _COPY_KEYS:
+                push(v)
+            return
+        if isinstance(v, list):
+            for x in v:
+                if isinstance(x, str) and key in _COPY_KEYS:
+                    push(x)
+                else:
+                    walk(x)
+            return
+        if isinstance(v, dict):
+            for k, x in v.items():
+                walk(x, k)
+
+    walk(attributes)
+    return out
+
+
+def _locale_script_error(locale: str, texts: list[str]) -> str | None:
+    hi = locale.lower().startswith("hi")
+    for t in texts:
+        if _ARABIC_RE.search(t):
+            return "arabic script in copy"
+        if hi:
+            if not _DEVANAGARI_RE.search(t):
+                return "hi-IN copy missing Devanagari"
+        elif _DEVANAGARI_RE.search(t):
+            return "en-IN copy contains Devanagari"
+    return None
 
 
 def _unit(x: Any) -> bool:
@@ -125,12 +175,17 @@ def validate_item(raw: Any) -> dict:
     if any(contains_blocked(t) for t in _texts([answer, aliases, raw.get("hints"), facts, attributes])):
         raise fail("blocked term")
 
+    locale = raw.get("locale") if isinstance(raw.get("locale"), str) else "en-IN"
+    script_err = _locale_script_error(locale, _player_facing_copy(raw, attributes))
+    if script_err:
+        raise fail(script_err)
+
     source = raw.get("source")
     return {
         "id": item_id,
         "type": item_type,
         "schemaVersion": raw.get("schemaVersion", 1) if isinstance(raw.get("schemaVersion"), int) else 1,
-        "locale": raw.get("locale") if isinstance(raw.get("locale"), str) else "en-IN",
+        "locale": locale,
         "categories": raw.get("categories") or [],
         "tags": raw.get("tags") or [],
         "difficulty": float(difficulty),

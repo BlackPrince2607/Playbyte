@@ -215,17 +215,18 @@ async def expire_ticket_if_needed(session: AsyncSession, ticket: MatchmakingTick
 
 
 async def finalize_match_if_needed(session: AsyncSession, match: Match) -> None:
-    if match.status not in OPEN_MATCH:
-        return
     now = datetime.now(UTC)
     prev = match.status
-    if match.play_a_id and match.play_b_id:
+    # Heal forfeits that later gained both plays (e.g. bot catch-up after a deadline race).
+    if match.play_a_id and match.play_b_id and match.status in (*OPEN_MATCH, "forfeit"):
         match.status = "completed"
         match.completed_at = now
         match.updated_at = now
         await session.flush()
         if prev != match.status:
             await _notify_match(session, match, "match.result")
+        return
+    if match.status not in OPEN_MATCH:
         return
     if match.play_deadline_at and match.play_deadline_at <= now:
         match.status = "forfeit" if (match.play_a_id or match.play_b_id) else "expired"
@@ -681,6 +682,8 @@ async def get_match(session: AsyncSession, match_id: UUID, user_id: UUID) -> Mat
         raise AppError("not_found", "Match not found.", 404)
     if user_id not in {match.player_a_id, match.player_b_id}:
         raise AppError("forbidden", "You're not part of this match.", 403)
+    # Bot score before deadline forfeit — otherwise history stays stuck on one-sided results.
+    await catch_up_bot_play_if_needed(session, match)
     await finalize_match_if_needed(session, match)
     return match
 
@@ -696,6 +699,7 @@ async def list_matches(session: AsyncSession, user_id: UUID, *, limit: int = 30)
         )
     )
     for row in rows:
+        await catch_up_bot_play_if_needed(session, row)
         await finalize_match_if_needed(session, row)
     return rows
 
@@ -847,8 +851,13 @@ async def catch_up_bot_play_if_needed(session: AsyncSession, match: Match) -> bo
 
     Result-screen polls hit serialize_match; without this, a dead worker leaves
     "Waiting for Zara…" until the play deadline forfeits the match.
+
+    Also heals already-forfeited bot matches that never got a bot GamePlay (list/get
+    used to finalize before catch-up, which locked out the bot score forever).
     """
-    if not match.opponent_is_bot or match.status not in OPEN_MATCH:
+    if not match.opponent_is_bot:
+        return False
+    if match.status not in (*OPEN_MATCH, "forfeit"):
         return False
     if not get_settings().online_matchmaking_enabled:
         return False
@@ -860,13 +869,16 @@ async def catch_up_bot_play_if_needed(session: AsyncSession, match: Match) -> bo
     human_play = await session.get(GamePlay, human_play_id)
     if human_play is None:
         return False
-    submitted_at = getattr(human_play, "created_at", None) or match.updated_at
-    if submitted_at is None:
-        return False
-    if submitted_at.tzinfo is None:
-        submitted_at = submitted_at.replace(tzinfo=UTC)
-    if datetime.now(UTC) - submitted_at < BOT_PLAY_CATCHUP_AFTER:
-        return False
+    # Open matches wait for a short grace so the normal outbox path can win.
+    # Forfeits are already late — attach the bot score immediately.
+    if match.status in OPEN_MATCH:
+        submitted_at = getattr(human_play, "created_at", None) or match.updated_at
+        if submitted_at is None:
+            return False
+        if submitted_at.tzinfo is None:
+            submitted_at = submitted_at.replace(tzinfo=UTC)
+        if datetime.now(UTC) - submitted_at < BOT_PLAY_CATCHUP_AFTER:
+            return False
 
     return await execute_bot_play(session, match.id)
 
@@ -905,7 +917,9 @@ async def execute_bot_play(session: AsyncSession, match_id: UUID) -> bool:
     if not get_settings().online_matchmaking_enabled:
         return False
     match = await session.get(Match, match_id)
-    if match is None or not match.opponent_is_bot or match.status not in OPEN_MATCH:
+    if match is None or not match.opponent_is_bot:
+        return False
+    if match.status not in (*OPEN_MATCH, "forfeit"):
         return False
 
     bot_id, bot_play_id, human_play_id = await _bot_and_human_play_ids(session, match)
@@ -1025,6 +1039,7 @@ async def finalize_due_matches(session: AsyncSession) -> int:
         )
     )
     for match in rows:
+        await catch_up_bot_play_if_needed(session, match)
         await finalize_match_if_needed(session, match)
     return len(rows)
 

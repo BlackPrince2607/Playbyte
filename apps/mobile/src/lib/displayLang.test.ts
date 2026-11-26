@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { displayCopy, hasDevanagari } from "./displayLang";
 
 describe("displayCopy", () => {
-  it("strips Devanagari in English mode", () => {
+  it("keeps English and strips Devanagari in English mode", () => {
     assert.equal(displayCopy("How often do you check news? कितनी बार?", "en"), "How often do you check news?");
     assert.equal(displayCopy("India / भारत", "en"), "India");
   });
@@ -13,13 +13,17 @@ describe("displayCopy", () => {
     assert.equal(displayCopy("Excited! / एक्साइटेड!", "hi"), "एक्साइटेड!");
   });
 
-  it("leaves Latin-only text alone in Hindi mode as fallback", () => {
-    assert.equal(displayCopy("Once a day.", "hi"), "Once a day.");
+  it("never falls back to the other language", () => {
+    // English UI must not show pure Hindi.
+    assert.equal(displayCopy("आप क्या खाते हैं?", "en"), "");
+    assert.equal(displayCopy("चाय!", "en"), "");
+    // Hindi UI must not show pure Latin English.
+    assert.equal(displayCopy("Once a day.", "hi"), "");
   });
 
-  it("keeps pure Hindi in English mode instead of punctuation leftovers", () => {
-    assert.equal(displayCopy("आप क्या खाते हैं?", "en"), "आप क्या खाते हैं?");
-    assert.equal(displayCopy("चाय!", "en"), "चाय!");
+  it("strips Arabic/Urdu script from mixed options", () => {
+    assert.equal(displayCopy("रियल مدريد", "hi"), "रियल");
+    assert.equal(displayCopy("Real مدريد", "en"), "Real");
   });
 
   it("detects Devanagari", () => {

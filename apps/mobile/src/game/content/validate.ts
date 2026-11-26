@@ -7,6 +7,10 @@ import { ContentFact, ContentItem, ContentMedia } from "./types";
 
 const ID_RE = /^[a-z0-9][a-z0-9_.:-]{0,79}$/;
 const TYPE_RE = /^[a-z][a-z0-9_]{1,39}$/;
+const DEVANAGARI = /[\u0900-\u097F]/;
+const ARABIC = /[\u0600-\u06FF]/;
+/** Attribute / nested keys that hold visible player copy (not ids, URLs, coords). */
+const COPY_KEYS = new Set(["answer", "hints", "members", "distractors", "prompt", "label", "title", "text", "explanation"]);
 
 /** Terms that must never appear in player-facing game content. Kept short; the server list is authoritative. */
 const BLOCKLIST = ["fuck", "shit", "bitch", "rape", "nazi", "porn", "slut", "chutiya", "madarchod", "behenchod"];
@@ -15,6 +19,53 @@ const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === 
 const strArr = (x: unknown): x is string[] => Array.isArray(x) && x.every((s) => typeof s === "string");
 const unit = (x: unknown) => typeof x === "number" && Number.isFinite(x) && x >= 0 && x <= 1;
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+
+/** Player-facing copy checked for locale script purity (EN vs HI packs). */
+function playerFacingCopy(raw: Record<string, unknown>, attributes: Record<string, unknown>): string[] {
+  const out: string[] = [];
+  const push = (v: unknown) => {
+    if (typeof v === "string" && v.trim()) out.push(v);
+  };
+  push(raw.answer);
+  if (Array.isArray(raw.hints)) for (const h of raw.hints) push(h);
+  if (Array.isArray(raw.facts)) {
+    for (const f of raw.facts) {
+      if (isObj(f)) push(f.text);
+    }
+  }
+  const walk = (v: unknown, key?: string) => {
+    if (typeof v === "string") {
+      if (key && COPY_KEYS.has(key)) push(v);
+      return;
+    }
+    if (Array.isArray(v)) {
+      // members / distractors / hints arrays inherit the parent key.
+      for (const x of v) {
+        if (typeof x === "string" && key && COPY_KEYS.has(key)) push(x);
+        else walk(x);
+      }
+      return;
+    }
+    if (isObj(v)) {
+      for (const [k, x] of Object.entries(v)) walk(x, k);
+    }
+  };
+  walk(attributes);
+  return out;
+}
+
+function localeScriptError(locale: string, texts: string[]): string | null {
+  const hi = locale.toLowerCase().startsWith("hi");
+  for (const t of texts) {
+    if (ARABIC.test(t)) return "arabic script in copy";
+    if (hi) {
+      if (!DEVANAGARI.test(t)) return "hi-IN copy missing Devanagari";
+    } else if (DEVANAGARI.test(t)) {
+      return "en-IN copy contains Devanagari";
+    }
+  }
+  return null;
+}
 
 export function containsBlocked(text: string): boolean {
   const t = text.toLowerCase();
@@ -97,11 +148,15 @@ export function validateItem(raw: unknown): Result<ContentItem> {
 
   if (textsOf([raw.answer, raw.aliases, raw.hints, facts, attributes]).some(containsBlocked)) return at("blocked term");
 
+  const locale = typeof raw.locale === "string" ? raw.locale : "en-IN";
+  const scriptErr = localeScriptError(locale, playerFacingCopy(raw, attributes as Record<string, unknown>));
+  if (scriptErr) return at(scriptErr);
+
   return ok({
     id,
     type: raw.type,
     schemaVersion: typeof raw.schemaVersion === "number" ? raw.schemaVersion : 1,
-    locale: typeof raw.locale === "string" ? raw.locale : "en-IN",
+    locale,
     categories: (raw.categories as string[] | undefined) ?? [],
     tags: (raw.tags as string[] | undefined) ?? [],
     difficulty: difficulty as number,

@@ -298,12 +298,34 @@ export function MainShell() {
     }
   }, [ready, isSignedIn, onboardingDone, resumeOnboarding]);
 
+  /**
+   * After Google sign-in: returning accounts already have categories on the
+   * server — skip create-profile / pick-categories and enter the app. New
+   * accounts (or incomplete ones) continue at profile setup.
+   * Onboarding completion is device-local, so a reinstall or sign-out would
+   * otherwise show the full create-account flow again.
+   */
+  const continueAfterAuth = useCallback(async () => {
+    try {
+      const r = await api<{ categories: unknown[] }>("/v1/me/interests");
+      if (r.categories?.length) {
+        if (!onboardingDone) await completeOnboarding();
+        else void refreshFeed();
+        return;
+      }
+    } catch {
+      // Missing interests is worse than a redundant prompt.
+    }
+    if (onboardingDone) await resumeOnboarding("profile");
+    else setOnboardingStep("profile");
+  }, [onboardingDone, completeOnboarding, refreshFeed, resumeOnboarding, setOnboardingStep]);
+
   const welcomeGoogle = useCallback(async () => {
     if (welcomeAuthBusy) return;
     setWelcomeAuthBusy(true);
     try {
       await signInWithGoogle();
-      setOnboardingStep("profile");
+      await continueAfterAuth();
     } catch (e) {
       const message = e instanceof Error ? e.message : "Google Sign-In failed";
       if (!message.toLowerCase().includes("cancelled")) {
@@ -313,18 +335,7 @@ export function MainShell() {
     } finally {
       setWelcomeAuthBusy(false);
     }
-  }, [signInWithGoogle, welcomeAuthBusy, setOnboardingStep]);
-
-  /** After sign-in, finish profile + categories if the account has none yet. */
-  const maybeResumeSetupAfterSignIn = useCallback(async () => {
-    try {
-      const r = await api<{ categories: unknown[] }>("/v1/me/interests");
-      if (r.categories?.length) return;
-    } catch {
-      // Still send them through setup — missing interests is worse than a redundant prompt.
-    }
-    await resumeOnboarding("profile");
-  }, [resumeOnboarding]);
+  }, [signInWithGoogle, welcomeAuthBusy, continueAfterAuth]);
 
   const startGame = useCallback(
     (
@@ -722,17 +733,7 @@ export function MainShell() {
         onSuccess={() => {
           setPromptSave(false);
           setSignInError("");
-          if (!onboardingDone && onboardingStep === "signup") {
-            setOnboardingStep("profile");
-            void refreshFeed();
-          } else if (onboardingDone) {
-            void (async () => {
-              await maybeResumeSetupAfterSignIn();
-              void refreshFeed();
-            })();
-          } else {
-            void refreshFeed();
-          }
+          void continueAfterAuth();
         }}
       />
     );
@@ -767,7 +768,7 @@ export function MainShell() {
           onGoogleSignIn={() => void welcomeGoogle()}
           busy={welcomeAuthBusy}
           signedInAs={isSignedIn ? (user?.email ?? t("yourAccount")) : null}
-          onContinueSignedIn={() => setOnboardingStep("profile")}
+          onContinueSignedIn={() => void continueAfterAuth()}
         />
       );
     } else if (onboardingStep === "profile") {

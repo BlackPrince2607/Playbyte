@@ -24,17 +24,18 @@ test("unanswered cards prompt the player", () => {
   assert.match(momentStatus({ ...base, isQuiz: true })!.text, /correct answer/i);
 });
 
-test("quiz feedback, then friend activity, then your answer", () => {
+test("quiz feedback, then friend activity; polls stay quiet after pick", () => {
   const answered = { ...base, answered: true, myChoice: "Tea" };
   assert.deepEqual(momentStatus({ ...answered, isQuiz: true, correctKnown: true, gotItRight: true }), {
     text: "Correct!",
     tone: "good",
   });
   assert.equal(momentStatus({ ...answered, isQuiz: true, correctKnown: true })?.tone, "muted");
-  // Quizzes stay quiet until the correct option is known — no "Your answer" flash.
+  // Quizzes stay quiet until the correct option is known.
   assert.equal(momentStatus({ ...answered, isQuiz: true, correctKnown: false }), null);
   assert.equal(momentStatus({ ...answered, friend: { name: "Ria", choice: "Coffee" } })?.text, "Ria chose Coffee");
-  assert.equal(momentStatus(answered)?.text, "Your answer: Tea");
+  // Polls rely on the highlighted option — no "Your answer" line.
+  assert.equal(momentStatus(answered), null);
 });
 
 test("pairUp makes rows of two and keeps a lone last item", () => {

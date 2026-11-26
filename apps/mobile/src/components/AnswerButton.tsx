@@ -43,8 +43,8 @@ export function AnswerButton({
   tile,
   compact,
 }: Props) {
-  const fillColor = selected || correct ? colors.limeFill : colors.pinkFill;
-  const borderSelected = selected || correct;
+  const fillColor = incorrect ? colors.pinkFill : selected || correct ? colors.limeFill : colors.pinkFill;
+  const borderSelected = (selected && !incorrect) || correct;
   const scale = useSharedValue(1);
   const fillWidth = useSharedValue(0);
   const reduced = prefersReducedMotion();
@@ -55,9 +55,10 @@ export function AnswerButton({
   }, [imageUrl]);
 
   useEffect(() => {
-    const target = percent != null && percent > 0 ? Math.min(100, percent) : selected || correct ? 100 : 0;
+    // Only paint the crowd bar from real percents — never fake a full fill on select.
+    const target = percent != null && percent > 0 ? Math.min(100, percent) : 0;
     fillWidth.value = reduced ? target : withTiming(target, { duration: 420, easing: Easing.out(Easing.cubic) });
-  }, [percent, selected, correct, fillWidth, reduced]);
+  }, [percent, fillWidth, reduced]);
 
   const pressStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const fillStyle = useAnimatedStyle(() => ({
@@ -96,9 +97,7 @@ export function AnswerButton({
           pressStyle,
         ]}
       >
-        {(percent != null && percent > 0) || selected || correct ? (
-          <Animated.View style={[styles.fill, fillStyle]} />
-        ) : null}
+        {percent != null && percent > 0 ? <Animated.View style={[styles.fill, fillStyle]} /> : null}
         {showImage ? (
           <Image
             source={{ uri: imageUrl! }}
@@ -117,7 +116,7 @@ export function AnswerButton({
             {label ?? ""}
           </Text>
           <View style={styles.trailing}>
-            {showCheck || selected || correct ? <Text style={styles.check}>✓</Text> : null}
+            {showCheck ? <Text style={styles.check}>✓</Text> : null}
             {percent != null ? (
               <Text style={[type.statsSm, { color: colors.lime, fontFamily: fonts.mono }]}>
                 {percent}%

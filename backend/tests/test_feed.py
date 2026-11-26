@@ -132,7 +132,8 @@ def test_serialize_moment_uses_hindi_when_lang_hi() -> None:
     hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
     assert hi["prompt"] == "आज रात कौन जीतेगा?"
     assert hi["options"][0]["label"] == "भारत"
-    assert hi["options"][1]["label"] == "Australia"
+    # Missing label_hi must not fall back to English on Hindi UI.
+    assert hi["options"][1]["label"] == ""
     en = serialize_moment(m, snap=None, my_option_id=None, lang="en")
     assert en["prompt"] == "Who wins tonight?"
     assert en["options"][0]["label"] == "India"
@@ -161,7 +162,7 @@ def test_serialize_moment_hindi_native_uses_primary_fields() -> None:
     assert hi["options"][0]["label"] == "भारत"
 
 
-def test_serialize_moment_hindi_falls_back_to_english_prompt() -> None:
+def test_serialize_moment_hindi_does_not_fall_back_to_english() -> None:
     m = SimpleNamespace(
         id=uuid4(),
         type="poll",
@@ -179,8 +180,8 @@ def test_serialize_moment_hindi_falls_back_to_english_prompt() -> None:
         ],
     )
     hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
-    assert hi["prompt"] == "How often do you check news updates?"
-    assert hi["options"][0]["label"] == "Once a day."
+    assert hi["prompt"] == ""
+    assert hi["options"][0]["label"] == ""
 
 
 def test_serialize_moment_strips_devanagari_in_english_mode() -> None:
@@ -212,6 +213,44 @@ def test_serialize_moment_strips_devanagari_in_english_mode() -> None:
     hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
     assert hi["prompt"] == "आज रात कौन जीतेगा?"
     assert hi["options"][0]["label"] == "भारत"
+
+
+def test_serialize_moment_strips_arabic_script() -> None:
+    m = SimpleNamespace(
+        id=uuid4(),
+        type="quiz",
+        prompt="किस क्लब ने सबसे ज्यादा चैंपियंस लीग जीते हैं?",
+        prompt_hi=None,
+        content_lang="hi",
+        prompt_image_key=None,
+        scoring_mode="correct_option",
+        category=SimpleNamespace(slug="football", name="Football"),
+        status="live",
+        starts_at=datetime.now(UTC),
+        ends_at=None,
+        options=[
+            SimpleNamespace(
+                id=uuid4(),
+                label="रियल مدريد",
+                label_hi=None,
+                sort_order=0,
+                image_key=None,
+                is_correct=True,
+            ),
+            SimpleNamespace(
+                id=uuid4(),
+                label="बार्सिलोना",
+                label_hi=None,
+                sort_order=1,
+                image_key=None,
+                is_correct=False,
+            ),
+        ],
+    )
+    hi = serialize_moment(m, snap=None, my_option_id=None, lang="hi")
+    assert "مدريد" not in hi["options"][0]["label"]
+    assert "रियल" in hi["options"][0]["label"]
+    assert hi["options"][1]["label"] == "बार्सिलोना"
 
 
 def test_serialize_moment_strips_latin_from_hindi_fields() -> None:

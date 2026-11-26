@@ -209,7 +209,8 @@ export function GuessFeedPage({
     return () => {
       cancelled = true;
     };
-  }, [isActive, sessionKey, raw.key, raw.engine, raw.variation]);
+  // Rebuild when Settings language changes so pack locale + chrome stay in sync.
+  }, [isActive, sessionKey, language, raw.key, raw.engine, raw.variation]);
 
   const restartPreview = useCallback(() => {
     setSessionKey((n) => n + 1);
@@ -494,6 +495,15 @@ function ActiveGuess({
             compact
           />
         </InlinePlayErrorBoundary>
+        {/* Soft veil: tease the first question without giving the full read. */}
+        {idle ? (
+          <LinearGradient
+            pointerEvents="none"
+            colors={["transparent", "rgba(33,21,64,0.45)", "rgba(33,21,64,0.92)", colors.card]}
+            locations={[0, 0.35, 0.72, 1]}
+            style={styles.previewFade}
+          />
+        ) : null}
       </View>
 
       {idle ? (
@@ -647,7 +657,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  playfield: { flex: 1, minHeight: 0 },
+  playfield: { flex: 1, minHeight: 0, overflow: "hidden" },
+  /** Covers lower half of the idle preview — top of the puzzle stays readable. */
+  previewFade: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "58%",
+  },
   playBar: {
     gap: spacing.sm,
     paddingTop: spacing.sm,

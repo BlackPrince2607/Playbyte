@@ -38,6 +38,13 @@ describe("content validation", () => {
     assert.equal(validateItem(item("a", { facts: [{ text: "short", isTrue: "yes" }] })).ok, false);
   });
 
+  it("rejects cross-script player copy by locale", () => {
+    assert.equal(validateItem(item("hi1", { locale: "hi-IN", answer: "Teacher" })).ok, false);
+    assert.equal(validateItem(item("hi2", { locale: "hi-IN", answer: "शिक्षक" })).ok, true);
+    assert.equal(validateItem(item("en1", { locale: "en-IN", answer: "भारत" })).ok, false);
+    assert.equal(validateItem(item("mix", { locale: "hi-IN", answer: "रियल مدريد" })).ok, false);
+  });
+
   it("does not flag substrings of innocent words", () => {
     assert.equal(validateItem(item("a", { answer: "Scunthorpe shitake grape" })).ok, true);
   });

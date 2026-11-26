@@ -347,9 +347,10 @@ def test_trend_poll_allows_freeform_options() -> None:
     assert any(item.endswith(":gambling:stake") for item in dropped)
 
 
-def test_english_fields_strip_mixed_devanagari() -> None:
+def test_english_fields_reject_mixed_devanagari() -> None:
+    """EN agent prompt: never emit Devanagari — reject mixed bilingual before strip."""
     now = datetime(2026, 10, 29, tzinfo=UTC)
-    raw = {
+    mixed = {
         "candidates": [
             {
                 "format": "poll",
@@ -365,15 +366,34 @@ def test_english_fields_strip_mixed_devanagari() -> None:
             }
         ]
     }
-    cards, dropped = validate_candidates(raw, "cricket", [], now=now)
-    assert dropped == []
-    assert len(cards) == 1
-    assert "आज" not in cards[0].prompt
-    assert cards[0].prompt.startswith("Who wins tonight")
-    # Accidental Hindi from the English agent is discarded — localize_hi owns HI fields.
-    assert cards[0].prompt_hi is None
-    assert cards[0].options[0]["label"] == "India"
-    assert "labelHi" not in cards[0].options[0]
+    cards, dropped = validate_candidates(mixed, "cricket", [], now=now)
+    assert cards == []
+    assert any("english-script" in d for d in dropped)
+
+    # Pure Latin English still passes; localization fields are discarded.
+    clean = {
+        "candidates": [
+            {
+                "format": "poll",
+                "category": "cricket",
+                "questionType": "hot",
+                "type": "predict",
+                "prompt": "Who wins tonight?",
+                "promptHi": "आज रात कौन जीतेगा?",
+                "options": [
+                    {"label": "India", "labelHi": "भारत", "isCorrect": False},
+                    {"label": "The other side", "labelHi": "दूसरी टीम", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    ok_cards, ok_dropped = validate_candidates(clean, "cricket", [], now=now)
+    assert ok_dropped == []
+    assert len(ok_cards) == 1
+    assert ok_cards[0].prompt == "Who wins tonight?"
+    assert ok_cards[0].prompt_hi is None
+    assert ok_cards[0].options[0]["label"] == "India"
+    assert "labelHi" not in ok_cards[0].options[0]
 
 
 def test_trend_quiz_allows_freeform_well_known_trivia() -> None:
@@ -717,9 +737,8 @@ def test_english_agent_rejects_devanagari_in_prompt() -> None:
         ]
     }
     cards, dropped = validate_candidates(raw, "food", [], now=now, content_lang="en")
-    # Strip leaves empty / invalid → dropped (english-script or prompt/options).
     assert cards == []
-    assert dropped
+    assert any("english-script" in d for d in dropped)
 
 
 def test_hi_generate_system_is_generation_not_localization() -> None:
@@ -772,18 +791,65 @@ def test_ensure_language_split_separates_en_and_hi() -> None:
 
 
 def test_prefer_devanagari_and_strip() -> None:
-    from scripts.content_gen.catalog import has_hinglish_latin
+    from scripts.content_gen.catalog import has_arabic, has_hinglish_latin
 
     assert strip_devanagari("India / भारत") == "India"
+    assert strip_devanagari("Real مدريد") == "Real"
     assert prefer_devanagari("Excited! / बहुत ज़्यादा!") == "बहुत ज़्यादा!"
     # Hinglish Hindi may keep short Latin acronyms/brands; drop English leftovers only.
     assert prefer_devanagari("पहले MV देखोगे?") == "पहले MV देखोगे?"
     assert prefer_devanagari("घर की Maggi") == "घर की Maggi"
     assert prefer_devanagari("कितने एक्साइटेड हो?") == "कितने एक्साइटेड हो?"
+    assert prefer_devanagari("रियल مدريد") == "रियल"
+    assert prefer_devanagari("Once a day.") == ""
+    assert has_arabic("رियल مدريد")
+    assert has_arabic("रियल مدريد")
     assert has_hinglish_latin("Kitne excited ho for the match?")
     assert has_hinglish_latin("Kya scene hai tonight?")
     assert not has_hinglish_latin("How excited are you for the match?")
     assert not has_hinglish_latin("New trailer just dropped. Watch now?")
+
+
+def test_agents_reject_arabic_script() -> None:
+    now = datetime(2026, 10, 29, tzinfo=UTC)
+    hi_raw = {
+        "candidates": [
+            {
+                "format": "trivia",
+                "category": "football",
+                "questionType": "who",
+                "type": "pulse",
+                "prompt": "किस क्लब ने सबसे ज्यादा चैंपियंस लीग जीते हैं?",
+                "options": [
+                    {"label": "रियल مدريد", "isCorrect": True},
+                    {"label": "बार्सिलोना", "isCorrect": False},
+                    {"label": "बायर्न म्यूनिख", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    hi_cards, hi_dropped = validate_candidates(hi_raw, "football", [], now=now, content_lang="hi")
+    assert hi_cards == []
+    assert any("arabic-script" in d for d in hi_dropped)
+
+    en_raw = {
+        "candidates": [
+            {
+                "format": "trivia",
+                "category": "football",
+                "questionType": "who",
+                "type": "pulse",
+                "prompt": "Which club has won the most Champions Leagues?",
+                "options": [
+                    {"label": "Real مدريد", "isCorrect": True},
+                    {"label": "Barcelona", "isCorrect": False},
+                ],
+            }
+        ]
+    }
+    en_cards, en_dropped = validate_candidates(en_raw, "football", [], now=now, content_lang="en")
+    assert en_cards == []
+    assert any("arabic-script" in d for d in en_dropped)
 
 
 def test_localize_hi_fills_missing_fields(monkeypatch: pytest.MonkeyPatch) -> None:

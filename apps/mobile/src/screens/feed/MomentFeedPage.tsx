@@ -51,6 +51,8 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const shareInflight = useRef(false);
   const answered = Boolean(local.myOptionId);
   const picking = Boolean(pendingOptionId);
+  // Hold the pre-result card until we can paint the final state once — no score flash/swap.
+  const showResults = answered && !picking;
   const crowd = withSeededCrowd(local);
   const total = crowd.totalResponses;
   const isQuiz =
@@ -61,16 +63,28 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const isTriviaTag = tagSlug === "trivia";
   const isQuizTag = tagSlug === "quiz" || (!contentTag && isQuiz);
   const myOption = local.options.find((o) => o.id === local.myOptionId);
+  const selectedId = pendingOptionId ?? local.myOptionId ?? null;
 
   useEffect(() => {
+    // Ignore optimistic feed patches while a pick is in flight — keeps the card steady.
+    if (pendingOptionId) {
+      if (
+        isQuiz &&
+        item.myOptionId === pendingOptionId &&
+        item.result?.correctOptionId
+      ) {
+        setLocal(item);
+        setPendingOptionId(null);
+      }
+      return;
+    }
     setLocal(item);
     setRespondError("");
     setShareError("");
-    if (item.myOptionId) setPendingOptionId(null);
-  }, [item]);
+  }, [item, pendingOptionId, isQuiz]);
 
   useEffect(() => {
-    if (!isActive || !answered) return;
+    if (!isActive || (!answered && !picking)) return;
 
     let cancelled = false;
 
@@ -94,6 +108,10 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
             correctOptionId: snap.correctOptionId ?? prev.result?.correctOptionId,
           },
         }));
+        // Quiz: reveal only once the correct option is known.
+        if (pendingOptionId && snap.correctOptionId) {
+          setPendingOptionId(null);
+        }
       } catch {
         /* polling is best-effort */
       } finally {
@@ -107,17 +125,14 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
       cancelled = true;
       clearInterval(id);
     };
-  }, [isActive, answered, item.id, mounted]);
+  }, [isActive, answered, picking, pendingOptionId, item.id, mounted]);
 
   async function pick(optionId: string) {
     if (answered || picking) return;
     setRespondError("");
-    if (isQuiz) {
-      // Hold the card until correct/wrong arrives so we never flash "Your answer".
-      setPendingOptionId(optionId);
-    } else {
-      // Polls: paint results immediately; server sync + coins land in the background.
-      setLocal((prev) => scoreLocalVote(prev, optionId));
+    // Lock selection highlight only — do not paint scores until the final snapshot is ready.
+    setPendingOptionId(optionId);
+    if (!isQuiz) {
       capture("poll_voted", {
         poll_id: item.id,
         category: local.category?.slug ?? null,
@@ -138,10 +153,13 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           correctOptionId: snap.correctOptionId,
         },
       }));
+      // Quizzes stay on the selection card until the key arrives (poll effect clears pending).
+      if (isQuiz && !snap.correctOptionId) return;
     } else {
-      // Lock the pick locally; one quiet retry for flaky networks.
       setLocal((prev) => scoreLocalVote(prev, optionId));
       if (!outcome.ok) void respond(item.id, optionId);
+      // Still wait for the correct option before revealing a quiz.
+      if (isQuiz) return;
     }
     setPendingOptionId(null);
   }
@@ -200,23 +218,25 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
 
   const tagLabel = contentTag?.name
     ? categoryName(contentTag.slug, contentTag.name, language)
-    : answered
+    : showResults
       ? t("hotTake")
       : categoryName(local.category?.slug, local.category?.name ?? "", language) || t("liveTag");
   const correctId = local.result?.correctOptionId;
-  const disagreeingFriend = answered
+  const disagreeingFriend = showResults
     ? local.friends?.find((f) => f.optionId && f.optionId !== local.myOptionId)
     : undefined;
   const imageOptions = local.options.some((o) => Boolean(o.imageUrl));
   const crowded = Boolean(local.promptImageUrl) || imageOptions || local.options.length > 3;
   const prompt = displayCopy(local.prompt, language);
   const promptStyle = promptTextStyle(prompt, { crowded });
-  const optionLabel = (label: string | null | undefined) => displayCopy(label, language) || label || "";
+  // Never fall back to raw label — that reintroduces the other language's script.
+  const optionLabel = (label: string | null | undefined) => displayCopy(label, language);
+  // While picking, stay on the unanswered copy so status + scores flip together once.
   const status = momentStatus(
     {
       respondError,
       shareError,
-      answered,
+      answered: showResults,
       isQuiz,
       gotItRight: Boolean(correctId) && local.myOptionId === correctId,
       correctKnown: Boolean(correctId),
@@ -236,13 +256,12 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
       correctExclaim: t("correctExclaim"),
       notThisTime: t("notThisTime"),
       friendChose: t("friendChose"),
-      yourAnswer: t("yourAnswer"),
     },
   );
 
   function renderOption(o: FeedMoment["options"][number], tile: boolean) {
     const label = optionLabel(o.label);
-    if (!answered) {
+    if (!showResults) {
       return (
         <AnswerButton
           key={o.id}
@@ -250,7 +269,8 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           imageUrl={o.imageUrl}
           tile={tile}
           compact={local.options.length > 4}
-          selected={pendingOptionId === o.id}
+          selected={selectedId === o.id}
+          showCheck={selectedId === o.id}
           disabled={picking}
           onPress={() => void pick(o.id)}
         />
@@ -272,7 +292,8 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
         correct={revealQuiz ? isCorrect : false}
         incorrect={revealQuiz && isMine && !isCorrect}
         disabled
-        showCheck={isMine || (revealQuiz && isCorrect)}
+        // Quiz: tick only the right answer. Poll: tick the option you picked.
+        showCheck={revealQuiz ? isCorrect : isMine}
       />
     );
   }
@@ -307,7 +328,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
         </View>
 
         <View style={[styles.card, !imageOptions && styles.cardCentered]}>
-          {answered ? <View style={styles.cardGlow} /> : null}
+          {showResults ? <View style={styles.cardGlow} /> : null}
           <View style={styles.promptBlock}>
             {local.category ? (
               <Text style={[type.metadata, styles.categoryHint, { fontFamily: ui.bodyMedium }]}>

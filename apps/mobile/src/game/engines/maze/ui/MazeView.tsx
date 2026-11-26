@@ -2,6 +2,8 @@ import { Canvas, Circle, Fill, Path, Rect, RoundedRect } from "@shopify/react-na
 import React, { memo, useMemo, useRef, useState } from "react";
 import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useLanguage } from "../../../../context/LanguageContext";
+import { localizeChrome } from "../../../../i18n/chrome";
 import { colors, radius, spacing } from "../../../../theme/colors";
 import { fonts, type } from "../../../../theme/typography";
 import { feedback } from "../../../ui/feedback";
@@ -50,6 +52,7 @@ export function MazeView({
   compact,
   hideHints,
 }: EngineViewProps<MazeState, MazeAction>) {
+  const { language } = useLanguage();
   const [board, setBoard] = useState(0);
   const playing = snapshot.status === "playing" && !state.roundOver;
   const size = state.size;
@@ -144,7 +147,10 @@ export function MazeView({
     <View style={[styles.root, compact && styles.rootCompact]}>
       <View style={styles.header}>
         <Text style={[type.bodySm, { color: colors.lilac }]} numberOfLines={1}>
-          Steps <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold }}>{state.steps}</Text> · Best route {state.par}
+          {localizeChrome("Steps", language)}{" "}
+          <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold }}>{state.steps}</Text>
+          {" · "}
+          {localizeChrome("Best route", language)} {state.par}
         </Text>
         {state.gems.length ? (
           <Text style={[type.bodySm, { color: exitOpen ? colors.lime : GOLD, fontFamily: fonts.bodyBold }]}>

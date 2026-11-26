@@ -12,4 +12,12 @@ describe("localizeChrome", () => {
     assert.equal(localizeChrome("Next clue", "hi"), "अगला क्लू");
     assert.equal(localizeChrome("Time's up!", "hi"), "टाइम खत्म!");
   });
+
+  it("localizes maze and connect HUD labels for Hindi UI", () => {
+    assert.equal(localizeChrome("Pairs", "hi"), "जोड़े");
+    assert.equal(localizeChrome("Filled", "hi"), "भरा");
+    assert.equal(localizeChrome("Moves", "hi"), "चालें");
+    assert.equal(localizeChrome("Steps", "hi"), "स्टेप्स");
+    assert.equal(localizeChrome("Best route", "hi"), "बेस्ट रूट");
+  });
 });

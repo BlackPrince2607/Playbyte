@@ -121,6 +121,19 @@ describe("quiz core", () => {
     assert.ok(share(0.9) > share(0.1) + 0.3);
   });
 
+  it("builds distractors for Hindi Devanagari answers", () => {
+    assert.equal(normLabel("भारत"), "भारत");
+    const pool = [
+      { id: "h1", answer: "भारत", group: "south_asia", difficulty: 0.1, clues: [] },
+      { id: "h2", answer: "पाकिस्तान", group: "south_asia", difficulty: 0.2, clues: [] },
+      { id: "h3", answer: "नेपाल", group: "south_asia", difficulty: 0.15, clues: [] },
+      { id: "h4", answer: "चीन", group: "asia", difficulty: 0.25, clues: [] },
+    ];
+    const opts = pickDistractors(pool[0], pool, 2, 0.5, createRng("hi-flag"));
+    assert.equal(opts.length, 2);
+    assert.ok(opts.every((o) => o.label.length > 0 && o.label !== "भारत"));
+  });
+
   it("keeps bollywood and global distractors in separate lanes", () => {
     const pool = [
       { id: "b1", answer: "Tum Hi Ho", group: "bollywood_ballad", difficulty: 0.1, clues: [] },

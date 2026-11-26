@@ -82,7 +82,7 @@ describe("spot_pair content", () => {
 });
 
 describe("selectDiffs", () => {
-  it("returns the requested count of authored regions for every level", () => {
+  it("can still subset authored regions when asked (legacy helper)", () => {
     for (const item of bundle.items) {
       const pair = pairFromItem(item)!;
       for (const lvl of [0, 0.5, 1]) {
@@ -96,6 +96,22 @@ describe("selectDiffs", () => {
         }
       }
     }
+  });
+});
+
+describe("rounds expose every baked difference", () => {
+  it("does not hide painted diffs behind a difficulty subset", () => {
+    const { runner } = playHeadless({
+      engine: spotEngine,
+      definition: definition({ engine: "spot_difference", variation: "city", difficulty: { start: 0 } }),
+      content: bundle,
+      pickAction: () => null,
+      stopAfter: 0,
+    });
+    const s = runner.getSnapshot().state;
+    const pair = s.pool.find((p) => p.id === s.pairId)!;
+    assert.equal(s.diffs.length, pair.diffs.length);
+    assert.ok(s.diffs.length >= 3);
   });
 });
 

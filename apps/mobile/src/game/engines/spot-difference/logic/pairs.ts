@@ -36,9 +36,14 @@ function parseDiff(raw: unknown, i: number): Difference | null {
   if (typeof x !== "number" || typeof y !== "number" || typeof hw !== "number" || typeof hh !== "number") return null;
   if (![x, y, hw, hh].every((n) => Number.isFinite(n))) return null;
   const id = typeof raw.id === "string" && raw.id ? raw.id : `d${i + 1}`;
+  const kindRaw = raw.kind;
+  const kind =
+    kindRaw === "missing" || kindRaw === "color" || kindRaw === "size" || kindRaw === "move" || kindRaw === "rotate" || kindRaw === "shape"
+      ? kindRaw
+      : "missing";
   const box: Difference = {
     id,
-    kind: "missing",
+    kind,
     x,
     y,
     hw: Math.max(MIN_REGION, hw),

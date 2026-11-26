@@ -2,6 +2,8 @@ import { Canvas, Circle, Fill, Path, Rect } from "@shopify/react-native-skia";
 import React, { memo, useMemo, useRef, useState } from "react";
 import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useLanguage } from "../../../../context/LanguageContext";
+import { localizeChrome } from "../../../../i18n/chrome";
 import { colors, radius, spacing } from "../../../../theme/colors";
 import { fonts, type } from "../../../../theme/typography";
 import { feedback } from "../../../ui/feedback";
@@ -30,6 +32,7 @@ export function ConnectView({
   compact,
   hideHints,
 }: EngineViewProps<ConnectState, ConnectAction>) {
+  const { language } = useLanguage();
   const [board, setBoard] = useState(0);
   const size = state.size;
   const cell = size ? board / size : 0;
@@ -162,10 +165,15 @@ export function ConnectView({
     <View style={[styles.root, compact && styles.rootCompact]}>
       <View style={styles.header}>
         <Text style={[type.bodySm, { color: colors.lilac }]} numberOfLines={1}>
-          Pairs <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold }}>{connected}/{state.pairs.length}</Text>
+          {localizeChrome("Pairs", language)}{" "}
+          <Text style={{ color: colors.paper, fontFamily: fonts.bodyBold }}>{connected}/{state.pairs.length}</Text>
         </Text>
-        <Text style={[type.bodySm, { color: fill === 100 ? colors.lime : colors.lilac }]}>Filled {fill}%</Text>
-        <Text style={[type.bodySm, { color: colors.lilac }]}>Moves {state.moves}</Text>
+        <Text style={[type.bodySm, { color: fill === 100 ? colors.lime : colors.lilac }]}>
+          {localizeChrome("Filled", language)} {fill}%
+        </Text>
+        <Text style={[type.bodySm, { color: colors.lilac }]}>
+          {localizeChrome("Moves", language)} {state.moves}
+        </Text>
       </View>
       <View style={[styles.boardWrap, compact && styles.boardWrapCompact]} onLayout={onLayout}>
         {board > 0 && size > 0 ? (

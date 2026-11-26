@@ -42,7 +42,9 @@ export const WS_VARIATIONS: Record<string, WordSearchVariation> = {
 };
 
 export function themeFromItem(item: ContentItem): ThemeEntry | null {
-  const members = item.attributes.members;
+  // Prefer latinMembers when Hindi packs store Devanagari labels for odd-one-out.
+  const latin = item.attributes.latinMembers;
+  const members = Array.isArray(latin) ? latin : item.attributes.members;
   if (!item.answer || !Array.isArray(members)) return null;
   const words = [...new Set(members.filter((m): m is string => typeof m === "string").map(normWord))].filter((w) => w.length >= 3 && w.length <= 10);
   return words.length >= 4 ? { id: item.id, theme: item.answer, words, difficulty: item.difficulty } : null;

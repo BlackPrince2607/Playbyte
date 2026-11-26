@@ -13,16 +13,16 @@
       "distractorGroup": "food",
       "attributes": {
         "members": [
-          "Apple",
-          "Banana",
-          "Mango",
-          "Grapes",
-          "Pineapple",
-          "Watermelon",
-          "Cherry",
-          "Strawberry",
-          "Lemon",
-          "Pear"
+          "सेब",
+          "केला",
+          "आम",
+          "अंगूर",
+          "अनानास",
+          "तरबूज",
+          "चेरी",
+          "स्ट्रॉबेरी",
+          "नींबू",
+          "नाशपाती"
         ],
         "emoji": [
           "🍎",
@@ -35,6 +35,18 @@
           "🍓",
           "🍋",
           "🍐"
+        ],
+        "latinMembers": [
+          "Apple",
+          "Banana",
+          "Mango",
+          "Grapes",
+          "Pineapple",
+          "Watermelon",
+          "Cherry",
+          "Strawberry",
+          "Lemon",
+          "Pear"
         ]
       },
       "locale": "hi-IN",
@@ -55,16 +67,16 @@
       "distractorGroup": "food",
       "attributes": {
         "members": [
-          "Carrot",
-          "Potato",
-          "Onion",
-          "Broccoli",
-          "Cucumber",
-          "Corn",
-          "Garlic",
-          "Aubergine",
-          "Capsicum",
-          "Cabbage"
+          "गाजर",
+          "आलू",
+          "प्याज़",
+          "ब्रोकली",
+          "खीरा",
+          "मक्का",
+          "लहसुन",
+          "बैंगन",
+          "शिमला मिर्च",
+          "पत्ता गोभी"
         ],
         "emoji": [
           "🥕",
@@ -77,6 +89,18 @@
           "🍆",
           "🫑",
           "🥬"
+        ],
+        "latinMembers": [
+          "Carrot",
+          "Potato",
+          "Onion",
+          "Broccoli",
+          "Cucumber",
+          "Corn",
+          "Garlic",
+          "Aubergine",
+          "Capsicum",
+          "Cabbage"
         ]
       },
       "locale": "hi-IN",
@@ -98,6 +122,16 @@
       "distractorGroup": "food",
       "attributes": {
         "members": [
+          "जलेबी",
+          "लड्डू",
+          "रसगुल्ला",
+          "गुलाब जामुन",
+          "बर्फ़ी",
+          "काजू कतली",
+          "पेड़ा",
+          "हलवा"
+        ],
+        "latinMembers": [
           "Jalebi",
           "Laddoo",
           "Rasgulla",
@@ -126,12 +160,12 @@
       "distractorGroup": "food",
       "attributes": {
         "members": [
-          "Tea",
-          "Coffee",
-          "Milk",
-          "Juice",
-          "Soda",
-          "Bubble tea"
+          "चाय",
+          "कॉफ़ी",
+          "दूध",
+          "जूस",
+          "सोडा",
+          "बबल टी"
         ],
         "emoji": [
           "🍵",
@@ -140,6 +174,14 @@
           "🧃",
           "🥤",
           "🧋"
+        ],
+        "latinMembers": [
+          "Tea",
+          "Coffee",
+          "Milk",
+          "Juice",
+          "Soda",
+          "Bubble tea"
         ]
       },
       "locale": "hi-IN",
@@ -160,13 +202,13 @@
       "distractorGroup": "food",
       "attributes": {
         "members": [
-          "Pizza",
-          "Burger",
-          "Fries",
-          "Hotdog",
-          "Taco",
-          "Sandwich",
-          "Burrito"
+          "पिज़्ज़ा",
+          "बर्गर",
+          "फ़्राइज़",
+          "हॉटडॉग",
+          "टैको",
+          "सैंडविच",
+          "बरिटो"
         ],
         "emoji": [
           "🍕",
@@ -176,6 +218,15 @@
           "🌮",
           "🥪",
           "🌯"
+        ],
+        "latinMembers": [
+          "Pizza",
+          "Burger",
+          "Fries",
+          "Hotdog",
+          "Taco",
+          "Sandwich",
+          "Burrito"
         ]
       },
       "locale": "hi-IN",
@@ -197,6 +248,16 @@
       "distractorGroup": "food",
       "attributes": {
         "members": [
+          "हल्दी",
+          "जीरा",
+          "इलायची",
+          "लौंग",
+          "दालचीनी",
+          "केसर",
+          "धनिया",
+          "मेथी"
+        ],
+        "latinMembers": [
           "Turmeric",
           "Cumin",
           "Cardamom",
@@ -225,14 +286,14 @@
       "distractorGroup": "animal",
       "attributes": {
         "members": [
-          "Cow",
-          "Pig",
-          "Sheep",
-          "Goat",
-          "Horse",
-          "Donkey",
-          "Buffalo",
-          "Llama"
+          "गाय",
+          "सूअर",
+          "भेड़",
+          "बकरी",
+          "घोड़ा",
+          "गधा",
+          "भैंस",
+          "लामा"
         ],
         "emoji": [
           "🐄",
@@ -243,6 +304,16 @@
           "🫏",
           "🐃",
           "🦙"
+        ],
+        "latinMembers": [
+          "Cow",
+          "Pig",
+          "Sheep",
+          "Goat",
+          "Horse",
+          "Donkey",
+          "Buffalo",
+          "Llama"
         ]
       },
       "locale": "hi-IN",
@@ -263,15 +334,15 @@
       "distractorGroup": "animal",
       "attributes": {
         "members": [
-          "Lion",
-          "Tiger",
-          "Elephant",
-          "Giraffe",
-          "Zebra",
-          "Rhino",
-          "Gorilla",
-          "Leopard",
-          "Hippo"
+          "शेर",
+          "बाघ",
+          "हाथी",
+          "जिराफ़",
+          "ज़ेबरा",
+          "गैंडा",
+          "गोरिल्ला",
+          "तेंदुआ",
+          "दरियाई घोड़ा"
         ],
         "emoji": [
           "🦁",
@@ -283,6 +354,17 @@
           "🦍",
           "🐆",
           "🦛"
+        ],
+        "latinMembers": [
+          "Lion",
+          "Tiger",
+          "Elephant",
+          "Giraffe",
+          "Zebra",
+          "Rhino",
+          "Gorilla",
+          "Leopard",
+          "Hippo"
         ]
       },
       "locale": "hi-IN",
@@ -303,14 +385,14 @@
       "distractorGroup": "animal",
       "attributes": {
         "members": [
-          "Parrot",
-          "Eagle",
-          "Owl",
-          "Peacock",
-          "Penguin",
-          "Flamingo",
-          "Swan",
-          "Dove"
+          "तोता",
+          "चील",
+          "उल्लू",
+          "मोर",
+          "पेंगुइन",
+          "फ़्लेमिंगो",
+          "हंस",
+          "कबूतर"
         ],
         "emoji": [
           "🦜",
@@ -321,6 +403,16 @@
           "🦩",
           "🦢",
           "🕊️"
+        ],
+        "latinMembers": [
+          "Parrot",
+          "Eagle",
+          "Owl",
+          "Peacock",
+          "Penguin",
+          "Flamingo",
+          "Swan",
+          "Dove"
         ]
       },
       "locale": "hi-IN",
@@ -341,14 +433,14 @@
       "distractorGroup": "animal",
       "attributes": {
         "members": [
-          "Octopus",
-          "Whale",
-          "Shark",
-          "Dolphin",
-          "Crab",
-          "Lobster",
-          "Squid",
-          "Seal"
+          "ऑक्टोपस",
+          "व्हेल",
+          "शार्क",
+          "डॉल्फ़िन",
+          "केकड़ा",
+          "लॉबस्टर",
+          "स्क्विड",
+          "सील"
         ],
         "emoji": [
           "🐙",
@@ -359,6 +451,16 @@
           "🦞",
           "🦑",
           "🦭"
+        ],
+        "latinMembers": [
+          "Octopus",
+          "Whale",
+          "Shark",
+          "Dolphin",
+          "Crab",
+          "Lobster",
+          "Squid",
+          "Seal"
         ]
       },
       "locale": "hi-IN",
@@ -379,13 +481,13 @@
       "distractorGroup": "animal",
       "attributes": {
         "members": [
-          "Ant",
-          "Bee",
-          "Butterfly",
-          "Ladybird",
-          "Mosquito",
-          "Beetle",
-          "Housefly"
+          "चींटी",
+          "मधुमक्खी",
+          "तितली",
+          "लेडीबर्ड",
+          "मच्छर",
+          "बीटल",
+          "मक्खी"
         ],
         "emoji": [
           "🐜",
@@ -395,6 +497,15 @@
           "🦟",
           "🪲",
           "🪰"
+        ],
+        "latinMembers": [
+          "Ant",
+          "Bee",
+          "Butterfly",
+          "Ladybird",
+          "Mosquito",
+          "Beetle",
+          "Housefly"
         ]
       },
       "locale": "hi-IN",
@@ -416,6 +527,18 @@
       "distractorGroup": "place",
       "attributes": {
         "members": [
+          "मुंबई",
+          "दिल्ली",
+          "चेन्नई",
+          "कोलकाता",
+          "बेंगलुरु",
+          "हैदराबाद",
+          "पुणे",
+          "जयपुर",
+          "लखनऊ",
+          "अहमदाबाद"
+        ],
+        "latinMembers": [
           "Mumbai",
           "Delhi",
           "Chennai",
@@ -446,16 +569,16 @@
       "distractorGroup": "place",
       "attributes": {
         "members": [
-          "France",
-          "Brazil",
-          "Japan",
-          "Egypt",
-          "Canada",
-          "Kenya",
-          "Mexico",
-          "Italy",
-          "Russia",
-          "Australia"
+          "फ़्रांस",
+          "ब्राज़ील",
+          "जापान",
+          "मिस्र",
+          "कनाडा",
+          "केन्या",
+          "मेक्सिको",
+          "इटली",
+          "रूस",
+          "ऑस्ट्रेलिया"
         ],
         "emoji": [
           "🇫🇷",
@@ -468,6 +591,18 @@
           "🇮🇹",
           "🇷🇺",
           "🇦🇺"
+        ],
+        "latinMembers": [
+          "France",
+          "Brazil",
+          "Japan",
+          "Egypt",
+          "Canada",
+          "Kenya",
+          "Mexico",
+          "Italy",
+          "Russia",
+          "Australia"
         ]
       },
       "locale": "hi-IN",
@@ -488,6 +623,16 @@
       "distractorGroup": "place",
       "attributes": {
         "members": [
+          "बुध",
+          "शुक्र",
+          "पृथ्वी",
+          "मंगल",
+          "बृहस्पति",
+          "शनि",
+          "यूरेनस",
+          "नेपच्यून"
+        ],
+        "latinMembers": [
           "Mercury",
           "Venus",
           "Earth",
@@ -517,6 +662,16 @@
       "distractorGroup": "place",
       "attributes": {
         "members": [
+          "गंगा",
+          "यमुना",
+          "गोदावरी",
+          "कृष्णा",
+          "नर्मदा",
+          "कावेरी",
+          "ब्रह्मपुत्र",
+          "महानदी"
+        ],
+        "latinMembers": [
           "Ganga",
           "Yamuna",
           "Godavari",
@@ -545,6 +700,17 @@
       "distractorGroup": "place",
       "attributes": {
         "members": [
+          "पेरिस",
+          "टोक्यो",
+          "लंदन",
+          "काहिरा",
+          "मॉस्को",
+          "बीजिंग",
+          "ओटावा",
+          "कैनबरा",
+          "नैरोबी"
+        ],
+        "latinMembers": [
           "Paris",
           "Tokyo",
           "London",
@@ -574,16 +740,16 @@
       "distractorGroup": "thing",
       "attributes": {
         "members": [
-          "Car",
-          "Bus",
-          "Train",
-          "Bicycle",
-          "Aeroplane",
-          "Ship",
-          "Scooter",
-          "Truck",
-          "Helicopter",
-          "Auto rickshaw"
+          "कार",
+          "बस",
+          "ट्रेन",
+          "साइकिल",
+          "हवाई जहाज़",
+          "जहाज़",
+          "स्कूटर",
+          "ट्रक",
+          "हेलीकॉप्टर",
+          "ऑटो रिक्शा"
         ],
         "emoji": [
           "🚗",
@@ -596,6 +762,18 @@
           "🚚",
           "🚁",
           "🛺"
+        ],
+        "latinMembers": [
+          "Car",
+          "Bus",
+          "Train",
+          "Bicycle",
+          "Aeroplane",
+          "Ship",
+          "Scooter",
+          "Truck",
+          "Helicopter",
+          "Auto rickshaw"
         ]
       },
       "locale": "hi-IN",
@@ -617,14 +795,14 @@
       "distractorGroup": "thing",
       "attributes": {
         "members": [
-          "Guitar",
-          "Piano",
-          "Drum",
-          "Violin",
-          "Trumpet",
-          "Saxophone",
-          "Banjo",
-          "Accordion"
+          "गिटार",
+          "पियानो",
+          "ड्रम",
+          "वायलिन",
+          "ट्रंपेट",
+          "सैक्सोफ़ोन",
+          "बैंजो",
+          "अकॉर्डियन"
         ],
         "emoji": [
           "🎸",
@@ -635,6 +813,16 @@
           "🎷",
           "🪕",
           "🪗"
+        ],
+        "latinMembers": [
+          "Guitar",
+          "Piano",
+          "Drum",
+          "Violin",
+          "Trumpet",
+          "Saxophone",
+          "Banjo",
+          "Accordion"
         ]
       },
       "locale": "hi-IN",
@@ -655,6 +843,16 @@
       "distractorGroup": "thing",
       "attributes": {
         "members": [
+          "कुर्सी",
+          "बिस्तर",
+          "सोफ़ा",
+          "मेज़",
+          "अलमारी",
+          "डेस्क",
+          "स्टूल",
+          "किताबों की अलमारी"
+        ],
+        "latinMembers": [
           "Chair",
           "Bed",
           "Sofa",
@@ -683,15 +881,15 @@
       "distractorGroup": "thing",
       "attributes": {
         "members": [
-          "Shirt",
-          "Jeans",
-          "Dress",
-          "Saree",
-          "Socks",
-          "Coat",
-          "Scarf",
-          "Gloves",
-          "Shorts"
+          "शर्ट",
+          "जींस",
+          "ड्रेस",
+          "साड़ी",
+          "मोज़े",
+          "कोट",
+          "स्कार्फ़",
+          "दस्ताने",
+          "शॉर्ट्स"
         ],
         "emoji": [
           "👕",
@@ -703,6 +901,17 @@
           "🧣",
           "🧤",
           "🩳"
+        ],
+        "latinMembers": [
+          "Shirt",
+          "Jeans",
+          "Dress",
+          "Saree",
+          "Socks",
+          "Coat",
+          "Scarf",
+          "Gloves",
+          "Shorts"
         ]
       },
       "locale": "hi-IN",
@@ -723,14 +932,14 @@
       "distractorGroup": "thing",
       "attributes": {
         "members": [
-          "Pencil",
-          "Pen",
-          "Ruler",
-          "Scissors",
-          "Notebook",
-          "Crayon",
-          "Paperclip",
-          "Pushpin"
+          "पेंसिल",
+          "पेन",
+          "रूलर",
+          "कैंची",
+          "नोटबुक",
+          "क्रेयॉन",
+          "पेपरक्लिप",
+          "पुशपिन"
         ],
         "emoji": [
           "✏️",
@@ -741,6 +950,16 @@
           "🖍️",
           "📎",
           "📌"
+        ],
+        "latinMembers": [
+          "Pencil",
+          "Pen",
+          "Ruler",
+          "Scissors",
+          "Notebook",
+          "Crayon",
+          "Paperclip",
+          "Pushpin"
         ]
       },
       "locale": "hi-IN",
@@ -761,12 +980,12 @@
       "distractorGroup": "thing",
       "attributes": {
         "members": [
-          "Hammer",
-          "Wrench",
-          "Screwdriver",
-          "Saw",
-          "Axe",
-          "Ladder"
+          "हथौड़ा",
+          "रिंच",
+          "स्क्रूड्राइवर",
+          "आरा",
+          "कुल्हाड़ी",
+          "सीढ़ी"
         ],
         "emoji": [
           "🔨",
@@ -775,6 +994,14 @@
           "🪚",
           "🪓",
           "🪜"
+        ],
+        "latinMembers": [
+          "Hammer",
+          "Wrench",
+          "Screwdriver",
+          "Saw",
+          "Axe",
+          "Ladder"
         ]
       },
       "locale": "hi-IN",
@@ -795,14 +1022,14 @@
       "distractorGroup": "sport",
       "attributes": {
         "members": [
-          "Football",
-          "Tennis",
-          "Hockey",
-          "Badminton",
-          "Basketball",
-          "Volleyball",
-          "Golf",
-          "Boxing"
+          "फ़ुटबॉल",
+          "टेनिस",
+          "हॉकी",
+          "बैडमिंटन",
+          "बास्केटबॉल",
+          "वॉलीबॉल",
+          "गोल्फ़",
+          "बॉक्सिंग"
         ],
         "emoji": [
           "⚽",
@@ -813,6 +1040,16 @@
           "🏐",
           "⛳",
           "🥊"
+        ],
+        "latinMembers": [
+          "Football",
+          "Tennis",
+          "Hockey",
+          "Badminton",
+          "Basketball",
+          "Volleyball",
+          "Golf",
+          "Boxing"
         ]
       },
       "locale": "hi-IN",
@@ -834,6 +1071,16 @@
       "distractorGroup": "sport",
       "attributes": {
         "members": [
+          "विकेट",
+          "बाउंसर",
+          "यॉर्कर",
+          "मेडन",
+          "गूगली",
+          "स्टंप्स",
+          "बाउंड्री",
+          "इनिंग्स"
+        ],
+        "latinMembers": [
           "Wicket",
           "Bouncer",
           "Yorker",
@@ -862,14 +1109,14 @@
       "distractorGroup": "nature",
       "attributes": {
         "members": [
-          "Red",
-          "Blue",
-          "Green",
-          "Yellow",
-          "Purple",
-          "Brown",
-          "Black",
-          "White"
+          "लाल",
+          "नीला",
+          "हरा",
+          "पीला",
+          "बैंगनी",
+          "भूरा",
+          "काला",
+          "सफ़ेद"
         ],
         "emoji": [
           "🟥",
@@ -880,6 +1127,16 @@
           "🟫",
           "⬛",
           "⬜"
+        ],
+        "latinMembers": [
+          "Red",
+          "Blue",
+          "Green",
+          "Yellow",
+          "Purple",
+          "Brown",
+          "Black",
+          "White"
         ]
       },
       "locale": "hi-IN",
@@ -900,14 +1157,14 @@
       "distractorGroup": "nature",
       "attributes": {
         "members": [
-          "Rose",
-          "Tulip",
-          "Sunflower",
-          "Hibiscus",
-          "Jasmine",
-          "Marigold",
-          "Lily",
-          "Lotus"
+          "गुलाब",
+          "ट्यूलिप",
+          "सूरजमुखी",
+          "गुड़हल",
+          "चमेली",
+          "गेंदा",
+          "लिली",
+          "कमल"
         ],
         "emoji": [
           "🌹",
@@ -918,6 +1175,16 @@
           "🌼",
           "💮",
           "🪷"
+        ],
+        "latinMembers": [
+          "Rose",
+          "Tulip",
+          "Sunflower",
+          "Hibiscus",
+          "Jasmine",
+          "Marigold",
+          "Lily",
+          "Lotus"
         ]
       },
       "locale": "hi-IN",
@@ -938,14 +1205,14 @@
       "distractorGroup": "nature",
       "attributes": {
         "members": [
-          "Rain",
-          "Snow",
-          "Thunder",
-          "Fog",
-          "Wind",
-          "Tornado",
-          "Rainbow",
-          "Sunshine"
+          "बारिश",
+          "बर्फ़",
+          "गरज",
+          "कोहरा",
+          "हवा",
+          "बवंडर",
+          "इंद्रधनुष",
+          "धूप"
         ],
         "emoji": [
           "🌧️",
@@ -956,6 +1223,16 @@
           "🌪️",
           "🌈",
           "☀️"
+        ],
+        "latinMembers": [
+          "Rain",
+          "Snow",
+          "Thunder",
+          "Fog",
+          "Wind",
+          "Tornado",
+          "Rainbow",
+          "Sunshine"
         ]
       },
       "locale": "hi-IN",
@@ -976,14 +1253,14 @@
       "distractorGroup": "body",
       "attributes": {
         "members": [
-          "Hand",
-          "Foot",
-          "Ear",
-          "Nose",
-          "Eye",
-          "Mouth",
-          "Leg",
-          "Tooth"
+          "हाथ",
+          "पैर",
+          "कान",
+          "नाक",
+          "आँख",
+          "मुँह",
+          "टांग",
+          "दाँत"
         ],
         "emoji": [
           "✋",
@@ -994,6 +1271,16 @@
           "👄",
           "🦵",
           "🦷"
+        ],
+        "latinMembers": [
+          "Hand",
+          "Foot",
+          "Ear",
+          "Nose",
+          "Eye",
+          "Mouth",
+          "Leg",
+          "Tooth"
         ]
       },
       "locale": "hi-IN",
@@ -1014,15 +1301,15 @@
       "distractorGroup": "people",
       "attributes": {
         "members": [
-          "Doctor",
-          "Teacher",
-          "Farmer",
-          "Chef",
-          "Pilot",
-          "Firefighter",
-          "Police officer",
-          "Astronaut",
-          "Mechanic"
+          "डॉक्टर",
+          "शिक्षक",
+          "किसान",
+          "शेफ़",
+          "पायलट",
+          "फ़ायरफ़ाइटर",
+          "पुलिस अधिकारी",
+          "अंतरिक्ष यात्री",
+          "मैकेनिक"
         ],
         "emoji": [
           "🧑‍⚕️",
@@ -1034,6 +1321,17 @@
           "👮",
           "🧑‍🚀",
           "🧑‍🔧"
+        ],
+        "latinMembers": [
+          "Doctor",
+          "Teacher",
+          "Farmer",
+          "Chef",
+          "Pilot",
+          "Firefighter",
+          "Police officer",
+          "Astronaut",
+          "Mechanic"
         ]
       },
       "locale": "hi-IN",
@@ -1054,6 +1352,15 @@
       "distractorGroup": "time",
       "attributes": {
         "members": [
+          "सोमवार",
+          "मंगलवार",
+          "बुधवार",
+          "गुरुवार",
+          "शुक्रवार",
+          "शनिवार",
+          "रविवार"
+        ],
+        "latinMembers": [
           "Monday",
           "Tuesday",
           "Wednesday",
@@ -1081,6 +1388,20 @@
       "distractorGroup": "time",
       "attributes": {
         "members": [
+          "जनवरी",
+          "फ़रवरी",
+          "मार्च",
+          "अप्रैल",
+          "मई",
+          "जून",
+          "जुलाई",
+          "अगस्त",
+          "सितंबर",
+          "अक्टूबर",
+          "नवंबर",
+          "दिसंबर"
+        ],
+        "latinMembers": [
           "January",
           "February",
           "March",

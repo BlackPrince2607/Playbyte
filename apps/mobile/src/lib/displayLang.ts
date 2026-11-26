@@ -1,41 +1,49 @@
 import type { AppLang } from "../i18n/lang";
 
-const DEVANAGARI = /[\u0900-\u097F]+/g;
+const DEVANAGARI = /[\u0900-\u097F]/;
+const DEVANAGARI_G = /[\u0900-\u097F]+/g;
+/** Arabic / Urdu script — never in English or Hindi UI copy (per EN/HI generation prompts). */
+const ARABIC_G = /[\u0600-\u06FF]+/g;
 const MULTI_SPACE = /\s{2,}/g;
-/** Latin or Devanagari letters/digits — detects punctuation-only leftovers after stripping. */
-const HAS_WORD = /[A-Za-z0-9\u0900-\u097F]/;
+const HAS_LATIN = /[A-Za-z0-9]/;
 
 /** True if the string contains Devanagari (Hindi script). */
 export function hasDevanagari(text: string): boolean {
-  DEVANAGARI.lastIndex = 0;
   return DEVANAGARI.test(text);
 }
 
-function finalize(cleaned: string, raw: string): string {
-  const next = cleaned.replace(MULTI_SPACE, " ").trim().replace(/([?!])\s*[?!]+$/g, "$1").trim();
-  // Prefer the original over ", ?" / "!" leftovers when a script strip removed every word.
-  if (!next || !HAS_WORD.test(next)) return raw;
-  return next;
+function tidy(cleaned: string): string {
+  return cleaned.replace(MULTI_SPACE, " ").trim().replace(/([?!])\s*[?!]+$/g, "$1").trim();
 }
 
 /**
- * Keep poll/quiz copy in the selected language only.
- * English mode drops Devanagari that leaked into the English field.
- * Hindi mode keeps Devanagari; Latin-only strings stay as a fallback.
+ * Keep poll/quiz copy in the selected language only — never fall back to the other script.
+ *
+ * Matches the English / Hindi Content Generation Agent prompts:
+ * - en: natural Latin English only; no Devanagari, no Arabic/Urdu.
+ * - hi: Devanagari Hindi/Hinglish; strip Arabic/Urdu and Latin bilingual halves;
+ *   short Latin brands may remain inside Devanagari text, but Latin-only copy is dropped.
  */
 export function displayCopy(text: string | null | undefined, lang: AppLang): string {
   const raw = (text ?? "").trim();
   if (!raw) return "";
 
   if (lang === "hi") {
-    if (!hasDevanagari(raw)) return raw;
+    let cleaned = raw.replace(ARABIC_G, " ");
+    if (!hasDevanagari(cleaned)) {
+      // No Devanagari left → wrong language for Hindi UI (do not show English/Latin-only).
+      return "";
+    }
     // Drop Latin-only bilingual halves like "Excited! / एक्साइटेड".
-    let cleaned = raw.replace(/\s*[|/·]+\s*/g, " ");
+    cleaned = cleaned.replace(/\s*[|/·]+\s*/g, " ");
     cleaned = cleaned.replace(/(?:^|\s)[A-Za-z][A-Za-z0-9''!?.%&-]{0,40}(?=\s|$)/g, " ");
-    return finalize(cleaned, raw);
+    cleaned = tidy(cleaned);
+    return hasDevanagari(cleaned) ? cleaned : "";
   }
 
-  let cleaned = raw.replace(DEVANAGARI, " ");
+  let cleaned = raw.replace(DEVANAGARI_G, " ").replace(ARABIC_G, " ");
   cleaned = cleaned.replace(/\s*[|/·]+\s*/g, " ");
-  return finalize(cleaned, raw);
+  cleaned = tidy(cleaned);
+  // Pure Hindi (or empty after strip) must not leak into English UI.
+  return cleaned && HAS_LATIN.test(cleaned) ? cleaned : "";
 }

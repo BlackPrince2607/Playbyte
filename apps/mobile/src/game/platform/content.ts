@@ -12,9 +12,9 @@ export { resolveAsset } from "./assetCache";
 
 const safeName = (packId: string) => packId.replace(/[^a-z0-9_.-]/gi, "_");
 
-/** Locale-scoped cache. v3: prefer bundled HI seeds; never reuse EN cached as hi-IN. */
+/** Locale-scoped cache. v4: HI word_group members are Devanagari (+ latinMembers for grids). */
 function cacheName(packId: string) {
-  return `${safeName(packId)}__${getContentLocale()}__v3.json`;
+  return `${safeName(packId)}__${getContentLocale()}__v4.json`;
 }
 
 function packDir(): Directory {

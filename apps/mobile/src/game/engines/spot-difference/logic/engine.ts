@@ -15,12 +15,13 @@ import {
   timeRemainingBonus,
 } from "../../../scoring";
 import { pickItem } from "../../quiz/logic/distractors";
-import { Difference, SpotParams, inRegion, selectDiffs } from "./differences";
+import { Difference, SpotParams, inRegion } from "./differences";
 import { SpotOverlay, SpotPair, pairFromItem } from "./pairs";
 import { ASPECT } from "./scene";
 
 export const SPOT_DIMENSIONS: (DimensionSpec & { key: keyof SpotParams })[] = [
-  { key: "diffCount", label: "Differences", easy: 3, hard: 6 },
+  // Count is informational — rounds always expose every baked diff on the pair.
+  { key: "diffCount", label: "Differences", easy: 5, hard: 5 },
   { key: "shapeCount", label: "Scene detail", easy: 14, hard: 34 },
   { key: "subtlety", label: "Subtlety", easy: 0, hard: 1 },
   { key: "minSize", label: "Smallest changed object", easy: 0.03, hard: 0.012 },
@@ -30,7 +31,7 @@ export const SPOT_DIMENSIONS: (DimensionSpec & { key: keyof SpotParams })[] = [
 export const SPOT_SCORING: AnswerScoring = { ...DEFAULT_ANSWER_SCORING, mistakePenalty: 3, hintPenalty: 5 };
 export const CLEAR_BONUS = 50;
 /** Extra tolerance around each hit region for finger imprecision. */
-export const TOUCH_SLOP = 0.015;
+export const TOUCH_SLOP = 0.035;
 
 const POOL_CAP = 40;
 
@@ -180,9 +181,10 @@ export function createSpotEngine(meta: EngineMeta, defaultRounds = 3): GameEngin
         rng,
       );
       const pair = picked ? s.pool.find((p) => p.id === picked.id)! : rng.pick(s.pool);
-      const diffs = selectDiffs(pair.diffs, params, rng);
-      const active = new Set(diffs.map((d) => d.id));
-      const overlays = pair.overlays.filter((o) => active.has(o.id));
+      // Every baked pixel change must be tappable. Subsetting authored diffs left
+      // visible-but-unscorable marks (taps looked “wrong” on real differences).
+      const diffs = pair.diffs;
+      const overlays = pair.overlays.filter((o) => diffs.some((d) => d.id === o.id));
       const limit = params.timeLimitMs;
       return {
         ...s,
