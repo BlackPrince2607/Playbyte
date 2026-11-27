@@ -16,8 +16,10 @@ module.exports = ({ config }) => {
     plugins.push("expo-localization");
   }
   // Image + caption shares (result / moment cards) need EXTRA_TEXT alongside the PNG.
-  if (!plugins.includes("react-native-share")) {
-    plugins.push("react-native-share");
+  // Plugin requires props — bare "react-native-share" crashes on props.android.
+  const hasSharePlugin = plugins.some((p) => (Array.isArray(p) ? p[0] : p) === "react-native-share");
+  if (!hasSharePlugin) {
+    plugins.push(["react-native-share", { ios: [], android: [] }]);
   }
 
   const inviteHost = hostOf(process.env.EXPO_PUBLIC_API_URL);
