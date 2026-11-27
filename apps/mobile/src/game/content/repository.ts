@@ -27,7 +27,22 @@ export type RepositoryDeps = {
   onReject?: (packId: string, rejected: { id?: string; error: string }[]) => void;
   /** Packs kept decoded in memory (LRU). */
   memoryPacks?: number;
+  /**
+   * When set, drop items whose locale does not match (EN and HI packages stay separate
+   * even if a remote/cached pack was mixed).
+   */
+  packLocale?: () => string | undefined;
 };
+
+/** Keep only items belonging to the active language package. */
+export function itemsForLocale(items: ContentItem[], locale: string | undefined): ContentItem[] {
+  if (!locale) return items;
+  const wantHi = locale.toLowerCase().startsWith("hi");
+  return items.filter((i) => {
+    const loc = (i.locale || "en-IN").toLowerCase();
+    return wantHi ? loc.startsWith("hi") : !loc.startsWith("hi");
+  });
+}
 
 export type LoadedPack = { items: ContentItem[]; source: ContentSource };
 
@@ -75,37 +90,50 @@ export function createContentRepository(deps: RepositoryDeps): ContentRepository
     return p;
   };
 
+  function keepLocale(items: ContentItem[]): ContentItem[] {
+    return itemsForLocale(items, deps.packLocale?.());
+  }
+
   async function fromFallback(packId: string): Promise<LoadedPack | null> {
     const raw = await deps.fallback(packId).catch(() => null);
     if (!raw) return null;
     const v = validatePack(raw);
     if (v.rejected.length) deps.onReject?.(packId, v.rejected);
-    return v.items.length ? { items: v.items, source: "fallback" } : null;
+    const items = keepLocale(v.items);
+    return items.length ? { items, source: "fallback" } : null;
   }
 
   async function resolvePack(packId: string): Promise<LoadedPack> {
     const cached = await deps.cache.read(packId).catch(() => null);
     if (cached && now() - cached.fetchedAt < ttlMs && cached.items.length) {
-      return { items: cached.items, source: "cache" };
+      const items = keepLocale(cached.items);
+      if (items.length) return { items, source: "cache" };
     }
     try {
       const res = await withTimeout(deps.fetchPack(packId, cached?.etag), timeoutMs);
       if (res.status === 304 && cached) {
-        void deps.cache.write({ ...cached, fetchedAt: now() }).catch(() => {});
-        return { items: cached.items, source: "cache" };
+        const items = keepLocale(cached.items);
+        if (items.length) {
+          void deps.cache.write({ ...cached, items, fetchedAt: now() }).catch(() => {});
+          return { items, source: "cache" };
+        }
       }
       if (res.status === 200) {
         const v = validatePack(res.items);
         if (v.rejected.length) deps.onReject?.(packId, v.rejected);
-        if (v.items.length) {
-          void deps.cache.write({ packId, etag: res.etag, items: v.items, fetchedAt: now() }).catch(() => {});
-          return { items: v.items, source: "remote" };
+        const items = keepLocale(v.items);
+        if (items.length) {
+          void deps.cache.write({ packId, etag: res.etag, items, fetchedAt: now() }).catch(() => {});
+          return { items, source: "remote" };
         }
       }
     } catch {
       // offline / timeout / server error: fall through to stale cache or fallback
     }
-    if (cached?.items.length) return { items: cached.items, source: "cache" };
+    if (cached?.items.length) {
+      const items = keepLocale(cached.items);
+      if (items.length) return { items, source: "cache" };
+    }
     return (await fromFallback(packId)) ?? { items: [], source: "none" };
   }
 

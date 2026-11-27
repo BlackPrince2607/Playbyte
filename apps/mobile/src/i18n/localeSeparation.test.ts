@@ -66,4 +66,74 @@ describe("locale separation e2e", () => {
     assert.ok(!members.includes("Teacher"));
     assert.ok(members.every((m) => DEVANAGARI.test(m)));
   });
+
+  it("never mixes Queen / क्वीन in one emoji_movie question pool", async () => {
+    const en = validatePack(await FALLBACK_PACKS.emoji_movie()).items.map(defaultToPool).filter(Boolean);
+    const hi = validatePack(await FALLBACK_PACKS_HI.emoji_movie()).items.map(defaultToPool).filter(Boolean);
+    const enQueen = en.find((p) => p!.id === "em.queen");
+    const hiQueen = hi.find((p) => p!.id === "em.queen.hi");
+    assert.ok(enQueen);
+    assert.ok(hiQueen);
+    assert.equal(enQueen!.answer, "Queen");
+    assert.ok(DEVANAGARI.test(hiQueen!.answer));
+
+    const enQ = defaultBuild("Which movie is this?")({
+      item: enQueen!,
+      pool: en as NonNullable<(typeof en)[0]>[],
+      params: { optionCount: 4, similarity: 0.8, targetDifficulty: 0.45, timeLimitMs: 10_000, startClues: 1 },
+      rng: createRng("en-queen-e2e"),
+      round: 1,
+    });
+    assert.ok(enQ);
+    const labels = enQ!.options.map((o) => o.label);
+    assert.ok(labels.includes("Queen"));
+    assert.ok(labels.every((l) => !DEVANAGARI.test(l)), `EN options mixed Hindi: ${labels.join(", ")}`);
+
+    const hiQ = defaultBuild("यह कौन सी फिल्म है?")({
+      item: hiQueen!,
+      pool: hi as NonNullable<(typeof hi)[0]>[],
+      params: { optionCount: 4, similarity: 0.8, targetDifficulty: 0.45, timeLimitMs: 10_000, startClues: 1 },
+      rng: createRng("hi-queen-e2e"),
+      round: 1,
+    });
+    assert.ok(hiQ);
+    for (const o of hiQ!.options) {
+      assert.ok(DEVANAGARI.test(o.label), `hi option ${o.label}`);
+    }
+  });
+
+  it("keeps Guess the State clues/options in one language package", async () => {
+    const enItems = validatePack(await FALLBACK_PACKS.indian_state()).items;
+    const hiItems = validatePack(await FALLBACK_PACKS_HI.indian_state()).items;
+    for (const item of enItems) {
+      for (const h of item.hints ?? []) assert.ok(!DEVANAGARI.test(h), `${item.id} hint`);
+      if (item.answer) assert.ok(!DEVANAGARI.test(item.answer), `${item.id} answer`);
+    }
+    for (const item of hiItems) {
+      for (const h of item.hints ?? []) assert.ok(DEVANAGARI.test(h), `${item.id} hint`);
+      if (item.answer) assert.ok(DEVANAGARI.test(item.answer), `${item.id} answer`);
+    }
+
+    const enPool = enItems.map(defaultToPool).filter(Boolean);
+    const hiPool = hiItems.map(defaultToPool).filter(Boolean);
+    const enQ = defaultBuild("Which state is this?")({
+      item: enPool[0]!,
+      pool: enPool as NonNullable<(typeof enPool)[0]>[],
+      params: { optionCount: 4, similarity: 0.5, targetDifficulty: 0.3, timeLimitMs: 10_000, startClues: 2 },
+      rng: createRng("en-state-e2e"),
+      round: 1,
+    });
+    const hiQ = defaultBuild("यह कौन सा राज्य है?")({
+      item: hiPool[0]!,
+      pool: hiPool as NonNullable<(typeof hiPool)[0]>[],
+      params: { optionCount: 4, similarity: 0.5, targetDifficulty: 0.3, timeLimitMs: 10_000, startClues: 2 },
+      rng: createRng("hi-state-e2e"),
+      round: 1,
+    });
+    assert.ok(enQ && hiQ);
+    for (const o of enQ!.options) assert.ok(!DEVANAGARI.test(o.label));
+    for (const c of enQ!.clues) if (c.kind === "text") assert.ok(!DEVANAGARI.test(c.value));
+    for (const o of hiQ!.options) assert.ok(DEVANAGARI.test(o.label));
+    for (const c of hiQ!.clues) if (c.kind === "text") assert.ok(DEVANAGARI.test(c.value));
+  });
 });

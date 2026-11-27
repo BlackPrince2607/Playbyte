@@ -4,7 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   StyleSheet,
@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isApiError, type MomentComment } from "../api";
 import { COMMENT_MAX, deleteComment, fetchComments, postComment, reportComment } from "../lib/social";
 import { timeAgo } from "../lib/timeAgo";
@@ -38,6 +39,7 @@ const errorText = (e: unknown, fallback: string) =>
 
 export function CommentsSheet({ momentId, visible, onClose, isSignedIn, onSignIn, onTotalChange }: Props) {
   const mounted = useMountedRef();
+  const insets = useSafeAreaInsets();
   const [comments, setComments] = useState<MomentComment[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
@@ -47,8 +49,28 @@ export function CommentsSheet({ momentId, visible, onClose, isSignedIn, onSignIn
   const [draft, setDraft] = useState("");
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
+  /** Extra bottom space so the composer sits above the keyboard (Modal ignores adjustResize). */
+  const [keyboardInset, setKeyboardInset] = useState(0);
   /** Drops responses from a previous open or moment. */
   const generation = useRef(0);
+
+  useEffect(() => {
+    if (!visible) {
+      setKeyboardInset(0);
+      return;
+    }
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const show = Keyboard.addListener(showEvent, (e) => {
+      // BottomSheetShell already pads safe-area bottom; keyboard height is from screen bottom.
+      setKeyboardInset(Math.max(0, e.endCoordinates.height - insets.bottom));
+    });
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardInset(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [visible, insets.bottom]);
 
   const applyTotal = useCallback(
     (n: number) => {
@@ -221,10 +243,7 @@ export function CommentsSheet({ momentId, visible, onClose, isSignedIn, onSignIn
       title={title}
       sheetStyle={styles.sheet}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
+      <View style={{ flex: 1, paddingBottom: keyboardInset }}>
         <View style={{ flex: 1 }}>{body}</View>
 
         {isSignedIn ? (
@@ -277,7 +296,7 @@ export function CommentsSheet({ momentId, visible, onClose, isSignedIn, onSignIn
         ) : (
           <Text style={[type.bodySm, { color: colors.lilac, textAlign: "center" }]}>Sign in to comment.</Text>
         )}
-      </KeyboardAvoidingView>
+      </View>
     </BottomSheetShell>
   );
 }

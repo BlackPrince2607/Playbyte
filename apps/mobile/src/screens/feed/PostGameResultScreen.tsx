@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Linking, ScrollView, Share, StyleSheet, Text, View } from "react-native";
-import * as Sharing from "expo-sharing";
+import { Alert, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvatarImage } from "../../components/AvatarImage";
 import { CoinIcon } from "../../components/CoinIcon";
@@ -22,7 +21,7 @@ import { localizeChrome } from "../../i18n/chrome";
 import { fill } from "../../i18n/strings";
 import { capture } from "../../lib/analytics";
 import { createChallenge } from "../../lib/challenges";
-import { APP_SHARE_URL, PLAY_STORE_URL, WHATSAPP_GROUP_URL } from "../../lib/links";
+import { PLAY_STORE_URL, WHATSAPP_GROUP_URL } from "../../lib/links";
 import { getMatch } from "../../lib/matchmaking";
 import {
   markFriendChallengePromptShown,
@@ -32,6 +31,8 @@ import {
 } from "../../lib/retentionStorage";
 import { shareAppInvite } from "../../lib/shareInvite";
 import { ensureLocalShareUri } from "../../lib/shareLocalFile";
+import { shareImageWithMessage, shareTextMessage } from "../../lib/shareMedia";
+import { scoreShareBody } from "../../lib/shareMessage";
 import { enableStreakReminder } from "../../lib/streakReminders";
 import {
   markRatePromptShown,
@@ -486,12 +487,16 @@ export function PostGameResultScreen({
           : t("challengeYouLost")
       : null;
 
-  async function shareTextScore() {
+  function resultShareMessage() {
     const brag =
       score <= 0
         ? fill(t("sharePlain"), { score, title: gameTitle })
         : fill(t("shareBeat"), { score, title: gameTitle, count: beatenLabel, pct: beaten.pct });
-    await Share.share({ message: `${brag}\n${APP_SHARE_URL}` });
+    return scoreShareBody(brag);
+  }
+
+  async function shareTextScore() {
+    await shareTextMessage(resultShareMessage());
   }
 
   async function shareScore() {
@@ -511,12 +516,13 @@ export function PostGameResultScreen({
         const card = await api<ShareCardResponse>(`/v1/games/${gameKey}/plays/${playId}/share-card`, {
           method: "POST",
         });
-        if (!(await Sharing.isAvailableAsync())) {
-          await shareTextScore();
-          return;
-        }
         const localUri = await ensureLocalShareUri(card.assetUrl, `play-${playId}.png`);
-        await Sharing.shareAsync(localUri, { mimeType: "image/png", UTI: "public.png" });
+        // Always send caption + Play Store link with the card (never image-only).
+        await shareImageWithMessage({
+          uri: localUri,
+          message: resultShareMessage(),
+          mimeType: "image/png",
+        });
         return;
       }
       await shareTextScore();

@@ -577,7 +577,7 @@ export function MainShell() {
     if (!onboardingDone && onboardingStep === "ready") void finishOnboarding();
   }, [onboardingDone, onboardingStep, finishOnboarding]);
 
-  // Android system back — unwind overlays / onboarding; exit only from root.
+  // Android system back — unwind overlays / onboarding; home from other tabs; confirm exit on Feed.
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       if (showSignIn) {
@@ -624,8 +624,25 @@ export function MainShell() {
         setShowStreak(false);
         return true;
       }
-      // Root tab screen — allow default (minimize / exit).
-      return false;
+      if (showWallet) {
+        setShowWallet(false);
+        return true;
+      }
+      if (onlineSearchGame) {
+        setOnlineSearchGame(null);
+        return true;
+      }
+      // Other tabs → Feed (home).
+      if (tab !== "feed") {
+        setTab("feed");
+        return true;
+      }
+      // Feed (home) → confirm before closing the app.
+      Alert.alert(t("exitAppTitle"), t("exitAppBody"), [
+        { text: t("cancel"), style: "cancel" },
+        { text: t("exitAppConfirm"), style: "destructive", onPress: () => BackHandler.exitApp() },
+      ]);
+      return true;
     });
     return () => sub.remove();
   }, [
@@ -643,6 +660,11 @@ export function MainShell() {
     showInterests,
     showRecap,
     showStreak,
+    showWallet,
+    onlineSearchGame,
+    tab,
+    setTab,
+    t,
   ]);
 
   useEffect(() => {

@@ -12,9 +12,9 @@ export { resolveAsset } from "./assetCache";
 
 const safeName = (packId: string) => packId.replace(/[^a-z0-9_.-]/gi, "_");
 
-/** Locale-scoped cache. v4: HI word_group members are Devanagari (+ latinMembers for grids). */
+/** Locale-scoped cache. v6: spot_pair hitboxes re-synced to painted pixel diffs. */
 function cacheName(packId: string) {
-  return `${safeName(packId)}__${getContentLocale()}__v4.json`;
+  return `${safeName(packId)}__${getContentLocale()}__v6.json`;
 }
 
 function packDir(): Directory {
@@ -47,7 +47,8 @@ async function requestPack(packId: string, etag: string | undefined, locale?: st
 }
 
 async function fetchPack(packId: string, etag?: string): Promise<PackResponse> {
-  if (getContentLocale() === "hi-IN") {
+  const locale = getContentLocale();
+  if (locale === "hi-IN") {
     try {
       const hi = await requestPack(packId, etag, "hi-IN");
       if (hi.status === 304) return hi;
@@ -58,7 +59,8 @@ async function fetchPack(packId: string, etag?: string): Promise<PackResponse> {
     // Do not fetch/cache English under the hi-IN key.
     throw new Error(`pack ${packId}: hi-IN unavailable`);
   }
-  return requestPack(packId, etag);
+  // Always pin en-IN — omitting locale used to return EN+HI items of the same type.
+  return requestPack(packId, etag, "en-IN");
 }
 
 function fallbackPack(packId: string): Promise<unknown | null> {
@@ -74,6 +76,7 @@ const repository = createContentRepository({
   fetchPack,
   cache: fileCache,
   fallback: fallbackPack,
+  packLocale: getContentLocale,
   onReject: (packId, rejected) => {
     if (__DEV__) console.warn(`[content] ${packId}: ${rejected.length} item(s) rejected`, rejected.slice(0, 3));
   },

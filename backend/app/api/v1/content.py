@@ -22,7 +22,8 @@ async def get_pack(
 ):
     """Versioned content pack. Public (no personal data); clients revalidate with If-None-Match.
 
-    `locale=hi-IN` returns only that locale. A missing Hindi pack is a 404 so the client can fall back.
+    Pass `locale=en-IN` or `locale=hi-IN` — each response is one language package only.
+    Omitting locale defaults to en-IN. A missing Hindi pack is a 404 so the client can fall back.
     """
     if not _PACK_ID_RE.match(pack_id):
         raise AppError("not_found", "Content pack not found.", 404)

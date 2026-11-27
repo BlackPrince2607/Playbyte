@@ -115,6 +115,26 @@ describe("rounds expose every baked difference", () => {
   });
 });
 
+describe("authored hitboxes stay playable", () => {
+  it("every pair has non-overlapping regions large enough to tap", () => {
+    for (const item of bundle.items) {
+      const pair = pairFromItem(item)!;
+      assert.ok(pair.diffs.length >= 3, item.id);
+      for (let i = 0; i < pair.diffs.length; i++) {
+        const d = pair.diffs[i];
+        assert.ok(d.hw >= MIN_REGION && d.hh >= MIN_REGION, `${item.id} ${d.id} too small`);
+        assert.ok(d.x - d.hw >= -1e-6 && d.x + d.hw <= 1 + 1e-6, `${item.id} ${d.id} x`);
+        assert.ok(d.y - d.hh >= -1e-6 && d.y + d.hh <= ASPECT + 1e-6, `${item.id} ${d.id} y`);
+        for (let j = 0; j < i; j++) {
+          const o = pair.diffs[j];
+          const overlap = Math.abs(d.x - o.x) < d.hw + o.hw && Math.abs(d.y - o.y) < d.hh + o.hh;
+          assert.equal(overlap, false, `${item.id} ${d.id} overlaps ${o.id}`);
+        }
+      }
+    }
+  });
+});
+
 describe("spot the difference rules", () => {
   const start = (extra: Record<string, unknown> = {}) =>
     playHeadless({

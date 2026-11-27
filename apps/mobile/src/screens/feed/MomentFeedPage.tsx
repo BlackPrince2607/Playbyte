@@ -1,4 +1,3 @@
-import * as Sharing from "expo-sharing";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
@@ -16,6 +15,8 @@ import { promptTextStyle } from "../../lib/promptSize";
 import { seededCount, withSeededCrowd } from "../../lib/seededEngagement";
 import { recordShare, setLike } from "../../lib/social";
 import { ensureLocalShareUri } from "../../lib/shareLocalFile";
+import { shareImageWithMessage, shareTextMessage } from "../../lib/shareMedia";
+import { momentShareBody } from "../../lib/shareMessage";
 import { useMountedRef } from "../../lib/useMounted";
 import { useLanguage } from "../../context/LanguageContext";
 import { categoryName } from "../../i18n/categories";
@@ -51,7 +52,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const shareInflight = useRef(false);
   const answered = Boolean(local.myOptionId);
   const picking = Boolean(pendingOptionId);
-  // Hold the pre-result card until we can paint the final state once — no score flash/swap.
+  // Polls reveal immediately; quizzes keep pending until correct/wrong can paint together.
   const showResults = answered && !picking;
   const crowd = withSeededCrowd(local);
   const total = crowd.totalResponses;
@@ -66,7 +67,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const selectedId = pendingOptionId ?? local.myOptionId ?? null;
 
   useEffect(() => {
-    // Ignore optimistic feed patches while a pick is in flight — keeps the card steady.
+    // Quiz: ignore optimistic feed patches until correct/wrong can paint together.
     if (pendingOptionId) {
       if (
         isQuiz &&
@@ -78,13 +79,24 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
       }
       return;
     }
-    setLocal(item);
+    setLocal((prev) => {
+      // Keep a quieter prefetched crowd if the feed item is still empty/stale.
+      if (
+        prev.id === item.id &&
+        prev.result &&
+        (!item.result || (item.result.totalResponses ?? 0) < (prev.result.totalResponses ?? 0))
+      ) {
+        return { ...item, result: prev.result };
+      }
+      return item;
+    });
     setRespondError("");
     setShareError("");
   }, [item, pendingOptionId, isQuiz]);
 
+  // Prefetch + silent refresh while the card is on screen — never tied to a tap.
   useEffect(() => {
-    if (!isActive || (!answered && !picking)) return;
+    if (!isActive) return;
 
     let cancelled = false;
 
@@ -105,6 +117,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
             optionCounts: snap.optionCounts,
             volumeState: prev.result?.volumeState,
             joinedLastMinute: prev.result?.joinedLastMinute,
+            // API only returns the key after the user has answered a quiz.
             correctOptionId: snap.correctOptionId ?? prev.result?.correctOptionId,
           },
         }));
@@ -113,7 +126,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           setPendingOptionId(null);
         }
       } catch {
-        /* polling is best-effort */
+        /* polling is best-effort — seeded crowd still paints instantly */
       } finally {
         pollInflight.current = false;
       }
@@ -125,43 +138,49 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
       cancelled = true;
       clearInterval(id);
     };
-  }, [isActive, answered, picking, pendingOptionId, item.id, mounted]);
+  }, [isActive, pendingOptionId, item.id, mounted]);
 
   async function pick(optionId: string) {
     if (answered || picking) return;
     setRespondError("");
-    // Lock selection highlight only — do not paint scores until the final snapshot is ready.
-    setPendingOptionId(optionId);
-    if (!isQuiz) {
-      capture("poll_voted", {
-        poll_id: item.id,
-        category: local.category?.slug ?? null,
-      });
-    }
-    const outcome = await respond(item.id, optionId);
-    if (!mounted.current) return;
-    if (outcome.ok && outcome.result) {
-      const snap = outcome.result;
-      setLocal((prev) => ({
-        ...prev,
-        myOptionId: optionId,
-        result: {
-          totalResponses: snap.totalResponses,
-          optionCounts: snap.optionCounts,
-          volumeState: snap.volumeState,
-          joinedLastMinute: snap.joinedLastMinute,
-          correctOptionId: snap.correctOptionId,
-        },
-      }));
-      // Quizzes stay on the selection card until the key arrives (poll effect clears pending).
-      if (isQuiz && !snap.correctOptionId) return;
-    } else {
+
+    if (isQuiz) {
+      // Hold until correct/wrong arrives so we never flash "Your answer".
+      setPendingOptionId(optionId);
+      const outcome = await respond(item.id, optionId);
+      if (!mounted.current) return;
+      if (outcome.ok && outcome.result) {
+        const snap = outcome.result;
+        setLocal((prev) => ({
+          ...prev,
+          myOptionId: optionId,
+          result: {
+            totalResponses: snap.totalResponses,
+            optionCounts: snap.optionCounts,
+            volumeState: snap.volumeState,
+            joinedLastMinute: snap.joinedLastMinute,
+            correctOptionId: snap.correctOptionId,
+          },
+        }));
+        if (!snap.correctOptionId) return;
+        setPendingOptionId(null);
+        return;
+      }
       setLocal((prev) => scoreLocalVote(prev, optionId));
       if (!outcome.ok) void respond(item.id, optionId);
-      // Still wait for the correct option before revealing a quiz.
-      if (isQuiz) return;
+      // Still wait for the correct option (silent poll clears pending).
+      return;
     }
-    setPendingOptionId(null);
+
+    // Polls: show preloaded/seeded % immediately; server sync + silent refresh land later.
+    setLocal((prev) => scoreLocalVote(prev, optionId));
+    capture("poll_voted", {
+      poll_id: item.id,
+      category: local.category?.slug ?? null,
+    });
+    void respond(item.id, optionId).then((outcome) => {
+      if (!outcome.ok) void respond(item.id, optionId);
+    });
   }
 
   async function toggleLike() {
@@ -195,21 +214,32 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
     shareInflight.current = true;
     setSharing(true);
     setShareError("");
+    const message = momentShareBody(t("shareMoment"));
     try {
       const card = await api<ShareCardResponse>(`/v1/moments/${item.id}/share-card`, { method: "POST" });
-      if (!(await Sharing.isAvailableAsync())) {
-        if (mounted.current) setShareError(t("sharingUnavailable"));
-        return;
-      }
       const localUri = await ensureLocalShareUri(card.assetUrl, `moment-${item.id}.png`);
-      await Sharing.shareAsync(localUri, { mimeType: "image/png", UTI: "public.png" });
+      // Always send caption + Play Store link with the card (never image-only).
+      await shareImageWithMessage({
+        uri: localUri,
+        message,
+        mimeType: "image/png",
+      });
       recordShare(item.id)
         .then((r) => updateEngagement(item.id, { shares: r.shares }))
         .catch(() => {});
     } catch (e) {
-      if (mounted.current && !isShareCancelled(e)) {
-        setShareError(shareErrorMessage(e));
+      if (isShareCancelled(e)) return;
+      // Card failed — still share text + download link.
+      try {
+        await shareTextMessage(message);
+        recordShare(item.id)
+          .then((r) => updateEngagement(item.id, { shares: r.shares }))
+          .catch(() => {});
+        return;
+      } catch {
+        /* fall through */
       }
+      if (mounted.current) setShareError(shareErrorMessage(e));
     } finally {
       if (mounted.current) setSharing(false);
       shareInflight.current = false;

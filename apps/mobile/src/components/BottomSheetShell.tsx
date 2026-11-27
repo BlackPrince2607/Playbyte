@@ -10,7 +10,7 @@ type Props = {
   onClose: () => void;
   title?: string;
   children: ReactNode;
-  /** Extra style on the sheet panel (e.g. flex for KeyboardAvoidingView). */
+  /** Extra style on the sheet panel (e.g. fixed height for scroll + composer layouts). */
   sheetStyle?: ViewStyle;
   /** When false, hide the X (handle + backdrop still dismiss). Default true. */
   showClose?: boolean;

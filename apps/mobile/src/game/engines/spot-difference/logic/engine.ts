@@ -31,7 +31,7 @@ export const SPOT_DIMENSIONS: (DimensionSpec & { key: keyof SpotParams })[] = [
 export const SPOT_SCORING: AnswerScoring = { ...DEFAULT_ANSWER_SCORING, mistakePenalty: 3, hintPenalty: 5 };
 export const CLEAR_BONUS = 50;
 /** Extra tolerance around each hit region for finger imprecision. */
-export const TOUCH_SLOP = 0.035;
+export const TOUCH_SLOP = 0.05;
 
 const POOL_CAP = 40;
 

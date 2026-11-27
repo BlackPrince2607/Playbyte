@@ -6,7 +6,7 @@ import { describe, it } from "node:test";
 import { definition } from "../testing/harness";
 import { AssetIndex, assetFileName } from "./assetIndex";
 import { missingContent, selectItems } from "./query";
-import { CachedPack, PackResponse, createContentRepository, packIdsFor } from "./repository";
+import { CachedPack, PackResponse, createContentRepository, itemsForLocale, packIdsFor } from "./repository";
 import { validateItem, validatePack } from "./validate";
 
 const item = (id: string, extra: Record<string, unknown> = {}) => ({
@@ -120,6 +120,46 @@ describe("content repository", () => {
     assert.deepEqual(packIdsFor([{ types: ["flag", "food"], min: 1 }, { types: ["flag"], min: 1 }], def), ["flag", "food"]);
     const pinned = definition({ engine: "guess", variation: "flag", content: { packId: "flags_asia" } });
     assert.deepEqual(packIdsFor([{ types: ["flag"], min: 1 }], pinned), ["flags_asia"]);
+  });
+
+  it("drops the other language when a mixed remote pack is returned", async () => {
+    const repo = createContentRepository({
+      fetchPack: async () => ({
+        status: 200,
+        etag: "mix",
+        items: [
+          item("em.queen", { answer: "Queen", locale: "en-IN", media: [{ kind: "emoji", value: "👸" }] }),
+          item("em.queen.hi", { answer: "क्वीन", locale: "hi-IN", media: [{ kind: "emoji", value: "👸" }] }),
+        ],
+      }),
+      cache: memCache(),
+      fallback: async () => null,
+      packLocale: () => "en-IN",
+    });
+    const pack = await repo.loadPack("emoji_movie");
+    assert.deepEqual(
+      pack.items.map((i) => i.id),
+      ["em.queen"],
+    );
+    assert.ok(pack.items.every((i) => !/[\u0900-\u097F]/.test(i.answer ?? "")));
+  });
+});
+
+describe("itemsForLocale", () => {
+  it("keeps EN and HI packages separate", () => {
+    const mixed = [
+      item("en", { locale: "en-IN", answer: "Queen" }),
+      item("hi", { locale: "hi-IN", answer: "क्वीन" }),
+    ];
+    const en = validatePack(mixed).items;
+    assert.deepEqual(
+      itemsForLocale(en, "en-IN").map((i) => i.id),
+      ["en"],
+    );
+    assert.deepEqual(
+      itemsForLocale(en, "hi-IN").map((i) => i.id),
+      ["hi"],
+    );
   });
 });
 

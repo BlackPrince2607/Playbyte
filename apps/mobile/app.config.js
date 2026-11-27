@@ -15,6 +15,10 @@ module.exports = ({ config }) => {
   if (!plugins.includes("expo-localization")) {
     plugins.push("expo-localization");
   }
+  // Image + caption shares (result / moment cards) need EXTRA_TEXT alongside the PNG.
+  if (!plugins.includes("react-native-share")) {
+    plugins.push("react-native-share");
+  }
 
   const inviteHost = hostOf(process.env.EXPO_PUBLIC_API_URL);
   if (inviteHost) {

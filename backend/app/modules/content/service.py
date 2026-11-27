@@ -37,7 +37,8 @@ def item_to_json(i: ContentItem) -> dict:
 def _pack_filter(pack_id: str, pack: ContentPack | None, locale: str | None = None):
     """WHERE clause for a pack; a pack id with no row means 'approved items of that type'.
 
-    A requested locale replaces the pack's own locale so Hindi can be asked for explicitly.
+    Locale is always applied so EN and HI packages never mix in one response.
+    Explicit `locale` wins; otherwise the pack's locale; otherwise en-IN.
     """
     clauses = [ContentItem.status == "approved"]
     if pack is None:
@@ -46,9 +47,8 @@ def _pack_filter(pack_id: str, pack: ContentPack | None, locale: str | None = No
         clauses.append(ContentItem.type.in_(list(pack.types)))
         if pack.categories:
             clauses.append(ContentItem.categories.overlap(list(pack.categories)))
-    chosen = locale or (pack.locale if pack else None)
-    if chosen:
-        clauses.append(ContentItem.locale == chosen)
+    chosen = locale or (pack.locale if pack else None) or "en-IN"
+    clauses.append(ContentItem.locale == chosen)
     return clauses
 
 

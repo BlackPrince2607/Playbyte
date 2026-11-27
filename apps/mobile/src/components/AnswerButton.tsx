@@ -67,11 +67,17 @@ export function AnswerButton({
   }));
 
   const showImage = Boolean(imageUrl) && !imageFailed;
+  const showPercent = percent != null;
+  const labelText = `${emoji ? `${emoji} ` : ""}${label ?? ""}`.trim();
+  // Always keep a results strip for image tiles so % / ✓ never get clipped under the square meme.
+  const showMetaRow = Boolean(labelText) || showCheck || showPercent;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label ?? undefined}
+      accessibilityLabel={
+        showPercent && labelText ? `${labelText}, ${percent}%` : labelText || (showPercent ? `${percent}%` : undefined)
+      }
       disabled={disabled}
       style={tile ? styles.tilePressable : undefined}
       onPressIn={() => {
@@ -97,7 +103,7 @@ export function AnswerButton({
           pressStyle,
         ]}
       >
-        {percent != null && percent > 0 ? <Animated.View style={[styles.fill, fillStyle]} /> : null}
+        {showPercent && percent > 0 ? <Animated.View style={[styles.fill, fillStyle]} /> : null}
         {showImage ? (
           <Image
             source={{ uri: imageUrl! }}
@@ -106,24 +112,28 @@ export function AnswerButton({
             onError={() => setImageFailed(true)}
           />
         ) : null}
-        <View style={styles.row}>
-          <Text
-            style={[tile ? type.bodyLg : type.button, styles.label, compact && styles.labelCompact, { fontFamily: fonts.bodyBold }]}
-            numberOfLines={2}
-            ellipsizeMode="tail"
-          >
-            {emoji ? `${emoji} ` : ""}
-            {label ?? ""}
-          </Text>
-          <View style={styles.trailing}>
-            {showCheck ? <Text style={styles.check}>✓</Text> : null}
-            {percent != null ? (
-              <Text style={[type.statsSm, { color: colors.lime, fontFamily: fonts.mono }]}>
-                {percent}%
-              </Text>
-            ) : null}
+        {showMetaRow ? (
+          <View style={styles.row}>
+            <Text
+              style={[
+                tile ? type.bodyLg : type.button,
+                styles.label,
+                compact && styles.labelCompact,
+                { fontFamily: fonts.bodyBold },
+              ]}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {labelText}
+            </Text>
+            <View style={styles.trailing}>
+              {showCheck ? <Text style={styles.check}>✓</Text> : null}
+              {showPercent ? (
+                <Text style={[type.statsSm, { color: colors.lime, fontFamily: fonts.mono }]}>{percent}%</Text>
+              ) : null}
+            </View>
           </View>
-        </View>
+        ) : null}
       </Animated.View>
     </Pressable>
   );
@@ -168,14 +178,24 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     backgroundColor: colors.ink,
   },
+  // Fills leftover tile height; meta row below stays fixed so % never clips.
   tileImage: {
     width: "100%",
-    aspectRatio: 1,
+    flex: 1,
+    minHeight: 72,
     borderRadius: radius.sm,
     marginBottom: spacing.xs,
     backgroundColor: colors.ink,
   },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: spacing.xs },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.xs,
+    flexGrow: 0,
+    flexShrink: 0,
+    minHeight: 24,
+  },
   label: { color: colors.paper, flex: 1 },
   labelCompact: { fontSize: 15, lineHeight: 20 },
   trailing: { flexDirection: "row", alignItems: "center", gap: 6 },

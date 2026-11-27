@@ -61,6 +61,19 @@ def test_etag_changes_with_content() -> None:
     assert a.startswith('"') and a.endswith('"')
 
 
+def test_pack_filter_defaults_to_en_and_never_omits_locale() -> None:
+    """EN and HI items share a type (emoji_movie); responses must still be one locale."""
+    from app.modules.content.service import _pack_filter
+    from app.infrastructure.postgres.models import ContentItem
+
+    en_only = _pack_filter("emoji_movie", None, None)
+    hi_only = _pack_filter("emoji_movie", None, "hi-IN")
+    # Last clause is always ContentItem.locale == …
+    assert en_only[-1].right.value == "en-IN"
+    assert hi_only[-1].right.value == "hi-IN"
+    assert en_only[-1].left == ContentItem.locale
+
+
 def test_bundled_packs_validate() -> None:
     from scripts.import_content import DEFAULT_DIR, main
 
