@@ -10,14 +10,24 @@ const PROJECT = "@anish2607s-team/maja";
 const PACKAGE = "app.maja.mobile";
 const OUT_DIR = path.join(__dirname, "..", "android", "app");
 
-async function main() {
+function authHeaders() {
+  const token = process.env.EXPO_TOKEN?.trim();
+  if (token) {
+    return { authorization: `Bearer ${token}` };
+  }
   const statePath = path.join(os.homedir(), ".expo", "state.json");
+  if (!fs.existsSync(statePath)) {
+    throw new Error("Set EXPO_TOKEN or run: npx eas login");
+  }
   const state = JSON.parse(fs.readFileSync(statePath, "utf8"));
   const sessionSecret = state.auth?.sessionSecret;
   if (!sessionSecret) {
-    throw new Error("No Expo session in ~/.expo/state.json — run: npx eas login");
+    throw new Error("Set EXPO_TOKEN or run: npx eas login");
   }
+  return { "expo-session": sessionSecret };
+}
 
+async function main() {
   const query = `
     query($projectFullName: String!, $applicationIdentifier: String) {
       app {
@@ -53,7 +63,7 @@ async function main() {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "expo-session": sessionSecret,
+      ...authHeaders(),
     },
     body: JSON.stringify({
       query,
