@@ -6,6 +6,7 @@ import { ActionRail } from "../../components/ActionRail";
 import { AnswerButton } from "../../components/AnswerButton";
 import { CommentsSheet } from "../../components/CommentsSheet";
 import { LivePill } from "../../components/MajaLogo";
+import { ScreenLoading } from "../../components/ScreenLoading";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { displayCopy } from "../../lib/displayLang";
@@ -52,7 +53,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const shareInflight = useRef(false);
   const answered = Boolean(local.myOptionId);
   const picking = Boolean(pendingOptionId);
-  // Polls reveal immediately; quizzes keep pending until correct/wrong can paint together.
+  // Hold the pre-result card (+ loader) until we can paint the final state once.
   const showResults = answered && !picking;
   const crowd = withSeededCrowd(local);
   const total = crowd.totalResponses;
@@ -67,7 +68,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   const selectedId = pendingOptionId ?? local.myOptionId ?? null;
 
   useEffect(() => {
-    // Quiz: ignore optimistic feed patches until correct/wrong can paint together.
+    // Ignore optimistic feed patches while a pick is in flight — keeps the card + loader steady.
     if (pendingOptionId) {
       if (
         isQuiz &&
@@ -126,7 +127,7 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           setPendingOptionId(null);
         }
       } catch {
-        /* polling is best-effort — seeded crowd still paints instantly */
+        /* polling is best-effort — seeded crowd still paints once revealed */
       } finally {
         pollInflight.current = false;
       }
@@ -143,44 +144,38 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
   async function pick(optionId: string) {
     if (answered || picking) return;
     setRespondError("");
-
-    if (isQuiz) {
-      // Hold until correct/wrong arrives so we never flash "Your answer".
-      setPendingOptionId(optionId);
-      const outcome = await respond(item.id, optionId);
-      if (!mounted.current) return;
-      if (outcome.ok && outcome.result) {
-        const snap = outcome.result;
-        setLocal((prev) => ({
-          ...prev,
-          myOptionId: optionId,
-          result: {
-            totalResponses: snap.totalResponses,
-            optionCounts: snap.optionCounts,
-            volumeState: snap.volumeState,
-            joinedLastMinute: snap.joinedLastMinute,
-            correctOptionId: snap.correctOptionId,
-          },
-        }));
-        if (!snap.correctOptionId) return;
-        setPendingOptionId(null);
-        return;
-      }
+    // Lock selection + show loader until the final snapshot is ready.
+    setPendingOptionId(optionId);
+    if (!isQuiz) {
+      capture("poll_voted", {
+        poll_id: item.id,
+        category: local.category?.slug ?? null,
+      });
+    }
+    const outcome = await respond(item.id, optionId);
+    if (!mounted.current) return;
+    if (outcome.ok && outcome.result) {
+      const snap = outcome.result;
+      setLocal((prev) => ({
+        ...prev,
+        myOptionId: optionId,
+        result: {
+          totalResponses: snap.totalResponses,
+          optionCounts: snap.optionCounts,
+          volumeState: snap.volumeState,
+          joinedLastMinute: snap.joinedLastMinute,
+          correctOptionId: snap.correctOptionId,
+        },
+      }));
+      // Quizzes stay on the selection card until the key arrives (poll effect clears pending).
+      if (isQuiz && !snap.correctOptionId) return;
+    } else {
       setLocal((prev) => scoreLocalVote(prev, optionId));
       if (!outcome.ok) void respond(item.id, optionId);
-      // Still wait for the correct option (silent poll clears pending).
-      return;
+      // Still wait for the correct option before revealing a quiz.
+      if (isQuiz) return;
     }
-
-    // Polls: show preloaded/seeded % immediately; server sync + silent refresh land later.
-    setLocal((prev) => scoreLocalVote(prev, optionId));
-    capture("poll_voted", {
-      poll_id: item.id,
-      category: local.category?.slug ?? null,
-    });
-    void respond(item.id, optionId).then((outcome) => {
-      if (!outcome.ok) void respond(item.id, optionId);
-    });
+    setPendingOptionId(null);
   }
 
   async function toggleLike() {
@@ -404,6 +399,11 @@ export function MomentFeedPage({ item, height, isActive, onSignIn }: Props) {
           ) : (
             <View style={styles.list}>{local.options.map((o) => renderOption(o, false))}</View>
           )}
+          {picking && !showResults ? (
+            <View style={styles.submitOverlay} accessibilityLabel={t("submitting")}>
+              <ScreenLoading label={t("submitting")} style={{ flex: 0, backgroundColor: "transparent" }} />
+            </View>
+          ) : null}
         </View>
 
         <ActionRail
@@ -468,6 +468,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cardCentered: { justifyContent: "center" },
+  submitOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "rgba(21,14,43,0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cardGlow: {
     position: "absolute",
     top: -40,
